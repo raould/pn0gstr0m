@@ -211,7 +211,7 @@ function MakeLightningAnimation(props) {
     var { lifespan, targets, end_fn } = props;
     return new Animation({
 	lifespan,
-	anim_fn: (gameState) => {
+	anim_fn: (dt, gameState) => {
 	    Cxdo(() => {
 		targets.forEach((puck) => {
 		    gCx.beginPath();
@@ -242,7 +242,7 @@ function MakeWaveAnimation(props) {
     var a1 = offset + Math.PI;
     return new Animation({
 	lifespan,
-	anim_fn: (gameState) => {
+	anim_fn: (dt, gameState) => {
 	    Cxdo(() => {
 		var t = GameTime01(lifespan, t0);
 		gCx.lineWidth = sx1(2);
@@ -265,7 +265,7 @@ function MakeEngorgeAnimation(props) {
     var ph0 = gameState.playerPaddle.height;
     return new Animation({
 	lifespan,
-	anim_fn: (gameState, start_ms, end_ms) => {
+	anim_fn: (dt, gameState, start_ms, end_ms) => {
 	    var pp = gameState.playerPaddle;
 	    var t01 = GameTime01(end_ms-start_ms, start_ms);
 	    var t10 = 1 - t01;

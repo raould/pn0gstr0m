@@ -81,8 +81,6 @@ var /*const*/ kFadeInMsec = 7000;
 var /*const*/ kHighKey = 'pn0g_high';
 var gHighScore;
 
-// todo: fix step() to take deltas.
-// todo: make gStartTime not be a global.
 var gStartTime = 0;
 var gGameTime = 0;
 var gLastFrameTime = gStartTime;
@@ -452,15 +450,15 @@ var haha = 0;
 	self.lastTime = now;
 	gGameTime += clock_diff;
 
-	var delta = gGameTime - gLastFrameTime;
-	if (delta >= kTimeStep) {
+	var dt = gGameTime - gLastFrameTime;
+	if (dt >= kTimeStep) {
 	    var handler = self.handlerMap[self.state];
 	    Assert(handler != undefined, self.state);
 	    if (self.transitioned) {
 		handler.Reset();
 		self.transitioned = false;
 	    }
-	    var next = handler.Step(delta);
+	    var next = handler.Step( dt );
 	    if( next != undefined && next !== self.state ) {
 		console.log(`transitioned from ${self.state} to ${next}`);
 		self.transitioned = true;
@@ -471,10 +469,10 @@ var haha = 0;
 	    ++gFrameCount;
 	    //if (gDebug) { DrawBounds(); }
 	    if (gDebug) { StepToasts(); }
-	    setTimeout( self.RunLoop, Math.max(1, kTimeStep-(delta-kTimeStep)) );
+	    setTimeout( self.RunLoop, Math.max(1, kTimeStep-(dt-kTimeStep)) );
 	}
 	else {
-	    setTimeout( self.RunLoop, Math.max(1, kTimeStep - delta));
+	    setTimeout( self.RunLoop, Math.max(1, kTimeStep - dt));
 	}
     };
 }
@@ -578,9 +576,9 @@ function PushToast(msg, lifespan=1000) {
 	});
     };
 
-    self.MoveDown = function(scale) {
+    self.MoveDown = function( dt, scale=1 ) {
 	self.prev_y = self.y;
-	self.y += gPaddleStepSize * ((scale==undefined)?1.0:scale);
+	self.y += gPaddleStepSize * scale * (dt/kTimeStep);
 	self.isAtLimit = false;
 	if( self.GetMidY() > gHeight-gPaddleMidYLimit ) {
 	    self.y = gHeight-gPaddleMidYLimit-gPaddleHeight/2;
@@ -588,9 +586,9 @@ function PushToast(msg, lifespan=1000) {
 	}
     };
 
-    self.MoveUp = function(scale) {
+    self.MoveUp = function( dt, scale=1 ) {
 	self.prev_y = self.y;
-	self.y -= gPaddleStepSize * ((scale==undefined)?1.0:scale);
+	self.y -= gPaddleStepSize * scale * (dt/kTimeStep);
 	self.isAtLimit = false;
 	if( self.GetMidY() < gPaddleMidYLimit ) {
 	    self.y = gPaddleMidYLimit-gPaddleHeight/2;
@@ -617,7 +615,7 @@ function PushToast(msg, lifespan=1000) {
 	return should;
     };
 
-    self.AIMove = function() {
+    self.AIMove = function( dt ) {
 	Cxdo(() => {
 	    gCx.fillStyle = "blue";
 	    if( self.shouldUpdate() ) {
@@ -627,10 +625,10 @@ function PushToast(msg, lifespan=1000) {
 		    var targetMid = self.targetAIPuck.GetMidY() + self.targetAIPuck.vy;
 		    var deadzone = (self.height*0.2);
 		    if( targetMid <= self.GetMidY() - deadzone) {
-			self.MoveUp(kAIMoveScale);
+			self.MoveUp( dt, kAIMoveScale );
 		    }
 		    else if( targetMid >= self.GetMidY() + deadzone) {
-			self.MoveDown(kAIMoveScale);
+			self.MoveDown( dt, kAIMoveScale );
 		    }
 		}
 		else {
@@ -1025,19 +1023,19 @@ function AddSparks(x, y, vx, vy) {
     self.Init();
 }
 
-/*class*/ function Animation(props) {
+/*class*/ function Animation( props ) {
     var { lifespan, anim_fn, start_fn, end_fn } = props;
     var self = this;
     self.start_ms = gGameTime;
     self.end_ms = self.start_ms + lifespan;
-    self.Step = function(gameState) {
-	start_fn && start_fn(gameState);
+    self.Step = function( dt, gameState ) {
+	start_fn && start_fn( gameState );
 	start_fn = undefined;
 	if (gGameTime <= self.end_ms) {
-	    anim_fn(gameState, self.start_ms, self.end_ms);
+	    anim_fn( dt, gameState, self.start_ms, self.end_ms );
 	    return false;
 	}
-	end_fn && end_fn(gameState);
+	end_fn && end_fn( gameState );
 	return true;
     };
 }
@@ -1086,12 +1084,13 @@ function AddSparks(x, y, vx, vy) {
 	PlayBlip();
     };
 
-    self.Step = function(delta) {
+    self.Step = function( dt ) {
 	if (!self.attract) { ClearScreen(); }
-	self.MaybeSpawnPowerup(delta);
+	self.MaybeSpawnPowerup( dt );
 	self.ProcessInput();
-	self.StepPlayer();
-	self.StepMoveables();
+	self.StepPlayer( dt );
+	self.StepMoveables( dt );
+	self.StepAnimations( dt );
 	self.Draw();
 	if (self.paused && gGameOverPressed) {
 	    gGameOverPressed = false;
@@ -1106,9 +1105,9 @@ function AddSparks(x, y, vx, vy) {
 	return nextState;
     };
 
-    self.MaybeSpawnPowerup = function(delta) {
+    self.MaybeSpawnPowerup = function( dt ) {
 	if (!self.paused) {
-	    self.powerupWait = Math.max(self.powerupWait-delta, 0);
+	    self.powerupWait = Math.max(self.powerupWait-dt, 0);
 	    if (!self.attract &&
 		self.powerupWait == 0 &&
 		RandomBool(gDebug ? 0.1 : 0.01) &&
@@ -1134,9 +1133,9 @@ function AddSparks(x, y, vx, vy) {
 	Assert(false, "if/else/fail");
     };
 
-    self.StepAnimations = function() {
+    self.StepAnimations = function( dt ) {
 	for (var anim_id in self.animations) {
-	    var done = self.animations[anim_id].Step(self);
+	    var done = self.animations[anim_id].Step( dt, self );
 	    if (done) {
 		delete self.animations[anim_id];
 	    }
@@ -1146,7 +1145,7 @@ function AddSparks(x, y, vx, vy) {
     self.CreateStartingPuck = function(sign) {
 	var p = new Puck( gw(RandomRange(0.45, 0.48)),
 			  gh(RandomRange(0.45, 0.5)),
-			  sign * gMaxVX/3,
+			  sign * gMaxVX/5,
 			  RandomCentered(1, 0.2),
 			  true );
 	return p;
@@ -1190,12 +1189,12 @@ function AddSparks(x, y, vx, vy) {
 	}
     };
 
-    self.StepPlayer = function() {
+    self.StepPlayer = function( dt ) {
 	if( gUpPressed || gStickUp ) {
-	    self.playerPaddle.MoveUp();
+	    self.playerPaddle.MoveUp( dt );
 	}
 	if( gDownPressed || gStickDown ) {
-	    self.playerPaddle.MoveDown();
+	    self.playerPaddle.MoveDown( dt );
 	}
 	if( gMoveTargetY != undefined ) {
 	    var limit = gPaddleInset + gPaddleHeight/2;
@@ -1205,10 +1204,10 @@ function AddSparks(x, y, vx, vy) {
 		gHeight - limit
 	    );
 	    if( gMoveTargetY < self.playerPaddle.GetMidY() ) {
-		self.playerPaddle.MoveUp();
+		self.playerPaddle.MoveUp( dt );
 	    }
 	    if( gMoveTargetY > self.playerPaddle.GetMidY() ) {
-		self.playerPaddle.MoveDown();
+		self.playerPaddle.MoveDown( dt );
 	    }
 	    // if the player isn't touching and the
 	    // paddle is close enough then don't
@@ -1225,22 +1224,22 @@ function AddSparks(x, y, vx, vy) {
 	}
     };
 
-    self.StepMoveables = function() {
+    self.StepMoveables = function( dt ) {
 	if (!self.paused) {
 	    if (self.attract) {
-		self.playerPaddle.AIMove();
+		self.playerPaddle.AIMove( dt );
 	    }
-	    self.cpuPaddle.AIMove();
-	    self.MovePucks();
-	    self.MoveSparks();
-	    self.MovePowerup();
+	    self.cpuPaddle.AIMove( dt );
+	    self.MovePucks( dt );
+	    self.MoveSparks( dt );
+	    self.MovePowerup( dt );
 	}
     };
 
-    self.MovePucks = function() {
+    self.MovePucks = function( dt ) {
 	gPucks.B.clear();
 	gPucks.A.forEach((p) => {
-	    p.Step( kMoveStep );
+	    p.Step( kMoveStep * (dt/kTimeStep) );
 	    if (!self.attract) {
 		p.UpdateScore();
 	    }
@@ -1256,18 +1255,18 @@ function AddSparks(x, y, vx, vy) {
 	SwapBuffers(gPucks);
     };
 
-    self.MoveSparks = function() {
+    self.MoveSparks = function( dt ) {
 	gSparks.B.clear();
 	gSparks.A.forEach((s) => {
-	    s.Step( kMoveStep );
+	    s.Step( kMoveStep * (dt/kTimeStep) );
 	    s.alive && gSparks.B.push( s );
 	} );
 	SwapBuffers(gSparks);
     };
 
-    self.MovePowerup = function() {
+    self.MovePowerup = function( dt ) {
 	if (gPowerup != undefined) {
-	    gPowerup.Step( kMoveStep );
+	    gPowerup.Step( kMoveStep * (dt/kTimeStep) );
 	    gPowerup = gPowerup.AllPaddlesCollision( self, [ self.playerPaddle, self.cpuPaddle ] );
 	}
     };
@@ -1409,7 +1408,6 @@ function AddSparks(x, y, vx, vy) {
 
     self.Draw = function() {
 	if (!gResizing) {
-	    self.StepAnimations();
 	    self.DrawMidLine();
 	    self.DrawHeader();
 	    gPucks.A.forEach((p) => {
@@ -1589,10 +1587,10 @@ function DrawTitle() {
 	BeginMusic();
     };
 
-    self.Step = function() {
+    self.Step = function( dt ) {
 	var nextState = undefined;
 	ClearScreen();
-	self.attract.Step();
+	self.attract.Step( dt );
 	nextState = self.ProcessInput();
 	self.Draw();
 	if (nextState != undefined) {
