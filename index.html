@@ -1,0 +1,66 @@
+<!-- no, actually i have no idea what i am doing. -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- iphone rendering tweak. ??!! -->
+    <style>BODY { -webkit-user-select:none; margin:0px}</style>
+
+    <!-- libraries. -->
+    <script type="text/javascript" src="Lib/howler.min.js"></script>
+    <script type="text/javascript" src="Lib/gamepads.js"></script>
+    <!-- include my code. -->
+    <script type="text/javascript" src="util.js"></script>
+    <script type="text/javascript" src="random.js"></script>
+    <script type="text/javascript" src="reuseArray.js"></script>
+    <script type="text/javascript" src="powerups.js"></script>
+    <script type="text/javascript" src="music.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+
+    <link rel="stylesheet" href="font/stylesheet.css"/>
+
+    <style>
+      * {
+	  margin: 0;
+	  padding: 0;
+	  box-sizing: border-box;
+	  font-family: noyb2Regular;
+      }
+      html {
+	  /*border: 1px dotted red;*/
+      }
+      body {
+	  /*border: 1px dotted blue;*/
+	  background: black; /* should match main.js scalineColor */
+	  touch-action: none;
+	  min-height: 99vh;
+      }
+      .container {
+	  /*border: 1px dotted white;*/
+	  position: fixed;
+	  top: 50%;
+	  left: 50%;
+	  transform: translate(-50%, -50%);
+      }
+      canvas {
+	  /*border: 1px dotted yellow;*/
+	  image-rendering: crisp-edges;
+	  image-rendering: -moz-crisp-edges;
+	  image-rendering: -webkit-optimize-contrast;
+	  -ms-interpolation-mode: nearest-neighbor;
+	  width: 512;
+	  height: 288;
+      }
+    </style>
+
+  </head>
+
+  <body id="body">
+    <div class="container">
+      <canvas id="canvas" width="512px" height="288px">
+	Your browser is not supported, sorry.
+      </canvas>
+    </div>
+    <p style="font-size:10pt; text-align:center; color:DarkSlateGray;">COPYRIGHT 2011 // LICENSE: <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html">GPL V2</a></p>
+  </body>
+
+</html>

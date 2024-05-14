@@ -1,0 +1,11 @@
+{
+  "name": "pn0gstr0m",
+  "version": "0.0.666",
+  "description": "str0mming the pn0gs",
+  "main": "main.js",
+  "author": "",
+  "license": "GPL-2.0-only",
+  "devDependencies": {
+    "eslint": "^9.1.1"
+  }
+}
