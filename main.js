@@ -1872,7 +1872,6 @@ function SetPointerTarget(tx, ty, event_type) {
 	    gTouchX = tx;
 	    gTouchY = ty;
 	    gMoveTargetY = ty;
-	    console.log(tx, ty, gMoveTargetY);
 	},
     });
 }
@@ -2135,7 +2134,6 @@ function InitEvents() {
 	    gEventQueue.push({
 		event_type: kEventKeyDown,
 		update_fn: () => {
-		    console.log("++ gSpawnPowerupPressed");
 		    if (gDebug) { gSpawnPowerupPressed = true; }
 		    gDownKeys[e.keyCode] = true;
 		}
@@ -2216,7 +2214,6 @@ function InitEvents() {
 	    gEventQueue.push({
 		event_type: kEventKeyUp,
 		update_fn: () => {
-		    console.log("-- gSpawnPowerupPressed");
 		    gSpawnPowerupPressed = false;
 		    delete gDownKeys[e.keyCode];
 		}
