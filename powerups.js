@@ -144,6 +144,7 @@ function MakeEngorgeSpec() {
 	    return !gameState.playerPaddle.engorged && !gPowerupsInUse['engorge'];
 	},
 	boom_fn: (gameState) => {
+	    PlayPowerupBoom();
 	    gameState.animations[gNextID++] = MakeEngorgeAnimation({
 		lifespan: 1000 * 10,
 		gameState,
@@ -183,6 +184,7 @@ function MakeOptionSpec() {
 	    // is not properly extended.
 	},
 	boom_fn: (gameState) => {
+	    PlayPowerupBoom();
 	    console.log("TODO");
 	},
 	draw_fn: (self, alpha) => {
@@ -199,7 +201,7 @@ function MakeRandomPowerup(gameState) {
 	    ...spec_base,
 	    x: ForSide(gw(0.35), gw(0.65)),
 	    y: gHeight * (RandomBool() ? 0.1 : 0.9),
-	    vx: ForSide(1,-1) * sx(4),
+	    vx: ForSide(-1,1) * sx(3),
 	    vy: RandomCentered(0, 4, 1)
 	};
 	return new Powerup(spec);
@@ -272,9 +274,9 @@ function MakeEngorgeAnimation(props) {
 	    Cxdo(() => {
 		gCx.beginPath();
 		AddLightningPath(
-		    pp.GetMidX(), pp.y,
-		    pp.GetMidX(), pp.y + pp.height,
-		    Math.max(0.5, pp.width * 2 * t10)
+                    pp.GetMidX(), pp.y,
+                    pp.GetMidX(), pp.y + pp.height,
+                    Math.max(0.5, pp.width * 2 * t10)
 		);
 		gCx.strokeStyle = RandomColor();
 		gCx.lineWidth = sx1(2);

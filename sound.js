@@ -14,15 +14,15 @@ var _kill_unplayed = false;
 var gStateMuted = true;
 var gUserMuted = false;
 
-function RegisterMusic(name, filebasename) {
-    RegisterSound(name, filebasename, true);
+function RegisterMusic(name, filebasename, modify_fn) {
+    RegisterSound(name, filebasename, true, modify_fn);
 }
 
-function RegisterSfx(name, filebasename) {
-    RegisterSound(name, filebasename, false);
+function RegisterSfx(name, filebasename, modify_fn) {
+    RegisterSound(name, filebasename, false, modify_fn);
 }
 
-function RegisterSound(name, filebasename, isMusic=false) {
+function RegisterSound(name, filebasename, isMusic=false, modify_fn) {
     var files = ["wav", "aac"].map((e) => `sound/${filebasename}.${e}`);
     var howl = new Howl({
 	src: files,
@@ -33,6 +33,7 @@ function RegisterSound(name, filebasename, isMusic=false) {
 	filebasename,
 	howl,
 	isMusic,
+	modify_fn,
 	last: 0,
     };
 }
@@ -44,7 +45,9 @@ function LoadAudio() {
     RegisterSfx("blip1", "blipSelectA");
     RegisterSfx("blip2", "blipSelectB");
     RegisterSfx("blip3", "blipSelectC");
+    RegisterSfx("start1", "powerUp");
     RegisterSfx("powerupboom1", "powerUp");
+    RegisterSfx("gameover1", "gameover");
     RegisterMusic("music1", "nervouslynx");
     RegisterMusic("music2", "candiddonkey");
     RegisterMusic("music3", "devotedhyena");
@@ -134,14 +137,14 @@ function PlaySound(name, ignore_muted=false) {
 	var meta = gAudioMap[name];
 	Assert(meta != undefined, name);
 	if (meta != undefined) {
-	    var sfx = meta.howl;
+	    var howl = meta.howl;
 	    // currently only allowing one name-instance at a time.
-	    if (sfx != undefined) {
+	    if (howl != undefined) {
 		var id = meta.id;
 		if (id != undefined) {
-		    sfx.stop();
+		    howl.stop();
 		}
-		meta.id = sid = sfx.play();
+		meta.id = sid = howl.play();
 		meta.last = Date.now();
 		gAudioMap[sid] = name;
 	    }
@@ -174,6 +177,9 @@ function MakePlayFn(count, basename, playfn) {
 	return playfn(name);
     };
 }
+
+const PlayStart = MakePlayFn(1, "start", PlaySound);
+const PlayGameOver = MakePlayFn(1, "gameover", PlaySound);
 
 const kExplosionSfxCount = 3;
 const PlayExplosion = MakePlayFn(kExplosionSfxCount, "explosion", PlaySoundDebounced);

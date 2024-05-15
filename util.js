@@ -9,6 +9,12 @@ function Assert(result, msg) {
     }
 }
 
+function Swap(a, b) {
+    var tmp = a;
+    a = b;
+    b = tmp;
+}
+
 function JsonStringToArrayWorkaround(json_str) {
     try {
 	json = JSON.parse(json_str);

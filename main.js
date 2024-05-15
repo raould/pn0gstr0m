@@ -950,6 +950,17 @@ function AddSparks(x, y, vx, vy) {
 	self.fontSize = spec.fontSize;
 	self.boom_fn = spec.boom_fn;
 	self.draw_fn = spec.draw_fn;
+
+	if (self.x <= gw(0.5)) {
+	    self.left_bound = 0;
+	    self.right_bound = gw(0.5);
+	}
+	else {
+	    self.left_bound = gw(0.5);
+	    self.right_bound = gw(1);
+	}
+	self.top_bound = 0;
+	self.bottom_bound = gHeight;
     };
 
     self.Draw = function( alpha ) {
@@ -961,28 +972,21 @@ function AddSparks(x, y, vx, vy) {
 	self.prev_y = self.y;
 	self.x += (self.vx * dt);
 	self.y += (self.vy * dt);
-	var left_bound, right_bound;
-	var top_bound = 0;
-	var bottom_bound = gHeight;
-	if (self.x < gw(0.5)) {
-	    left_bound = 0;
-	    right_bound = gw(0.5);
+	if (self.x <= self.left_bound) {
+	    self.vx = Math.abs(self.vx);
+	    self.x = self.left_bound + 1;
 	}
-	else {
-	    left_bound = gw(0.5);
-	    right_bound = gw(1);
+	else if (self.x + self.w >= self.right_bound) {
+	    self.vx = -1 * Math.abs(self.vx);
+	    self.x = self.right_bound - self.w - 1;
 	}
-	if (self.x <= left_bound) {
-	    self.vx = -self.vx;
+	if (self.y <= self.top_bound) {
+	    self.vy = Math.abs(self.vy);
+	    self.y = self.top_bound + 1;
 	}
-	else if (self.x + self.w >= right_bound) {
-	    self.vx = -self.vx;
-	}
-	if (self.y <= top_bound) {
-	    self.vy = -self.vy;
-	}
-	else if (self.y + self.h >= bottom_bound) {
-	    self.vy = -self.vy;
+	else if (self.y + self.h >= self.bottom_bound) {
+	    self.vy = -1 * Math.abs(self.vy);
+	    self.y = self.bottom_bound - self.h - 1;
 	}
     };
 
@@ -1081,7 +1085,7 @@ function AddSparks(x, y, vx, vy) {
 	    }
 	)();
 
-	PlayBlip();
+	PlayStart();
     };
 
     self.Step = function( dt ) {
@@ -1190,6 +1194,9 @@ function AddSparks(x, y, vx, vy) {
     };
 
     self.StepPlayer = function( dt ) {
+	if (self.paused) {
+	    return;
+	}
 	if( gUpPressed || gStickUp ) {
 	    self.playerPaddle.MoveUp( dt );
 	}
@@ -1304,26 +1311,26 @@ function AddSparks(x, y, vx, vy) {
 	});
     };
 
-    self.DrawHeader = function() {
+    self.DrawScoreHeader = function() {
 	Cxdo(() => {
 	    gCx.fillStyle = RandomMagenta(self.Alpha(0.7));
 	    ForSide(
 		() => {
 		    if (gHighScore != undefined) {
-			DrawText( "HI: " + gHighScore, "left", gw(0.1), gh(1/12), gSmallFontSizePt );
+			DrawText( "HI: " + gHighScore, "left", gw(0.1), gh(0.1), gSmallFontSizePt );
 		    }
 		    if (!self.attract) {
-			DrawText( "GPT: " + gCPUScore, "right", gw(0.9), gh(2/12), gRegularFontSizePt );
-			DrawText( "P1: " + gPlayerScore, "left", gw(0.1), gh(2/12), gRegularFontSizePt );
+			DrawText( "GPT: " + gCPUScore, "right", gw(0.9), gh(0.19), gRegularFontSizePt );
+			DrawText( "P1: " + gPlayerScore, "left", gw(0.1), gh(0.19), gRegularFontSizePt );
 		    }
 		},
 		() => {
 		    if (gHighScore != undefined) {
-			DrawText( "HI: " + gHighScore, "right", gw(0.9), gh(1/12), gSmallFontSizePt );
+			DrawText( "HI: " + gHighScore, "right", gw(0.9), gh(0.1), gSmallFontSizePt );
 		    }
 		    if (!self.attract) {
-			DrawText( "GPT: " + gCPUScore, "left", gw(0.1), gh(2/12), gRegularFontSizePt );
-			DrawText( "P1: " + gPlayerScore, "right", gw(0.9), gh(2/12), gRegularFontSizePt );
+			DrawText( "GPT: " + gCPUScore, "left", gw(0.1), gh(0.19), gRegularFontSizePt );
+			DrawText( "P1: " + gPlayerScore, "right", gw(0.9), gh(0.19), gRegularFontSizePt );
 		    }
 		}
 	    )();
@@ -1409,7 +1416,7 @@ function AddSparks(x, y, vx, vy) {
     self.Draw = function() {
 	if (!gResizing) {
 	    self.DrawMidLine();
-	    self.DrawHeader();
+	    self.DrawScoreHeader();
 	    gPucks.A.forEach((p) => {
 		Assert(!!p);
 		p.Draw( self.Alpha() );
@@ -1476,8 +1483,8 @@ function DrawBounds() {
 	gCx.lineTo(WX(gWidth), WY(gHeight));
 	gCx.moveTo(WX(gWidth), WY(0));
 	gCx.lineTo(WX(0), WY(gHeight));
-	gCx.strokeStyle = "rgba(255,255,255,0.3)";
-	gCx.lineWidth = 25;
+	gCx.strokeStyle = "rgba(255,255,255,0.25)";
+	gCx.lineWidth = 10;
 	gCx.stroke();
 	gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
     });
@@ -1487,8 +1494,8 @@ function DrawBounds() {
 	gCx.lineTo(WX(gCanvas.width), WY(gCanvas.height));
 	gCx.moveTo(WX(gCanvas.width), WY(0));
 	gCx.lineTo(WX(0), WY(gCanvas.height));
-	gCx.strokeStyle = "rgba(255,0,255,0.7)";
-	gCx.lineWidth = 3;
+	gCx.strokeStyle = "rgba(255,0,255,0.5)";
+	gCx.lineWidth = 2;
 	gCx.stroke();
 	gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
     });
@@ -1718,6 +1725,7 @@ function DrawTitle() {
 	self.timeoutEnd = 1000 * 10;
 	self.started = gGameTime;
 	self.finalScore = gPlayerScore - gCPUScore;
+	PlayGameOver();
     };
 
     self.Step = function() {
@@ -1849,9 +1857,6 @@ function PointerProcess(t, update_fn) {
     // todo: handle window.devicePixelRatio.
     var tx = (t.clientX - cvx);
     var ty = (t.clientY - cvy);
-    if (gTouchSide == undefined) {
-	gTouchSide = tx < gw(0.5) ? "left" : "right";
-    }
     Assert(update_fn != undefined);
     update_fn(tx, ty);
 }
@@ -1873,6 +1878,9 @@ function TouchStart(e) {
     PointerProcess(
 	e.touches[0],
 	(tx, ty) => {
+	    if (gTouchSide == undefined) {
+		gTouchSide = tx < gw(0.5) ? "left" : "right";
+	    }
 	    SetPointerTarget(tx, ty, kEventTouchStart);
 	    gTouchingTime = { start: gGameTime, end: undefined };
 	}
@@ -2019,6 +2027,9 @@ function CheckResizeMatch() {
 }
 
 function Start() {
+    console.log("Start");
+    Assert(Object.keys(gPowerupsInUse).length == 0);
+
     var hs = localStorage.getItem(kHighKey);
     if (hs != undefined) {
 	gHighScore = parseInt(hs);

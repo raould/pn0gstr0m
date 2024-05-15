@@ -1,14 +1,11 @@
 * all the todo:s.
-* dt step size!
 * apologize for not having a ui toolkit.
-* implement ProcessInput in all necessary states.
-* mouse clicks, x, y for some things at least?
 * test gamepads.
 * handle device pixel ratio.
 * orientation hell, including effing manifest.json?
 * wish i could hide the mouse cursor.
 * add a game over sound.
-* resolve "any key" lies.
+* say sound(s) are loading when they are.
 * ugly inconsistencies:
   * resizing things & left vs. right e.g. gPauseButtonCx.
   * events queue vs. immediate.
@@ -17,7 +14,7 @@
 * more bugs:
   * powerups sometimes getting stuck on spawn still.
   * music not always starting? permission? bad data?
-  * don't nuke player's game on rotation.
-  * crt outline gets worse the smaller the screen.
-  * inputs still buffered sometimes badly e.g. game over exit.
-  * oopsy player can move whle game is paused.
+  * somehow don't nuke player's game on rotation. :-(
+  * crt bezier outline got worse the smaller the screen.
+
+  
