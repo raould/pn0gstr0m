@@ -190,7 +190,6 @@ function anyKeyPressed() {
 }
 var gPauseButtonEnabled = false;
 var gPausePressed = false;
-var gAnyClick = false;
 var gUserMutedButtonEnabled = false;
 var gUserMutedPressed = false;
 var gUpPressed = false;
@@ -1573,7 +1572,7 @@ function DrawTitle() {
     };
 
     self.ProcessOneInput = function() {
-	if (anyKeyPressed() || gAnyClick || gStickUp || gStickDown || touching()) {
+	if (anyKeyPressed() ||  gStickUp || gStickDown || touching()) {
 	    return kMenu;
 	}
 	return undefined;
@@ -1640,8 +1639,6 @@ function DrawTitle() {
 	else if (gNextMusicPressed) {
 	    BeginMusic();
 	}
-	// explicitly not including gAnyClick because
-	// the game play itself doesn't support mouse yet.
 	else if ((gGameTime - self.started) > self.timeout &&
 		(anyKeyPressed() || gStickUp || gStickDown || touching())) {
 	    nextState = kGame;
@@ -1760,7 +1757,7 @@ function DrawTitle() {
 
     self.ProcessOneInput = function(goto_menu) {
 	var nextState = undefined;
-	if (goto_menu && (anyKeyPressed() || gAnyClick || gStickUp || gStickDown || touching())) {
+	if (goto_menu && (anyKeyPressed() || gStickUp || gStickDown || touching())) {
             nextState = kMenu;
         }
 	else if (nextState == undefined && (gGameTime - self.started) > self.timeoutMsg+self.timeoutEnd) {
@@ -1951,7 +1948,6 @@ function MouseUp(e) {
 }
 
 function ResetInput() {
-    gAnyClick = false;
     gPausePressed = false;
     gUpPressed = false;
     gDownPressed = false;
