@@ -4,7 +4,6 @@
 * handle device pixel ratio.
 * orientation hell, including effing manifest.json?
 * wish i could hide the mouse cursor.
-* add a game over sound.
 * say sound(s) are loading when they are.
 * ugly inconsistencies:
   * resizing things & left vs. right e.g. gPauseButtonCx.
