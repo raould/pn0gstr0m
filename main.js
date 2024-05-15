@@ -1530,8 +1530,8 @@ function DrawTitle(flicker=true) {
 	gCx.fillStyle = flicker ?
 	    RandomForColor(cyan, RandomCentered(0.8,0.2)) :
 	    "rgba(0,255,255,0.7)";
-	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt );
-	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.45), gSmallFontSizePt );
+	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
+	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.45), gSmallFontSizePt, flicker );
     });
 }
 
