@@ -10,11 +10,8 @@
   * resizing things & left vs. right e.g. gPauseButtonCx.
   * events queue vs. immediate.
   * gDebug stuff is sort of super hacky all over the place.
-  * i guess the Step() stuff is not sane.
 * more bugs:
-  * powerups sometimes getting stuck on spawn still.
   * music not always starting? permission? bad data?
   * somehow don't nuke player's game on rotation. :-(
-  * crt bezier outline got worse the smaller the screen.
 
   
