@@ -1284,15 +1284,17 @@ function AddSparks(x, y, vx, vy) {
     };
 
     self.DrawMidLine = function() {
-	Cxdo(() => {
-	    gCx.fillStyle = RandomGreen(self.Alpha(RandomRange(0.4, 0.6)));
-	    var dashStep = (gHeight - 2*gPaddleInset)/(gDashedLineCount*2);
-	    var x = gw(0.5) - ii(gDashedLineWidth/2);
-	    for( var y = gPaddleInset; y < gHeight-gPaddleInset; y += dashStep*2 ) {
-		var ox = RandomCentered(0, 1);
-		gCx.fillRect( x+ox, y, gDashedLineWidth, dashStep );
-	    }
-	});
+	if (!self.attract) {
+	    Cxdo(() => {
+		gCx.fillStyle = RandomGreen(self.Alpha(RandomRange(0.4, 0.6)));
+		var dashStep = (gHeight - 2*gPaddleInset)/(gDashedLineCount*2);
+		var x = gw(0.5) - ii(gDashedLineWidth/2);
+		for( var y = gPaddleInset; y < gHeight-gPaddleInset; y += dashStep*2 ) {
+		    var ox = RandomCentered(0, 1);
+		    gCx.fillRect( x+ox, y, gDashedLineWidth, dashStep );
+		}
+	    });
+	}
     };
 
     self.DrawCRTOutline = function() {
