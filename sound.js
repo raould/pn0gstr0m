@@ -24,17 +24,25 @@ function RegisterSfx(name, filebasename, modify_fn) {
 
 function RegisterSound(name, filebasename, isMusic=false, modify_fn) {
     var files = ["wav", "aac"].map((e) => `sound/${filebasename}.${e}`);
+    gAudioMap[name] = {};
     var howl = new Howl({
 	src: files,
+	// {html: true} was killing my iPad Safari it seemed.
+	onload: () => {
+	    gAudioMap[name].loaded = true;
+	},
 	html5: false,
-	onend: () => OnSfxStop(name), // only 1 allowed per name.
+	// only 1 allowed per name.
+	onend: () => OnSfxStop(name),
     });
     gAudioMap[name] = /*meta*/ {
+	...gAudioMap[name],
 	filebasename,
 	howl,
 	isMusic,
 	modify_fn,
 	last: 0,
+	loaded: false,
     };
 }
 
@@ -113,7 +121,6 @@ function BeginMusic() {
 	unplayed.splice(index, 1);
 	localStorage.setItem(kMusicStorageKey, JSON.stringify(unplayed));	
 	var name = `music${num}`;
-	console.log(index, name, unplayed);
 	gMusicID = PlaySound(name, true);
     }
 }

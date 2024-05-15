@@ -1591,6 +1591,7 @@ function DrawTitle() {
 	self.attract.Reset();
 	self.timeout = 1000 * 1.5;
 	self.started = gGameTime;
+	LoadAudio(); 
 	BeginMusic();
     };
 
@@ -1680,7 +1681,10 @@ function DrawTitle() {
 	    if (meta?.filebasename != undefined) {
 		Cxdo(() => {
 		    gCx.fillStyle = "grey";
-		    DrawText(`norcalledmvsic ${meta.filebasename}`.toUpperCase(),
+		    var msg = meta.loaded ?
+			`norcalledmvsic ${meta.filebasename}` :
+			"loading music";
+		    DrawText(msg.toUpperCase(),
 			     "right",
 			     gw(0.95),
 			     gh(0.95),
@@ -2041,6 +2045,8 @@ function Start() {
     RecalculateConstants();
 
     var handlerMap = {};
+    // ugh the splash is just so we can get
+    // user input so we can actually play sounds.
     handlerMap[kNoop] = new NoopState(kSplash);
     handlerMap[kSplash] = new SplashState();
     handlerMap[kMenu] = new MenuState();
@@ -2051,7 +2057,12 @@ function Start() {
     gLifecycle.RunLoop();
 }
 
+// er, i'm lazy and never un-register so be sure this only gets called once.
+var init_events_run = false;
 function InitEvents() {
+    Assert(!init_events_run);
+    init_events_run = true;
+    
     Gamepads.start();
     Gamepads.addEventListener('connect', RegisterGamepad);
     Gamepads.addEventListener('disconnect', RemoveGamepad);
@@ -2233,4 +2244,4 @@ function InitEvents() {
     window.addEventListener( 'resize', OnResize, false );
 }
 
-window.addEventListener( 'load', () => { LoadAudio(); Start(); InitEvents(); }, false );
+window.addEventListener( 'load', () => { Start(); InitEvents(); }, false );
