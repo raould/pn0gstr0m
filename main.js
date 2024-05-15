@@ -68,6 +68,7 @@ var /*const*/ magenta = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF
 
 var /*const*/ backgroundColor = "black"; // match: index.html background color.
 var /*const*/ scanlineColor = "rgba(0,0,8,0.5)";
+var /*const*/ warningColor = "rgba(0,255,0,1)";
 
 var /*const*/ k2Pi = Math.PI*2;
 
@@ -1524,9 +1525,11 @@ function DrawResizing() {
     });
 }
 
-function DrawTitle() {
+function DrawTitle(flicker=true) {
     Cxdo(() => {
-    	gCx.fillStyle = RandomForColor(cyan, RandomCentered(0.8,0.2));
+	gCx.fillStyle = flicker ?
+	    RandomForColor(cyan, RandomCentered(0.8,0.2)) :
+	    "rgba(0,255,255,0.7)";
 	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt );
 	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.45), gSmallFontSizePt );
     });
@@ -1546,7 +1549,8 @@ function DrawTitle() {
 	    DrawResizing();
 	}
 	else {
-	    DrawTitle();
+	    DrawTitle(false);
+	    self.DrawWarning();
 	    if (getWindowAspect() <= 1) {
 		Cxdo(() => {
 		    gCx.fillStyle = RandomForColor(yellow);
@@ -1557,6 +1561,15 @@ function DrawTitle() {
 	}
 	DrawCRTScanLines();
 	return nextState;
+    };
+
+    self.DrawWarning = function() {
+	gCx.fillStyle = warningColor;
+	Cxdo(() => {
+	    gWarning.forEach((t, i) => {
+		DrawText(t, "center", gw(0.5), gh(0.1) + i*gSmallestFontSize, gSmallestFontSizePt, false, "monospace");
+	    })
+	});
     };
 
     self.ProcessInput = function() {
