@@ -1303,10 +1303,7 @@ function AddSparks(x, y, vx, vy) {
 	var wy = WY(inset);
 	Cxdo(() => {
 	    gCx.beginPath();
-	    // ok i am going a bit crazy here?!?! the corner radius
-	    // empirically renders incorrectly on firefox (too small)
-	    // vs. edge and webkit showing the same (correct) curvature.
-	    gCx.roundRect(wx, wy, gWidth-wx*2, gHeight-wy*2, [20]);
+	    gCx.roundRect(wx, wy, gWidth-wx*2, gHeight-wy*2, 20);
 	    gCx.lineWidth = sx1(2);
 	    gCx.strokeStyle = RandomCyan(self.Alpha(0.3));
 	    gCx.stroke();
@@ -1645,7 +1642,8 @@ function DrawTitle() {
 	}
 	// explicitly not including gAnyClick because
 	// the game play itself doesn't support mouse yet.
-	else if (anyKeyPressed() || gStickUp || gStickDown || touching()) {
+	else if ((gGameTime - self.started) > self.timeout &&
+		(anyKeyPressed() || gStickUp || gStickDown || touching())) {
 	    nextState = kGame;
 	}
 	return nextState;
