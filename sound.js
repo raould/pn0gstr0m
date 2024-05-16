@@ -4,7 +4,7 @@
  */
 
 // ship as 'false'.
-var _kill_unplayed = true;
+var _kill_unplayed = false;
 
 // this object contains multiple mappings.
 // 0-bsed index to name.

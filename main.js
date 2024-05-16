@@ -1644,7 +1644,7 @@ function DrawTitle(flicker=true) {
 	}
 	if (gUserMutedPressed) {
 	    gUserMuted = !gUserMuted;
-	    BeginMusic();
+	    gUserMuted ? EndMusic() : BeginMusic();
 	    gUserMutedPressed = false;
 	}
 	else if (gNextMusicPressed) {
