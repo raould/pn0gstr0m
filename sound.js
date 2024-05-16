@@ -4,7 +4,7 @@
  */
 
 // ship as 'false'.
-var _kill_unplayed = false;
+var _kill_unplayed = true;
 
 // this object contains multiple mappings.
 // 0-bsed index to name.
@@ -21,16 +21,16 @@ var kMusicStorageKey = "pn0g_music";
 var gStateMuted = true;
 var gUserMuted = false;
 
-function RegisterMusic(name, filebasename) {
-    RegisterSound(name, filebasename, true);
+function RegisterMusic(name, basename) {
+    RegisterSound(name, basename, true);
 }
 
-function RegisterSfx(name, filebasename) {
-    RegisterSound(name, filebasename, false);
+function RegisterSfx(name, basename) {
+    RegisterSound(name, basename, false);
 }
 
-function RegisterSound(name, filebasename, isMusic=false) {
-    var files = ["wav", "aac"].map((e) => `sound/${filebasename}.${e}`);
+function RegisterSound(name, basename, is_music=false) {
+    var files = ["wav", "aac"].map((e) => `sound/${basename}.${e}`);
     var howl = new Howl({
 	src: files,
 	onload: () => {
@@ -41,29 +41,28 @@ function RegisterSound(name, filebasename, isMusic=false) {
 	    // well, poop. todo: something better.
 	    LoadNextSound(name);
 	},
-	html5: true,
+	html5: false,
 	preload: false,
 	// only 1 concurrent playback per name.
 	onend: () => OnSfxStop(name),
     });
-    Assert(!gAudio.names.includes(name), name);
+    Assert(!gAudio.names.includes(name), `RegisterSound ${name}`);
     gAudio.names.push(name);
     gAudio.name2meta[name] = /*meta*/ {
 	...gAudio[name],
-	filebasename,
+	basename,
 	howl,
-	isMusic,
+	is_music,
 	last: 0,
 	loaded: false,
     };
 }
 
 function LoadNextSound(prev) {
-    console.log(
-	gAudio.names.map((n) => {
-	    return gAudio.name2meta[n].loaded ? "1" : "0";
-	}).join('')
-    );
+    var report = gAudio.names.map((n) => {
+	return gAudio.name2meta[n].loaded ? "1" : "0";
+    }).join('');
+    console.log(report);
 
     var pi = gAudio.names.indexOf(prev);
     if (pi >= 0 && pi < gAudio.names.length-1) {
@@ -75,7 +74,7 @@ function OnSfxStop(name) {
     var meta = gAudio.name2meta[name];
     if (meta != undefined) {
 	delete meta.id;
-	!!meta.isMusic && BeginMusic();
+	!!meta.is_music && BeginMusic();
     }
 }
 
@@ -83,27 +82,29 @@ const kMusicSfxCount = 22;
 function BeginMusic() {
     EndMusic();
     if (!gUserMuted) {
+	// max list of music numbers in order (javascript sucks?).
 	var unplayed_all = Array(kMusicSfxCount).fill().map((_,i) => {return i+1;});
-	// refresh to full list if empty.
+	// refresh to full list if unknown.
 	var unplayed_str = localStorage.getItem(kMusicStorageKey);
-	if (unplayed_str == null) {
+	if (unplayed_str == null || _kill_unplayed) {
 	    unplayed = unplayed_all;
 	}
+	// else parse the unplayed list.
+	// if that is [] then reset to all.
 	else {
-	    var unplayed = JsonStringToArrayWorkaround(unplayed_str);
+	    var unplayed = JSON.parse(unplayed_str);
 	    if (unplayed.length == 0) {
 		var json_str = JSON.stringify(unplayed_all);
 		localStorage.setItem(kMusicStorageKey, json_str);
 	    }
-	    // get the updated valid list.
 	    unplayed_str = localStorage.getItem(kMusicStorageKey);
-	    unplayed = JsonStringToArrayWorkaround(unplayed_str);
+	    unplayed = JSON.parse(unplayed_str);
 	}
-	Assert(unplayed != null);
-	// always play musicN in order since we load in order.
+	Assert(unplayed != null, "BeginMusic");
+	// not random, always play musicN in order since we 'load' them in order.
 	var num = unplayed.shift();
 	// save the smaller remaining items list.
-	localStorage.setItem(kMusicStorageKey, JSON.stringify(unplayed));	
+	localStorage.setItem(kMusicStorageKey, JSON.stringify(unplayed));
 	var name = `music${num}`;
 	gMusicID = PlaySound(name, true);
     }
@@ -126,7 +127,7 @@ function PlaySound(name, ignore_muted=false) {
     var sid;
     if (ignore_muted || (!gStateMuted && !gUserMuted)) {
 	var meta = gAudio.name2meta[name];
-	Assert(meta != undefined, name);
+	Assert(meta != undefined, `PlaySound ${name}`);
 	if (meta != undefined) {
 	    var howl = meta.howl;
 	    // currently only allowing one name-instance at a time.
@@ -148,7 +149,7 @@ function PlaySoundDebounced(name) {
     var sid;
     if (!gStateMuted && !gUserMuted) {
 	var meta = gAudio.name2meta[name];
-	Assert(meta != undefined, name);
+	Assert(meta != undefined, name, `PlaySoundDebounced ${name}`);
 	if (meta != undefined) {
 	    var last = meta.last || 0;
 	    if (Date.now()-last > RandomCentered(25,10) /*msec*/) {
@@ -160,7 +161,7 @@ function PlaySoundDebounced(name) {
 }
 
 function MakePlayFn(count, basename, playfn) {
-    Assert(count >= 0, count);
+    Assert(count >= 0, count, `MakePlayFn ${basename}`);
     var gNames = Array(count).fill().map((e,i) => `${basename}${i+1}`);
     return () => {
 	var index = RandomRangeInt(0, count-1);
@@ -224,10 +225,10 @@ function LoadAudio() {
     RegisterMusic("music21", "youngchipmunk");
     RegisterMusic("music22", "youngprawn");
 
-    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("music")).length == kMusicSfxCount);
-    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("explosion")).length == kExplosionSfxCount);
-    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("blip")).length == kBlipSfxCount);
-    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("powerupboom")).length == kPowerupSfxCount);
+    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("music")).length == kMusicSfxCount, "music count");
+    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("explosion")).length == kExplosionSfxCount, "explosion count");
+    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("blip")).length == kBlipSfxCount, "blip count");
+    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("powerupboom")).length == kPowerupSfxCount, "powerupboom count");
 
     // kick off loading chain.
     gAudio.name2meta[gAudio.names[0]].howl.load();

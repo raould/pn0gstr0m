@@ -10,27 +10,16 @@ function Assert(result, msg) {
     }
 }
 
+function ForCount(count, fn) {
+    for (var i = 0; i < count; ++i) {
+	fn();
+    }
+}
+
 function Swap(a, b) {
     var tmp = a;
     a = b;
     b = tmp;
-}
-
-function JsonStringToArrayWorkaround(json_str) {
-    try {
-	json = JSON.parse(json_str);
-	if (typeof json == "string") {
-	    // oh my gosh wait ?!?!@?!?!?!?!?@@!#!@#!@#!@
-	    // https://stackoverflow.com/questions/710586/json-stringify-array-bizarreness-with-prototype-js
-	    json = JSON.parse(json);
-	    Assert(typeof json == "object");
-	}
-	return json;
-    }
-    catch (err) {
-	console.error(err);
-	return [];
-    }
 }
 
 function Sign(value) {

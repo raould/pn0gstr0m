@@ -27,6 +27,7 @@
 // firefox kills the frame rate, but it
 // is ok on edge and webkit. :eyeroll:
 var /*const*/ gDebug = false;
+var /*const*/ gShowToasts = false;
 
 var /*const*/ gCanvasName = "canvas";
 var gLifecycle;
@@ -392,6 +393,7 @@ function RandomMagenta(alpha) {
 }
 
 function DrawCRTScanLines() {
+    /* todo: blit an image of the lines on top, would be less hitchy?
     Cxdo(() => {
 	// not scaled on purpose.
 	var step = 2;
@@ -401,6 +403,7 @@ function DrawCRTScanLines() {
 	    gCx.fillRect( 0, y, gWidth, 1 );
 	}
     });
+    */
 }
 
 function WX( v ) {
@@ -453,7 +456,7 @@ var haha = 0;
 	var dt = gGameTime - gLastFrameTime;
 	if (dt >= kTimeStep) {
 	    var handler = self.handlerMap[self.state];
-	    Assert(handler != undefined, self.state);
+	    Assert(handler != undefined, self.state, "RunLoop");
 	    if (self.transitioned) {
 		handler.Reset();
 		self.transitioned = false;
@@ -468,7 +471,7 @@ var haha = 0;
 	    gLastFrameTime = gGameTime;
 	    ++gFrameCount;
 	    //if (gDebug) { DrawBounds(); }
-	    if (gDebug) { StepToasts(); }
+	    if (gShowToasts) { StepToasts(); }
 	    setTimeout( self.RunLoop, Math.max(1, kTimeStep-(dt-kTimeStep)) );
 	}
 	else {
@@ -485,14 +488,15 @@ function StepToasts() {
 	Cxdo(() => {
 	    gCx.fillStyle = "magenta";
 	    gToasts.forEach((t) => {
-		DrawText(t.msg, "center", gw(0.5), y, gSmallFontSizePt);
-		y += gSmallFontSize;
+		DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, "monospace");
+		y += gSmallestFontSize;
 	    });
 	});
     }
 }
 
 function PushToast(msg, lifespan=1000) {
+    console.log(msg);
     gToasts.push({
 	msg: msg.toUpperCase(),
 	end: Date.now() + lifespan
@@ -792,7 +796,6 @@ function AddSparks(x, y, vx, vy) {
 	var np = undefined;
 	var count = gPucks.A.length;
 	dosplit = forced || (count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && RandomBool(1.05-Clip01(Math.abs(self.vx/gMaxVX)))));
-	if (!dosplit) { PushToast(`no split ${self.id}`, 250); }
 
 	// sometimes force ejection to avoid too many pucks.
 	// if there are already too many pucks to allow for a split-spawned-puck,
@@ -936,7 +939,7 @@ function AddSparks(x, y, vx, vy) {
     var self = this;
 
     self.Init = function() {
-	Assert(spec != undefined);
+	Assert(spec != undefined, "no spec");
 	self.id = gNextID++;
 	self.x = spec.x;
 	self.y = spec.y;
@@ -1069,7 +1072,9 @@ function AddSparks(x, y, vx, vy) {
 	    () => {
 		self.playerPaddle = new Paddle(lp.x, lp.y, p1label);
 		self.cpuPaddle = new Paddle(rp.x, rp.y);
-		gPucks.A.push( self.CreateStartingPuck(1) );
+		ForCount(100, () => { 
+		    gPucks.A.push( self.CreateStartingPuck(1) );
+		});
 		if (gDebug) {
 		    gPucks.A.push( self.CreateStartingPuck(1) );
 		    gPucks.A.push( self.CreateStartingPuck(1) );
@@ -1078,7 +1083,9 @@ function AddSparks(x, y, vx, vy) {
 	    () => {
 		self.playerPaddle = new Paddle(rp.x, rp.y, p1label);
 		self.cpuPaddle = new Paddle(lp.x, lp.y);
-		gPucks.A.push( self.CreateStartingPuck(-1) );
+		ForCount(100, () => {
+		    gPucks.A.push( self.CreateStartingPuck(-1) );
+		});
 		if (gDebug) {
 		    gPucks.A.push( self.CreateStartingPuck(-1) );
 		    gPucks.A.push( self.CreateStartingPuck(-1) );
@@ -1417,11 +1424,11 @@ function AddSparks(x, y, vx, vy) {
 	    self.DrawMidLine();
 	    self.DrawScoreHeader();
 	    gPucks.A.forEach((p) => {
-		Assert(!!p);
+		Assert(!!p, "broken pucks");
 		p.Draw( self.Alpha() );
 	    } );
 	    gSparks.A.forEach((s) => {
-		Assert(!!s);
+		Assert(!!s, "broken spark");
 		s.Draw( self.Alpha() );
 	    } );
 	    // keep some things visible on z top.
@@ -1530,7 +1537,7 @@ function DrawTitle(flicker=true) {
 	gCx.fillStyle = flicker ?
 	    RandomForColor(cyan, RandomCentered(0.8,0.2)) :
 	    rgb255s(cyan.regular);
-	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
+	DrawText( "1P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
 	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.45), gSmallFontSizePt, flicker );
     });
 }
@@ -1873,7 +1880,7 @@ function PointerProcess(t, update_fn) {
     // todo: handle window.devicePixelRatio.
     var tx = (t.clientX - cvx);
     var ty = (t.clientY - cvy);
-    Assert(update_fn != undefined);
+    Assert(update_fn != undefined, "PointerProcess");
     update_fn(tx, ty);
 }
 
@@ -2042,7 +2049,7 @@ function CheckResizeMatch() {
 
 function Start() {
     console.log("Start");
-    Assert(Object.keys(gPowerupsInUse).length == 0);
+    Assert(Object.keys(gPowerupsInUse).length == 0, "Start");
 
     var hs = localStorage.getItem(kHighKey);
     if (hs != undefined) {
@@ -2070,7 +2077,7 @@ function Start() {
 // er, i'm lazy and never un-register so be sure this only gets called once.
 var init_events_run = false;
 function InitEvents() {
-    Assert(!init_events_run);
+    Assert(!init_events_run, "init_events_run");
     init_events_run = true;
     
     Gamepads.start();
