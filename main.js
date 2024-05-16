@@ -1568,7 +1568,7 @@ function DrawTitle(flicker=true) {
 	Cxdo(() => {
 	    gWarning.forEach((t, i) => {
 		DrawText(t, "center", gw(0.5), gh(0.5) + i*(gSmallestFontSize*1.2), gSmallestFontSizePt, false, "monospace");
-	    })
+	    });
 	});
     };
 
@@ -1681,28 +1681,29 @@ function DrawTitle(flicker=true) {
     self.DrawAudio = function() {
 	self.DrawMusicName();
 	self.DrawMuteMusicButton();
-    }
+    };
 
     self.DrawMusicName = function() {
-	if (!gUserMuted && gMusicID != undefined) {
-	    var name = gAudio.id2name[gMusicID];
-	    var meta = gAudio.name2meta[name];
-	    if (meta?.filebasename != undefined) {
-		Cxdo(() => {
-		    gCx.fillStyle = rgb255s(grey.strong, 0.5);
-		    var msg = meta.loaded ?
-			`norcalledmvsic ${meta.filebasename}` :
-			"fetching music";
-		    DrawText(msg.toUpperCase(),
-			     "right",
-			     gw(0.95),
-			     gh(0.95),
-			     gSmallestFontSizePt,
-			     false);
-		});
+	if (!gUserMuted) {
+	    var msg = "fetching music";
+	    if (gMusicID != undefined) {
+		var name = gAudio.id2name[gMusicID];
+		var meta = gAudio.name2meta[name];
+		if (meta?.filebasename != undefined && !!meta?.loaded) {
+		    var msg = `norcalledmvsic ${meta.filebasename}`;
+		}
 	    }
+	    Cxdo(() => {
+		gCx.fillStyle = rgb255s(grey.strong, 0.5);
+		DrawText(msg.toUpperCase(),
+			 "right",
+			 gw(0.95),
+			 gh(0.95),
+			 gSmallestFontSizePt,
+			 false);
+	    });
 	}
-    };	
+    };
 
     self.DrawMuteMusicButton = function() {
 	// todo: this is just about the absolute worst kid of button ux.
@@ -1931,7 +1932,7 @@ function MouseDown(e) {
     PointerProcess(
 	e,
 	(tx, ty) => {
-	    SetPointerTarget(tx, ty, kEventMouseDown)
+	    SetPointerTarget(tx, ty, kEventMouseDown);
 	    gTouchingTime = { start: gGameTime, end: undefined };
 	}
     );
