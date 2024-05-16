@@ -788,10 +788,10 @@ function AddSparks(x, y, vx, vy) {
 	}
     };
 
-    self.SplitPuck = function() {
+    self.SplitPuck = function(forced) {
 	var np = undefined;
 	var count = gPucks.A.length;
-	var dosplit = count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && RandomBool(1.05-Clip01(Math.abs(self.vx/gMaxVX))));
+	dosplit = forced || (count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && RandomBool(1.05-Clip01(Math.abs(self.vx/gMaxVX)))));
 	if (!dosplit) { PushToast(`no split ${self.id}`, 250); }
 
 	// sometimes force ejection to avoid too many pucks.
@@ -805,7 +805,7 @@ function AddSparks(x, y, vx, vy) {
 	var doeject_speed = (self.vx > gMaxVX*0.9) && (r < eject_countFactor);
 	var doeject = doeject_count || doeject_speed;
 
-	if (!dosplit) {
+	if (!forced && !dosplit) {
 	    if (doeject) {
 		self.vy *= 1.1;
 	    }
@@ -820,8 +820,9 @@ function AddSparks(x, y, vx, vy) {
 	    np = new Puck( self.x, self.y, nvx, nvy );
 	    PlayExplosion();
 
-	    // !? can't win, spark is a global update
-	    // whereas we're returning the new puck :-(
+	    // fyi because SplitPuck is called during MovePucks,
+	    // we return the new puck to go onto the B list, whereas
+	    // MoveSparks happens after so it goes onto the A list.
 	    AddSparks(self.x, self.y, self.vx, self.vy);
 	}
 
@@ -1110,10 +1111,9 @@ function AddSparks(x, y, vx, vy) {
     };
 
     self.MaybeSpawnPowerup = function( dt ) {
-	if (!self.paused) {
+	if (!self.paused && !self.attract) {
 	    self.powerupWait = Math.max(self.powerupWait-dt, 0);
-	    if (!self.attract &&
-		self.powerupWait == 0 &&
+	    if (self.powerupWait <= 0 &&
 		RandomBool(gDebug ? 0.1 : 0.01) &&
 		gPowerup == undefined) {
 		gPowerup = MakeRandomPowerup(self);
@@ -1298,7 +1298,7 @@ function AddSparks(x, y, vx, vy) {
     };
 
     self.DrawCRTOutline = function() {
-	var inset = 10;
+	var inset = 2;
 	var wx = WX(inset);
 	var wy = WY(inset);
 	Cxdo(() => {
@@ -1529,7 +1529,7 @@ function DrawTitle(flicker=true) {
     Cxdo(() => {
 	gCx.fillStyle = flicker ?
 	    RandomForColor(cyan, RandomCentered(0.8,0.2)) :
-	    "rgba(0,255,255,0.3)";
+	    rgb255s(cyan.regular);
 	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
 	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.45), gSmallFontSizePt, flicker );
     });
@@ -1554,8 +1554,8 @@ function DrawTitle(flicker=true) {
 	    self.DrawWarning();
 	    if (getWindowAspect() <= 1) {
 		Cxdo(() => {
-		    gCx.fillStyle = rgb255s(yellow.strong);
-		    DrawText("HINT: PLAYS BETTER IN LANDSCAPE MODE", "center", gw(0.5), gh(0.9), gSmallestFontSizePt, false);
+		    gCx.fillStyle = rgb255s(cyan.regular);
+		    DrawText("HINT: PLAYS BETTER IN LANDSCAPE MODE", "center", gw(0.5), gh(0.9), gSmallFontSizePt, false);
 		});
 	    }
 	    nextState = self.ProcessInput();		
@@ -1567,7 +1567,7 @@ function DrawTitle(flicker=true) {
 	gCx.fillStyle = warningColor;
 	Cxdo(() => {
 	    gWarning.forEach((t, i) => {
-		DrawText(t, "center", gw(0.5), gh(0.1) + i*(gSmallestFontSize*1.13), gSmallestFontSizePt, false, "monospace");
+		DrawText(t, "center", gw(0.5), gh(0.5) + i*(gSmallestFontSize*1.2), gSmallestFontSizePt, false, "monospace");
 	    })
 	});
     };
@@ -1739,6 +1739,8 @@ function DrawTitle(flicker=true) {
 	self.started = gGameTime;
 	self.finalScore = gPlayerScore - gCPUScore;
 	PlayGameOver();
+	// ok, yes, i'm a terrible coder.
+	gPowerup = undefined;
     };
 
     self.Step = function() {
@@ -2087,6 +2089,7 @@ function InitEvents() {
 
     window.addEventListener('keydown', (e) => {
 	if (e.repeat) { return; }
+
 	// keyCodes do not respect e.g. QWERTZ vs. QWERTY, they assume QWEbbRTY.
 	// that sort of works for WASD pattern, but maybe not for all debug commands.
 	if( e.keyCode == 38 || e.keyCode == 87 ) { // arrow up, w
@@ -2120,12 +2123,19 @@ function InitEvents() {
 		}
 	    });
 	}
+	if( e.keyCode == 32 ) { // ' '
+	    gEventQueue.push({
+		event_type: kEventKeyDown,
+		update_fn: () => {
+		    gDownKeys[e.keyCode] = true;
+		}
+	    });
+	}
 	if( e.keyCode == 65 ) { // 'a'
 	    gEventQueue.push({
 		event_type: kEventKeyDown,
 		update_fn: () => {
 		    if (gDebug) { gAddPuckPressed = true; }
-		    gDownKeys[e.keyCode] = true;
 		}
 	    });
 	}
@@ -2134,7 +2144,6 @@ function InitEvents() {
 		event_type: kEventKeyDown,
 		update_fn: () => {
 		    if (gDebug) { gGameOverPressed = true; }
-		    gDownKeys[e.keyCode] = true;
 		}
 	    });
 	}
@@ -2143,7 +2152,6 @@ function InitEvents() {
 		event_type: kEventKeyDown,
 		update_fn: () => {
 		    if (gDebug) { gSpawnPowerupPressed = true; }
-		    gDownKeys[e.keyCode] = true;
 		}
 	    });
 	}
@@ -2152,7 +2160,6 @@ function InitEvents() {
 		event_type: kEventKeyDown,
 		update_fn: () => {
 		    if (gDebug) { gNextMusicPressed = true; }
-		    gDownKeys[e.keyCode] = true;
 		}
 	    });
 	}
@@ -2164,7 +2171,6 @@ function InitEvents() {
 			gHighScore = undefined;
 			localStorage.removeItem(kHighKey);
 		    }
-		    gDownKeys[e.keyCode] = true;
 		}
 	    });
 	}
@@ -2200,12 +2206,19 @@ function InitEvents() {
 		}
 	    });
 	}
+	if( e.keyCode == 32 ) { // ' '
+	    gEventQueue.push({
+		event_type: kEventKeyUp,
+		update_fn: () => {
+		    delete gDownKeys[e.keyCode];
+		}
+	    });
+	}
 	if( e.keyCode == 65 ) { // 'a'
 	    gEventQueue.push({
 		event_type: kEventKeyUp,
 		update_fn: () => {
 		    gAddPuckPressed = false;
-		    delete gDownKeys[e.keyCode];
 		}
 	    });
 	}
@@ -2214,7 +2227,6 @@ function InitEvents() {
 		event_type: kEventKeyUp,
 		update_fn: () => {
 		    gGameOverPressed = false;
-		    delete gDownKeys[e.keyCode];
 		}
 	    });
 	}
@@ -2223,7 +2235,6 @@ function InitEvents() {
 		event_type: kEventKeyUp,
 		update_fn: () => {
 		    gSpawnPowerupPressed = false;
-		    delete gDownKeys[e.keyCode];
 		}
 	    });
 	}
@@ -2231,7 +2242,6 @@ function InitEvents() {
 	    gEventQueue.push({
 		event_type: kEventKeyUp,
 		update_fn: () => {
-		    delete gDownKeys[e.keyCode];
 		}
 	    });
 	}
@@ -2239,7 +2249,6 @@ function InitEvents() {
 	    gEventQueue.push({
 		event_type: kEventKeyUp,
 		update_fn: () => {
-		    delete gDownKeys[e.keyCode];
 		}
 	    });
 	}

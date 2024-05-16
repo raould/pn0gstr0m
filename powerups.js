@@ -7,7 +7,7 @@ var gPowerupSpecs = {
     reverse: MakeReverseSpec,
     decimate: MakeDecimateSpec,
     engorge: MakeEngorgeSpec,
-// todo: option: MakeOptionSpec,
+    split: MakeSplitSpec,
 };
 
 // note: any powerup that lasts a long time
@@ -170,24 +170,50 @@ function MakeEngorgeSpec() {
     };
 }
 
-// TODO: all of this.
-function MakeOptionSpec() {
+function MakeSplitSpec() {
+    var xoff = ForSide(-50, 50);
     return {
-	w: sx(18), h: sy(18),
-	label: "?",
-	ylb: sy(30),
-	fontSize: gBigFontSizePt,
+	w: sx(40), h: sy(24),
+	label: "//",
+	ylb: sy(18),
+	fontSize: gSmallFontSizePt,
 	test_fn: (gameState) => {
-	    // note that any powerup that lasts a long time
-	    // should prevent being created again until the
-	    // live one expires, because the ending time
-	    // is not properly extended.
+	    return true;
 	},
 	boom_fn: (gameState) => {
-	    PlayPowerupBoom();
-	    console.log("TODO");
+	    var r = 10/gPucks.A.length;
+	    var targets = gPucks.A.filter((p, i) => {
+		return i < 1 ? true : RandomBool(r);
+	    });
+	    targets.forEach((p) => {
+		gPucks.A.push(p.SplitPuck(true));
+	    });
+	    gameState.animations[gNextID++] = MakeLightningAnimation({
+		lifespan: 100,
+		targets,
+		end_fn: () => { delete gPowerupsInUse['decimate']; }
+	    });
 	},
 	draw_fn: (self, alpha) => {
+	    Cxdo(() => {
+		var wx = WX(self.x);
+		var wy = WY(self.y);
+		var mx = wx + ii(self.w/2);
+		var my = wy + ii(self.h/2);
+
+		gCx.beginPath();
+		gCx.roundRect(wx, wy, self.w, self.h, 20);
+		gCx.fillStyle = backgroundColor;
+		gCx.fill();
+
+		gCx.beginPath();
+		gCx.roundRect(wx, wy, self.w, self.h, 20);
+		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+		gCx.lineWidth = sx1(2);
+		gCx.stroke();
+
+		DrawText( self.label, "center", wx+ii(self.w/2), wy+self.ylb, self.fontSize );
+	    });
 	},
     };
 }
