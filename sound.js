@@ -3,90 +3,76 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-// both:
+// ship as 'false'.
+var _kill_unplayed = false;
+
+// this object contains multiple mappings.
+// 0-bsed index to name.
 // name to meta.
-// and
-// id to name.
-var gAudioMap = {};
+// actively playing sound id to name.
+var gAudio = {
+    names: [],
+    name2meta: {},
+    id2name: {},
+};
+
 var gMusicID;
 var kMusicStorageKey = "pn0g_music";
-var _kill_unplayed = false;
 var gStateMuted = true;
 var gUserMuted = false;
 
-function RegisterMusic(name, filebasename, modify_fn) {
-    RegisterSound(name, filebasename, true, modify_fn);
+function RegisterMusic(name, filebasename) {
+    RegisterSound(name, filebasename, true);
 }
 
-function RegisterSfx(name, filebasename, modify_fn) {
-    RegisterSound(name, filebasename, false, modify_fn);
+function RegisterSfx(name, filebasename) {
+    RegisterSound(name, filebasename, false);
 }
 
-function RegisterSound(name, filebasename, isMusic=false, modify_fn) {
+function RegisterSound(name, filebasename, isMusic=false) {
     var files = ["wav", "aac"].map((e) => `sound/${filebasename}.${e}`);
-    gAudioMap[name] = {};
     var howl = new Howl({
 	src: files,
-	// {html: true} was killing my iPad Safari it seemed.
 	onload: () => {
-	    gAudioMap[name].loaded = true;
+	    gAudio.name2meta[name].loaded = true;
+	    LoadNextSound(name);
 	},
-	html5: false,
-	// only 1 allowed per name.
+	onloaderror: () => {
+	    // well, poop. todo: something better.
+	    LoadNextSound(name);
+	},
+	html5: true,
+	preload: false,
+	// only 1 concurrent playback per name.
 	onend: () => OnSfxStop(name),
     });
-    gAudioMap[name] = /*meta*/ {
-	...gAudioMap[name],
+    Assert(!gAudio.names.includes(name), name);
+    gAudio.names.push(name);
+    gAudio.name2meta[name] = /*meta*/ {
+	...gAudio[name],
 	filebasename,
 	howl,
 	isMusic,
-	modify_fn,
 	last: 0,
 	loaded: false,
     };
 }
 
-function LoadAudio() {
-    RegisterSfx("explosion1", "explosionA");
-    RegisterSfx("explosion2", "explosionB");
-    RegisterSfx("explosion3", "explosionC");
-    RegisterSfx("blip1", "blipSelectA");
-    RegisterSfx("blip2", "blipSelectB");
-    RegisterSfx("blip3", "blipSelectC");
-    RegisterSfx("start1", "powerUp");
-    RegisterSfx("powerupboom1", "powerUp");
-    RegisterSfx("gameover1", "gameover");
-    RegisterMusic("music1", "nervouslynx");
-    RegisterMusic("music2", "candiddonkey");
-    RegisterMusic("music3", "devotedhyena");
-    RegisterMusic("music4", "sweetgorilla");
-    RegisterMusic("music5", "sweettapir");
-    RegisterMusic("music6", "uglyshrimp");
-    RegisterMusic("music7", "vulgarhamster");
-    RegisterMusic("music8", "cynicalsheep2");
-    RegisterMusic("music9", "cynicaltermite2");
-    RegisterMusic("music10", "grumpywolverine");
-    RegisterMusic("music11", "lazymouse");
-    RegisterMusic("music12", "lonelymouse");
-    RegisterMusic("music13", "modestcamel");
-    RegisterMusic("music14", "nastywalrus");
-    RegisterMusic("music15", "oldpenguin");
-    RegisterMusic("music16", "rudeantelope");
-    RegisterMusic("music17", "skinnykoala");
-    RegisterMusic("music18", "sneakylabradoodle");
-    RegisterMusic("music19", "wickedguppy");
-    RegisterMusic("music20", "wickedmoose");
-    RegisterMusic("music21", "youngchipmunk");
-    RegisterMusic("music22", "youngprawn");
+function LoadNextSound(prev) {
+    console.log(
+	gAudio.names.map((n) => {
+	    return gAudio.name2meta[n].loaded ? "1" : "0";
+	}).join('')
+    );
 
-    Assert(Object.keys(gAudioMap).filter((k)=>k.includes("music")).length == kMusicSfxCount);
-    Assert(Object.keys(gAudioMap).filter((k)=>k.includes("explosion")).length == kExplosionSfxCount);
-    Assert(Object.keys(gAudioMap).filter((k)=>k.includes("blip")).length == kBlipSfxCount);
-    Assert(Object.keys(gAudioMap).filter((k)=>k.includes("powerupboom")).length == kPowerupSfxCount);
+    var pi = gAudio.names.indexOf(prev);
+    if (pi >= 0 && pi < gAudio.names.length-1) {
+	gAudio.name2meta[gAudio.names[pi+1]].howl.load();
+    }
 }
 
 function OnSfxStop(name) {
-    var meta = gAudioMap[name];
+    var meta = gAudio.name2meta[name];
     if (meta != undefined) {
 	delete meta.id;
 	!!meta.isMusic && BeginMusic();
@@ -114,11 +100,9 @@ function BeginMusic() {
 	    unplayed = JsonStringToArrayWorkaround(unplayed_str);
 	}
 	Assert(unplayed != null);
-	// choose random entry.
-	var index = RandomRangeInt(0, unplayed.length-1);
-	var num = unplayed[index];
+	// always play musicN in order since we load in order.
+	var num = unplayed.shift();
 	// save the smaller remaining items list.
-	unplayed.splice(index, 1);
 	localStorage.setItem(kMusicStorageKey, JSON.stringify(unplayed));	
 	var name = `music${num}`;
 	gMusicID = PlaySound(name, true);
@@ -127,12 +111,12 @@ function BeginMusic() {
 
 function EndMusic() {
     if (gMusicID != undefined) {
-	var name = gAudioMap[gMusicID];
-	var meta = gAudioMap[name];
+	var name = gAudio.id2name[gMusicID];
+	var meta = gAudio.name2meta[name];
 	if (meta != undefined) {
 	    meta.howl.stop();
 	    delete meta.id;
-	    delete gAudioMap[gMusicID];
+	    delete gAudio.id2name[gMusicID];
 	}
     }
     gMusicID = undefined;
@@ -141,7 +125,7 @@ function EndMusic() {
 function PlaySound(name, ignore_muted=false) {
     var sid;
     if (ignore_muted || (!gStateMuted && !gUserMuted)) {
-	var meta = gAudioMap[name];
+	var meta = gAudio.name2meta[name];
 	Assert(meta != undefined, name);
 	if (meta != undefined) {
 	    var howl = meta.howl;
@@ -153,7 +137,7 @@ function PlaySound(name, ignore_muted=false) {
 		}
 		meta.id = sid = howl.play();
 		meta.last = Date.now();
-		gAudioMap[sid] = name;
+		gAudio.id2name[sid] = name;
 	    }
 	}
     }
@@ -163,7 +147,7 @@ function PlaySound(name, ignore_muted=false) {
 function PlaySoundDebounced(name) {
     var sid;
     if (!gStateMuted && !gUserMuted) {
-	var meta = gAudioMap[name];
+	var meta = gAudio.name2meta[name];
 	Assert(meta != undefined, name);
 	if (meta != undefined) {
 	    var last = meta.last || 0;
@@ -204,4 +188,47 @@ function GameTime01(period, start) {
 	    3
 	)
     );
+}
+
+function LoadAudio() {
+    // these will load 1 by 1 in order.
+    RegisterMusic("music1", "nervouslynx");
+    RegisterSfx("explosion1", "explosionA");
+    RegisterSfx("explosion2", "explosionB");
+    RegisterSfx("explosion3", "explosionC");
+    RegisterSfx("blip1", "blipSelectA");
+    RegisterSfx("blip2", "blipSelectB");
+    RegisterSfx("blip3", "blipSelectC");
+    RegisterSfx("start1", "powerUp");
+    RegisterSfx("powerupboom1", "powerUp");
+    RegisterSfx("gameover1", "gameover");
+    RegisterMusic("music2", "candiddonkey");
+    RegisterMusic("music3", "devotedhyena");
+    RegisterMusic("music4", "sweetgorilla");
+    RegisterMusic("music5", "sweettapir");
+    RegisterMusic("music6", "uglyshrimp");
+    RegisterMusic("music7", "vulgarhamster");
+    RegisterMusic("music8", "cynicalsheep2");
+    RegisterMusic("music9", "cynicaltermite2");
+    RegisterMusic("music10", "grumpywolverine");
+    RegisterMusic("music11", "lazymouse");
+    RegisterMusic("music12", "lonelymouse");
+    RegisterMusic("music13", "modestcamel");
+    RegisterMusic("music14", "nastywalrus");
+    RegisterMusic("music15", "oldpenguin");
+    RegisterMusic("music16", "rudeantelope");
+    RegisterMusic("music17", "skinnykoala");
+    RegisterMusic("music18", "sneakylabradoodle");
+    RegisterMusic("music19", "wickedguppy");
+    RegisterMusic("music20", "wickedmoose");
+    RegisterMusic("music21", "youngchipmunk");
+    RegisterMusic("music22", "youngprawn");
+
+    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("music")).length == kMusicSfxCount);
+    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("explosion")).length == kExplosionSfxCount);
+    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("blip")).length == kBlipSfxCount);
+    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("powerupboom")).length == kPowerupSfxCount);
+
+    // kick off loading chain.
+    gAudio.name2meta[gAudio.names[0]].howl.load();
 }

@@ -5,6 +5,7 @@
 * orientation hell, including effing manifest.json?
 * wish i could hide the mouse cursor.
 * say sound(s) are loading when they are.
+* wavy scaline fx.
 * ugly inconsistencies:
   * resizing things & left vs. right e.g. gPauseButtonCx.
   * events queue vs. immediate.

@@ -68,7 +68,7 @@ var /*const*/ magenta = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF
 
 var /*const*/ backgroundColor = "black"; // match: index.html background color.
 var /*const*/ scanlineColor = "rgba(0,0,8,0.5)";
-var /*const*/ warningColor = "rgba(0,255,0,1)";
+var /*const*/ warningColor = "grey";
 
 var /*const*/ k2Pi = Math.PI*2;
 
@@ -124,33 +124,35 @@ var gMaxVX;
 function ii(v) { return Math.floor(0.5 + v); }
 // "absolute" casling helpers to scale values based on actual canvas resolution.
 // arbiraryily trying to consistently use sx() for symmetrics e.g. lineWidth.
-function sx(x) { return ii(x * gWidth/kHtmlWidth); }
-function sy(y) { return ii(y * gHeight/kHtmlHeight); }
+function sxi(x) { return ii(sx(x)); }
+function syi(y) { return ii(sy(y)); }
+function sx(x) { return x * gWidth/kHtmlWidth; }
+function sy(y) { return y * gHeight/kHtmlHeight; }
 // some scaled values have more change of ever becoming zero than others,
 // so these helpers can be used to avoid that if needed e.g. pixel widths.
-function sx1(x) { return Math.max(1, sx(x)); }
-function sy1(y) { return Math.max(1, sy(y)); }
+function sx1(x) { return Math.max(1, sxi(x)); }
+function sy1(y) { return Math.max(1, syi(y)); }
 // "percent" scaling helpers.
 function gw(x=1) { return x == 1 ? gWidth : ii(x * gWidth); }
 function gh(y=1) { return y == 1 ? gHeight : ii(y * gHeight); }
 function RecalculateConstants() {
-    gDashedLineCount = sy(15);
+    gDashedLineCount = syi(15);
     gDashedLineWidth = sx1(2);
-    gPaddleInset = sx(15);
+    gPaddleInset = sxi(15);
     gPaddleHeight = gh(0.11);
-    gPaddleWidth = sx(6);
+    gPaddleWidth = sxi(6);
     gPaddleStepSize = gPaddleHeight * 0.2;
     gPaddleMidYLimit = gPaddleInset + gPaddleHeight/2;
     gPuckHeight = gPuckWidth = gh(0.015);
     gPauseCenterX = gw(0.54);
     gPauseCenterY = gh(0.08);
-    gPauseRadius = sx(10);
+    gPauseRadius = sxi(10);
     gUserMutedCenterX = gw(0.9);
     gUserMutedCenterY = gh(0.85);
-    gUserMutedWidth = sx(40);
-    gUserMutedHeight = sy(30);
-    gSparkWidth = sx(2);
-    gSparkHeight = sy(2);
+    gUserMutedWidth = sxi(40);
+    gUserMutedHeight = syi(30);
+    gSparkWidth = sxi(2);
+    gSparkHeight = syi(2);
     gBigFontSize = gw(0.088);
     gRegularFontSize = gw(0.047);
     gReducedFontSize = gw(0.037);
@@ -161,8 +163,8 @@ function RecalculateConstants() {
     gReducedFontSizePt = gReducedFontSize + "pt";
     gSmallFontSizePt = gSmallFontSize + "pt";
     gSmallestFontSizePt = gSmallestFontSize + "pt";
-    gMinVX = Math.max(0.5, sx(1));
-    gMaxVX = sx(19);
+    gMinVX = Math.max(0.5, sxi(1));
+    gMaxVX = sxi(19);
 }
 
 // anything here below that ends up depending on
@@ -390,7 +392,6 @@ function RandomMagenta(alpha) {
 }
 
 function DrawCRTScanLines() {
-    /*
     Cxdo(() => {
 	// not scaled on purpose.
 	var step = 2;
@@ -400,14 +401,13 @@ function DrawCRTScanLines() {
 	    gCx.fillRect( 0, y, gWidth, 1 );
 	}
     });
-    */
 }
 
 function WX( v ) {
-    return v + RandomCentered(0,1);
+    return v + RandomCentered(0,0.4);
 }
 function WY( v ) {
-    return v + RandomCentered(0,0.5);
+    return v + RandomCentered(0,0.4);
 }
 
 function DrawText( data, align, x, y, size, wiggle, font ) {
@@ -1338,8 +1338,8 @@ function AddSparks(x, y, vx, vy) {
 
     self.DrawTouchTarget = function() {
 	if (gMoveTargetY != undefined && !self.attract) {
-	    var size = sy(7);
-	    var xoff = sx((Clip01(Math.abs(gMoveTargetY - gh(0.5))/gh(0.5)))*5);
+	    var size = syi(7);
+	    var xoff = sxi((Clip01(Math.abs(gMoveTargetY - gh(0.5))/gh(0.5)))*5);
 	    ForSide(
 		() => {
 		    var left = WX(gPaddleInset*0.2) + xoff;
@@ -1431,7 +1431,7 @@ function AddSparks(x, y, vx, vy) {
 	    self.DrawTouchTarget();
 	    self.DrawCRTOutline();
 	    gPowerup && gPowerup.Draw( self.Alpha() );
-	    DrawCRTScanLines();
+	    if (!self.attract) { DrawCRTScanLines(); }
 	}
 	self.DrawDebug();
     };
@@ -1529,7 +1529,7 @@ function DrawTitle(flicker=true) {
     Cxdo(() => {
 	gCx.fillStyle = flicker ?
 	    RandomForColor(cyan, RandomCentered(0.8,0.2)) :
-	    "rgba(0,255,255,0.7)";
+	    "rgba(0,255,255,0.3)";
 	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
 	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.45), gSmallFontSizePt, flicker );
     });
@@ -1540,6 +1540,7 @@ function DrawTitle(flicker=true) {
 
     self.Reset = function() {
 	ResetInput();
+	LoadAudio(); 
     };
 
     self.Step = function() {
@@ -1553,13 +1554,12 @@ function DrawTitle(flicker=true) {
 	    self.DrawWarning();
 	    if (getWindowAspect() <= 1) {
 		Cxdo(() => {
-		    gCx.fillStyle = RandomForColor(yellow);
-		    DrawText("HINT: SWITCH TO LANDSCAPE MODE", "center", gw(0.5), gh(0.8), gReducedFontSizePt);
+		    gCx.fillStyle = rgb255s(yellow.strong);
+		    DrawText("HINT: PLAYS BETTER IN LANDSCAPE MODE", "center", gw(0.5), gh(0.9), gSmallestFontSizePt, false);
 		});
 	    }
 	    nextState = self.ProcessInput();		
 	}
-	DrawCRTScanLines();
 	return nextState;
     };
 
@@ -1567,7 +1567,7 @@ function DrawTitle(flicker=true) {
 	gCx.fillStyle = warningColor;
 	Cxdo(() => {
 	    gWarning.forEach((t, i) => {
-		DrawText(t, "center", gw(0.5), gh(0.1) + i*gSmallestFontSize, gSmallestFontSizePt, false, "monospace");
+		DrawText(t, "center", gw(0.5), gh(0.1) + i*(gSmallestFontSize*1.13), gSmallestFontSizePt, false, "monospace");
 	    })
 	});
     };
@@ -1602,7 +1602,6 @@ function DrawTitle(flicker=true) {
 	self.attract.Reset();
 	self.timeout = 1000 * 1.5;
 	self.started = gGameTime;
-	LoadAudio(); 
 	BeginMusic();
     };
 
@@ -1669,10 +1668,10 @@ function DrawTitle(flicker=true) {
 		DrawTitle();
 		self.DrawAudio();
 		gCx.fillStyle = RandomGreen();
-		DrawText( "CONTROLS: TAP / W S / ARROWS / GAMEPAD", "center", gw(0.5), gh(0.5)+50, gReducedFontSizePt );
+		DrawText( "CONTROLS: TAP / W S / ARROWS / GAMEPAD", "center", gw(0.5), gh(0.5)+50, gSmallFontSizePt );
 		if ((gGameTime - self.started) <= self.timeout) {
 		    var msg = "LOADING...";
-		    DrawText( msg, "center", gw(0.5), gh(0.9), gReducedFontSizePt );
+		    DrawText( msg, "center", gw(0.5), gh(0.5)+80, gSmallFontSizePt );
 		}
 	    });
 	}
@@ -1686,14 +1685,14 @@ function DrawTitle(flicker=true) {
 
     self.DrawMusicName = function() {
 	if (!gUserMuted && gMusicID != undefined) {
-	    var name = gAudioMap[gMusicID];
-	    var meta = gAudioMap[name];
+	    var name = gAudio.id2name[gMusicID];
+	    var meta = gAudio.name2meta[name];
 	    if (meta?.filebasename != undefined) {
 		Cxdo(() => {
-		    gCx.fillStyle = "grey";
+		    gCx.fillStyle = rgb255s(grey.strong, 0.5);
 		    var msg = meta.loaded ?
 			`norcalledmvsic ${meta.filebasename}` :
-			"loading music";
+			"fetching music";
 		    DrawText(msg.toUpperCase(),
 			     "right",
 			     gw(0.95),
@@ -1722,7 +1721,7 @@ function DrawTitle(flicker=true) {
 		gCx.moveTo(cx-ox+2, cy-oy+2);
 		gCx.lineTo(cx+ox-2, cy+oy-2);
 	    }
-	    gCx.fillStyle = gCx.strokeStyle = RandomForColor(yellow, 0.5);
+	    gCx.fillStyle = gCx.strokeStyle = RandomGreen(0.3);
 	    gCx.lineWidth = sx1(2);
 	    gCx.stroke();
 	    DrawText(label, "center", cx, cy+(gUserMutedHeight*0.32), gRegularFontSizePt);
