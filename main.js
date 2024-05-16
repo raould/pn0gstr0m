@@ -1072,24 +1072,16 @@ function AddSparks(x, y, vx, vy) {
 	    () => {
 		self.playerPaddle = new Paddle(lp.x, lp.y, p1label);
 		self.cpuPaddle = new Paddle(rp.x, rp.y);
-		ForCount(100, () => { 
+		ForCount(gDebug ? 10 : 1, () => { 
 		    gPucks.A.push( self.CreateStartingPuck(1) );
 		});
-		if (gDebug) {
-		    gPucks.A.push( self.CreateStartingPuck(1) );
-		    gPucks.A.push( self.CreateStartingPuck(1) );
-		}
 	    },
 	    () => {
 		self.playerPaddle = new Paddle(rp.x, rp.y, p1label);
 		self.cpuPaddle = new Paddle(lp.x, lp.y);
-		ForCount(100, () => {
+		ForCount(gDebug ? 10 : 1, () => { 
 		    gPucks.A.push( self.CreateStartingPuck(-1) );
 		});
-		if (gDebug) {
-		    gPucks.A.push( self.CreateStartingPuck(-1) );
-		    gPucks.A.push( self.CreateStartingPuck(-1) );
-		}
 	    }
 	)();
 
@@ -1537,7 +1529,7 @@ function DrawTitle(flicker=true) {
 	gCx.fillStyle = flicker ?
 	    RandomForColor(cyan, RandomCentered(0.8,0.2)) :
 	    rgb255s(cyan.regular);
-	DrawText( "1P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
+	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
 	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.45), gSmallFontSizePt, flicker );
     });
 }
