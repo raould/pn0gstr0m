@@ -1688,8 +1688,8 @@ function DrawTitle(flicker=true) {
 	    if (gMusicID != undefined) {
 		var name = gAudio.id2name[gMusicID];
 		var meta = gAudio.name2meta[name];
-		if (meta?.filebasename != undefined && !!meta?.loaded) {
-		    var msg = `norcalledmvsic ${meta.filebasename}`;
+		if (meta?.basename != undefined && !!(meta?.loaded)) {
+		    var msg = `norcalledmvsic ${meta.basename}`;
 		}
 	    }
 	    Cxdo(() => {
