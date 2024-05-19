@@ -1385,8 +1385,8 @@ function AddSparks(x, y, vx, vy) {
 	// user might start using touch only after beginning the game.
 	if (gTouchSide != undefined && !self.attract) {
 	    gPauseButtonEnabled = true;
-	    var cx = gPauseCenterX;
-	    var cy = gPauseCenterY;
+	    var cx = WX(gPauseCenterX);
+	    var cy = WY(gPauseCenterY);
 	    if (!self.paused) {
 		Cxdo(() => {
 		    gCx.beginPath();
@@ -1400,7 +1400,7 @@ function AddSparks(x, y, vx, vy) {
 		    gCx.moveTo( cx + o, cy - o*2 );
 		    gCx.lineTo( cx + o, cy + o*2 );
 		    gCx.lineWidth = 2;
-		    gCx.strokeStyle = RandomGreen(0.5);
+		    gCx.strokeStyle = RandomGreen(0.4);
 		    gCx.stroke();
 		});
 	    } else {
