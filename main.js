@@ -165,7 +165,7 @@ function RecalculateConstants() {
     gSmallFontSizePt = gSmallFontSize + "pt";
     gSmallestFontSizePt = gSmallestFontSize + "pt";
     gMinVX = Math.max(0.5, sxi(1));
-    gMaxVX = sxi(19);
+    gMaxVX = sxi(14);
 }
 
 // anything here below that ends up depending on
@@ -265,6 +265,17 @@ var /*const*/ kJoystickDeadZone = 0.5;
 var gRandom = MakeRandom(0xDEADBEEF);
 
 // ----------------------------------------
+
+// note: not linear, aesthetically on purpose!
+function GameTime01(period, start) {
+    var diff = gGameTime - (start == undefined ? gStartTime : start);
+    return Clip01(
+	Math.pow(
+	    diff / ((period > 0) ? period : 1000),
+	    3
+	)
+    );
+}
 
 function ForSide(left, right) {
     if (gTouchSide == "left") {
@@ -509,6 +520,7 @@ function PushToast(msg, lifespan=1000) {
 
     self.Init = function(label) {
 	self.id = gNextID++;
+	self.x0 = x0;
 	self.x = x0;
 	self.y = y0;
 	self.isAtLimit = false;
@@ -517,12 +529,15 @@ function PushToast(msg, lifespan=1000) {
 	self.width = gPaddleWidth;
 	self.height = gPaddleHeight;
 	self.engorged_height = gPaddleHeight * 2;
+	self.engorged_width = gPaddleWidth * 0.8;
 	self.targetAIPuck = undefined;
 	self.label = label;
 	self.engorged = false;
+	self.nudgeX();
     };
 
     self.BeginEngorged = function() {
+	self.width = self.engorged_width;
 	var h2 = self.engorged_height;
 	var yd = (h2 - self.height)/2;
 	self.height = h2;
@@ -532,6 +547,7 @@ function PushToast(msg, lifespan=1000) {
     };
 
     self.EndEngorged = function() {
+	self.width = gPaddleWidth;
 	self.height = gPaddleHeight;
 	// re-center.
 	self.y += Math.abs(self.engorged_height - self.height)/2;
@@ -539,24 +555,20 @@ function PushToast(msg, lifespan=1000) {
     };
 
     self.GetMidX = function() {
-	return self.X() + self.width/2;
+	return self.x + self.width/2;
     };
 
     self.GetMidY = function() {
-	return self.Y() + self.height/2;
+	return self.y + self.height/2;
     };
 
-    self.X = function() {
+    self.nudgeX = function() {
 	// nudging horizontally to emulate crt curvature.
 	var ypos = self.y + self.height/2;
 	var mid = gh(0.5);
 	var factor = Clip01(Math.abs(mid - ypos)/mid);
 	var off = (10 * factor) * ((self.x < gw(0.5)) ? 1 : -1);
-	return self.x + off;
-    };
-
-    self.Y = function() {
-	return self.y;
+	self.x = self.x0 + off;
     };
 
     self.getVX = function() {
@@ -570,12 +582,12 @@ function PushToast(msg, lifespan=1000) {
     self.Draw = function( alpha ) {
 	Cxdo(() => {
 	    gCx.fillStyle = RandomGreen(0.7 * alpha);
-	    var wx = WX(self.X());
-	    var wy = WY(self.Y());
+	    var wx = WX(self.x);
+	    var wy = WY(self.y);
 	    gCx.fillRect( wx, wy, self.width, self.height );
 	    if (!!label && gRandom() > GameTime01(kFadeInMsec)) {
 		gCx.fillStyle = RandomGreen(0.5 * alpha);
-		DrawText( label, "center", self.GetMidX(), self.Y()-20, gSmallFontSizePt );
+		DrawText( label, "center", self.GetMidX(), self.y-20, gSmallFontSizePt );
 	    }
 	});
     };
@@ -585,9 +597,10 @@ function PushToast(msg, lifespan=1000) {
 	self.y += gPaddleStepSize * scale * (dt/kTimeStep);
 	self.isAtLimit = false;
 	if( self.GetMidY() > gHeight-gPaddleMidYLimit ) {
-	    self.y = gHeight-gPaddleMidYLimit-gPaddleHeight/2;
+	    self.y = gHeight-gPaddleMidYLimit-(self.height)/2;
 	    self.isAtLimit = true;
 	}
+	self.nudgeX();
     };
 
     self.MoveUp = function( dt, scale=1 ) {
@@ -595,9 +608,10 @@ function PushToast(msg, lifespan=1000) {
 	self.y -= gPaddleStepSize * scale * (dt/kTimeStep);
 	self.isAtLimit = false;
 	if( self.GetMidY() < gPaddleMidYLimit ) {
-	    self.y = gPaddleMidYLimit-gPaddleHeight/2;
+	    self.y = gPaddleMidYLimit-(self.height)/2;
 	    self.isAtLimit = true;
 	}
+	self.nudgeX();
     };
 
     // ........................................ AI
@@ -735,7 +749,7 @@ function AddSparks(x, y, vx, vy) {
     }
 }
 
-/*class*/ function Puck( x0, y0, vx, vy, ur ) {
+/*class*/ function Puck( x0, y0, vx, vy, ur=true, forced=false ) {
 
     var self = this;
 
@@ -767,12 +781,9 @@ function AddSparks(x, y, vx, vy) {
 	var wx = WX(self.x);
 	var wy = WY(self.y);
 	Cxdo(() => {
-	    // splits render white briefly.
-	    var dt = GameTime01(
-		(1-Clip01(Math.abs(self.vx)/gMaxVX)) * 1000,
-		self.startTime
-	    );
-	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? "white" : RandomCyan( alpha );
+	    // splits render another color briefly.
+	    var dt = GameTime01(1000, self.startTime);
+	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? "yellow" : RandomCyan( alpha );
 	    gCx.fillRect( wx, wy, self.width, self.height );
 	    gCx.lineWidth = sx1(1);
 	    gCx.strokeStyle = "black";
@@ -820,7 +831,7 @@ function AddSparks(x, y, vx, vy) {
 	    var nvx = self.vx * (slow ? RandomRange(0.8, 0.9) : RandomRange(1.01, 1.1));
 	    var nvy = self.vy;
 	    nvy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
-	    np = new Puck( self.x, self.y, nvx, nvy );
+	    np = new Puck( self.x, self.y, nvx, nvy, false, forced );
 	    PlayExplosion();
 
 	    // fyi because SplitPuck is called during MovePucks,

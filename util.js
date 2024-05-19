@@ -3,6 +3,8 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+function noOp() {}
+
 function Assert(result, msg) {
     if (!result) {
 	console.error("ASSERTION FAILED", msg);

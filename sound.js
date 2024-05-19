@@ -180,17 +180,6 @@ const PlayBlip = MakePlayFn(kBlipSfxCount, "blip", PlaySoundDebounced);
 const kPowerupSfxCount = 1;
 const PlayPowerupBoom = MakePlayFn(kPowerupSfxCount, "powerupboom", PlaySoundDebounced);
 
-// note: not linear, aesthetically on purpose!
-function GameTime01(period, start) {
-    var diff = gGameTime - (start == undefined ? gStartTime : start);
-    return Clip01(
-	Math.pow(
-	    diff / ((period > 0) ? period : 1000),
-	    3
-	)
-    );
-}
-
 function LoadAudio() {
     // these will load 1 by 1 in order.
     RegisterMusic("music1", "nervouslynx");

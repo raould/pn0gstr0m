@@ -10,6 +10,8 @@ var gPowerupSpecs = {
     split: MakeSplitSpec,
 };
 
+// note: ideally each powerup type should have a unique animation.
+
 // note: any powerup that lasts a long time
 // should prevent being created again until the
 // live one expires, because the ending time
@@ -93,7 +95,7 @@ function MakeDecimateSpec() {
 		    p.alive = false;
 		    AddSparks(p.x, p.y, p.vx, p.vy);
 		});
-		gameState.animations[gNextID++] = MakeLightningAnimation({
+		gameState.animations[gNextID++] = MakeHLightningAnimation({
 		    lifespan: 100,
 		    targets,
 		    end_fn: () => { delete gPowerupsInUse['decimate']; }
@@ -136,9 +138,9 @@ function MakeDecimateSpec() {
 function MakeEngorgeSpec() {
     var xoff = ForSide(-50, 50);
     return {
-	w: sx(18), h: sy(18),
+	w: sx(22), h: sy(22),
 	label: "+",
-	ylb: sy(30),
+	ylb: sy(32),
 	fontSize: gBigFontSizePt,
 	test_fn: (gameState) => {
 	    return !gameState.playerPaddle.engorged && !gPowerupsInUse['engorge'];
@@ -173,7 +175,7 @@ function MakeEngorgeSpec() {
 function MakeSplitSpec() {
     var xoff = ForSide(-50, 50);
     return {
-	w: sx(40), h: sy(24),
+	w: sx(30), h: sy(24),
 	label: "//",
 	ylb: sy(18),
 	fontSize: gSmallFontSizePt,
@@ -185,11 +187,12 @@ function MakeSplitSpec() {
 	    var targets = gPucks.A.filter((p, i) => {
 		return i < 1 ? true : RandomBool(r);
 	    });
+	    Assert(targets.length > 0, "split.boom_fn");
 	    targets.forEach((p) => {
 		gPucks.A.push(p.SplitPuck(true));
 	    });
-	    gameState.animations[gNextID++] = MakeLightningAnimation({
-		lifespan: 100,
+	    gameState.animations[gNextID++] = MakeSplitAnimation({
+		lifespan: 250,
 		targets,
 		end_fn: () => { delete gPowerupsInUse['decimate']; }
 	    });
@@ -235,7 +238,7 @@ function MakeRandomPowerup(gameState) {
     return undefined;
 }
 
-function MakeLightningAnimation(props) {
+function MakeHLightningAnimation(props) {
     var { lifespan, targets, end_fn } = props;
     return new Animation({
 	lifespan,
@@ -244,7 +247,7 @@ function MakeLightningAnimation(props) {
 		targets.forEach((puck) => {
 		    gCx.beginPath();
 		    AddLightningPath(
-			gameState.playerPaddle.x - 5,
+			gameState.playerPaddle.GetMidX(),
 			gameState.playerPaddle.GetMidY(),
 			puck.x,
 			puck.y,
@@ -253,6 +256,35 @@ function MakeLightningAnimation(props) {
 		    gCx.strokeStyle = RandomColor();
 		    gCx.lineWidth = sx1(2);
 		    gCx.stroke();
+		});
+	    });
+	},
+	end_fn
+    });
+}
+
+function MakeSplitAnimation(props) {
+    var { lifespan, targets, end_fn } = props;
+    // start chain at nearest puck, assumes rhs default.
+    targets.sort((a,b) => {return b.x-a.x});
+    ForSide(() => targets.reverse, () => {})();
+    return new Animation({
+	lifespan,
+	anim_fn: (dt, gameState) => {
+	    var p0 = { x: gameState.playerPaddle.GetMidX(),
+		       y: gameState.playerPaddle.GetMidY() };
+	    Cxdo(() => {
+		targets.forEach((p1, i) => {
+		    gCx.beginPath();
+		    AddLightningPath(
+			p0.x, p0.y,
+			p1.x, p1.y,
+			10
+		    );
+		    gCx.strokeStyle = RandomColor();
+		    gCx.lineWidth = sx1(i==0?3:2);
+		    gCx.stroke();
+		    p0 = p1;
 		});
 	    });
 	},
