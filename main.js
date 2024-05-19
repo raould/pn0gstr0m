@@ -780,10 +780,12 @@ function AddSparks(x, y, vx, vy) {
     self.Draw = function( alpha ) {
 	var wx = WX(self.x);
 	var wy = WY(self.y);
+	// make things coming toward you be slightly easier to see.
+	var amod = ForSide(-1,1) == Sign(self.vx) ? 1 : 0.8;
 	Cxdo(() => {
 	    // splits render another color briefly.
 	    var dt = GameTime01(1000, self.startTime);
-	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? "yellow" : RandomCyan( alpha );
+	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? "yellow" : RandomCyan( alpha * amod );
 	    gCx.fillRect( wx, wy, self.width, self.height );
 	    gCx.lineWidth = sx1(1);
 	    gCx.strokeStyle = "black";
