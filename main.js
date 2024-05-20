@@ -1781,11 +1781,11 @@ function DrawTitle(flicker=true) {
 		DrawTitle();
 		self.DrawAudio();
 		gCx.fillStyle = RandomGreen();
-		DrawText( "CONTROLS: TAP / W S / ARROWS / GAMEPAD", "center", gw(0.5), gh(0.5)+50, gSmallFontSizePt );
+		var msg = "CONTROLS: TAP / W S / ARROWS / GAMEPAD";
 		if ((gGameTime - self.started) <= self.timeout) {
 		    var msg = "LOADING...";
-		    DrawText( msg, "center", gw(0.5), gh(0.5)+80, gSmallFontSizePt );
 		}
+		DrawText( msg, "center", gw(0.5), gh(0.5)+80, gSmallFontSizePt );
 	    });
 	}
 	DrawCRTScanLines();
