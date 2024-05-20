@@ -229,11 +229,12 @@ function MakeDefendSpec() {
 	fontSize: gSmallFontSizePt,
 	test_fn: (gameState) => {
 	    console.log(gBarriers.A.length);
-	    return gBarriers.A.length == 0 && gPucks.A.length > 15;
+	    return gBarriers.A.length == 0 && (gDebug || gPucks.A.length > 15);
 	},
 	boom_fn: (gameState) => {
 	    PlayPowerupBoom();
 	    var c = 4;
+	    var w = sx1(10);
 	    var h = (gHeight-gYInset*2) / c;
 	    var x = gw(ForSide(0.1, 0.9));
 	    for (var i = 0; i < c; ++i) {
@@ -241,11 +242,20 @@ function MakeDefendSpec() {
 		gameState.AddBarrier(
 		    new Barrier({
 			x, y,
-			w: sx1(10), h,
+			w, h,
 			hp: 15
 		    })
 		);
 	    }
+	    gameState.animations[gNextID++] = Make2PtLightningAnimation({
+		lifespan: 250,
+		x0: x+w/2, y0: gh(0),
+		x1: x+w/2, y1: gh(1),
+		width: sx1(2),
+		range: 15,
+		steps: 20,
+	    });
+
 	},
 	draw_fn: (self, alpha) => {
 	    Cxdo(() => {
@@ -345,7 +355,7 @@ function MakeSplitAnimation(props) {
 }
 
 function MakeWaveAnimation(props) {
-    var { lifespan, gameState } = props;
+    var { lifespan, gameState, end_fn } = props;
     var t0 = gGameTime;
     var x0 = gameState.playerPaddle.GetMidX();
     var y0 = gameState.playerPaddle.GetMidY();
@@ -368,7 +378,8 @@ function MakeWaveAnimation(props) {
 		    gCx.stroke();
 		}
 	    });
-	}
+	},
+	end_fn
     });
 }
 
@@ -403,8 +414,24 @@ function MakeEngorgeAnimation(props) {
     });
 }
 
-function AddLightningPath( x0, y0, x1, y1, range ) {
-    var steps = 5;
+function Make2PtLightningAnimation(props) {
+    var { lifespan, x0, y0, x1, y1, width, range, steps, end_fn } = props;
+    return new Animation({
+	lifespan,
+	anim_fn: (dt, gameState) => {
+	    Cxdo(() => {
+		gCx.beginPath();
+		AddLightningPath(x0, y0, x1, y1, range, steps);
+		gCx.strokeStyle = RandomColor();
+		gCx.lineWidth = sx1(width);
+		gCx.stroke();
+	    });
+	},
+	end_fn
+    });
+}
+
+function AddLightningPath( x0, y0, x1, y1, range, steps=5 ) {
     var sx = (x1 - x0)/steps;
     var sy = (y1 - y0)/steps;
     gCx.moveTo(x0, y0);
