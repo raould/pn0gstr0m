@@ -4,12 +4,10 @@
  */
 
 var gPowerupSpecs = {
-/*
     reverse: MakeReverseSpec,
     decimate: MakeDecimateSpec,
     engorge: MakeEngorgeSpec,
     split: MakeSplitSpec,
-*/
     defend: MakeDefendSpec,
 };
 
@@ -26,7 +24,7 @@ var gPowerupsInUse = {};
 function MakeReverseSpec() {
     var label = ForSide(">", "<");
     return {
-	w: sx(18), h: sy(18),
+	width: sx(18), height: sy(18),
 	label,
 	ylb: sy(17),
 	fontSize: gReducedFontSizePt,
@@ -56,17 +54,17 @@ function MakeReverseSpec() {
 		var r = 20;
 
 		gCx.beginPath();
-		gCx.roundRect( WX(wx), WY(wy), self.w, self.h, r );
+		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, r );
 		gCx.fillStyle = backgroundColor;
 		gCx.fill();
 
 		gCx.beginPath();
-		gCx.roundRect( WX(wx), WY(wy), self.w, self.h, r );
+		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, r );
 		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
 		gCx.lineWidth = sx1(2);
 		gCx.stroke();
 
-		DrawText( self.label, "center", wx+ii(self.w/2), wy+self.ylb, self.fontSize );
+		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
     };
@@ -75,7 +73,7 @@ function MakeReverseSpec() {
 function MakeDecimateSpec() {
     var name = 'decimate';
     return {
-	w: sx(18), h: sy(18),
+	width: sx(18), height: sy(18),
 	label: "*",
 	ylb: sy(18),
 	fontSize: gSmallFontSizePt,
@@ -111,13 +109,13 @@ function MakeDecimateSpec() {
 	    Cxdo(() => {
 		var wx = WX(self.x);
 		var wy = WY(self.y);
-		var mx = wx + ii(self.w/2);
-		var my = wy + ii(self.h/2);
+		var mx = wx + ii(self.width/2);
+		var my = wy + ii(self.height/2);
 
 		gCx.beginPath();
 		gCx.moveTo(mx, wy);
-		gCx.lineTo(wx + self.w, my);
-		gCx.lineTo(mx, wy + self.h);
+		gCx.lineTo(wx + self.width, my);
+		gCx.lineTo(mx, wy + self.height);
 		gCx.lineTo(wx, my);
 		gCx.closePath();
 		gCx.fillStyle = backgroundColor;
@@ -125,15 +123,15 @@ function MakeDecimateSpec() {
 
 		gCx.beginPath();
 		gCx.moveTo(mx, wy);
-		gCx.lineTo(wx + self.w, my);
-		gCx.lineTo(mx, wy + self.h);
+		gCx.lineTo(wx + self.width, my);
+		gCx.lineTo(mx, wy + self.height);
 		gCx.lineTo(wx, my);
 		gCx.closePath();
 		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
 		gCx.lineWidth = sx1(2);
 		gCx.stroke();
 
-		DrawText( self.label, "center", wx+ii(self.w/2), wy+self.ylb, self.fontSize );
+		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
     };
@@ -142,7 +140,7 @@ function MakeDecimateSpec() {
 function MakeEngorgeSpec() {
     var name = 'engorge';
     return {
-	w: sx(22), h: sy(22),
+	width: sx(22), height: sy(22),
 	label: "+",
 	ylb: sy(32),
 	fontSize: gBigFontSizePt,
@@ -164,13 +162,13 @@ function MakeEngorgeSpec() {
 		var wy = WY(self.y);
 
 		gCx.fillStyle = backgroundColor;
-		gCx.fillRect( WX(wx), WY(wy), self.w, self.h );
+		gCx.fillRect( WX(wx), WY(wy), self.width, self.height );
 
 		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
 		gCx.lineWidth = sx1(2);
-		gCx.strokeRect( WX(wx), WY(wy), self.w, self.h );
+		gCx.strokeRect( WX(wx), WY(wy), self.width, self.height );
 
-		DrawText( self.label, "center", wx+ii(self.w/2), wy+self.ylb, self.fontSize );
+		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
     };
@@ -178,7 +176,7 @@ function MakeEngorgeSpec() {
 
 function MakeSplitSpec() {
     return {
-	w: sx(30), h: sy(24),
+	width: sx(30), height: sy(24),
 	label: "//",
 	ylb: sy(18),
 	fontSize: gSmallFontSizePt,
@@ -203,21 +201,21 @@ function MakeSplitSpec() {
 	    Cxdo(() => {
 		var wx = WX(self.x);
 		var wy = WY(self.y);
-		var mx = wx + ii(self.w/2);
-		var my = wy + ii(self.h/2);
+		var mx = wx + ii(self.width/2);
+		var my = wy + ii(self.height/2);
 
 		gCx.beginPath();
-		gCx.roundRect(wx, wy, self.w, self.h, 20);
+		gCx.roundRect(wx, wy, self.width, self.height, 20);
 		gCx.fillStyle = backgroundColor;
 		gCx.fill();
 
 		gCx.beginPath();
-		gCx.roundRect(wx, wy, self.w, self.h, 20);
+		gCx.roundRect(wx, wy, self.width, self.height, 20);
 		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
 		gCx.lineWidth = sx1(2);
 		gCx.stroke();
 
-		DrawText( self.label, "center", wx+ii(self.w/2), wy+self.ylb, self.fontSize );
+		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
     };
@@ -225,7 +223,7 @@ function MakeSplitSpec() {
 
 function MakeDefendSpec() {
     return {
-	w: sx(20), h: sy(30),
+	width: sx(20), height: sy(30),
 	label: "#",
 	ylb: sy(20),
 	fontSize: gSmallFontSizePt,
@@ -267,17 +265,17 @@ function MakeDefendSpec() {
 		var r = 2;
 
 		gCx.beginPath();
-		gCx.roundRect( WX(wx), WY(wy), self.w, self.h, r );
+		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, r );
 		gCx.fillStyle = backgroundColor;
 		gCx.fill();
 
 		gCx.beginPath();
-		gCx.roundRect( WX(wx), WY(wy), self.w, self.h, r );
+		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, r );
 		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
 		gCx.lineWidth = sx1(2);
 		gCx.stroke();
 
-		DrawText( self.label, "center", wx+ii(self.w/2), wy+self.ylb, self.fontSize );
+		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
     };
@@ -289,7 +287,7 @@ function MakeRandomPowerup(gameState) {
     var specBase = gPowerupSpecs[keys[index]]();
     var y = RandomBool() ?
 	gh(0.1) :
-	gh(0.9) - specBase.h;
+	gh(0.9) - specBase.height;
     if (specBase.testFn(gameState)) {
 	var spec = {
 	    ...specBase,

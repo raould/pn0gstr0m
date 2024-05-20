@@ -974,8 +974,8 @@ function AddSparks(x, y, vx, vy) {
 	self.prevX = self.x;
 	self.prevY = self.y;
 
-	self.height = spec.h;
-	self.width = spec.w;
+	self.height = spec.height;
+	self.width = spec.width;
 
 	self.hp0 = spec.hp;
 	self.hp = self.hp0;
@@ -1047,8 +1047,8 @@ function AddSparks(x, y, vx, vy) {
 	self.y = spec.y;
 	self.prevX = self.x;
 	self.prevY = self.y;
-	self.w = spec.w;
-	self.h = spec.h;
+	self.width = spec.width;
+	self.height = spec.height;
 	self.vx = spec.vx;
 	self.vy = spec.vy;
 	self.label = spec.label;
@@ -1082,17 +1082,17 @@ function AddSparks(x, y, vx, vy) {
 	    self.vx = Math.abs(self.vx);
 	    self.x = self.leftBound + 1;
 	}
-	else if (self.x + self.w >= self.rightBound) {
+	else if (self.x + self.width >= self.rightBound) {
 	    self.vx = -1 * Math.abs(self.vx);
-	    self.x = self.rightBound - self.w - 1;
+	    self.x = self.rightBound - self.width - 1;
 	}
 	if (self.y <= self.topBound) {
 	    self.vy = Math.abs(self.vy);
 	    self.y = self.topBound + 1;
 	}
-	else if (self.y + self.h >= self.bottomBound) {
+	else if (self.y + self.height >= self.bottomBound) {
 	    self.vy = -1 * Math.abs(self.vy);
-	    self.y = self.bottomBound - self.h - 1;
+	    self.y = self.bottomBound - self.height - 1;
 	}
     };
 
@@ -1101,16 +1101,16 @@ function AddSparks(x, y, vx, vy) {
 	// !? assuming small enough simulation stepping !?
 	// current step overlap?
 	var xRight = self.x >= paddle.x+paddle.width;
-	var xLeft = self.x+self.w < paddle.x ;
+	var xLeft = self.x+self.width < paddle.x ;
 	var xOverlaps = ! ( xRight || xLeft );
 	var yTop = self.y >= paddle.y+paddle.height;
-	var yBottom = self.y+self.h < paddle.y;
+	var yBottom = self.y+self.height < paddle.y;
 	var yOverlaps = ! ( yTop || yBottom );
 
 	// did previous step overlap?
 	// also trying to see which direction?
 	var pxRight = self.prevX >= paddle.prevX+paddle.width;
-	var pxLeft = self.prevX+self.w < paddle.prevX;
+	var pxLeft = self.prevX+self.width < paddle.prevX;
 	var pxOverlaps = ! ( pxRight || pxLeft );
 
 	// did it pass over the paddle? (paranoid check.)
