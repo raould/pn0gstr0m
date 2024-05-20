@@ -229,7 +229,7 @@ function MakeDefendSpec() {
 	fontSize: gSmallFontSizePt,
 	test_fn: (gameState) => {
 	    return gBarriers.A.length == 0 &&
-		gPucks.A.count > kEjectSpeedCountThreshold/2;
+		gPucks.A.count > kEjectSpeedCountThreshold/4;
 	},
 	boom_fn: (gameState) => {
 	    PlayPowerupBoom();
