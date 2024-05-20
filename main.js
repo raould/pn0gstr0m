@@ -787,8 +787,8 @@ function AddSparks(x, y, vx, vy) {
     };
 
     self.Draw = function( alpha ) {
-	var wx = WX(self.x);
-	var wy = WY(self.y);
+	var wx = self.x;
+	var wy = self.y;
 	// make things coming toward you be slightly easier to see.
 	var amod = ForSide(-1,1) == Sign(self.vx) ? 1 : 0.8;
 	Cxdo(() => {
