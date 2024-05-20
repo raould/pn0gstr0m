@@ -1168,14 +1168,14 @@ function AddSparks(x, y, vx, vy) {
 		self.playerPaddle = new Paddle(lp.x, lp.y, p1label);
 		self.cpuPaddle = new Paddle(rp.x, rp.y);
 		ForCount(gDebug ? 1 : 1, () => { 
-		    gPucks.A.push( self.CreateStartingPuck(-1) );
+		    gPucks.A.push( self.CreateStartingPuck(1) );
 		});
 	    },
 	    () => {
 		self.playerPaddle = new Paddle(rp.x, rp.y, p1label);
 		self.cpuPaddle = new Paddle(lp.x, lp.y);
 		ForCount(gDebug ? 1 : 1, () => { 
-		    gPucks.A.push( self.CreateStartingPuck(1) );
+		    gPucks.A.push( self.CreateStartingPuck(-1) );
 		});
 	    }
 	)();
