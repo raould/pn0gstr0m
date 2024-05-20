@@ -234,7 +234,8 @@ function MakeDefendSpec() {
 	boom_fn: (gameState) => {
 	    PlayPowerupBoom();
 	    var c = 4;
-	    var w = sx1(10);
+	    var hp = 15;
+	    var w = sx1(hp);
 	    var h = (gHeight-gYInset*2) / c;
 	    var x = gw(ForSide(0.1, 0.9));
 	    for (var i = 0; i < c; ++i) {
@@ -243,7 +244,7 @@ function MakeDefendSpec() {
 		    new Barrier({
 			x, y,
 			w, h,
-			hp: 15
+			hp,
 		    })
 		);
 	    }
