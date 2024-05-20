@@ -228,8 +228,7 @@ function MakeDefendSpec() {
 	ylb: sy(20),
 	fontSize: gSmallFontSizePt,
 	test_fn: (gameState) => {
-	    return gBarriers.A.length == 0 &&
-		gPucks.A.count > kEjectSpeedCountThreshold/4;
+	    return gBarriers.A.length == 0 && gPucks.A.length > 15;
 	},
 	boom_fn: (gameState) => {
 	    PlayPowerupBoom();
@@ -242,7 +241,7 @@ function MakeDefendSpec() {
 		    new Barrier({
 			x, y,
 			w: sx1(10), h,
-			hp: 20
+			hp: 15
 		    })
 		);
 	    }
