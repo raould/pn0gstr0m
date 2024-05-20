@@ -29,7 +29,7 @@ function RegisterSfx(name, basename) {
     RegisterSound(name, basename, false);
 }
 
-function RegisterSound(name, basename, is_music=false) {
+function RegisterSound(name, basename, isMusic=false) {
     var files = ["wav", "aac"].map((e) => `sound/${basename}.${e}`);
     var howl = new Howl({
 	src: files,
@@ -52,7 +52,7 @@ function RegisterSound(name, basename, is_music=false) {
 	...gAudio[name],
 	basename,
 	howl,
-	is_music,
+	isMusic,
 	last: 0,
 	loaded: false,
     };
@@ -74,7 +74,7 @@ function OnSfxStop(name) {
     var meta = gAudio.name2meta[name];
     if (meta != undefined) {
 	delete meta.id;
-	!!meta.is_music && BeginMusic();
+	!!meta.isMusic && BeginMusic();
     }
 }
 
@@ -83,22 +83,22 @@ function BeginMusic() {
     EndMusic();
     if (!gUserMuted) {
 	// max list of music numbers in order (javascript sucks?).
-	var unplayed_all = Array(kMusicSfxCount).fill().map((_,i) => {return i+1;});
+	var unplayedAll = Array(kMusicSfxCount).fill().map((_,i) => {return i+1;});
 	// refresh to full list if unknown.
-	var unplayed_str = localStorage.getItem(kMusicStorageKey);
-	if (unplayed_str == null || _kill_unplayed) {
-	    unplayed = unplayed_all;
+	var unplayedStr = localStorage.getItem(kMusicStorageKey);
+	if (unplayedStr == null || _kill_unplayed) {
+	    unplayed = unplayedAll;
 	}
 	// else parse the unplayed list.
 	// if that is [] then reset to all.
 	else {
-	    var unplayed = JSON.parse(unplayed_str);
+	    var unplayed = JSON.parse(unplayedStr);
 	    if (unplayed.length == 0) {
-		var json_str = JSON.stringify(unplayed_all);
-		localStorage.setItem(kMusicStorageKey, json_str);
+		var jsonStr = JSON.stringify(unplayedAll);
+		localStorage.setItem(kMusicStorageKey, jsonStr);
 	    }
-	    unplayed_str = localStorage.getItem(kMusicStorageKey);
-	    unplayed = JSON.parse(unplayed_str);
+	    unplayedStr = localStorage.getItem(kMusicStorageKey);
+	    unplayed = JSON.parse(unplayedStr);
 	}
 	Assert(unplayed != null, "BeginMusic");
 	// not random, always play musicN in order since we 'load' them in order.
@@ -123,9 +123,9 @@ function EndMusic() {
     gMusicID = undefined;
 }
 
-function PlaySound(name, ignore_muted=false) {
+function PlaySound(name, ignoreMuted=false) {
     var sid;
-    if (ignore_muted || (!gStateMuted && !gUserMuted)) {
+    if (ignoreMuted || (!gStateMuted && !gUserMuted)) {
 	var meta = gAudio.name2meta[name];
 	Assert(meta != undefined, `PlaySound ${name}`);
 	if (meta != undefined) {

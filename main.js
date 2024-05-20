@@ -26,7 +26,7 @@
 // ugh for some reason enabling this on
 // firefox kills the frame rate, but it
 // is ok on edge and webkit. :eyeroll:
-var /*const*/ gDebug = false;
+var /*const*/ gDebug = true;
 var /*const*/ gShowToasts = false;
 
 var /*const*/ gCanvasName = "canvas";
@@ -256,7 +256,7 @@ var gSparks; // { A:[], B:[] };
 var gPowerup; // there can be (at most) only 1 (at a time).
 // these are a bit complicated.
 // { x, y, width, height,
-//   prev_x, prev_y,
+//   prevX, prevY,
 //   CollisionTest( paddle (todo: xywh) ) }
 var gBarriers; // ( A:[], B:[] };
 
@@ -413,20 +413,6 @@ function RandomMagenta(alpha) {
     return RandomForColorFadein(magenta, alpha);
 }
 
-function DrawCRTScanLines() {
-    /* todo: blit an image of the lines on top, would be less hitchy?
-    Cxdo(() => {
-	// not scaled on purpose.
-	var step = 2;
-	gCx.fillStyle = scanlineColor;
-	gCx.liheWidth = 0.5;
-	for( var y = 0; y < gHeight; y += step ) {
-	    gCx.fillRect( 0, y, gWidth, 1 );
-	}
-    });
-    */
-}
-
 function WX( v ) {
     return v + RandomCentered(0,0.4);
 }
@@ -469,9 +455,9 @@ function DrawTextFaint( data, align, x, y, size ) {
 
 	// note that pausing time is handled in GameState.
 	var now = Date.now();
-	var clock_diff = now - self.lastTime;
+	var clockDiff = now - self.lastTime;
 	self.lastTime = now;
-	gGameTime += clock_diff;
+	gGameTime += clockDiff;
 
 	var dt = gGameTime - gLastFrameTime;
 	if (dt >= kTimeStep) {
@@ -533,12 +519,12 @@ function PushToast(msg, lifespan=1000) {
 	self.x = x0;
 	self.y = y0;
 	self.isAtLimit = false;
-	self.prev_x = self.x;
-	self.prev_y = self.y;
+	self.prevX = self.x;
+	self.prevY = self.y;
 	self.width = gPaddleWidth;
 	self.height = gPaddleHeight;
-	self.engorged_height = gPaddleHeight * 2;
-	self.engorged_width = gPaddleWidth * 0.8;
+	self.engorgedHeight = gPaddleHeight * 2;
+	self.engorgedWidth = gPaddleWidth * 0.8;
 	self.targetAIPuck = undefined;
 	self.label = label;
 	self.engorged = false;
@@ -546,8 +532,8 @@ function PushToast(msg, lifespan=1000) {
     };
 
     self.BeginEngorged = function() {
-	self.width = self.engorged_width;
-	var h2 = self.engorged_height;
+	self.width = self.engorgedWidth;
+	var h2 = self.engorgedHeight;
 	var yd = (h2 - self.height)/2;
 	self.height = h2;
 	// re-center.
@@ -559,7 +545,7 @@ function PushToast(msg, lifespan=1000) {
 	self.width = gPaddleWidth;
 	self.height = gPaddleHeight;
 	// re-center.
-	self.y += Math.abs(self.engorged_height - self.height)/2;
+	self.y += Math.abs(self.engorgedHeight - self.height)/2;
 	self.engorged = false;
     };
 
@@ -581,11 +567,11 @@ function PushToast(msg, lifespan=1000) {
     };
 
     self.getVX = function() {
-	return (self.x - self.prev_x) / kTimeStep;
+	return (self.x - self.prevX) / kTimeStep;
     };
 
     self.getVY = function() {
-	return (self.y - self.prev_y) / kTimeStep;
+	return (self.y - self.prevY) / kTimeStep;
     };
 
     self.Draw = function( alpha ) {
@@ -602,7 +588,7 @@ function PushToast(msg, lifespan=1000) {
     };
 
     self.MoveDown = function( dt, scale=1 ) {
-	self.prev_y = self.y;
+	self.prevY = self.y;
 	self.y += gPaddleStepSize * scale * (dt/kTimeStep);
 	self.isAtLimit = false;
 	if( self.GetMidY() > gHeight-gPaddleMidYLimit ) {
@@ -613,7 +599,7 @@ function PushToast(msg, lifespan=1000) {
     };
 
     self.MoveUp = function( dt, scale=1 ) {
-	self.prev_y = self.y;
+	self.prevY = self.y;
 	self.y -= gPaddleStepSize * scale * (dt/kTimeStep);
 	self.isAtLimit = false;
 	if( self.GetMidY() < gPaddleMidYLimit ) {
@@ -694,9 +680,9 @@ function PushToast(msg, lifespan=1000) {
 		if (self.IsPuckMovingAway(bp)) {
 		    bp = p;
 		}
-		var d_puck = Math.abs( self.x - p.x );
-		var d_bp = Math.abs( self.x - bp.x );
-		if (d_puck < d_bp && !self.IsPuckMovingAway(p)) {
+		var dPuck = Math.abs( self.x - p.x );
+		var dBp = Math.abs( self.x - bp.x );
+		if (dPuck < dBp && !self.IsPuckMovingAway(p)) {
 		    bp = p;
 		}
 		if (p.vx > bp.vx) {
@@ -717,8 +703,8 @@ function PushToast(msg, lifespan=1000) {
 	self.id = gNextID++;
 	self.x = x0;
 	self.y = y0;
-	self.prev_x = self.x;
-	self.prev_y = self.y;
+	self.prevX = self.x;
+	self.prevY = self.y;
 	self.width = gSparkWidth * gRandom()*2;
 	self.height = gSparkHeight * gRandom()*2;
 	self.vx = vx;
@@ -738,8 +724,8 @@ function PushToast(msg, lifespan=1000) {
 
     self.Step = function( dt ) {
 	if (self.alive) {
-	    self.prev_x = self.x;
-	    self.prev_y = self.y;
+	    self.prevX = self.x;
+	    self.prevY = self.y;
 	    self.x += (self.vx * dt);
 	    self.y += (self.vy * dt);
 	    self.alive = self.frameCount < gMaxSparkFrame;
@@ -766,8 +752,8 @@ function AddSparks(x, y, vx, vy) {
 	self.id = gNextID++;
 	self.x = x0;
 	self.y = y0;
-	self.prev_x = self.x;
-	self.prev_y = self.y;
+	self.prevX = self.x;
+	self.prevY = self.y;
 	self.width = gPuckWidth;
 	self.height = gPuckHeight;
 	// tweak max vx to avoid everything being too visually lock-step.
@@ -804,8 +790,8 @@ function AddSparks(x, y, vx, vy) {
 
     self.Step = function( dt ) {
 	if( self.alive ) {
-	    self.prev_x = self.x;
-	    self.prev_y = self.y;
+	    self.prevX = self.x;
+	    self.prevY = self.y;
 	    self.x += (self.vx * dt);
 	    self.y += (self.vy * dt);
 	    var xout = self.x < 0 || self.x+self.width >= gWidth;
@@ -825,10 +811,10 @@ function AddSparks(x, y, vx, vy) {
  	// to avoid ending up with just a linear stream of pucks.
 	var r = gRandom();
  	var countFactor = Clip01(count/kEjectSpeedCountThreshold);
-	var eject_countFactor = Math.pow(countFactor, 3);
-	var doeject_count = (count > kEjectCountThreshold) && (r < 0.1);
-	var doeject_speed = (self.vx > gMaxVX*0.9) && (r < eject_countFactor);
-	var doeject = doeject_count || doeject_speed;
+	var ejectCountFactor = Math.pow(countFactor, 3);
+	var doejectCount = (count > kEjectCountThreshold) && (r < 0.1);
+	var doejectSpeed = (self.vx > gMaxVX*0.9) && (r < ejectCountFactor);
+	var doeject = doejectCount || doejectSpeed;
 
 	if (!forced && !dosplit) {
 	    if (doeject) {
@@ -837,8 +823,8 @@ function AddSparks(x, y, vx, vy) {
 	}
 	else {
 	    // i'm sure this set of heuristics is clearly genius.
-	    var slow_countFactor = Math.pow(countFactor, 1.5);
-	    var slow = !doeject_speed && (self.vx > gMaxVX*0.7) && (gRandom() < slow_countFactor);
+	    var slowCountFactor = Math.pow(countFactor, 1.5);
+	    var slow = !doejectSpeed && (self.vx > gMaxVX*0.7) && (gRandom() < slowCountFactor);
 	    var nvx = self.vx * (slow ? RandomRange(0.8, 0.9) : RandomRange(1.01, 1.1));
 	    var nvy = self.vy;
 	    nvy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
@@ -866,11 +852,11 @@ function AddSparks(x, y, vx, vy) {
 	    var yOverlaps = ! ( yTop || yBottom );
 	    // did previous step overlap?
 	    // also trying to see which direction?
-	    var pxRight = self.prev_x >= xywh.prev_x+xywh.width;
-	    var pxLeft = self.prev_x+self.width < xywh.prev_x;
+	    var pxRight = self.prevX >= xywh.prevX+xywh.width;
+	    var pxLeft = self.prevX+self.width < xywh.prevX;
 	    var pxOverlaps = ! ( pxRight || pxLeft );
 	    // did it pass over the xywh? (paranoid check.)
-	    var dxOverlaps = Sign(self.prev_x - xywh.prev_x) != Sign(self.x - xywh.x);
+	    var dxOverlaps = Sign(self.prevX - xywh.prevX) != Sign(self.x - xywh.x);
 	    return (dxOverlaps || xOverlaps) && yOverlaps;
 	}
 	return false;
@@ -959,8 +945,8 @@ function AddSparks(x, y, vx, vy) {
 
     self.UpdateScore = function() {
 	if (!self.alive) {
-	    var was_left = self.x < gw(0.5);
-	    if (was_left) {
+	    var wasLeft = self.x < gw(0.5);
+	    if (wasLeft) {
 		ForSide(
 		    () => { gCPUScore += kScoreIncrement; },
 		    () => { gPlayerScore += kScoreIncrement; }
@@ -984,8 +970,8 @@ function AddSparks(x, y, vx, vy) {
     self.Init = function() {
 	self.x = spec.x;
 	self.y = spec.y;
-	self.prev_x = self.x;
-	self.prev_y = self.y;
+	self.prevX = self.x;
+	self.prevY = self.y;
 
 	self.height = spec.h;
 	self.width = spec.w;
@@ -1027,7 +1013,7 @@ function AddSparks(x, y, vx, vy) {
     self.Init();
 }
 
-// the spec is { x, y, w, h, vx, vy, label, ylb, test_fn, boom_fn, draw_fn }
+// the spec is { x, y, w, h, vx, vy, label, ylb, testFn, boomFn, drawFn }
 // don't you wish this was all in typescript now?
 /*class*/ function Powerup( spec ) {
     var self = this;
@@ -1037,8 +1023,8 @@ function AddSparks(x, y, vx, vy) {
 	self.id = gNextID++;
 	self.x = spec.x;
 	self.y = spec.y;
-	self.prev_x = self.x;
-	self.prev_y = self.y;
+	self.prevX = self.x;
+	self.prevY = self.y;
 	self.w = spec.w;
 	self.h = spec.h;
 	self.vx = spec.vx;
@@ -1046,45 +1032,45 @@ function AddSparks(x, y, vx, vy) {
 	self.label = spec.label;
 	self.ylb = spec.ylb;
 	self.fontSize = spec.fontSize;
-	self.boom_fn = spec.boom_fn;
-	self.draw_fn = spec.draw_fn;
+	self.boomFn = spec.boomFn;
+	self.drawFn = spec.drawFn;
 
 	if (self.x <= gw(0.5)) {
-	    self.left_bound = 0;
-	    self.right_bound = gw(0.5);
+	    self.leftBound = 0;
+	    self.rightBound = gw(0.5);
 	}
 	else {
-	    self.left_bound = gw(0.5);
-	    self.right_bound = gw(1);
+	    self.leftBound = gw(0.5);
+	    self.rightBound = gw(1);
 	}
-	self.top_bound = 0;
-	self.bottom_bound = gHeight;
+	self.topBound = 0;
+	self.bottomBound = gHeight;
     };
 
     self.Draw = function( alpha ) {
-	self.draw_fn( self, alpha );
+	self.drawFn( self, alpha );
     };
 
     self.Step = function( dt ) {
-	self.prev_x = self.x;
-	self.prev_y = self.y;
+	self.prevX = self.x;
+	self.prevY = self.y;
 	self.x += (self.vx * dt);
 	self.y += (self.vy * dt);
-	if (self.x <= self.left_bound) {
+	if (self.x <= self.leftBound) {
 	    self.vx = Math.abs(self.vx);
-	    self.x = self.left_bound + 1;
+	    self.x = self.leftBound + 1;
 	}
-	else if (self.x + self.w >= self.right_bound) {
+	else if (self.x + self.w >= self.rightBound) {
 	    self.vx = -1 * Math.abs(self.vx);
-	    self.x = self.right_bound - self.w - 1;
+	    self.x = self.rightBound - self.w - 1;
 	}
-	if (self.y <= self.top_bound) {
+	if (self.y <= self.topBound) {
 	    self.vy = Math.abs(self.vy);
-	    self.y = self.top_bound + 1;
+	    self.y = self.topBound + 1;
 	}
-	else if (self.y + self.h >= self.bottom_bound) {
+	else if (self.y + self.h >= self.bottomBound) {
 	    self.vy = -1 * Math.abs(self.vy);
-	    self.y = self.bottom_bound - self.h - 1;
+	    self.y = self.bottomBound - self.h - 1;
 	}
     };
 
@@ -1101,12 +1087,12 @@ function AddSparks(x, y, vx, vy) {
 
 	// did previous step overlap?
 	// also trying to see which direction?
-	var pxRight = self.prev_x >= paddle.prev_x+paddle.width;
-	var pxLeft = self.prev_x+self.w < paddle.prev_x;
+	var pxRight = self.prevX >= paddle.prevX+paddle.width;
+	var pxLeft = self.prevX+self.w < paddle.prevX;
 	var pxOverlaps = ! ( pxRight || pxLeft );
 
 	// did it pass over the paddle? (paranoid check.)
-	var dxOverlaps = Sign(self.prev_x - paddle.prev_x) != Sign(self.x - paddle.x);
+	var dxOverlaps = Sign(self.prevX - paddle.prevX) != Sign(self.x - paddle.x);
 
 	return (dxOverlaps || xOverlaps) && yOverlaps;
     };
@@ -1116,7 +1102,7 @@ function AddSparks(x, y, vx, vy) {
 	paddles.forEach( function(paddle) {
 	    var hit = self.PaddleCollision(paddle);
 	    if( hit ) {
-		self.boom_fn(gameState);
+		self.boomFn(gameState);
 		nextSelf = undefined;
 	    }
 	} );
@@ -1127,18 +1113,18 @@ function AddSparks(x, y, vx, vy) {
 }
 
 /*class*/ function Animation( props ) {
-    var { lifespan, anim_fn, start_fn, end_fn } = props;
+    var { lifespan, animFn, startFn, endFn } = props;
     var self = this;
-    self.start_ms = gGameTime;
-    self.end_ms = self.start_ms + lifespan;
+    self.startMs = gGameTime;
+    self.endMs = self.startMs + lifespan;
     self.Step = function( dt, gameState ) {
-	start_fn && start_fn( gameState );
-	start_fn = undefined;
-	if (gGameTime <= self.end_ms) {
-	    anim_fn( dt, gameState, self.start_ms, self.end_ms );
+	startFn && startFn( gameState );
+	startFn = undefined;
+	if (gGameTime <= self.endMs) {
+	    animFn( dt, gameState, self.startMs, self.endMs );
 	    return false;
 	}
-	end_fn && end_fn( gameState );
+	endFn && endFn( gameState );
 	return true;
     };
 }
@@ -1167,14 +1153,14 @@ function AddSparks(x, y, vx, vy) {
 	    () => {
 		self.playerPaddle = new Paddle(lp.x, lp.y, p1label);
 		self.cpuPaddle = new Paddle(rp.x, rp.y);
-		ForCount(gDebug ? 1 : 1, () => { 
+		ForCount(gDebug ? 50 : 1, () => { 
 		    gPucks.A.push( self.CreateStartingPuck(1) );
 		});
 	    },
 	    () => {
 		self.playerPaddle = new Paddle(rp.x, rp.y, p1label);
 		self.cpuPaddle = new Paddle(lp.x, lp.y);
-		ForCount(gDebug ? 1 : 1, () => { 
+		ForCount(gDebug ? 50 : 1, () => { 
 		    gPucks.A.push( self.CreateStartingPuck(-1) );
 		});
 	    }
@@ -1232,10 +1218,10 @@ function AddSparks(x, y, vx, vy) {
     };
 
     self.StepAnimations = function( dt ) {
-	for (var anim_id in self.animations) {
-	    var done = self.animations[anim_id].Step( dt, self );
+	for (var animId in self.animations) {
+	    var done = self.animations[animId].Step( dt, self );
 	    if (done) {
-		delete self.animations[anim_id];
+		delete self.animations[animId];
 	    }
 	}
     };
@@ -1261,7 +1247,7 @@ function AddSparks(x, y, vx, vy) {
     self.ProcessInput = function() {
 	if( !self.attract ) {
 	    gEventQueue.forEach((event,i) => {
-		event.update_fn();
+		event.updateFn();
 		self.ProcessOneInput();
 	    });
 	    gEventQueue = [];
@@ -1524,10 +1510,18 @@ function AddSparks(x, y, vx, vy) {
     self.Draw = function() {
 	if (!gResizing) {
 	    self.DrawMidLine();
-	    self.DrawScoreHeader();
+	    // z order pucks rendering overkill nuance.
 	    gPucks.A.forEach((p) => {
 		Assert(!!p, "broken pucks");
-		p.Draw( self.Alpha() );
+		if (Sign(p.vx) == ForSide(1,-1)) {
+		    p.Draw( self.Alpha() );
+		}
+	    });
+	    gPucks.A.forEach((p) => {
+		Assert(!!p, "broken pucks");
+		if (Sign(p.vx) == ForSide(-1,1)) {
+		    p.Draw( self.Alpha() );
+		}
 	    });
 	    gSparks.A.forEach((s) => {
 		Assert(!!s, "broken spark");
@@ -1540,11 +1534,11 @@ function AddSparks(x, y, vx, vy) {
 	    // keep some things visible on z top.
 	    self.playerPaddle.Draw( self.Alpha() );
 	    self.cpuPaddle.Draw( self.Alpha() );
+	    gPowerup && gPowerup.Draw( self.Alpha() );
+	    self.DrawScoreHeader();
 	    self.DrawPauseButton();
 	    self.DrawTouchTarget();
 	    self.DrawCRTOutline();
-	    gPowerup && gPowerup.Draw( self.Alpha() );
-	    if (!self.attract) { DrawCRTScanLines(); }
 	}
 	self.DrawDebug();
     };
@@ -1688,7 +1682,7 @@ function DrawTitle(flicker=true) {
     self.ProcessInput = function() {
 	var nextState = undefined;
 	gEventQueue.forEach((event,i) => {
-	    event.update_fn();
+	    event.updateFn();
 	    if (nextState == undefined) {
 		nextState = self.ProcessOneInput();
 	    }
@@ -1736,10 +1730,10 @@ function DrawTitle(flicker=true) {
 	var hasEvents = gEventQueue.length > 0;
 	if (hasEvents) {
 	    gEventQueue.forEach((event,i) => {
-		event.update_fn();
+		event.updateFn();
 		if (nextState == undefined &&
-		    event.event_type != kEventTouchMove &&
-		    event.event_type != kEventMouseMove) {
+		    event.eventType != kEventTouchMove &&
+		    event.eventType != kEventMouseMove) {
 		    nextState = self.ProcessOneInput();
 		}
 	    });
@@ -1788,7 +1782,6 @@ function DrawTitle(flicker=true) {
 		DrawText( msg, "center", gw(0.5), gh(0.5)+80, gSmallFontSizePt );
 	    });
 	}
-	DrawCRTScanLines();
     };
 
     self.DrawAudio = function() {
@@ -1859,20 +1852,20 @@ function DrawTitle(flicker=true) {
 
     self.Step = function() {
 	var nextState = undefined;
-	var goto_menu = (gGameTime - self.started) > self.timeoutMsg;
+	var gotoMenu = (gGameTime - self.started) > self.timeoutMsg;
 	ClearScreen();
-	nextState = self.ProcessInput(goto_menu);
-	self.Draw(goto_menu);
+	nextState = self.ProcessInput(gotoMenu);
+	self.Draw(gotoMenu);
 	return nextState;
     };
 
-    self.ProcessInput = function(goto_menu) {
+    self.ProcessInput = function(gotoMenu) {
 	var nextState = undefined;
 	var hasEvents = gEventQueue.length > 0;
 	if (hasEvents) {
 	    gEventQueue.forEach((event,i) => {
-		event.update_fn();
-		nextState = self.ProcessOneInput(goto_menu);
+		event.updateFn();
+		nextState = self.ProcessOneInput(gotoMenu);
 	    });
 	    gEventQueue = [];
 	}
@@ -1883,9 +1876,9 @@ function DrawTitle(flicker=true) {
 	return nextState;
     };
 
-    self.ProcessOneInput = function(goto_menu) {
+    self.ProcessOneInput = function(gotoMenu) {
 	var nextState = undefined;
-	if (goto_menu && (anyKeyPressed() || gStickUp || gStickDown || touching())) {
+	if (gotoMenu && (anyKeyPressed() || gStickUp || gStickDown || touching())) {
             nextState = kMenu;
         }
 	else if (nextState == undefined && (gGameTime - self.started) > self.timeoutMsg+self.timeoutEnd) {
@@ -1894,7 +1887,7 @@ function DrawTitle(flicker=true) {
 	return nextState;
     };
     
-    self.Draw = function(goto_menu) {
+    self.Draw = function(gotoMenu) {
 	ClearScreen();
 	var x = gw(0.5);
 	var y = gh(0.5) - 20;
@@ -1907,13 +1900,11 @@ function DrawTitle(flicker=true) {
 	    var msg = `FINAL SCORE: ${gPlayerScore} - ${gCPUScore} = ${self.finalScore}`;
 	    DrawText( msg, "center", x, y, gRegularFontSizePt );
 
-	    if (goto_menu) {
+	    if (gotoMenu) {
 		gCx.fillStyle = RandomYellowSolid();
 		DrawText( "GO TO MENU", "center", x, y+120, gReducedFontSizePt );
 	    }
 	});
-
-	DrawCRTScanLines();
 
 	return nextState;
     };
@@ -1938,8 +1929,8 @@ function JoystickMove(e) {
 	gStickDopn = false;
 	if (e.verticalValue < -kJoystickDeadZone) {
 	    gEventQueue.push({
-		event_type: kEventStickUp,
-		update_fn: () => {
+		eventType: kEventStickUp,
+		updateFn: () => {
 		    gStickUp = true;
 		    gStickDopn = false;
 		    gMoveTargetY = undefined;
@@ -1952,8 +1943,8 @@ function JoystickMove(e) {
 	gStickDopn = false;
 	if (e.verticalValue > kJoystickDeadZone) {
 	    gEventQueue.push({
-		event_type: kEventStickDown,
-		update_fn: () => {
+		eventType: kEventStickDown,
+		updateFn: () => {
 		    gStickUp = false;
 		    gStickDown = true;
 		    gMoveTargetY = undefined;
@@ -1978,7 +1969,7 @@ function RemoveGamepad() {
     }
 }
 
-function PointerProcess(t, update_fn) {
+function PointerProcess(t, updateFn) {
     var cvrect = gCanvas.getBoundingClientRect();
     var cvx = cvrect.x + window.scrollX;
     var cvy = cvrect.y + window.scrollY;
@@ -1986,14 +1977,14 @@ function PointerProcess(t, update_fn) {
     // todo: handle window.devicePixelRatio.
     var tx = (t.clientX - cvx);
     var ty = (t.clientY - cvy);
-    Assert(update_fn != undefined, "PointerProcess");
-    update_fn(tx, ty);
+    Assert(updateFn != undefined, "PointerProcess");
+    updateFn(tx, ty);
 }
 
-function SetPointerTarget(tx, ty, event_type) {
+function SetPointerTarget(tx, ty, eventType) {
     gEventQueue.push({
-	event_type,
-	update_fn: () => {
+	eventType,
+	updateFn: () => {
 	    gTouchX = tx;
 	    gTouchY = ty;
 	    gMoveTargetY = ty;
@@ -2029,13 +2020,13 @@ function TouchMove(e) {
 
 function TouchEnd(e) {
     e.preventDefault();
-    var start_time = gTouchingTime.start;
-    var end_time = gGameTime;
+    var startTime = gTouchingTime.start;
+    var endTime = gGameTime;
     gEventQueue.push({
-	event_type: kEventTouchEnd,
-	update_fn: () => {
+	eventType: kEventTouchEnd,
+	updateFn: () => {
 	    gMoveTargetStepY = 0;
-	    gTouchingTime.end = end_time;
+	    gTouchingTime.end = endTime;
 	}
     });
 }
@@ -2064,13 +2055,13 @@ function MouseMove(e) {
 
 function MouseUp(e) {
     e.preventDefault();
-    var start_time = gTouchingTime.start;
-    var end_time = gGameTime;
+    var startTime = gTouchingTime.start;
+    var endTime = gGameTime;
     gEventQueue.push({
-	event_type: kEventMouseUp,
-	update_fn: () => {
+	eventType: kEventMouseUp,
+	updateFn: () => {
 	    gMoveTargetStepY = 0;
-	    gTouchingTime.end = end_time;
+	    gTouchingTime.end = endTime;
 	}
     });
 }
@@ -2185,10 +2176,10 @@ function Start() {
 }
 
 // er, i'm lazy and never un-register so be sure this only gets called once.
-var init_events_run = false;
+var initEventsRun = false;
 function InitEvents() {
-    Assert(!init_events_run, "init_events_run");
-    init_events_run = true;
+    Assert(!initEventsRun, "initEventsRun");
+    initEventsRun = true;
     
     Gamepads.start();
     Gamepads.addEventListener('connect', RegisterGamepad);
@@ -2213,8 +2204,8 @@ function InitEvents() {
 	if( e.keyCode == 38 || e.keyCode == 87 ) { // arrow up, w
 	    e.preventDefault();
 	    gEventQueue.push({
-		event_type: kEventKeyDown,
-		update_fn: () => {
+		eventType: kEventKeyDown,
+		updateFn: () => {
 		    gUpPressed = true;
 		    gMoveTargetY = undefined;
 		    gDownKeys[e.keyCode] = true;
@@ -2224,8 +2215,8 @@ function InitEvents() {
 	if( e.keyCode == 40 || e.keyCode == 83 ) { // arrow down, s
 	    e.preventDefault();
 	    gEventQueue.push({
-		event_type: kEventKeyDown,
-		update_fn: () => {
+		eventType: kEventKeyDown,
+		updateFn: () => {
 		    gDownPressed = true;
 		    gMoveTargetY = undefined;
 		    gDownKeys[e.keyCode] = true;
@@ -2234,8 +2225,8 @@ function InitEvents() {
 	}
 	if( e.keyCode == 80 || e.keyCode == 19 ) { // 'p', 'pause'
 	    gEventQueue.push({
-		event_type: kEventKeyDown,
-		update_fn: () => {
+		eventType: kEventKeyDown,
+		updateFn: () => {
 		    gPausePressed = true;
 		    gDownKeys[e.keyCode] = true;
 		}
@@ -2243,48 +2234,48 @@ function InitEvents() {
 	}
 	if( e.keyCode == 32 ) { // ' '
 	    gEventQueue.push({
-		event_type: kEventKeyDown,
-		update_fn: () => {
+		eventType: kEventKeyDown,
+		updateFn: () => {
 		    gDownKeys[e.keyCode] = true;
 		}
 	    });
 	}
 	if( e.keyCode == 65 ) { // 'a'
 	    gEventQueue.push({
-		event_type: kEventKeyDown,
-		update_fn: () => {
+		eventType: kEventKeyDown,
+		updateFn: () => {
 		    if (gDebug) { gAddPuckPressed = true; }
 		}
 	    });
 	}
 	if( e.keyCode == 81 ) { // 'q'
 	    gEventQueue.push({
-		event_type: kEventKeyDown,
-		update_fn: () => {
+		eventType: kEventKeyDown,
+		updateFn: () => {
 		    if (gDebug) { gGameOverPressed = true; }
 		}
 	    });
 	}
 	if( e.keyCode == 66 ) { // 'b'
 	    gEventQueue.push({
-		event_type: kEventKeyDown,
-		update_fn: () => {
+		eventType: kEventKeyDown,
+		updateFn: () => {
 		    if (gDebug) { gSpawnPowerupPressed = true; }
 		}
 	    });
 	}
 	if( e.keyCode == 69 ) { // 'e'
 	    gEventQueue.push({
-		event_type: kEventKeyDown,
-		update_fn: () => {
+		eventType: kEventKeyDown,
+		updateFn: () => {
 		    if (gDebug) { gNextMusicPressed = true; }
 		}
 	    });
 	}
 	if (e.keyCode == 46) { // delete.
 	    gEventQueue.push({
-		event_type: kEventKeyDown,
-		update_fn: () => {
+		eventType: kEventKeyDown,
+		updateFn: () => {
 		    if (gDebug) {
 			gHighScore = undefined;
 			localStorage.removeItem(kHighKey);
@@ -2298,8 +2289,8 @@ function InitEvents() {
 	if( e.keyCode == 38 || e.keyCode == 87 ) { // arrow up, w
 	    e.preventDefault();
 	    gEventQueue.push({
-		event_type: kEventKeyUp,
-		update_fn: () => {
+		eventType: kEventKeyUp,
+		updateFn: () => {
 		    gUpPressed = false;
 		    delete gDownKeys[e.keyCode];
 		}
@@ -2308,8 +2299,8 @@ function InitEvents() {
 	if( e.keyCode == 40 || e.keyCode == 83 ) { // arrow down, s
 	    e.preventDefault();
 	    gEventQueue.push({
-		event_type: kEventKeyUp,
-		update_fn: () => {
+		eventType: kEventKeyUp,
+		updateFn: () => {
 		    gDownPressed = false;
 		    delete gDownKeys[e.keyCode];
 		}
@@ -2317,8 +2308,8 @@ function InitEvents() {
 	}
 	if( e.keyCode == 80 || e.keyCode == 19 ) { // 'p', 'pause'
 	    gEventQueue.push({
-		event_type: kEventKeyUp,
-		update_fn: () => {
+		eventType: kEventKeyUp,
+		updateFn: () => {
 		    gPausePressed = false;
 		    delete gDownKeys[e.keyCode];
 		}
@@ -2326,47 +2317,47 @@ function InitEvents() {
 	}
 	if( e.keyCode == 32 ) { // ' '
 	    gEventQueue.push({
-		event_type: kEventKeyUp,
-		update_fn: () => {
+		eventType: kEventKeyUp,
+		updateFn: () => {
 		    delete gDownKeys[e.keyCode];
 		}
 	    });
 	}
 	if( e.keyCode == 65 ) { // 'a'
 	    gEventQueue.push({
-		event_type: kEventKeyUp,
-		update_fn: () => {
+		eventType: kEventKeyUp,
+		updateFn: () => {
 		    gAddPuckPressed = false;
 		}
 	    });
 	}
 	if( e.keyCode == 81 ) { // 'q'
 	    gEventQueue.push({
-		event_type: kEventKeyUp,
-		update_fn: () => {
+		eventType: kEventKeyUp,
+		updateFn: () => {
 		    gGameOverPressed = false;
 		}
 	    });
 	}
 	if( e.keyCode == 66 ) { // 'b'
 	    gEventQueue.push({
-		event_type: kEventKeyUp,
-		update_fn: () => {
+		eventType: kEventKeyUp,
+		updateFn: () => {
 		    gSpawnPowerupPressed = false;
 		}
 	    });
 	}
 	if( e.keyCode == 69 ) { // 'e'
 	    gEventQueue.push({
-		event_type: kEventKeyUp,
-		update_fn: () => {
+		eventType: kEventKeyUp,
+		updateFn: () => {
 		}
 	    });
 	}
 	if (e.keyCode == 46) { // delete.
 	    gEventQueue.push({
-		event_type: kEventKeyUp,
-		update_fn: () => {
+		eventType: kEventKeyUp,
+		updateFn: () => {
 		}
 	    });
 	}

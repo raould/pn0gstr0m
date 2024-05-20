@@ -34,8 +34,8 @@ function RandomRangeInt( min, max ) {
     return Math.round(RandomRange(min,max));
 }
 
-function RandomCentered( center, half_range, half_dead_zone=0 ) {
-    var r = half_dead_zone + RandomRange(0, half_range - half_dead_zone);
+function RandomCentered( center, halfRange, halfDeadZone=0 ) {
+    var r = halfDeadZone + RandomRange(0, halfRange - halfDeadZone);
     var s = RandomSign();
     var v = center + s * r;
     return v;
