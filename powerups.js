@@ -8,7 +8,7 @@ var gPowerupSpecs = {
     decimate: MakeDecimateSpec,
     engorge: MakeEngorgeSpec,
     split: MakeSplitSpec,
-    defend: MakeDefendSpec,
+//    defend: MakeDefendSpec,
 };
 
 // note: ideally each powerup type should have a unique animation.

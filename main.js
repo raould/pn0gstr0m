@@ -26,7 +26,7 @@
 // ugh for some reason enabling this on
 // firefox kills the frame rate, but it
 // is ok on edge and webkit. :eyeroll:
-var /*const*/ gDebug = false;
+var /*const*/ gDebug = true;
 var /*const*/ gShowToasts = false;
 
 var /*const*/ gCanvasName = "canvas";
@@ -1016,7 +1016,6 @@ function AddSparks(x, y, vx, vy) {
 		}
 	    )();
 	    gCx.fillStyle = RandomBlue(alpha * 0.8);
-	    gCx.fill();
 	});
     };
 
