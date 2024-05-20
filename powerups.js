@@ -236,7 +236,7 @@ function MakeDefendSpec() {
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
 	    var c = 4;
-	    var hp = 15;
+	    var hp = 20;
 	    var w = sx1(hp);
 	    var h = (gHeight-gYInset*2) / c;
 	    var x = gw(ForSide(0.1, 0.9));

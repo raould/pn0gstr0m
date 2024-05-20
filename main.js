@@ -987,36 +987,35 @@ function AddSparks(x, y, vx, vy) {
     };
 
     self.Draw = function( alpha ) {
-	var hpw = Math.max(sx1(1), Math.floor(self.width * self.hp/self.hp0));
+	var off = sx1(5);
+	var hpw = Math.max(off, Math.floor(self.width * self.hp/self.hp0)+off);
 	var r = WX(ForSide(self.x+hpw, self.x+self.width));
 	var l = WX(ForSide(self.x, r-hpw));
 	var t = WY(self.y+sy1(1));
 	var b = WY(self.y+self.height-sy1(1));
- 	var ix = sx1(5);
- 	var iy = sy1(5);
 	Cxdo(() => {
 	    gCx.beginPath();
 	    ForSide(
 		() => {
 		    gCx.moveTo(l, t);
-		    gCx.lineTo(r-ix, t);
-		    gCx.lineTo(r, t+iy);
-		    gCx.lineTo(r, b-iy);
-		    gCx.lineTo(r-ix, b);
+		    gCx.lineTo(r-off, t);
+		    gCx.lineTo(r, t+off);
+		    gCx.lineTo(r, b-off);
+		    gCx.lineTo(r-off, b);
 		    gCx.lineTo(l, b);
 		    gCx.closePath();
 		},
 		() => {
 		    gCx.moveTo(r, t);
-		    gCx.lineTo(l+ix, t);
-		    gCx.lineTo(l, t+iy);
-		    gCx.lineTo(l, b-iy);
-		    gCx.lineTo(l+ix, b);
+		    gCx.lineTo(l+off, t);
+		    gCx.lineTo(l, t+off);
+		    gCx.lineTo(l, b-off);
+		    gCx.lineTo(l+off, b);
 		    gCx.lineTo(r, b);
 		    gCx.closePath();
 		}
 	    )();
-	    gCx.fillStyle = RandomBlue(alpha);
+	    gCx.fillStyle = RandomBlue(alpha * 0.8);
 	    gCx.fill();
 	});
     };
@@ -1434,20 +1433,20 @@ function AddSparks(x, y, vx, vy) {
 	    ForSide(
 		() => {
 		    if (gHighScore != undefined) {
-			DrawText( "HI: " + gHighScore, "left", gw(0.15), gh(0.1), gSmallFontSizePt );
+			DrawText( "HI: " + gHighScore, "left", gw(0.2), gh(0.1), gSmallFontSizePt );
 		    }
 		    if (!self.attract) {
-			DrawText( "GPT: " + gCPUScore, "right", gw(0.85), gh(0.19), gRegularFontSizePt );
-			DrawText( "P1: " + gPlayerScore, "left", gw(0.15), gh(0.19), gRegularFontSizePt );
+			DrawText( "GPT: " + gCPUScore, "right", gw(0.8), gh(0.19), gRegularFontSizePt );
+			DrawText( "P1: " + gPlayerScore, "left", gw(0.2), gh(0.19), gRegularFontSizePt );
 		    }
 		},
 		() => {
 		    if (gHighScore != undefined) {
-			DrawText( "HI: " + gHighScore, "right", gw(0.85), gh(0.1), gSmallFontSizePt );
+			DrawText( "HI: " + gHighScore, "right", gw(0.8), gh(0.1), gSmallFontSizePt );
 		    }
 		    if (!self.attract) {
-			DrawText( "GPT: " + gCPUScore, "left", gw(0.15), gh(0.19), gRegularFontSizePt );
-			DrawText( "P1: " + gPlayerScore, "right", gw(0.85), gh(0.19), gRegularFontSizePt );
+			DrawText( "GPT: " + gCPUScore, "left", gw(0.2), gh(0.19), gRegularFontSizePt );
+			DrawText( "P1: " + gPlayerScore, "right", gw(0.8), gh(0.19), gRegularFontSizePt );
 		    }
 		}
 	    )();
