@@ -8,6 +8,7 @@ var gPowerupSpecs = {
     decimate: MakeDecimateSpec,
     engorge: MakeEngorgeSpec,
     split: MakeSplitSpec,
+    defend: MakeDefendSpec,
 };
 
 // note: ideally each powerup type should have a unique animation.
@@ -18,8 +19,9 @@ var gPowerupSpecs = {
 // is not properly extended.
 var gPowerupsInUse = {};
 
+// spec x,y should be top,left.
+
 function MakeReverseSpec() {
-    var xoff = ForSide(-50, 50);
     var label = ForSide(">", "<");
     return {
 	w: sx(18), h: sy(18),
@@ -69,7 +71,7 @@ function MakeReverseSpec() {
 }
 
 function MakeDecimateSpec() {
-    var xoff = ForSide(-50, 50);
+    var name = 'decimate';
     return {
 	w: sx(18), h: sy(18),
 	label: "*",
@@ -77,7 +79,7 @@ function MakeDecimateSpec() {
 	fontSize: gSmallFontSizePt,
 	test_fn: (gameState) => {
 	    // looks unfun if there aren't enough puck to destroy.
-	    return gPucks.A.length > 8 && !gPowerupsInUse['decimate'];
+	    return gPucks.A.length > 8 && !gPowerupsInUse[name];
 	},
 	boom_fn: (gameState) => {
 	    // test_fn passed, so we must have at least 8 pucks.
@@ -98,9 +100,9 @@ function MakeDecimateSpec() {
 		gameState.animations[gNextID++] = MakeHLightningAnimation({
 		    lifespan: 100,
 		    targets,
-		    end_fn: () => { delete gPowerupsInUse['decimate']; }
+		    end_fn: () => { delete gPowerupsInUse[name]; }
 		});
-		gPowerupsInUse['decimate'] = true;
+		gPowerupsInUse[name] = true;
 	    }
 	},
 	draw_fn: (self, alpha) => {
@@ -136,23 +138,23 @@ function MakeDecimateSpec() {
 }
 
 function MakeEngorgeSpec() {
-    var xoff = ForSide(-50, 50);
+    var name = 'engorge';
     return {
 	w: sx(22), h: sy(22),
 	label: "+",
 	ylb: sy(32),
 	fontSize: gBigFontSizePt,
 	test_fn: (gameState) => {
-	    return !gameState.playerPaddle.engorged && !gPowerupsInUse['engorge'];
+	    return !gameState.playerPaddle.engorged && !gPowerupsInUse[name];
 	},
 	boom_fn: (gameState) => {
 	    PlayPowerupBoom();
 	    gameState.animations[gNextID++] = MakeEngorgeAnimation({
 		lifespan: 1000 * 10,
 		gameState,
-		end_fn: () => { delete gPowerupsInUse['engorge']; }
+		end_fn: () => { delete gPowerupsInUse[name]; }
 	    });
-	    gPowerupsInUse['engorge'] = true;
+	    gPowerupsInUse[name] = true;
 	},
 	draw_fn: (self, alpha) => {
 	    Cxdo(() => {
@@ -173,7 +175,6 @@ function MakeEngorgeSpec() {
 }
 
 function MakeSplitSpec() {
-    var xoff = ForSide(-50, 50);
     return {
 	w: sx(30), h: sy(24),
 	label: "//",
@@ -194,7 +195,6 @@ function MakeSplitSpec() {
 	    gameState.animations[gNextID++] = MakeSplitAnimation({
 		lifespan: 250,
 		targets,
-		end_fn: () => { delete gPowerupsInUse['decimate']; }
 	    });
 	},
 	draw_fn: (self, alpha) => {
@@ -221,15 +221,67 @@ function MakeSplitSpec() {
     };
 }
 
+function MakeDefendSpec() {
+    return {
+	w: sx(20), h: sy(30),
+	label: "D",
+	ylb: sy(20),
+	fontSize: gSmallFontSizePt,
+	test_fn: (gameState) => {
+	    return gBarriers.A.length == 0 &&
+		gPucks.A.count > kEjectSpeedCountThreshold/2;
+	},
+	boom_fn: (gameState) => {
+	    PlayPowerupBoom();
+	    var c = 4;
+	    var h = (gHeight-gYInset*2) / c;
+	    var x = gw(ForSide(0.1, 0.9));
+	    for (var i = 0; i < c; ++i) {
+		var y = gYInset + i * h;
+		gameState.AddBarrier(
+		    new Barrier({
+			x, y,
+			w: sx1(10), h,
+			hp: 20
+		    })
+		);
+	    }
+	},
+	draw_fn: (self, alpha) => {
+	    Cxdo(() => {
+		var wx = WX(self.x);
+		var wy = WY(self.y);
+		var r = 2;
+
+		gCx.beginPath();
+		gCx.roundRect( WX(wx), WY(wy), self.w, self.h, r );
+		gCx.fillStyle = backgroundColor;
+		gCx.fill();
+
+		gCx.beginPath();
+		gCx.roundRect( WX(wx), WY(wy), self.w, self.h, r );
+		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+		gCx.lineWidth = sx1(2);
+		gCx.stroke();
+
+		DrawText( self.label, "center", wx+ii(self.w/2), wy+self.ylb, self.fontSize );
+	    });
+	},
+    };
+}
+
 function MakeRandomPowerup(gameState) {
     var keys = Object.keys(gPowerupSpecs);
     var index = RandomRangeInt(0, keys.length-1);
     var spec_base = gPowerupSpecs[keys[index]]();
+    var y = RandomBool() ?
+	gh(0.1) :
+	gh(0.9) - spec_base.h;
     if (spec_base.test_fn(gameState)) {
 	var spec = {
 	    ...spec_base,
 	    x: ForSide(gw(0.35), gw(0.65)),
-	    y: gHeight * (RandomBool() ? 0.1 : 0.9),
+	    y,
 	    vx: ForSide(-1,1) * sx(3),
 	    vy: RandomCentered(0, 4, 1)
 	};
@@ -266,7 +318,7 @@ function MakeHLightningAnimation(props) {
 function MakeSplitAnimation(props) {
     var { lifespan, targets, end_fn } = props;
     // start chain at nearest puck, assumes rhs default.
-    targets.sort((a,b) => {return b.x-a.x});
+    targets.sort((a,b) => b.x-a.x);
     ForSide(() => targets.reverse, () => {})();
     return new Animation({
 	lifespan,
@@ -364,3 +416,5 @@ function AddLightningPath( x0, y0, x1, y1, range ) {
     }
     gCx.lineTo(x1, y1);
 }
+
+console.log(gPowerupsInUse);

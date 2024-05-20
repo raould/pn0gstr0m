@@ -6,6 +6,7 @@
 * wish i could hide the mouse cursor.
 * say sound(s) are loading when they are.
 * wavy scaline fx.
+* move A,B,SwapBuffers into reusableArray.
 * ugly inconsistencies:
   * resizing things & left vs. right e.g. gPauseButtonCx.
   * events queue vs. immediate.

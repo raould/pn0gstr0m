@@ -95,7 +95,8 @@ var /*const*/ kAIMoveScale = 1.2;
 
 var gDashedLineCount;
 var gDashedLineWidth;
-var gPaddleInset;
+var gXInset;
+var gYInset;
 var gPaddleHeight;
 var gPaddleWidth;
 var gPaddleStepSize;
@@ -139,11 +140,12 @@ function gh(y=1) { return y == 1 ? gHeight : ii(y * gHeight); }
 function RecalculateConstants() {
     gDashedLineCount = syi(15);
     gDashedLineWidth = sx1(2);
-    gPaddleInset = sxi(15);
+    gXInset = sxi(15);
+    gYInset = sxi(15);
     gPaddleHeight = gh(0.11);
     gPaddleWidth = sxi(6);
     gPaddleStepSize = gPaddleHeight * 0.2;
-    gPaddleMidYLimit = gPaddleInset + gPaddleHeight/2;
+    gPaddleMidYLimit = gYInset + gPaddleHeight/2;
     gPuckHeight = gPuckWidth = gh(0.015);
     gPauseCenterX = gw(0.54);
     gPauseCenterY = gh(0.08);
@@ -178,6 +180,7 @@ var /*const*/ kEjectCountThreshold = 100;
 var /*const*/ kEjectSpeedCountThreshold = 90;
 var /*const*/ gPuckArrayInitialSize = 300;
 var /*const*/ gSparkArrayInitialSize = 200;
+var /*const*/ gBarriersArrayInitialSize = 10;
 
 var gNextID = 0;
 
@@ -246,9 +249,16 @@ var /*const*/ kScoreIncrement = 1;
 var gPlayerScore = 0;
 var gCPUScore = 0;
 
+// todo: move all these into GameState.
+// todo: use typescript.
 var gPucks; // { A:[], B:[] };
 var gSparks; // { A:[], B:[] };
 var gPowerup; // there can be (at most) only 1 (at a time).
+// these are a bit complicated.
+// { x, y, width, height,
+//   prev_x, prev_y,
+//   CollisionTest( paddle (todo: xywh) ) }
+var gBarriers; // ( A:[], B:[] };
 
 var /*const*/ kNoop = -1;
 var /*const*/ kSplash = 0; // audio permission via user interaction effing eff.
@@ -439,7 +449,6 @@ function DrawTextFaint( data, align, x, y, size ) {
     DrawText( data, align, x, y, size, false );
 }
 
-var haha = 0;
 /*class*/ function Lifecycle( handlerMap ) {
 
     var self = this;
@@ -799,9 +808,9 @@ function AddSparks(x, y, vx, vy) {
 	    self.prev_y = self.y;
 	    self.x += (self.vx * dt);
 	    self.y += (self.vy * dt);
-	    self.alive = 
-		!(self.x+self.width < 0 || self.x > gWidth ||
-		  self.y+self.height < 0 || self.y > gHeight);
+	    var xout = self.x < 0 || self.x+self.width >= gWidth;
+	    var yout = self.y < 0 || self.y+self.height >= gHeight;
+	    self.alive = !(xout || yout);
 	}
     };
 
@@ -845,82 +854,105 @@ function AddSparks(x, y, vx, vy) {
 	return np;
     };
 
-    self.PaddleCollision = function( paddle ) {
-	var newPuck = undefined;
+    self.CollisionTest = function( xywh ) {
 	if( self.alive ) {
 	    // !? assuming small enough simulation stepping !?
 	    // current step overlap?
-	    var xRight = self.x >= paddle.x+paddle.width;
-	    var xLeft = self.x+self.width < paddle.x;
+	    var xRight = self.x >= xywh.x+xywh.width;
+	    var xLeft = self.x+self.width < xywh.x;
 	    var xOverlaps = ! ( xRight || xLeft );
-	    var yTop = self.y >= paddle.y+paddle.height;
-	    var yBottom = self.y+self.height < paddle.y;
+	    var yTop = self.y >= xywh.y+xywh.height;
+	    var yBottom = self.y+self.height < xywh.y;
 	    var yOverlaps = ! ( yTop || yBottom );
-
 	    // did previous step overlap?
 	    // also trying to see which direction?
-	    var pxRight = self.prev_x >= paddle.prev_x+paddle.width;
-	    var pxLeft = self.prev_x+self.width < paddle.prev_x;
+	    var pxRight = self.prev_x >= xywh.prev_x+xywh.width;
+	    var pxLeft = self.prev_x+self.width < xywh.prev_x;
 	    var pxOverlaps = ! ( pxRight || pxLeft );
-
-	    // did it pass over the paddle? (paranoid check.)
-	    var dxOverlaps = Sign(self.prev_x - paddle.prev_x) != Sign(self.x - paddle.x);
-
-	    if( (dxOverlaps || xOverlaps) && yOverlaps ) {
-		// bounce horizontally.
-		if( self.vx > 0 ) {
-		    self.x = paddle.x-self.width;
-		}
-		else {
-		    self.x = paddle.x+paddle.width;
-		}
-		self.vx *= -1;
-
-		// smallest bit of vertical english.
-		// too much means you never get to 'streaming'.
-		// too little means you maybe crash the machine :-)
-		var dy = self.GetMidY() - paddle.GetMidY();
-		var mody = gRandom() * 0.055 * Math.abs(dy);
-		if( self.GetMidY() < paddle.GetMidY() ) {
-		    self.vy -= mody;
-		}
-		else if( self.GetMidY() > paddle.GetMidY() ) {
-		    self.vy += mody;
-		}
-
-		newPuck = self.SplitPuck();
-	    }
+	    // did it pass over the xywh? (paranoid check.)
+	    var dxOverlaps = Sign(self.prev_x - xywh.prev_x) != Sign(self.x - xywh.x);
+	    return (dxOverlaps || xOverlaps) && yOverlaps;
 	}
+	return false;
+    };
 
+    self.BounceCollidableX = function( xywh ) {
+	var did = false;
+	if( self.vx > 0 ) {
+	    did = true;
+	    self.x = xywh.x - self.width;
+	}
+	else {
+	    did = true;
+	    self.x = xywh.x + xywh.width;
+	}
+	self.vx *= -1;
+	return did;
+    };
+
+    self.PaddleCollision = function( paddle ) {
+	var newPuck = undefined;
+	var hit = self.CollisionTest( paddle );
+	if ( hit ) {
+	    // todo: bounce Y.
+	    self.BounceCollidableX( paddle );
+
+	    // smallest bit of vertical english.
+	    // too much means you never get to 'streaming'.
+	    // too little means you maybe crash the machine :-)
+	    var dy = self.GetMidY() - paddle.GetMidY();
+	    var mody = gRandom() * 0.055 * Math.abs(dy);
+	    if( self.GetMidY() < paddle.GetMidY() ) {
+		self.vy -= mody;
+	    }
+	    else if( self.GetMidY() > paddle.GetMidY() ) {
+		self.vy += mody;
+	    }
+
+	    newPuck = self.SplitPuck();
+	}
 	return newPuck;
     };
 
     self.AllPaddlesCollision = function( paddles ) {
 	var spawned = [];
-	paddles.forEach( function(paddle) {
-	    var np = self.PaddleCollision(paddle);
-	    if( np !== undefined ) {
-		spawned.push( np );
-	    }
-	} );
+	if (self.alive) {
+	    paddles.forEach( function(paddle) {
+		var np = self.PaddleCollision(paddle);
+		if( np !== undefined ) {
+		    spawned.push( np );
+		}
+	    } );
+	}
 	return spawned;
     };
-    
-    self.WallCollision = function() {
+
+    self.BarriersCollision = function( barriers ) {
 	if (self.alive) {
-	    if( self.y < gPaddleInset ) {
-		if( self.vy < 0 ) {
-		    self.vy *= -1;
+	    gBarriers.A.forEach( function(barrier) {
+		var hit = barrier.CollisionTest( self );
+		if (hit) {
 		    PlayBlip();
+		    self.vx *= -1;
 		}
-		self.y = gPaddleInset;
+	    } );
+	}
+    };
+    
+    self.WallsCollision = function() {
+	if (self.alive) {
+	    var did = false;
+	    if( self.y < gYInset ) {
+		did = true;
+		self.y = gYInset;
 	    }
-	    if( self.y+self.height > gHeight - gPaddleInset ) {
-		if( self.vy > 0 ) {
-		    self.vy *= -1;
-		    PlayBlip();
-		}
-		self.y = gHeight - gPaddleInset - self.height;
+	    if( self.y+self.height > gHeight - gYInset ) {
+		did = true;
+		self.y = gHeight - gYInset - self.height;
+	    }
+	    if (did) {
+		self.vy *= -1;
+		PlayBlip();
 	    }
 	}
     };
@@ -941,6 +973,55 @@ function AddSparks(x, y, vx, vy) {
 		)();
 	    }
 	}
+    };
+
+    self.Init();
+}
+
+/*class*/ function Barrier( spec ) {
+    var self = this;
+
+    self.Init = function() {
+	self.x = spec.x;
+	self.y = spec.y;
+	self.prev_x = self.x;
+	self.prev_y = self.y;
+
+	self.height = spec.h;
+	self.width = spec.w;
+
+	self.hp0 = spec.hp;
+	self.hp = self.hp0;
+	self.alive = spec.hp > 0;
+    };
+
+    self.Step = function( dt ) {
+	self.alive = self.hp > 0;
+    };
+
+    self.Draw = function( alpha ) {
+	var hpw = Math.max(sx(1), Math.floor(self.width * self.hp/self.hp0));
+	var r = ForSide(self.x+hpw, self.x+self.width);
+	var l = ForSide(self.x, r-hpw);
+	Cxdo(() => {
+	    gCx.fillStyle = RandomBlue(alpha);
+	    gCx.fillRect(
+		WX(l), WX(self.y)-sy1(1),
+		hpw, self.height-sy1(2)
+	    );
+	});
+    };
+
+    self.CollisionTest = function( puck ) {
+	var okvx = ForSide(1, -1);
+	if (Sign(puck.vx) != okvx) {
+	    var hit = puck.CollisionTest( self );
+	    if (hit) {
+		self.hp--;
+	    }
+	    return hit;
+	}
+	return false;
     };
 
     self.Init();
@@ -1007,6 +1088,7 @@ function AddSparks(x, y, vx, vy) {
 	}
     };
 
+    // todo: reuse collision xywh code.
     self.PaddleCollision = function( paddle ) {
 	// !? assuming small enough simulation stepping !?
 	// current step overlap?
@@ -1078,22 +1160,22 @@ function AddSparks(x, y, vx, vy) {
 	self.powerupWait = 1000*(gDebug?3:20);
 	self.paused = false;
 	self.animations = {};
-	var lp = { x: gPaddleInset, y: gh(0.5) };
-	var rp = { x: gWidth-gPaddleInset-gPaddleWidth, y: gh(0.5) };
+	var lp = { x: gXInset, y: gh(0.5) };
+	var rp = { x: gWidth-gXInset-gPaddleWidth, y: gh(0.5) };
 	var p1label = attract ? undefined : "P1";
 	ForSide(
 	    () => {
 		self.playerPaddle = new Paddle(lp.x, lp.y, p1label);
 		self.cpuPaddle = new Paddle(rp.x, rp.y);
-		ForCount(gDebug ? 10 : 1, () => { 
-		    gPucks.A.push( self.CreateStartingPuck(1) );
+		ForCount(gDebug ? 1 : 1, () => { 
+		    gPucks.A.push( self.CreateStartingPuck(-1) );
 		});
 	    },
 	    () => {
 		self.playerPaddle = new Paddle(rp.x, rp.y, p1label);
 		self.cpuPaddle = new Paddle(lp.x, lp.y);
-		ForCount(gDebug ? 10 : 1, () => { 
-		    gPucks.A.push( self.CreateStartingPuck(-1) );
+		ForCount(gDebug ? 1 : 1, () => { 
+		    gPucks.A.push( self.CreateStartingPuck(1) );
 		});
 	    }
 	)();
@@ -1216,7 +1298,7 @@ function AddSparks(x, y, vx, vy) {
 	    self.playerPaddle.MoveDown( dt );
 	}
 	if( gMoveTargetY != undefined ) {
-	    var limit = gPaddleInset + gPaddleHeight/2;
+	    var limit = gYInset + gPaddleHeight/2;
 	    gMoveTargetY = Clip(
 		gMoveTargetY + gMoveTargetStepY,
 		limit,
@@ -1243,6 +1325,10 @@ function AddSparks(x, y, vx, vy) {
 	}
     };
 
+    self.AddBarrier = function( s ) {
+	gBarriers.A.push(s);
+    };
+    
     self.StepMoveables = function( dt ) {
 	if (!self.paused) {
 	    if (self.attract) {
@@ -1252,6 +1338,7 @@ function AddSparks(x, y, vx, vy) {
 	    self.MovePucks( dt );
 	    self.MoveSparks( dt );
 	    self.MovePowerup( dt );
+	    self.MoveBarriers( dt );
 	}
     };
 
@@ -1264,7 +1351,8 @@ function AddSparks(x, y, vx, vy) {
 	    }
 	    if (p.alive) {
 		var splits = p.AllPaddlesCollision( [ self.playerPaddle, self.cpuPaddle ] );
-		p.WallCollision();
+		p.WallsCollision();
+		p.BarriersCollision();
 		gPucks.B.push( p );
 		if( !self.attract ) {
 		    gPucks.B.pushAll(splits);
@@ -1290,6 +1378,15 @@ function AddSparks(x, y, vx, vy) {
 	}
     };
 
+    self.MoveBarriers = function( dt ) {
+	gBarriers.B.clear();
+	gBarriers.A.forEach((s) => {
+	    s.Step( kMoveStep * (dt/kTimeStep) );
+	    s.alive && gBarriers.B.push( s );
+	} );
+	SwapBuffers(gBarriers);
+    };
+
     self.Alpha = function( alpha ) {
 	if (alpha == undefined) { alpha = 1; }
 	return alpha * (self.attract ? 0.3 : 1);
@@ -1299,9 +1396,9 @@ function AddSparks(x, y, vx, vy) {
 	if (!self.attract) {
 	    Cxdo(() => {
 		gCx.fillStyle = RandomGreen(self.Alpha(RandomRange(0.4, 0.6)));
-		var dashStep = (gHeight - 2*gPaddleInset)/(gDashedLineCount*2);
+		var dashStep = (gHeight - 2*gYInset)/(gDashedLineCount*2);
 		var x = gw(0.5) - ii(gDashedLineWidth/2);
-		for( var y = gPaddleInset; y < gHeight-gPaddleInset; y += dashStep*2 ) {
+		for( var y = gYInset; y < gHeight-gYInset; y += dashStep*2 ) {
 		    var ox = RandomCentered(0, 1);
 		    gCx.fillRect( x+ox, y, gDashedLineWidth, dashStep );
 		}
@@ -1354,7 +1451,7 @@ function AddSparks(x, y, vx, vy) {
 	    var xoff = sxi((Clip01(Math.abs(gMoveTargetY - gh(0.5))/gh(0.5)))*5);
 	    ForSide(
 		() => {
-		    var left = WX(gPaddleInset*0.2) + xoff;
+		    var left = WX(gXInset*0.2) + xoff;
 		    var right = left + size;
 		    var y = WY(gMoveTargetY);
 		    Cxdo(() => {
@@ -1367,7 +1464,7 @@ function AddSparks(x, y, vx, vy) {
 		    });
 		},
 		() => {
-		    var right = WX(gWidth - gPaddleInset*0.2) - xoff;
+		    var right = WX(gWidth - gXInset*0.2) - xoff;
 		    var left = right - size;
 		    var y = WY(gMoveTargetY);
 		    Cxdo(() => {
@@ -1431,11 +1528,15 @@ function AddSparks(x, y, vx, vy) {
 	    gPucks.A.forEach((p) => {
 		Assert(!!p, "broken pucks");
 		p.Draw( self.Alpha() );
-	    } );
+	    });
 	    gSparks.A.forEach((s) => {
 		Assert(!!s, "broken spark");
 		s.Draw( self.Alpha() );
-	    } );
+	    });
+	    gBarriers.A.forEach((s) => {
+		Assert(!!s, "broken steppable");
+		s.Draw( self.Alpha() );
+	    });
 	    // keep some things visible on z top.
 	    self.playerPaddle.Draw( self.Alpha() );
 	    self.cpuPaddle.Draw( self.Alpha() );
@@ -1994,6 +2095,10 @@ function ResetGlobalStorage() {
     gSparks = {
 	A: new ReuseArray(gSparkArrayInitialSize),
 	B: new ReuseArray(gSparkArrayInitialSize)
+    };
+    gBarriers = {
+	A: new ReuseArray(gBarriersArrayInitialSize),
+	B: new ReuseArray(gBarriersArrayInitialSize)
     };
 }
 
