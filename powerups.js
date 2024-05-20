@@ -224,10 +224,11 @@ function MakeSplitSpec() {
 function MakeDefendSpec() {
     return {
 	w: sx(20), h: sy(30),
-	label: "D",
+	label: "#",
 	ylb: sy(20),
 	fontSize: gSmallFontSizePt,
 	test_fn: (gameState) => {
+	    console.log(gBarriers.A.length);
 	    return gBarriers.A.length == 0 && gPucks.A.length > 15;
 	},
 	boom_fn: (gameState) => {
