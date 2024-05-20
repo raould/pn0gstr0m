@@ -4,10 +4,12 @@
  */
 
 var gPowerupSpecs = {
+/*
     reverse: MakeReverseSpec,
     decimate: MakeDecimateSpec,
     engorge: MakeEngorgeSpec,
     split: MakeSplitSpec,
+*/
     defend: MakeDefendSpec,
 };
 
