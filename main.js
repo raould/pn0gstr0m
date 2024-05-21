@@ -26,7 +26,7 @@
 // ugh for some reason enabling this on
 // firefox kills the frame rate, but it
 // is ok on edge and webkit. :eyeroll:
-var /*const*/ gDebug = true;
+var /*const*/ gDebug = false;
 var /*const*/ gShowToasts = false;
 
 var /*const*/ gCanvasName = "canvas";
