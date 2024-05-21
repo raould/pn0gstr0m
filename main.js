@@ -23,28 +23,28 @@
 // where "top" means "up" on the screen which
 // means -y in canvas coordinates.
 
-var /*const*/ gDebug = false;
-var /*const*/ gShowToasts = gDebug;
+var gDebug = false;
+var gShowToasts = gDebug;
 
-var /*const*/ gCanvasName = "canvas";
+var kCanvasName = "canvas";
 var gLifecycle;
 
 // ----------------------------------------
 // lots of dunsel things wrt scaling. :-(
 // the game was designed based on this default aspect & resolution.
 
-var /*const*/ gAspectRatio = 16/9;
+var kAspectRatio = 16/9;
 
 // these should be able to vary independently
 // as long as they keep the aspect ratio,
 // and everything should still draw 'correctly'.
 // (e.g. fonts scaled to fit in same relative area.)
-var /*const*/ kHtmlWidth = 512;
-var /*const*/ kHtmlHeight = 288;
-Assert(Math.abs(kHtmlWidth/kHtmlHeight - gAspectRatio) < 0.1, "unexpected html aspect ratio");
+var kHtmlWidth = 512;
+var kHtmlHeight = 288;
+Assert(Math.abs(kHtmlWidth/kHtmlHeight - kAspectRatio) < 0.1, "unexpected html aspect ratio");
 var gWidth = kHtmlWidth;
 var gHeight = kHtmlHeight;
-Assert(Math.abs(gWidth/gHeight - gAspectRatio) < 0.1, "unexpected g aspect ratio");
+Assert(Math.abs(gWidth/gHeight - kAspectRatio) < 0.1, "unexpected g aspect ratio");
 function getBorderFactor() {
     return getWindowAspect() > 1 ? 0.8 : 0.7;
 }
@@ -54,41 +54,41 @@ function getWindowAspect() {
 
 // ----------------------------------------
 
-var /*const*/ black = [0x0, 0x0, 0x0];
+var black = [0x0, 0x0, 0x0];
 
-var /*const*/ grey = { regular: [0xA0, 0xA0, 0xA0], strong: [0xA0, 0xA0, 0xA0] };
-var /*const*/ green = { regular: [0x89, 0xCE, 0x00], strong: [0x00, 0xFF, 0x00] };
-var /*const*/ blue = { regular: [0x05, 0x71, 0xB0], strong: [0x00, 0x00, 0xFF] };
-var /*const*/ red = { regular: [0xB5, 0x19, 0x19], strong: [0xFF, 0x00, 0x00] };
-var /*const*/ cyan = { regular: [0x57, 0xC4, 0xAD], strong: [0x00, 0xFF, 0xFF] };
-var /*const*/ yellow = { regular: [0xED, 0xA2, 0x47], strong: [0xFF, 0xFF, 0x00] };
-var /*const*/ magenta = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF] };
+var grey = { regular: [0xA0, 0xA0, 0xA0], strong: [0xA0, 0xA0, 0xA0] };
+var green = { regular: [0x89, 0xCE, 0x00], strong: [0x00, 0xFF, 0x00] };
+var blue = { regular: [0x05, 0x71, 0xB0], strong: [0x00, 0x00, 0xFF] };
+var red = { regular: [0xB5, 0x19, 0x19], strong: [0xFF, 0x00, 0x00] };
+var cyan = { regular: [0x57, 0xC4, 0xAD], strong: [0x00, 0xFF, 0xFF] };
+var yellow = { regular: [0xED, 0xA2, 0x47], strong: [0xFF, 0xFF, 0x00] };
+var magenta = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF] };
 
-var /*const*/ backgroundColor = "black"; // match: index.html background color.
-var /*const*/ scanlineColor = "rgba(0,0,8,0.5)";
-var /*const*/ warningColor = "grey";
+var backgroundColor = "black"; // match: index.html background color.
+var scanlineColor = "rgba(0,0,8,0.5)";
+var warningColor = "grey";
 
-var /*const*/ k2Pi = Math.PI*2;
+var k2Pi = Math.PI*2;
 
 // slightly useful for testing collisions when on, but carries debt, and can mislead about regular behaviour.
-var /*const*/ kDrawAIPuckTarget = true;
+var kDrawAIPuckTarget = true;
 
 // note that all the timing and stepping stuff is fragile vs. frame rate.
 var gMonochrome;
-var /*const*/ kFadeInMsec = 7000;
+var kFadeInMsec = 7000;
 
-var /*const*/ kHighKey = 'pn0g_high';
+var kHighKey = 'pn0g_high';
 var gHighScore;
 
 var gStartTime = 0;
 var gGameTime = 0;
 var gLastFrameTime = gStartTime;
 var gFrameCount = 0;
-var /*const*/ kFPS = 30;
-var /*const*/ kTimeStep = 1000/kFPS;
-var /*const*/ kMoveStep = 1;
-var /*const*/ kAIPeriod = 5;
-var /*const*/ kAIMoveScale = 1.2;
+var kFPS = 30;
+var kTimeStep = 1000/kFPS;
+var kMoveStep = 1;
+var kAIPeriod = 5;
+var kAIMoveScale = 1.2;
 
 var gDashedLineCount;
 var gDashedLineWidth;
@@ -169,14 +169,15 @@ function RecalculateConstants() {
 // gWidth or gHeight must got up into RecalculateConstants().
 
 var kFontName = "noyb2Regular";
-var /*const*/ gStartPuckCount = 1;
-var /*const*/ gMaxSparkFrame = 10;
-var /*const*/ kEjectCountThreshold = 100;
-var /*const*/ kEjectSpeedCountThreshold = 90;
-var /*const*/ gPuckArrayInitialSize = 300;
-var /*const*/ gSparkArrayInitialSize = 200;
-var /*const*/ gBarriersArrayInitialSize = 4;
-var /*const*/ gOptionsArrayInitialSize = 6;
+var kStartPuckCount = 1;
+var kMaxSparkFrame = 10;
+var kEjectCountThreshold = 100;
+var kEjectSpeedCountThreshold = 90;
+var kPuckArrayInitialSize = 300;
+var kSparkArrayInitialSize = 200;
+var kBarriersArrayInitialSize = 4;
+var kOptionsArrayInitialSize = 6;
+var kSpawnPowerupFactor = 0.001;
 
 var gNextID = 0;
 
@@ -241,7 +242,7 @@ function cancelTouch() {
     gTouchingTime.end = gGameTime;
 }
 
-var /*const*/ kScoreIncrement = 1;
+var kScoreIncrement = 1;
 var gPlayerScore = 0;
 var gCPUScore = 0;
 
@@ -257,18 +258,18 @@ var gPowerup; // there can be (at most) only 1 (at a time).
 var gBarriers; // ( A:[], B:[] }
 var gOptions; // ( A:[], B:[] }
 
-var /*const*/ kNoop = -1;
-var /*const*/ kSplash = 0; // audio permission via user interaction effing eff.
-var /*const*/ kMenu = 1;
-var /*const*/ kGame = 2;
-var /*const*/ kGameOver = 3;
-var /*const*/ kDebug = 4;
+var kNoop = -1;
+var kSplash = 0; // audio permission via user interaction effing eff.
+var kMenu = 1;
+var kGame = 2;
+var kGameOver = 3;
+var kDebug = 4;
 
 var gCanvas;
 var gCx;
 var gToasts = [];
 var gGamepad = undefined;
-var /*const*/ kJoystickDeadZone = 0.5;
+var kJoystickDeadZone = 0.5;
 var gRandom = MakeRandom(0xDEADBEEF);
 
 // ----------------------------------------
@@ -757,7 +758,7 @@ function PushToast(msg, lifespan=1000) {
 	    self.prevY = self.y;
 	    self.x += (self.vx * dt);
 	    self.y += (self.vy * dt);
-	    self.alive = self.frameCount < gMaxSparkFrame;
+	    self.alive = self.frameCount < kMaxSparkFrame;
 	}
     };
 
@@ -1286,7 +1287,7 @@ function AddSparks(x, y, vx, vy) {
 	if (!self.paused && !self.attract) {
 	    self.powerupWait = Math.max(self.powerupWait-dt, 0);
 	    if (self.powerupWait <= 0 &&
-		RandomBool(gDebug ? 0.1 : 0.01) &&
+		RandomBool(gDebug ? 0.1 : kSpawnPowerupFactor) &&
 		isU(gPowerup)) {
 		gPowerup = MakeRandomPowerup(self);
 	    }
@@ -2195,20 +2196,20 @@ function ResetInput() {
 
 function ResetGlobalStorage() {
     gPucks = {
-	A: new ReuseArray(gPuckArrayInitialSize),
-	B: new ReuseArray(gPuckArrayInitialSize)
+	A: new ReuseArray(kPuckArrayInitialSize),
+	B: new ReuseArray(kPuckArrayInitialSize)
     };
     gSparks = {
-	A: new ReuseArray(gSparkArrayInitialSize),
-	B: new ReuseArray(gSparkArrayInitialSize)
+	A: new ReuseArray(kSparkArrayInitialSize),
+	B: new ReuseArray(kSparkArrayInitialSize)
     };
     gBarriers = {
-	A: new ReuseArray(gBarriersArrayInitialSize),
-	B: new ReuseArray(gBarriersArrayInitialSize)
+	A: new ReuseArray(kBarriersArrayInitialSize),
+	B: new ReuseArray(kBarriersArrayInitialSize)
     };
     gOptions = {
-	A: new ReuseArray(gOptionsArrayInitialSize),
-	B: new ReuseArray(gOptionsArrayInitialSize)
+	A: new ReuseArray(kOptionsArrayInitialSize),
+	B: new ReuseArray(kOptionsArrayInitialSize)
     };
 }
 
@@ -2245,10 +2246,10 @@ function DoResize() {
     var w = window.innerWidth * borderFactor;
     var h = window.innerHeight * borderFactor;
     var wa = w / h;
-    if (wa >= gAspectRatio) {
-	w = h * gAspectRatio;
+    if (wa >= kAspectRatio) {
+	w = h * kAspectRatio;
     } else {
-	h = w * 1/gAspectRatio;
+	h = w * 1/kAspectRatio;
     }
     gCanvas.width = gWidth = w;
     gCanvas.height = gHeight = h;
@@ -2276,7 +2277,7 @@ function Start() {
 	gHighScore = parseInt(hs);
     }
 
-    gCanvas = document.getElementById( gCanvasName );
+    gCanvas = document.getElementById( kCanvasName );
     gCx = gCanvas.getContext( '2d' );
     DoResize();
     RecalculateConstants();

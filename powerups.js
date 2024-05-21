@@ -233,7 +233,7 @@ function MakeDefendSpec() {
 	},
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
-	    var n = 4; // match: gBarriersArrayInitialSize.
+	    var n = 4; // match: kBarriersArrayInitialSize.
 	    var hp = 20;
 	    var width = sx1(hp);
 	    var height = (gHeight-gYInset*2) / n;
@@ -287,7 +287,7 @@ function MakeOptionSpec() {
 	},
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
-	    var n = 6; // match: gOptionsArrayInitialSize.
+	    var n = 6; // match: kOptionsArrayInitialSize.
 	    var yy = (gHeight-gYInset*2)/n; // todo: center.
 	    var width = gPaddleWidth*2/3;
 	    var height = Math.min(gPaddleHeight/2, yy/2);
