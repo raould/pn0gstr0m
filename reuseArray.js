@@ -3,6 +3,9 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+// voodoo, but empirically just having this seems
+// at least in some browsers to reduce hitchiness
+// that i naively guess is gc pauses.
 function ReuseArray( initialCapacity ) {
     var self = this;
     self.length = 0;

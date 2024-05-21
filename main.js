@@ -23,11 +23,8 @@
 // where "top" means "up" on the screen which
 // means -y in canvas coordinates.
 
-// ugh for some reason enabling this on
-// firefox kills the frame rate, but it
-// is ok on edge and webkit. :eyeroll:
 var /*const*/ gDebug = false;
-var /*const*/ gShowToasts = false;
+var /*const*/ gShowToasts = gDebug;
 
 var /*const*/ gCanvasName = "canvas";
 var gLifecycle;
@@ -100,7 +97,6 @@ var gYInset;
 var gPaddleHeight;
 var gPaddleWidth;
 var gPaddleStepSize;
-var gPaddleMidYLimit;
 var gPuckHeight;
 var gPuckWidth;
 var gPauseCenterX;
@@ -145,7 +141,6 @@ function RecalculateConstants() {
     gPaddleHeight = gh(0.11);
     gPaddleWidth = sxi(6);
     gPaddleStepSize = gPaddleHeight * 0.2;
-    gPaddleMidYLimit = gYInset + gPaddleHeight/2;
     gPuckHeight = gPuckWidth = gh(0.015);
     gPauseCenterX = gw(0.54);
     gPauseCenterY = gh(0.08);
@@ -180,7 +175,8 @@ var /*const*/ kEjectCountThreshold = 100;
 var /*const*/ kEjectSpeedCountThreshold = 90;
 var /*const*/ gPuckArrayInitialSize = 300;
 var /*const*/ gSparkArrayInitialSize = 200;
-var /*const*/ gBarriersArrayInitialSize = 10;
+var /*const*/ gBarriersArrayInitialSize = 4;
+var /*const*/ gOptionsArrayInitialSize = 6;
 
 var gNextID = 0;
 
@@ -235,10 +231,10 @@ var gMoveTargetStepY = 0;
 // undefined means no taps seen, and means "right" due to history.
 var gTouchSide;
 function touchEnabled() {
-    return gTouchingTime.start != undefined;
+    return isntU(gTouchingTime.start);
 }
 function touching() {
-    var is = touchEnabled() && gTouchingTime.end == undefined;
+    var is = touchEnabled() && isU(gTouchingTime.end);
     return is;
 }
 function cancelTouch() {
@@ -251,14 +247,15 @@ var gCPUScore = 0;
 
 // todo: move all these into GameState.
 // todo: use typescript.
-var gPucks; // { A:[], B:[] };
-var gSparks; // { A:[], B:[] };
+var gPucks; // { A:[], B:[] }
+var gSparks; // { A:[], B:[] }
 var gPowerup; // there can be (at most) only 1 (at a time).
 // these are a bit complicated.
 // { x, y, width, height,
 //   prevX, prevY,
 //   CollisionTest( paddle (todo: xywh) ) }
-var gBarriers; // ( A:[], B:[] };
+var gBarriers; // ( A:[], B:[] }
+var gOptions; // ( A:[], B:[] }
 
 var /*const*/ kNoop = -1;
 var /*const*/ kSplash = 0; // audio permission via user interaction effing eff.
@@ -278,7 +275,7 @@ var gRandom = MakeRandom(0xDEADBEEF);
 
 // note: not linear, aesthetically on purpose!
 function GameTime01(period, start) {
-    var diff = gGameTime - (start == undefined ? gStartTime : start);
+    var diff = gGameTime - aorb(start, gStartTime);
     return Clip01(
 	Math.pow(
 	    diff / ((period > 0) ? period : 1000),
@@ -319,7 +316,7 @@ function rgb255s(array, alpha) {
 	_tc[3] = array[3];
     }
     var joined = _tc.map((ch,i) => ((i < 3) ? Clip255(ch) : ch)).join(",");
-    var str = ((array.length == 4 || alpha != undefined) ? "rgba(" : "rgb(") + joined + ")";
+    var str = ((array.length == 4 || isntU(alpha)) ? "rgba(" : "rgb(") + joined + ")";
     return  str;
 }
 
@@ -462,13 +459,13 @@ function DrawTextFaint( data, align, x, y, size ) {
 	var dt = gGameTime - gLastFrameTime;
 	if (dt >= kTimeStep) {
 	    var handler = self.handlerMap[self.state];
-	    Assert(handler != undefined, self.state, "RunLoop");
+	    Assert(isntU(handler), self.state, "RunLoop");
 	    if (self.transitioned) {
 		handler.Reset();
 		self.transitioned = false;
 	    }
 	    var next = handler.Step( dt );
-	    if( next != undefined && next !== self.state ) {
+	    if( isntU(next) && next !== self.state ) {
 		console.log(`transitioned from ${self.state} to ${next}`);
 		self.transitioned = true;
 		self.state = next;
@@ -509,26 +506,49 @@ function PushToast(msg, lifespan=1000) {
     });
 }
 
-/*class*/ function Paddle( x0, y0, label ) {
-
+/*class*/ function Paddle(spec) {
+    /* spec is {
+       x, y,
+       yMin, yMax,
+       width, height,
+       label,
+       hp,
+       isSplitter,
+       stepSize,
+       }
+    */
     var self = this;
 
     self.Init = function(label) {
 	self.id = gNextID++;
-	self.x0 = x0;
-	self.x = x0;
-	self.y = y0;
+	self.hp0 = spec.hp;
+	self.hp = spec.hp;
+	self.x0 = spec.x;
+	self.x = spec.x;
+	self.y = spec.y;
+	self.yMin = aorb(spec.yMin, gYInset);
+	self.yMax = aorb(spec.yMax, gHeight-gYInset);
 	self.isAtLimit = false;
 	self.prevX = self.x;
 	self.prevY = self.y;
-	self.width = gPaddleWidth;
-	self.height = gPaddleHeight;
+	self.width = spec.width;
+	self.height = spec.height;
+	self.isSplitter = !!spec.isSpliter;
+	self.alive = isU(self.hp) || self.hp > 0;
 	self.engorgedHeight = gPaddleHeight * 2;
 	self.engorgedWidth = gPaddleWidth * 0.8;
 	self.targetAIPuck = undefined;
-	self.label = label;
+	self.label = spec.label;
 	self.engorged = false;
+	self.stepSize = aorb(spec.stepSize, gPaddleStepSize);
 	self.nudgeX();
+    };
+
+    self.Hit = function() {
+	if (isntU(self.hp)) {
+	    self.hp--;
+	    self.alive = self.hp > 0;
+	}
     };
 
     self.BeginEngorged = function() {
@@ -577,22 +597,31 @@ function PushToast(msg, lifespan=1000) {
     self.Draw = function( alpha ) {
 	Cxdo(() => {
 	    gCx.fillStyle = RandomGreen(0.7 * alpha);
-	    var wx = WX(self.x);
+	    var hpw = isU(self.hp) ?
+		self.width :
+		Math.max(sx1(2), ii(self.width * self.hp/self.hp0));
+	    var wx = WX(self.x + (self.width-hpw)/2);
 	    var wy = WY(self.y);
-	    gCx.fillRect( wx, wy, self.width, self.height );
-	    if (!!label && gRandom() > GameTime01(kFadeInMsec)) {
+	    gCx.fillRect( wx, wy, hpw, self.height );
+	    if (isntU(self.label) && gRandom() > GameTime01(kFadeInMsec)) {
 		gCx.fillStyle = RandomGreen(0.5 * alpha);
-		DrawText( label, "center", self.GetMidX(), self.y-20, gSmallFontSizePt );
+		DrawText( self.label, "center", self.GetMidX(), self.y-20, gSmallFontSizePt );
+	    }
+	    if (false) {//gDebug) {
+		gCx.strokeStyle = "red";
+		gCx.strokeRect( self.x, self.y, self.width, self.height );
+		gCx.strokeStyle = "white";
+		gCx.strokeRect( self.x+1, self.yMin, self.width-2, self.yMax-self.yMin );
 	    }
 	});
     };
 
     self.MoveDown = function( dt, scale=1 ) {
 	self.prevY = self.y;
-	self.y += gPaddleStepSize * scale * (dt/kTimeStep);
+	self.y += self.stepSize * scale * (dt/kTimeStep);
 	self.isAtLimit = false;
-	if( self.GetMidY() > gHeight-gPaddleMidYLimit ) {
-	    self.y = gHeight-gPaddleMidYLimit-(self.height)/2;
+	if( self.y+self.height > self.yMax ) {
+	    self.y = self.yMax-self.height;
 	    self.isAtLimit = true;
 	}
 	self.nudgeX();
@@ -600,10 +629,10 @@ function PushToast(msg, lifespan=1000) {
 
     self.MoveUp = function( dt, scale=1 ) {
 	self.prevY = self.y;
-	self.y -= gPaddleStepSize * scale * (dt/kTimeStep);
+	self.y -= self.stepSize * scale * (dt/kTimeStep);
 	self.isAtLimit = false;
-	if( self.GetMidY() < gPaddleMidYLimit ) {
-	    self.y = gPaddleMidYLimit-(self.height)/2;
+	if( self.y < self.yMin ) {
+	    self.y = self.yMin;
 	    self.isAtLimit = true;
 	}
 	self.nudgeX();
@@ -614,7 +643,7 @@ function PushToast(msg, lifespan=1000) {
     self.aiCountdownToUpdate = kAIPeriod;
     self.shouldUpdate = function() {
 	self.aiCountdownToUpdate--;
-	var should = self.targetAIPuck == undefined;
+	var should = isU(self.targetAIPuck);
 	if( ! should ) {
 	    should = self.aiCountdownToUpdate <= 0;
 	}
@@ -633,7 +662,7 @@ function PushToast(msg, lifespan=1000) {
 	    gCx.fillStyle = "blue";
 	    if( self.shouldUpdate() ) {
 		self.UpdatePuckTarget();
-		if( self.targetAIPuck != undefined ) {
+		if( isntU(self.targetAIPuck) ) {
 		    if (gDebug) { DrawTextFaint("TRACK", "center", gw(0.8), gh(0.1), gRegularFontSizePt); }
 		    var targetMid = self.targetAIPuck.GetMidY() + self.targetAIPuck.vy;
 		    var deadzone = (self.height*0.2);
@@ -660,7 +689,7 @@ function PushToast(msg, lifespan=1000) {
 
     self.IsPuckMovingAway = function( puck ) {
 	var away = false;
-	if( puck !== undefined ) {
+	if( isntU(puck)) {
 	    var pnx = puck.x + puck.vx * 0.1;
 	    var d1 = Math.abs( puck.x - self.x );
 	    var d2 = Math.abs( pnx - self.x );
@@ -672,7 +701,7 @@ function PushToast(msg, lifespan=1000) {
     self.MaybeChoosePuck = function() {
 	var bp = undefined;
 	gPucks.A.forEach((p) => {
-	    if (bp == undefined && p != undefined) {
+	    if (isU(bp) && isntU(p)) {
 		bp = p;
 		return;
 	    }
@@ -693,7 +722,7 @@ function PushToast(msg, lifespan=1000) {
 	return bp;
     };
 
-    self.Init(label);
+    self.Init(spec.label);
 }
 
 /*class*/ function Spark( x0, y0, vx, vy ) {
@@ -778,7 +807,7 @@ function AddSparks(x, y, vx, vy) {
 	// make things coming toward you be slightly easier to see.
 	var amod = alpha * ForSide(-1,1) == Sign(self.vx) ? 1 : 0.8;
 	Cxdo(() => {
-	    // splits render another color briefly.
+	    // young pucks (mainly splits) render another color briefly.
 	    var dt = GameTime01(1000, self.startTime);
 	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? RandomYellow(amod) : RandomCyan(amod);
 	    gCx.fillRect( wx, wy, self.width, self.height );
@@ -800,7 +829,7 @@ function AddSparks(x, y, vx, vy) {
 	}
     };
 
-    self.SplitPuck = function(forced) {
+    self.SplitPuck = function(forced=false) {
 	var np = undefined;
 	var count = gPucks.A.length;
 	dosplit = forced || (count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && RandomBool(1.05-Clip01(Math.abs(self.vx/gMaxVX)))));
@@ -842,22 +871,25 @@ function AddSparks(x, y, vx, vy) {
 
     self.CollisionTest = function( xywh ) {
 	if( self.alive ) {
-	    // !? assuming small enough simulation stepping !?
-	    // current step overlap?
-	    var xRight = self.x >= xywh.x+xywh.width;
-	    var xLeft = self.x+self.width < xywh.x;
-	    var xOverlaps = ! ( xRight || xLeft );
-	    var yTop = self.y >= xywh.y+xywh.height;
-	    var yBottom = self.y+self.height < xywh.y;
-	    var yOverlaps = ! ( yTop || yBottom );
-	    // did previous step overlap?
-	    // also trying to see which direction?
-	    var pxRight = self.prevX >= xywh.prevX+xywh.width;
-	    var pxLeft = self.prevX+self.width < xywh.prevX;
-	    var pxOverlaps = ! ( pxRight || pxLeft );
-	    // did it pass over the xywh? (paranoid check.)
-	    var dxOverlaps = Sign(self.prevX - xywh.prevX) != Sign(self.x - xywh.x);
-	    return (dxOverlaps || xOverlaps) && yOverlaps;
+	    var blockvx = xywh.x >= gw(0.5) ? 1 : -1;
+	    if (Sign(self.vx) == blockvx) {
+		// !? assuming small enough simulation stepping !?
+		// current step overlap?
+		var xRight = self.x >= xywh.x+xywh.width;
+		var xLeft = self.x+self.width < xywh.x;
+		var xOverlaps = ! ( xRight || xLeft );
+		var yTop = self.y >= xywh.y+xywh.height;
+		var yBottom = self.y+self.height < xywh.y;
+		var yOverlaps = ! ( yTop || yBottom );
+		// did previous step overlap?
+		// also trying to see which direction?
+		var pxRight = self.prevX >= xywh.prevX+xywh.width;
+		var pxLeft = self.prevX+self.width < xywh.prevX;
+		var pxOverlaps = ! ( pxRight || pxLeft );
+		// did it pass over the xywh? (paranoid check.)
+		var dxOverlaps = Sign(self.prevX - xywh.prevX) != Sign(self.x - xywh.x);
+		return (dxOverlaps || xOverlaps) && yOverlaps;
+	    }
 	}
 	return false;
     };
@@ -880,6 +912,7 @@ function AddSparks(x, y, vx, vy) {
 	var newPuck = undefined;
 	var hit = self.CollisionTest( paddle );
 	if ( hit ) {
+	    paddle.Hit( self );
 	    // todo: bounce Y.
 	    self.BounceCollidableX( paddle );
 
@@ -895,7 +928,9 @@ function AddSparks(x, y, vx, vy) {
 		self.vy += mody;
 	    }
 
-	    newPuck = self.SplitPuck();
+	    if (paddle.isSplitter) {
+		newPuck = self.SplitPuck();
+	    }
 	}
 	return newPuck;
     };
@@ -905,7 +940,7 @@ function AddSparks(x, y, vx, vy) {
 	if (self.alive) {
 	    paddles.forEach( function(paddle) {
 		var np = self.PaddleCollision(paddle);
-		if( np !== undefined ) {
+		if( isntU(np) ) {
 		    spawned.push( np );
 		}
 	    } );
@@ -926,6 +961,19 @@ function AddSparks(x, y, vx, vy) {
 	}
     };
     
+    self.OptionsCollision = function( options ) {
+	if (self.alive) {
+	    gOptions.A.forEach( function(option) {
+		var hit = option.CollisionTest( self );
+		if (hit) {
+		    PlayBlip();
+		    // todo: bounds adjustment.
+		    self.vx *= -1;
+		}
+	    } );
+	}
+    };
+
     self.WallsCollision = function() {
 	if (self.alive) {
 	    var did = false;
@@ -969,6 +1017,7 @@ function AddSparks(x, y, vx, vy) {
     var self = this;
 
     self.Init = function() {
+	self.id = gNextID++;
 	self.x = spec.x;
 	self.y = spec.y;
 	self.prevX = self.x;
@@ -988,8 +1037,10 @@ function AddSparks(x, y, vx, vy) {
 
     self.Draw = function( alpha ) {
 	Cxdo(() => {
-	    var off = sx1(5);
-	    var hpw = Math.max(off, Math.floor(self.width * self.hp/self.hp0)+off);
+	    // front-side wedge cuts.
+	    var edge = sx1(5);
+	    // max() prevent getting too thin for wedge shape.
+	    var hpw = Math.max(edge, ii(self.width * self.hp/self.hp0)+edge);
 	    var r = WX(ForSide(self.x+hpw, self.x+self.width));
 	    var l = WX(ForSide(self.x, r-hpw));
 	    var t = WY(self.y+sy1(1));
@@ -998,20 +1049,20 @@ function AddSparks(x, y, vx, vy) {
 		() => {
 		    gCx.beginPath();
 		    gCx.moveTo(l, t);
-		    gCx.lineTo(r-off, t);
-		    gCx.lineTo(r, t+off);
-		    gCx.lineTo(r, b-off);
-		    gCx.lineTo(r-off, b);
+		    gCx.lineTo(r-edge, t);
+		    gCx.lineTo(r, t+edge);
+		    gCx.lineTo(r, b-edge);
+		    gCx.lineTo(r-edge, b);
 		    gCx.lineTo(l, b);
 		    gCx.closePath();
 		},
 		() => {
 		    gCx.beginPath();
 		    gCx.moveTo(r, t);
-		    gCx.lineTo(l+off, t);
-		    gCx.lineTo(l, t+off);
-		    gCx.lineTo(l, b-off);
-		    gCx.lineTo(l+off, b);
+		    gCx.lineTo(l+edge, t);
+		    gCx.lineTo(l, t+edge);
+		    gCx.lineTo(l, b-edge);
+		    gCx.lineTo(l+edge, b);
 		    gCx.lineTo(r, b);
 		    gCx.closePath();
 		}
@@ -1042,7 +1093,7 @@ function AddSparks(x, y, vx, vy) {
     var self = this;
 
     self.Init = function() {
-	Assert(spec != undefined, "no spec");
+	Assert(isntU(spec), "no spec");
 	self.id = gNextID++;
 	self.x = spec.x;
 	self.y = spec.y;
@@ -1137,6 +1188,7 @@ function AddSparks(x, y, vx, vy) {
 /*class*/ function Animation( props ) {
     var { lifespan, animFn, startFn, endFn } = props;
     var self = this;
+    self.id = gNextID++;
     self.startMs = gGameTime;
     self.endMs = self.startMs + lifespan;
     self.Step = function( dt, gameState ) {
@@ -1168,20 +1220,38 @@ function AddSparks(x, y, vx, vy) {
 	self.powerupWait = 1000*(gDebug?3:20);
 	self.paused = false;
 	self.animations = {};
+
 	var lp = { x: gXInset, y: gh(0.5) };
 	var rp = { x: gWidth-gXInset-gPaddleWidth, y: gh(0.5) };
 	var p1label = attract ? undefined : "P1";
+
 	ForSide(
 	    () => {
-		self.playerPaddle = new Paddle(lp.x, lp.y, p1label);
-		self.cpuPaddle = new Paddle(rp.x, rp.y);
+		self.playerPaddle = new Paddle({
+		    x: lp.x, y: lp.y,
+		    width: gPaddleWidth, height: gPaddleHeight,
+		    label: p1label,
+		    isSplitter: true
+		});
+		self.cpuPaddle = new Paddle({
+		    x: rp.x, y: rp.y,
+		    width: gPaddleWidth, height: gPaddleHeight
+		});
 		ForCount(gDebug ? 50 : 1, () => { 
 		    gPucks.A.push( self.CreateStartingPuck(1) );
 		});
 	    },
 	    () => {
-		self.playerPaddle = new Paddle(rp.x, rp.y, p1label);
-		self.cpuPaddle = new Paddle(lp.x, lp.y);
+		self.playerPaddle = new Paddle({
+		    x: rp.x, y: rp.y,
+		    width: gPaddleWidth, height: gPaddleHeight,
+		    label: p1label,
+		    isSplitter: true
+		});
+		self.cpuPaddle = new Paddle({
+		    x: lp.x, y: lp.y,
+		    width: gPaddleWidth, height: gPaddleHeight
+		});
 		ForCount(gDebug ? 50 : 1, () => { 
 		    gPucks.A.push( self.CreateStartingPuck(-1) );
 		});
@@ -1208,7 +1278,7 @@ function AddSparks(x, y, vx, vy) {
 	    gPowerup = MakeRandomPowerup(self);
 	}
 	var nextState = self.CheckNoPucks();
-	gPauseButtonEnabled = (nextState == undefined);
+	gPauseButtonEnabled = isU(nextState);
 	return nextState;
     };
 
@@ -1217,7 +1287,7 @@ function AddSparks(x, y, vx, vy) {
 	    self.powerupWait = Math.max(self.powerupWait-dt, 0);
 	    if (self.powerupWait <= 0 &&
 		RandomBool(gDebug ? 0.1 : 0.01) &&
-		gPowerup == undefined) {
+		isU(gPowerup)) {
 		gPowerup = MakeRandomPowerup(self);
 	    }
 	}
@@ -1305,7 +1375,7 @@ function AddSparks(x, y, vx, vy) {
 	if( gDownPressed || gStickDown ) {
 	    self.playerPaddle.MoveDown( dt );
 	}
-	if( gMoveTargetY != undefined ) {
+	if( isntU(gMoveTargetY) ) {
 	    var limit = gYInset + gPaddleHeight/2;
 	    gMoveTargetY = Clip(
 		gMoveTargetY + gMoveTargetStepY,
@@ -1333,8 +1403,14 @@ function AddSparks(x, y, vx, vy) {
 	}
     };
 
-    self.AddBarrier = function( s ) {
-	gBarriers.A.push(s);
+    self.AddBarrier = function( spec ) {
+	var b = new Barrier(spec);
+	gBarriers.A.push(b);
+    };
+
+    self.AddOption = function( spec ) {
+	var o = new Paddle(spec);
+	gOptions.A.push(o);
     };
     
     self.StepMoveables = function( dt ) {
@@ -1347,6 +1423,7 @@ function AddSparks(x, y, vx, vy) {
 	    self.MoveSparks( dt );
 	    self.MovePowerup( dt );
 	    self.MoveBarriers( dt );
+	    self.MoveOptions( dt );
 	}
     };
 
@@ -1359,6 +1436,7 @@ function AddSparks(x, y, vx, vy) {
 	    }
 	    if (p.alive) {
 		var splits = p.AllPaddlesCollision( [ self.playerPaddle, self.cpuPaddle ] );
+		splits.push.apply( splits, p.AllPaddlesCollision( gOptions.A ) );
 		p.WallsCollision();
 		p.BarriersCollision();
 		gPucks.B.push( p );
@@ -1380,9 +1458,10 @@ function AddSparks(x, y, vx, vy) {
     };
 
     self.MovePowerup = function( dt ) {
-	if (gPowerup != undefined) {
+	if (isntU(gPowerup)) {
 	    gPowerup.Step( kMoveStep * (dt/kTimeStep) );
-	    gPowerup = gPowerup.AllPaddlesCollision( self, [ self.playerPaddle, self.cpuPaddle ] );
+	    // could in theory give powerups to the cpu side as well :-)
+	    gPowerup = gPowerup.AllPaddlesCollision( self, [ self.playerPaddle ] );
 	}
     };
 
@@ -1393,6 +1472,15 @@ function AddSparks(x, y, vx, vy) {
 	    s.alive && gBarriers.B.push( s );
 	} );
 	SwapBuffers(gBarriers);
+    };
+
+    self.MoveOptions = function( dt ) {
+	gOptions.B.clear();
+	gOptions.A.forEach((o) => {
+	    o.AIMove( dt );
+	    o.alive && gOptions.B.push( o );
+	} );
+	SwapBuffers(gOptions);
     };
 
     self.Alpha = function( alpha ) {
@@ -1432,7 +1520,7 @@ function AddSparks(x, y, vx, vy) {
 	    gCx.fillStyle = RandomMagenta(self.Alpha(0.7));
 	    ForSide(
 		() => {
-		    if (gHighScore != undefined) {
+		    if (isntU(gHighScore)) {
 			DrawText( "HI: " + gHighScore, "left", gw(0.2), gh(0.1), gSmallFontSizePt );
 		    }
 		    if (!self.attract) {
@@ -1441,7 +1529,7 @@ function AddSparks(x, y, vx, vy) {
 		    }
 		},
 		() => {
-		    if (gHighScore != undefined) {
+		    if (isntU(gHighScore)) {
 			DrawText( "HI: " + gHighScore, "right", gw(0.8), gh(0.1), gSmallFontSizePt );
 		    }
 		    if (!self.attract) {
@@ -1454,7 +1542,7 @@ function AddSparks(x, y, vx, vy) {
     };
 
     self.DrawTouchTarget = function() {
-	if (gMoveTargetY != undefined && !self.attract) {
+	if (isntU(gMoveTargetY) && !self.attract) {
 	    var size = syi(7);
 	    var xoff = sxi((Clip01(Math.abs(gMoveTargetY - gh(0.5))/gh(0.5)))*5);
 	    ForSide(
@@ -1490,7 +1578,7 @@ function AddSparks(x, y, vx, vy) {
 
     self.DrawPauseButton = function() {
 	// user might start using touch only after beginning the game.
-	if (gTouchSide != undefined && !self.attract) {
+	if (isntU(gTouchSide) && !self.attract) {
 	    gPauseButtonEnabled = true;
 	    var cx = WX(gPauseCenterX);
 	    var cy = WY(gPauseCenterY);
@@ -1532,6 +1620,7 @@ function AddSparks(x, y, vx, vy) {
     self.Draw = function() {
 	if (!gResizing) {
 	    self.DrawMidLine();
+	    self.DrawScoreHeader();
 	    // z order pucks rendering overkill nuance.
 	    gPucks.A.forEach((p) => {
 		Assert(!!p, "broken pucks");
@@ -1549,15 +1638,18 @@ function AddSparks(x, y, vx, vy) {
 		Assert(!!s, "broken spark");
 		s.Draw( self.Alpha() );
 	    });
-	    gBarriers.A.forEach((s) => {
-		Assert(!!s, "broken steppable");
-		s.Draw( self.Alpha() );
+	    gBarriers.A.forEach((b) => {
+		Assert(!!b, "broken barrier");
+		b.Draw( self.Alpha() );
+	    });
+	    gOptions.A.forEach((o) => {
+		Assert(!!o, "broken option");
+		o.Draw( self.Alpha() );
 	    });
 	    // keep some things visible on z top.
 	    self.playerPaddle.Draw( self.Alpha() );
 	    self.cpuPaddle.Draw( self.Alpha() );
 	    gPowerup && gPowerup.Draw( self.Alpha() );
-	    self.DrawScoreHeader();
 	    self.DrawPauseButton();
 	    self.DrawTouchTarget();
 	    self.DrawCRTOutline();
@@ -1581,7 +1673,7 @@ function AddSparks(x, y, vx, vy) {
 	});
 
 	var cpuAIPuckTarget = self.cpuPaddle.targetAIPuck;
-	if( cpuAIPuckTarget !== undefined ) {
+	if( isntU(cpuAIPuckTarget) ) {
 	    Cxdo(() => {
 	    gCx.strokeStyle = "red";
 	    gCx.beginPath();
@@ -1593,7 +1685,7 @@ function AddSparks(x, y, vx, vy) {
 	    });
 	}
 	var playerAIPuckTarget = self.playerPaddle.targetAIPuck;
-	if( playerAIPuckTarget !== undefined ) {
+	if( isntU(playerAIPuckTarget) ) {
 	    Cxdo(() => {
 		gCx.strokeStyle = "magenta";
 		gCx.strokeRect(
@@ -1706,7 +1798,7 @@ function DrawTitle(flicker=true) {
 	var nextState = undefined;
 	gEventQueue.forEach((event,i) => {
 	    event.updateFn();
-	    if (nextState == undefined) {
+	    if (isU(nextState)) {
 		nextState = self.ProcessOneInput();
 	    }
 	});
@@ -1741,7 +1833,7 @@ function DrawTitle(flicker=true) {
 	self.attract.Step( dt );
 	nextState = self.ProcessInput();
 	self.Draw();
-	if (nextState != undefined) {
+	if (isntU(nextState)) {
 	    EndMusic();
 	    gUserMutedButtonEnabled = false;
 	}
@@ -1754,7 +1846,7 @@ function DrawTitle(flicker=true) {
 	if (hasEvents) {
 	    gEventQueue.forEach((event,i) => {
 		event.updateFn();
-		if (nextState == undefined &&
+		if (isU(nextState) &&
 		    event.eventType != kEventTouchMove &&
 		    event.eventType != kEventMouseMove) {
 		    nextState = self.ProcessOneInput();
@@ -1815,10 +1907,10 @@ function DrawTitle(flicker=true) {
     self.DrawMusicName = function() {
 	if (!gUserMuted) {
 	    var msg = "fetching music";
-	    if (gMusicID != undefined) {
+	    if (isntU(gMusicID)) {
 		var name = gAudio.id2name[gMusicID];
 		var meta = gAudio.name2meta[name];
-		if (meta?.basename != undefined && !!(meta?.loaded)) {
+		if (isntU(meta?.basename) && !!(meta?.loaded)) {
 		    var msg = `norcalledmvsic ${meta.basename}`;
 		}
 	    }
@@ -1892,8 +1984,8 @@ function DrawTitle(flicker=true) {
 	    });
 	    gEventQueue = [];
 	}
-	if (nextState != undefined) {
-	    gHighScore = Math.max(self.finalScore, (gHighScore||self.finalScore));
+	if (isntU(nextState)) {
+	    gHighScore = Math.max(self.finalScore, (aorb(gHighScore,self.finalScore)));
 	    localStorage.setItem(kHighKey, gHighScore);
 	}
 	return nextState;
@@ -1904,7 +1996,7 @@ function DrawTitle(flicker=true) {
 	if (gotoMenu && (anyKeyPressed() || gStickUp || gStickDown || touching())) {
             nextState = kMenu;
         }
-	else if (nextState == undefined && (gGameTime - self.started) > self.timeoutMsg+self.timeoutEnd) {
+	else if (isU(nextState) && (gGameTime - self.started) > self.timeoutMsg+self.timeoutEnd) {
 	    nextState = kMenu;
 	}
 	return nextState;
@@ -1917,7 +2009,7 @@ function DrawTitle(flicker=true) {
 	var nextState = undefined;
 	Cxdo(() => {
 	    gCx.fillStyle = RandomMagentaSolid();
-	    if (gHighScore == undefined || self.finalScore > gHighScore) {
+	    if (isU(gHighScore) || self.finalScore > gHighScore) {
 		DrawText( "NEW HIGH SCORE", "center", x, y - 80, gRegularFontSizePt );
 	    }
 	    var msg = `FINAL SCORE: ${gPlayerScore} - ${gCPUScore} = ${self.finalScore}`;
@@ -1985,7 +2077,7 @@ function RegisterGamepad(e) {
 }
 
 function RemoveGamepad() {
-    if (gGamepad != undefined) {
+    if (isntU(gGamepad)) {
 	gGamepad.removeEventListener("joystickmove", StandardMapping.Axis.JOYSTICK_LEFT);
 	gGamepad.removeEventListener("joystickmove", StandardMapping.Axis.JOYSTICK_RIGHT);
 	gGamepad = undefined;
@@ -2000,7 +2092,7 @@ function PointerProcess(t, updateFn) {
     // todo: handle window.devicePixelRatio.
     var tx = (t.clientX - cvx);
     var ty = (t.clientY - cvy);
-    Assert(updateFn != undefined, "PointerProcess");
+    Assert(isntU(updateFn), "PointerProcess");
     updateFn(tx, ty);
 }
 
@@ -2020,7 +2112,7 @@ function TouchStart(e) {
     PointerProcess(
 	e.touches[0],
 	(tx, ty) => {
-	    if (gTouchSide == undefined) {
+	    if (isU(gTouchSide)) {
 		gTouchSide = tx < gw(0.5) ? "left" : "right";
 	    }
 	    SetPointerTarget(tx, ty, kEventTouchStart);
@@ -2031,7 +2123,7 @@ function TouchStart(e) {
 
 function TouchMove(e) {
     e.preventDefault();
-    if (gTouchingTime.end == undefined) {
+    if (isU(gTouchingTime.end)) {
 	PointerProcess(
 	    e.touches[0],
 	    (tx, ty) => {
@@ -2066,7 +2158,7 @@ function MouseDown(e) {
 }
 
 function MouseMove(e) {
-    if (gTouchingTime.end == undefined) {
+    if (isU(gTouchingTime.end)) {
 	PointerProcess(
 	    e,
 	    (tx, ty) => {
@@ -2114,10 +2206,14 @@ function ResetGlobalStorage() {
 	A: new ReuseArray(gBarriersArrayInitialSize),
 	B: new ReuseArray(gBarriersArrayInitialSize)
     };
+    gOptions = {
+	A: new ReuseArray(gOptionsArrayInitialSize),
+	B: new ReuseArray(gOptionsArrayInitialSize)
+    };
 }
 
 function OnOrientationChange() {
-    if (gLifecycle != undefined && gLifecycle.state == kMenu) {
+    if (isntU(gLifecycle) && gLifecycle.state == kMenu) {
 	Start(); // yes, just a full reboot. :-(
     }
 }
@@ -2176,7 +2272,7 @@ function Start() {
     Assert(Object.keys(gPowerupsInUse).length == 0, "Start");
 
     var hs = localStorage.getItem(kHighKey);
-    if (hs != undefined) {
+    if (isntU(hs)) {
 	gHighScore = parseInt(hs);
     }
 

@@ -3,6 +3,18 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+function isU(u) {
+    return u == undefined;
+}
+
+function isntU(u) {
+    return u != undefined;
+}
+
+function aorb(a, b) {
+    return a != undefined ? a : b;
+}
+
 function noOp() {}
 
 function Assert(result, msg) {
@@ -14,8 +26,13 @@ function Assert(result, msg) {
 
 function ForCount(count, fn) {
     for (var i = 0; i < count; ++i) {
-	fn();
+	fn(i);
     }
+}
+
+// your fault if you don't pass an integer value.
+function isEven(n) {
+    return n%2 == 0;
 }
 
 function Swap(a, b) {

@@ -4,11 +4,12 @@
  */
 
 var gPowerupSpecs = {
-    reverse: MakeReverseSpec,
-    decimate: MakeDecimateSpec,
-    engorge: MakeEngorgeSpec,
-    split: MakeSplitSpec,
-    defend: MakeDefendSpec,
+//    reverse: MakeReverseSpec,
+//    decimate: MakeDecimateSpec,
+//    engorge: MakeEngorgeSpec,
+//    split: MakeSplitSpec,
+//    defend: MakeDefendSpec,
+    option: MakeOptionSpec,
 };
 
 // note: ideally each powerup type should have a unique animation.
@@ -232,21 +233,19 @@ function MakeDefendSpec() {
 	},
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
-	    var c = 4;
+	    var n = 4; // match: gBarriersArrayInitialSize.
 	    var hp = 20;
 	    var width = sx1(hp);
-	    var height = (gHeight-gYInset*2) / c;
+	    var height = (gHeight-gYInset*2) / n;
 	    var x = gw(ForSide(0.1, 0.9));
 	    var targets = [];
-	    for (var i = 0; i < c; ++i) {
+	    for (var i = 0; i < n; ++i) {
 		var y = gYInset + i * height;
-		gameState.AddBarrier(
-		    new Barrier({
-			x, y,
-			width, height,
-			hp,
-		    })
-		);
+		gameState.AddBarrier({
+		    x, y,
+		    width, height,
+		    hp,
+		});
 		targets.push({x: x+width/2, y: y+height/2});
 	    }
 	    gameState.animations[gNextID++] = MakeTargetsLightningAnimation({
@@ -259,6 +258,61 @@ function MakeDefendSpec() {
 		var wx = WX(self.x);
 		var wy = WY(self.y);
 		var r = 2;
+
+		gCx.beginPath();
+		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, r );
+		gCx.fillStyle = backgroundColor;
+		gCx.fill();
+
+		gCx.beginPath();
+		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, r );
+		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+		gCx.lineWidth = sx1(2);
+		gCx.stroke();
+
+		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
+	    });
+	},
+    };
+}
+
+function MakeOptionSpec() {
+    return {
+	width: sx(22), height: sy(22),
+	label: "!!",
+	ylb: sy(16),
+	fontSize: gSmallFontSizePt,
+	testFn: (gameState) => {
+	    return gOptions.A.length == 0 && (gDebug || gPucks.A.length > 20);
+	},
+	boomFn: (gameState) => {
+	    PlayPowerupBoom();
+	    var n = 6; // match: gOptionsArrayInitialSize.
+	    var yy = (gHeight-gYInset*2)/n; // todo: center.
+	    var width = gPaddleWidth*2/3;
+	    var height = Math.min(gPaddleHeight/2, yy/2);
+	    var hp = 30;
+	    ForCount(n, (i) => {
+		var x = ForSide(gw(0.3), gw(0.7));
+		var xoff = isEven(i) ? 0 : gw(0.1);
+		var y = gYInset+yy*i;
+		var yMin = y;
+		var yMax = y+yy;
+		gameState.AddOption({
+		    x: x+xoff, y,
+		    yMin, yMax,
+		    width, height,
+		    hp,
+		    stepSize: Math.max(1,(yMax-yMin)/10)
+		});
+	    });
+	    // todo: boom animation.
+	},
+	drawFn: (self, alpha) => {
+	    Cxdo(() => {
+		var wx = WX(self.x);
+		var wy = WY(self.y);
+		var r = 6;
 
 		gCx.beginPath();
 		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, r );
