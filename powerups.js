@@ -4,11 +4,11 @@
  */
 
 var gPowerupSpecs = {
-//    reverse: MakeReverseSpec,
-//    decimate: MakeDecimateSpec,
-//    engorge: MakeEngorgeSpec,
-//    split: MakeSplitSpec,
-//    defend: MakeDefendSpec,
+    reverse: MakeReverseSpec,
+    decimate: MakeDecimateSpec,
+    engorge: MakeEngorgeSpec,
+    split: MakeSplitSpec,
+    defend: MakeDefendSpec,
     option: MakeOptionSpec,
 };
 
@@ -303,6 +303,7 @@ function MakeOptionSpec() {
 		    yMin, yMax,
 		    width, height,
 		    hp,
+		    isSplitter: false,
 		    stepSize: Math.max(1,(yMax-yMin)/10)
 		});
 	    });

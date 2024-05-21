@@ -533,7 +533,7 @@ function PushToast(msg, lifespan=1000) {
 	self.prevY = self.y;
 	self.width = spec.width;
 	self.height = spec.height;
-	self.isSplitter = !!spec.isSpliter;
+	self.isSplitter = aorb(spec.isSpliter, true);
 	self.alive = isU(self.hp) || self.hp > 0;
 	self.engorgedHeight = gPaddleHeight * 2;
 	self.engorgedWidth = gPaddleWidth * 0.8;
@@ -845,7 +845,7 @@ function AddSparks(x, y, vx, vy) {
 	var doejectSpeed = (self.vx > gMaxVX*0.9) && (r < ejectCountFactor);
 	var doeject = doejectCount || doejectSpeed;
 
-	if (!forced && !dosplit) {
+	if (!forced && !dosplit) { // i cry here.
 	    if (doeject) {
 		self.vy *= 1.1;
 	    }
