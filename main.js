@@ -987,16 +987,16 @@ function AddSparks(x, y, vx, vy) {
     };
 
     self.Draw = function( alpha ) {
-	var off = sx1(5);
-	var hpw = Math.max(off, Math.floor(self.width * self.hp/self.hp0)+off);
-	var r = WX(ForSide(self.x+hpw, self.x+self.width));
-	var l = WX(ForSide(self.x, r-hpw));
-	var t = WY(self.y+sy1(1));
-	var b = WY(self.y+self.height-sy1(1));
 	Cxdo(() => {
-	    gCx.beginPath();
+	    var off = sx1(5);
+	    var hpw = Math.max(off, Math.floor(self.width * self.hp/self.hp0)+off);
+	    var r = WX(ForSide(self.x+hpw, self.x+self.width));
+	    var l = WX(ForSide(self.x, r-hpw));
+	    var t = WY(self.y+sy1(1));
+	    var b = WY(self.y+self.height-sy1(1));
 	    ForSide(
 		() => {
+		    gCx.beginPath();
 		    gCx.moveTo(l, t);
 		    gCx.lineTo(r-off, t);
 		    gCx.lineTo(r, t+off);
@@ -1006,6 +1006,7 @@ function AddSparks(x, y, vx, vy) {
 		    gCx.closePath();
 		},
 		() => {
+		    gCx.beginPath();
 		    gCx.moveTo(r, t);
 		    gCx.lineTo(l+off, t);
 		    gCx.lineTo(l, t+off);
@@ -1015,7 +1016,8 @@ function AddSparks(x, y, vx, vy) {
 		    gCx.closePath();
 		}
 	    )();
-	    gCx.fillStyle = RandomBlue(alpha * 0.8);
+	    gCx.fillStyle = RandomBlue( alpha * 0.5 );
+	    gCx.fill();
 	});
     };
 
@@ -1055,14 +1057,13 @@ function AddSparks(x, y, vx, vy) {
 	self.fontSize = spec.fontSize;
 	self.boomFn = spec.boomFn;
 	self.drawFn = spec.drawFn;
-
-	if (self.x <= gw(0.5)) {
-	    self.leftBound = 0;
-	    self.rightBound = gw(0.5);
-	}
-	else {
+	if (self.x >= gw(0.5)) {
 	    self.leftBound = gw(0.5);
 	    self.rightBound = gw(1);
+	}
+	else {
+	    self.leftBound = 0;
+	    self.rightBound = gw(0.5);
 	}
 	self.topBound = 0;
 	self.bottomBound = gHeight;
@@ -1594,6 +1595,7 @@ function AddSparks(x, y, vx, vy) {
 	var playerAIPuckTarget = self.playerPaddle.targetAIPuck;
 	if( playerAIPuckTarget !== undefined ) {
 	    Cxdo(() => {
+		gCx.strokeStyle = "magenta";
 		gCx.strokeRect(
 		    playerAIPuckTarget.x - 5, playerAIPuckTarget.y - 5,
 		    playerAIPuckTarget.width + 10, playerAIPuckTarget.height + 10 );

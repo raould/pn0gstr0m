@@ -8,7 +8,7 @@ var gPowerupSpecs = {
     decimate: MakeDecimateSpec,
     engorge: MakeEngorgeSpec,
     split: MakeSplitSpec,
-//    defend: MakeDefendSpec,
+    defend: MakeDefendSpec,
 };
 
 // note: ideally each powerup type should have a unique animation.
@@ -79,7 +79,7 @@ function MakeDecimateSpec() {
 	fontSize: gSmallFontSizePt,
 	testFn: (gameState) => {
 	    // looks unfun if there aren't enough puck to destroy.
-	    return gPucks.A.length > 8 && !gPowerupsInUse[name];
+	    return gDebug || (gPucks.A.length > 8 && !gPowerupsInUse[name]);
 	},
 	boomFn: (gameState) => {
 	    // testFn passed, so we must have at least 8 pucks.
@@ -97,7 +97,7 @@ function MakeDecimateSpec() {
 		    p.alive = false;
 		    AddSparks(p.x, p.y, p.vx, p.vy);
 		});
-		gameState.animations[gNextID++] = MakeHLightningAnimation({
+		gameState.animations[gNextID++] = MakeTargetsLightningAnimation({
 		    lifespan: 100,
 		    targets,
 		    endFn: () => { delete gPowerupsInUse[name]; }
@@ -235,28 +235,25 @@ function MakeDefendSpec() {
 	    PlayPowerupBoom();
 	    var c = 4;
 	    var hp = 20;
-	    var w = sx1(hp);
-	    var h = (gHeight-gYInset*2) / c;
+	    var width = sx1(hp);
+	    var height = (gHeight-gYInset*2) / c;
 	    var x = gw(ForSide(0.1, 0.9));
+	    var targets = [];
 	    for (var i = 0; i < c; ++i) {
-		var y = gYInset + i * h;
+		var y = gYInset + i * height;
 		gameState.AddBarrier(
 		    new Barrier({
 			x, y,
-			w, h,
+			width, height,
 			hp,
 		    })
 		);
+		targets.push({x: x+width/2, y: y+height/2});
 	    }
-	    gameState.animations[gNextID++] = Make2PtLightningAnimation({
-		lifespan: 250,
-		x0: x+w/2, y0: gh(0),
-		x1: x+w/2, y1: gh(1),
-		width: sx1(2),
-		range: 15,
-		steps: 20,
+	    gameState.animations[gNextID++] = MakeTargetsLightningAnimation({
+		lifespan: 150,
+		targets,
 	    });
-
 	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
@@ -285,9 +282,7 @@ function MakeRandomPowerup(gameState) {
     var keys = Object.keys(gPowerupSpecs);
     var index = RandomRangeInt(0, keys.length-1);
     var specBase = gPowerupSpecs[keys[index]]();
-    var y = RandomBool() ?
-	gh(0.1) :
-	gh(0.9) - specBase.height;
+    var y = RandomChoice(gh(0.1), gh(0.9)-specBase.height);
     if (specBase.testFn(gameState)) {
 	var spec = {
 	    ...specBase,
@@ -301,25 +296,20 @@ function MakeRandomPowerup(gameState) {
     return undefined;
 }
 
-function MakeHLightningAnimation(props) {
+function MakeTargetsLightningAnimation(props) {
     var { lifespan, targets, endFn } = props;
     return new Animation({
 	lifespan,
 	animFn: (dt, gameState) => {
-	    Cxdo(() => {
-		targets.forEach((puck) => {
-		    gCx.beginPath();
-		    AddLightningPath(
-			gameState.playerPaddle.GetMidX(),
-			gameState.playerPaddle.GetMidY(),
-			puck.x,
-			puck.y,
-			20
-		    );
-		    gCx.strokeStyle = RandomColor();
-		    gCx.lineWidth = sx1(2);
-		    gCx.stroke();
-		});
+	    targets.forEach((xy) => {
+		AddLightningPath(
+		    RandomColor(),
+		    gameState.playerPaddle.GetMidX(),
+		    gameState.playerPaddle.GetMidY(),
+		    xy.x,
+		    xy.y,
+		    20
+		);
 	    });
 	},
 	endFn
@@ -336,19 +326,14 @@ function MakeSplitAnimation(props) {
 	animFn: (dt, gameState) => {
 	    var p0 = { x: gameState.playerPaddle.GetMidX(),
 		       y: gameState.playerPaddle.GetMidY() };
-	    Cxdo(() => {
-		targets.forEach((p1, i) => {
-		    gCx.beginPath();
-		    AddLightningPath(
-			p0.x, p0.y,
-			p1.x, p1.y,
-			10
-		    );
-		    gCx.strokeStyle = RandomColor();
-		    gCx.lineWidth = sx1(i==0?3:2);
-		    gCx.stroke();
-		    p0 = p1;
-		});
+	    targets.forEach((p1, i) => {
+		AddLightningPath(
+		    RandomColor(),
+		    p0.x, p0.y,
+		    p1.x, p1.y,
+		    10
+		);
+		p0 = p1;
 	    });
 	},
 	endFn
@@ -393,17 +378,12 @@ function MakeEngorgeAnimation(props) {
 	    var pp = gameState.playerPaddle;
 	    var t01 = GameTime01(endMs-startMs, startMs);
 	    var t10 = 1 - t01;
-	    Cxdo(() => {
-		gCx.beginPath();
-		AddLightningPath(
-                    pp.GetMidX(), pp.y,
-                    pp.GetMidX(), pp.y + pp.height,
-                    Math.max(0.5, pp.width * 2 * t10)
-		);
-		gCx.strokeStyle = RandomColor();
-		gCx.lineWidth = sx1(2);
-		gCx.stroke();
-	    });
+	    AddLightningPath(
+		RandomColor(),
+                pp.GetMidX(), pp.y,
+                pp.GetMidX(), pp.y + pp.height,
+                Math.max(0.5, pp.width * 2 * t10)
+	    );
 	},
 	startFn: (gameState) => {
 	    gameState.playerPaddle.BeginEngorged();
@@ -420,29 +400,45 @@ function Make2PtLightningAnimation(props) {
     return new Animation({
 	lifespan,
 	animFn: (dt, gameState) => {
-	    Cxdo(() => {
-		gCx.beginPath();
-		AddLightningPath(x0, y0, x1, y1, range, steps);
-		gCx.strokeStyle = RandomColor();
-		gCx.lineWidth = sx1(width);
-		gCx.stroke();
-	    });
+	    AddLightningPath(
+		RandomColor(),
+		x0, y0,
+		x1, y1,
+		range, steps
+	    );
 	},
 	endFn
     });
 }
 
-function AddLightningPath( x0, y0, x1, y1, range, steps=5 ) {
+function AddLightningPath( color, x0, y0, x1, y1, range, steps=5 ) {
     var sx = (x1 - x0)/steps;
     var sy = (y1 - y0)/steps;
-    gCx.moveTo(x0, y0);
+    var points = [];
     for (var t = 1; t <= steps-1; ++t) {
-	gCx.lineTo(
-	    RandomCentered(x0 + (sx*t), range),
-	    RandomCentered(y0 + (sy*t), range)
-	);
+	var x = RandomCentered(x0 + (sx*t), range);
+	var y = RandomCentered(y0 + (sy*t), range);
+	points.push({x, y});
     }
-    gCx.lineTo(x1, y1);
+    Cxdo(() => {
+	gCx.beginPath();
+	gCx.strokeStyle = color;
+
+	gCx.moveTo(x0, y0);
+	points.forEach(p => gCx.lineTo(p.x, p.y));
+	gCx.lineTo(x1, y1);
+	gCx.lineWidth = sx1(3);
+	gCx.globalAlpha = 0.3;
+	gCx.stroke();
+
+	gCx.beginPath();
+	gCx.moveTo(x0, y0);
+	points.forEach(p => gCx.lineTo(p.x, p.y));
+	gCx.lineTo(x1, y1);
+	gCx.lineWidth = sx1(1);
+	gCx.globalAlpha = 1;
+	gCx.stroke();
+    });
 }
 
 console.log(gPowerupsInUse);

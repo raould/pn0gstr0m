@@ -20,6 +20,10 @@ function RandomSign(cutoff) {
     return RandomBool() ? 1 : -1;
 }
 
+function RandomChoice(a, b) {
+    return RandomBool() ? a : b;
+}
+
 // closed interval [min, max].
 function RandomRange( min, max ) {
     if (min > max) {
