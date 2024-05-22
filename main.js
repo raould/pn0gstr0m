@@ -5,23 +5,17 @@
 
 // Welcome to The Land of Global Varibles, And Inconsistent Naming.
 //
-// note: velocities are kinda only work for 960x480.
-// sorry, the naming is horrible just about everywhere.
-// this code is probably like 85.2% bugs.
+// sorry: velocities are kinda hacky guesstimates;
+// the naming is horrible just about everywhere;
+// this code is probably like 85.2% bugs or bad taste.
 //
-// note: "up" or "top" in the code means toward the top of the screen
-// whereas in canvas +y is toward the bottom.
+// note: my use of
+// "left" is -x in canvas coordinates;
+// "up" is -y in canvas coordinates;
+// ideally (x,y) of objects consistenly means (left,top).
 //
-// note: er, well, the meaning of (x,y,w,h) for game objects
-// has ended up being arbitrary over time. sometimes it means
-// a corner, sometimes it means a center. also? the naming
-// is super inconsistent.
-//
-// the noyb2 font only has upper case letters mostly by the way.
-//
-// i guess mostly things have a (top,left) origin?
-// where "top" means "up" on the screen which
-// means -y in canvas coordinates.
+// note: the noyb2 font only has upper case letters,
+// with a few icons in the lower case.
 
 var gDebug = false;
 var gShowToasts = gDebug;
