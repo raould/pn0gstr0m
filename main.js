@@ -177,7 +177,9 @@ var kPuckArrayInitialSize = 300;
 var kSparkArrayInitialSize = 200;
 var kBarriersArrayInitialSize = 4;
 var kOptionsArrayInitialSize = 6;
-var kSpawnPowerupFactor = 0.005;
+var kSpawnPowerupFactor = 0.004;
+var kPowerupSpawnCooldown = 1000 * 10;
+var gPowerupSpawnCountdown = kPowerupSpawnCooldown;
 
 var gNextID = 0;
 
@@ -1219,7 +1221,6 @@ function AddSparks(x, y, vx, vy) {
 	gStateMuted = gMonochrome = self.attract;
 	gPauseButtonEnabled = !self.attract && touchEnabled();
 	gStartTime = gGameTime;
-	self.powerupWait = 1000*(gDebug?3:20);
 	self.paused = false;
 	self.animations = {};
 
@@ -1286,11 +1287,14 @@ function AddSparks(x, y, vx, vy) {
 
     self.MaybeSpawnPowerup = function( dt ) {
 	if (!self.paused && !self.attract) {
-	    self.powerupWait = Math.max(self.powerupWait-dt, 0);
-	    if (self.powerupWait <= 0 &&
+	    gPowerupSpawnCountdown = Math.max(0, gPowerupSpawnCountdown-dt);
+	    if (gPowerupSpawnCountdown <= 0 &&
 		RandomBool(gDebug ? 0.1 : kSpawnPowerupFactor) &&
 		isU(gPowerup)) {
 		gPowerup = MakeRandomPowerup(self);
+		if (isntU(gPowerup)) {
+		    gPowerupSpawnCountdown = kPowerupSpawnCooldown;
+		}
 	    }
 	}
     };
@@ -2281,7 +2285,6 @@ function CheckResizeMatch() {
 
 function Start() {
     console.log("Start");
-    Assert(Object.keys(gPowerupsInUse).length == 0, "Start");
 
     var hs = localStorage.getItem(kHighKey);
     if (isntU(hs)) {

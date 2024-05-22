@@ -14,12 +14,6 @@ var gPowerupSpecs = {
 
 // note: ideally each powerup type should have a unique animation.
 
-// note: any powerup that lasts a long time
-// should prevent being created again until the
-// live one expires, because the ending time
-// is not properly extended.
-var gPowerupsInUse = {};
-
 // spec x,y should be top,left.
 
 function MakeReverseSpec() {
@@ -80,7 +74,7 @@ function MakeDecimateSpec() {
 	fontSize: gSmallFontSizePt,
 	testFn: (gameState) => {
 	    // looks unfun if there aren't enough puck to destroy.
-	    return gDebug || (gPucks.A.length > 20 && !gPowerupsInUse[name]);
+	    return gDebug || gPucks.A.length > 20;
 	},
 	boomFn: (gameState) => {
 	    // testFn passed, so we must have at least N pucks.
@@ -101,9 +95,7 @@ function MakeDecimateSpec() {
 		gameState.animations[gNextID++] = MakeTargetsLightningAnimation({
 		    lifespan: 100,
 		    targets,
-		    endFn: () => { delete gPowerupsInUse[name]; }
 		});
-		gPowerupsInUse[name] = true;
 	    }
 	},
 	drawFn: (self, alpha) => {
@@ -146,16 +138,14 @@ function MakeEngorgeSpec() {
 	ylb: sy(32),
 	fontSize: gBigFontSizePt,
 	testFn: (gameState) => {
-	    return !gameState.playerPaddle.engorged && !gPowerupsInUse[name];
+	    return !gameState.playerPaddle.engorged;
 	},
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
 	    gameState.animations[gNextID++] = MakeEngorgeAnimation({
 		lifespan: 1000 * 10,
 		gameState,
-		endFn: () => { delete gPowerupsInUse[name]; }
 	    });
-	    gPowerupsInUse[name] = true;
 	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
@@ -496,5 +486,3 @@ function AddLightningPath( color, x0, y0, x1, y1, range, steps=5 ) {
 	gCx.stroke();
     });
 }
-
-console.log(gPowerupsInUse);
