@@ -3,7 +3,7 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-var gWarning = ["WARNING:",
+var gWarning = ["------== W A R N I N G ==------",
 		"Photosensitivity/epilepsy/seizures: a very small",
 		"percentage of individuals may experience",
 		"epileptic seizures or blackouts when exposed to",

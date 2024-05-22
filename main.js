@@ -1768,7 +1768,7 @@ function DrawTitle(flicker=true) {
 	    RandomForColor(cyan, RandomCentered(0.8,0.2)) :
 	    rgb255s(cyan.regular);
 	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
-	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.45), gSmallFontSizePt, flicker );
+	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.46), gSmallFontSizePt, flicker );
     });
 }
 
@@ -1802,9 +1802,11 @@ function DrawTitle(flicker=true) {
 
     self.DrawWarning = function() {
 	gCx.fillStyle = warningColor;
+	var lineFactor = 1.5;
+	var y0 = gh(1) - (gSmallestFontSize * lineFactor * gWarning.length);
 	Cxdo(() => {
 	    gWarning.forEach((t, i) => {
-		DrawText(t, "center", gw(0.5), gh(0.5) + i*(gSmallestFontSize*1.2), gSmallestFontSizePt, false, "monospace");
+		DrawText(t, "center", gw(0.5), y0 + i*(gSmallestFontSize * lineFactor), gSmallestFontSizePt, false, "monospace");
 	    });
 	});
     };
