@@ -282,8 +282,8 @@ function MakeOptionSpec() {
 	    var height = Math.min(gPaddleHeight/2, yy/2);
 	    var hp = 30;
 	    ForCount(n, (i) => {
-		var x = ForSide(gw(0.3), gw(0.7));
-		var xoff = isEven(i) ? 0 : gw(0.1);
+		var x = ForSide(gw(0.15), gw(0.85));
+		var xoff = isEven(i) ? 0 : gw(0.02);
 		var y = gYInset+yy*i;
 		var yMin = y;
 		var yMax = y+yy;

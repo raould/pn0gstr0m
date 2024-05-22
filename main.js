@@ -1645,40 +1645,35 @@ function AddSparks(x, y, vx, vy) {
 
     self.Draw = function() {
 	if (!gResizing) {
+	    // painter's z-algorithm here below, keep important things last.
+	    self.DrawCRTOutline();
 	    self.DrawMidLine();
 	    self.DrawScoreHeader();
-	    // z order pucks rendering overkill nuance.
+	    // z order pucks rendering overkill nuance. :-)
 	    gPucks.A.forEach((p) => {
-		Assert(!!p, "broken pucks");
 		if (Sign(p.vx) == ForSide(1,-1)) {
 		    p.Draw( self.Alpha() );
 		}
 	    });
 	    gPucks.A.forEach((p) => {
-		Assert(!!p, "broken pucks");
 		if (Sign(p.vx) == ForSide(-1,1)) {
 		    p.Draw( self.Alpha() );
 		}
 	    });
 	    gSparks.A.forEach((s) => {
-		Assert(!!s, "broken spark");
 		s.Draw( self.Alpha() );
 	    });
 	    gBarriers.A.forEach((b) => {
-		Assert(!!b, "broken barrier");
 		b.Draw( self.Alpha() );
 	    });
 	    gOptions.A.forEach((o) => {
-		Assert(!!o, "broken option");
 		o.Draw( self.Alpha() );
 	    });
-	    // keep some things visible on z top.
 	    self.playerPaddle.Draw( self.Alpha() );
 	    self.cpuPaddle.Draw( self.Alpha() );
 	    self.DrawPowerup();
 	    self.DrawPauseButton();
 	    self.DrawTouchTarget();
-	    self.DrawCRTOutline();
 	}
 	self.DrawDebug();
     };
