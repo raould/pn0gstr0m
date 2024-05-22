@@ -44,7 +44,6 @@ function getWindowAspect() {
 // ----------------------------------------
 
 var black = [0x0, 0x0, 0x0];
-
 var grey = { regular: [0xA0, 0xA0, 0xA0], strong: [0xA0, 0xA0, 0xA0] };
 var green = { regular: [0x89, 0xCE, 0x00], strong: [0x00, 0xFF, 0x00] };
 var blue = { regular: [0x05, 0x71, 0xB0], strong: [0x00, 0x00, 0xFF] };
@@ -52,30 +51,32 @@ var red = { regular: [0xB5, 0x19, 0x19], strong: [0xFF, 0x00, 0x00] };
 var cyan = { regular: [0x57, 0xC4, 0xAD], strong: [0x00, 0xFF, 0xFF] };
 var yellow = { regular: [0xED, 0xA2, 0x47], strong: [0xFF, 0xFF, 0x00] };
 var magenta = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF] };
-
 var backgroundColor = "black"; // match: index.html background color.
-var scanlineColor = "rgba(0,0,8,0.5)";
 var warningColor = "grey";
 
 var k2Pi = Math.PI*2;
 
-// slightly useful for testing collisions when on, but carries debt, and can mislead about regular behaviour.
+// slightly useful for testing collisions when enabled
+// but carries some hacky tech debt
+// and can mislead about regular behaviour?!
 var kDrawAIPuckTarget = true;
 
-// note that all the timing and stepping stuff is fragile vs. frame rate.
+// i.e. attract mode.
 var gMonochrome;
 var kFadeInMsec = gDebug ? 1000 : 7000;
 
-var kHighKey = 'pn0g_high';
+var kHighScoreKey = 'pn0g_high';
 var gHighScore;
 
+// note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
+// although i did try to compensate in the run loop.
+var kFPS = 30;
+var kTimeStep = 1000/kFPS;
 var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
 var gStartTime = 0;
 var gGameTime = 0;
 var gLastFrameTime = gStartTime;
 var gFrameCount = 0;
-var kFPS = 30;
-var kTimeStep = 1000/kFPS;
 var kMoveStep = 1;
 var kAIPeriod = 5;
 var kAIMoveScale = 1.2;
@@ -2000,7 +2001,7 @@ function DrawTitle(flicker=true) {
 	}
 	if (isntU(nextState)) {
 	    gHighScore = Math.max(self.finalScore, (aorb(gHighScore,self.finalScore)));
-	    localStorage.setItem(kHighKey, gHighScore);
+	    localStorage.setItem(kHighScoreKey, gHighScore);
 	}
 	return nextState;
     };
@@ -2284,7 +2285,7 @@ function CheckResizeMatch() {
 function Start() {
     console.log("Start");
 
-    var hs = localStorage.getItem(kHighKey);
+    var hs = localStorage.getItem(kHighScoreKey);
     if (isntU(hs)) {
 	gHighScore = parseInt(hs);
     }
@@ -2410,7 +2411,7 @@ function InitEvents() {
 		updateFn: () => {
 		    if (gDebug) {
 			gHighScore = undefined;
-			localStorage.removeItem(kHighKey);
+			localStorage.removeItem(kHighScoreKey);
 		    }
 		}
 	    });
