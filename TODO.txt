@@ -17,7 +17,7 @@
   * wrong side chosen because not clearing input.
   * music not always starting? permission? bad data?
   * somehow don't nuke player's game on rotation. :-(
-  * debugger-paused game can game over because of wall clock time? or setTimeout?
+
   
 
   
