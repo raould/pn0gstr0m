@@ -80,6 +80,7 @@ var kFadeInMsec = 7000;
 var kHighKey = 'pn0g_high';
 var gHighScore;
 
+var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
 var gStartTime = 0;
 var gGameTime = 0;
 var gLastFrameTime = gStartTime;
@@ -453,36 +454,45 @@ function DrawTextFaint( data, align, x, y, size ) {
 	    return;
 	}
 
-	// note that pausing time is handled in GameState.
+	// note: pausing game time is only handled/supported in GameState.
+
+	var tt = kTimeStep;
 	var now = Date.now();
 	var clockDiff = now - self.lastTime;
-	self.lastTime = now;
-	gGameTime += clockDiff;
 
-	var dt = gGameTime - gLastFrameTime;
-	if (dt >= kTimeStep) {
-	    var handler = self.handlerMap[self.state];
-	    Assert(isntU(handler), self.state, "RunLoop");
-	    if (self.transitioned) {
-		handler.Reset();
-		self.transitioned = false;
-	    }
-	    var next = handler.Step( dt );
-	    if( isntU(next) && next !== self.state ) {
-		console.log(`transitioned from ${self.state} to ${next}`);
-		self.transitioned = true;
-		self.state = next;
-		cancelTouch();
-	    }
-	    gLastFrameTime = gGameTime;
-	    ++gFrameCount;
-	    //if (gDebug) { DrawBounds(); }
-	    if (gShowToasts) { StepToasts(); }
-	    setTimeout( self.RunLoop, Math.max(1, kTimeStep-(dt-kTimeStep)) );
+	// oy veh oh brother sheesh barf.
+	if (clockDiff >= kMaybeWasPausedInTheDangedDebuggerMsec) {
+	    self.lastTime = now;
 	}
 	else {
-	    setTimeout( self.RunLoop, Math.max(1, kTimeStep - dt));
+	    self.lastTime = now;
+	    gGameTime += clockDiff;
+	    var dt = gGameTime - gLastFrameTime;
+	    if (dt < kTimeStep) {
+		tt = kTimeStep - dt;
+	    }
+	    else {
+		var handler = self.handlerMap[self.state];
+		Assert(isntU(handler), self.state, "RunLoop");
+		if (self.transitioned) {
+		    handler.Reset();
+		    self.transitioned = false;
+		}
+		var next = handler.Step( dt );
+		if( isntU(next) && next !== self.state ) {
+		    console.log(`transitioned from ${self.state} to ${next}`);
+		    self.transitioned = true;
+		    self.state = next;
+		    cancelTouch();
+		}
+		gLastFrameTime = gGameTime;
+		++gFrameCount;
+		if (gShowToasts) { StepToasts(); }
+		tt = kTimeStep-(dt-kTimeStep);
+	    }
 	}
+	console.log(tt, clockDiff);
+	setTimeout( self.RunLoop, Math.max(1, tt) );
     };
 }
 
