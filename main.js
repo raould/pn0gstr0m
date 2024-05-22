@@ -75,7 +75,7 @@ var kDrawAIPuckTarget = true;
 
 // note that all the timing and stepping stuff is fragile vs. frame rate.
 var gMonochrome;
-var kFadeInMsec = 7000;
+var kFadeInMsec = gDebug ? 1000 : 7000;
 
 var kHighKey = 'pn0g_high';
 var gHighScore;
@@ -491,7 +491,6 @@ function DrawTextFaint( data, align, x, y, size ) {
 		tt = kTimeStep-(dt-kTimeStep);
 	    }
 	}
-	console.log(tt, clockDiff);
 	setTimeout( self.RunLoop, Math.max(1, tt) );
     };
 }
@@ -786,24 +785,26 @@ function AddSparks(x, y, vx, vy) {
     }
 }
 
-/*class*/ function Puck( x0, y0, vx, vy, ur=true, forced=false ) {
+/*class*/ function Puck(spec) {
+    /* spec = { x, y, vx, vy, ur=true, forced=false } */
 
     var self = this;
 
     self.Init = function() {
 	self.id = gNextID++;
-	self.x = x0;
-	self.y = y0;
+	self.x = spec.x;
+	self.y = spec.y;
 	self.prevX = self.x;
 	self.prevY = self.y;
 	self.width = gPuckWidth;
 	self.height = gPuckHeight;
 	// tweak max vx to avoid everything being too visually lock-step.
-	self.vx = Sign(vx) * Math.min(RandomCentered(gMaxVX, 1), Math.abs(vx));
-	self.vy = AvoidZero(vy, 0.8);
+	self.vx = Sign(spec.vx) * Math.min(RandomCentered(gMaxVX, 1), Math.abs(spec.vx));
+	self.vy = AvoidZero(spec.vy, 0.8);
 	self.alive = true;
 	self.startTime = gGameTime;
-	self.ur = ur;
+	self.splitColor = aorb(spec.forced, false) ? "yellow" : "white";
+	self.ur = aorb(spec.ur, true);
     };
 
     self.GetMidX = function() {
@@ -822,7 +823,7 @@ function AddSparks(x, y, vx, vy) {
 	Cxdo(() => {
 	    // young pucks (mainly splits) render another color briefly.
 	    var dt = GameTime01(1000, self.startTime);
-	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? RandomYellow(amod) : RandomCyan(amod);
+	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? self.spliColor : RandomCyan(amod);
 	    gCx.fillRect( wx, wy, self.width, self.height );
 	    gCx.lineWidth = sx1(1);
 	    gCx.strokeStyle = "black";
@@ -870,7 +871,7 @@ function AddSparks(x, y, vx, vy) {
 	    var nvx = self.vx * (slow ? RandomRange(0.8, 0.9) : RandomRange(1.01, 1.1));
 	    var nvy = self.vy;
 	    nvy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
-	    np = new Puck( self.x, self.y, nvx, nvy, false, forced );
+	    np = new Puck({ x: self.x, y: self.y, vx: nvx, vy: nvy, ur: false, forced });
 	    PlayExplosion();
 
 	    // fyi because SplitPuck is called during MovePucks,
@@ -1335,20 +1336,20 @@ function AddSparks(x, y, vx, vy) {
     };
 
     self.CreateStartingPuck = function(sign) {
-	var p = new Puck( gw(RandomRange(0.45, 0.48)),
-			  gh(RandomRange(0.45, 0.5)),
-			  sign * gMaxVX/5,
-			  RandomCentered(1, 0.2),
-			  true );
+	var p = new Puck({ x: gw(RandomRange(0.45, 0.48)),
+			   y: gh(RandomRange(0.45, 0.5)),
+			   vx: sign * gMaxVX/5,
+			   vy: RandomCentered(1, 0.2),
+			   ur: true });
 	return p;
     };
 
     self.CreateRandomPuck = function() {
-	var p = new Puck( gw(RandomRange(3/8, 4/8)),
-			  gh(RandomRange(3/8, 4/8)),
-			  RandomRange(gMaxVX/5, gMaxVX/10),
-			  RandomCentered(1, 0.5),
-			  true );
+	var p = new Puck({ x: gw(RandomRange(3/8, 4/8)),
+			   y: gh(RandomRange(3/8, 4/8)),
+			   vx: RandomRange(gMaxVX/5, gMaxVX/10),
+			   vy: RandomCentered(1, 0.5),
+			   ur: true });
 	return p;
     };
 
