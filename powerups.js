@@ -77,7 +77,6 @@ function MakeDecimateSpec() {
 	    return gDebug || gPucks.A.length > 20;
 	},
 	boomFn: (gameState) => {
-	    // testFn passed, so we must have at least N pucks.
 	    // try to destroy at least 1, but leave at least 1 still alive.
 	    // prefer destroying the ones closest to the player.
 	    var count = Math.max(1, Math.floor(gPucks.A.length*0.6)); // technically not "deci"mate, i know.
@@ -219,7 +218,7 @@ function MakeDefendSpec() {
 	ylb: sy(20),
 	fontSize: gSmallFontSizePt,
 	testFn: (gameState) => {
-	    return gBarriers.A.length == 0 && (gDebug || gPucks.A.length > 15);
+	    return gBarriers.A.length == 0 && (gDebug || gPucks.A.length > 25);
 	},
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
