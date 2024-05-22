@@ -23,7 +23,7 @@
 // where "top" means "up" on the screen which
 // means -y in canvas coordinates.
 
-var gDebug = false;
+var gDebug = true;
 var gShowToasts = gDebug;
 
 var kCanvasName = "canvas";
@@ -247,7 +247,9 @@ function cancelTouch() {
 
 var kScoreIncrement = 1;
 var gPlayerScore = 0;
+var gPlayerHitCount = 0;
 var gCPUScore = 0;
+var gCPUHitCount = 0;
 
 // todo: move all these into GameState.
 // todo: use typescript.
@@ -528,6 +530,7 @@ function PushToast(msg, lifespan=1000) {
        hp,
        isSplitter,
        stepSize,
+       isPlayer,
        }
     */
     var self = this;
@@ -547,6 +550,7 @@ function PushToast(msg, lifespan=1000) {
 	self.width = spec.width;
 	self.height = spec.height;
 	self.isSplitter = aorb(spec.isSpliter, true);
+	self.isPlayer = aorb(spec.isPlayer, false);
 	self.alive = isU(self.hp) || self.hp > 0;
 	self.engorgedHeight = gPaddleHeight * 2;
 	self.engorgedWidth = gPaddleWidth * 0.8;
@@ -561,6 +565,12 @@ function PushToast(msg, lifespan=1000) {
 	if (isntU(self.hp)) {
 	    self.hp--;
 	    self.alive = self.hp > 0;
+	}
+	if (self.isPlayer) {
+	    gPlayerHitCount++;
+	}
+	else {
+	    gCPUHitCount++;
 	}
     };
 
@@ -1007,17 +1017,17 @@ function AddSparks(x, y, vx, vy) {
 
     self.UpdateScore = function() {
 	if (!self.alive) {
-	    var wasLeft = self.x < gw(0.5);
-	    if (wasLeft) {
+	    var wasRight = self.x >= gw(0.5);
+	    if (wasRight) {
 		ForSide(
-		    () => { gCPUScore += kScoreIncrement; },
-		    () => { gPlayerScore += kScoreIncrement; }
+		    () => { gPlayerScore += kScoreIncrement; },
+		    () => { gCPUScore += kScoreIncrement; }
 		)();
 	    }
 	    else {
 		ForSide(
-		    () => { gPlayerScore += kScoreIncrement; },
-		    () => { gCPUScore += kScoreIncrement; }
+		    () => { gCPUScore += kScoreIncrement; },
+		    () => { gPlayerScore += kScoreIncrement; }
 		)();
 	    }
 	}
@@ -1227,7 +1237,9 @@ function AddSparks(x, y, vx, vy) {
 	RecalculateConstants();
 	ResetGlobalStorage();
 	gPlayerScore = 0;
+	gPlayerHitCount = 0;
 	gCPUScore = 0;
+	gCPUHitCount = 0;
 	gStateMuted = gMonochrome = self.attract;
 	gPauseButtonEnabled = !self.attract && touchEnabled();
 	gStartTime = gGameTime;
@@ -1244,7 +1256,8 @@ function AddSparks(x, y, vx, vy) {
 		    x: lp.x, y: lp.y,
 		    width: gPaddleWidth, height: gPaddleHeight,
 		    label: p1label,
-		    isSplitter: true
+		    isSplitter: true,
+		    isPlayer: true,
 		});
 		self.cpuPaddle = new Paddle({
 		    x: rp.x, y: rp.y,
@@ -2035,10 +2048,14 @@ function DrawTitle(flicker=true) {
 	    }
 	    var msg = `FINAL SCORE: ${gPlayerScore} - ${gCPUScore} = ${self.finalScore}`;
 	    DrawText( msg, "center", x, y, gRegularFontSizePt );
+	    var msg = `PLAYER HIT RATE: ${F(gPlayerHitCount/(gCPUScore==0?1:gCPUScore))}`;
+	    DrawText( msg, "center", x, y+gRegularFontSize*2, gSmallFontSizePt );
+	    var msg = `GPT HIT RATE: ${F(gCPUHitCount/(gPlayerScore==0?1:gPlayerScore))}`;
+	    DrawText( msg, "center", x, y+gRegularFontSize*2+gSmallFontSize*2, gSmallFontSizePt );
 
 	    if (gotoMenu) {
 		gCx.fillStyle = RandomYellowSolid();
-		DrawText( "GO TO MENU", "center", x, y+120, gReducedFontSizePt );
+		DrawText( "GO TO MENU", "center", x, gh(0.9), gReducedFontSizePt );
 	    }
 	});
 

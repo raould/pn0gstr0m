@@ -293,6 +293,7 @@ function MakeOptionSpec() {
 		    width, height,
 		    hp,
 		    isSplitter: false,
+		    isPlayer: true,
 		    stepSize: Math.max(1,(yMax-yMin)/10)
 		});
 	    });
