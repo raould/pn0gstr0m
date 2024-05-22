@@ -20,26 +20,21 @@
 var gDebug = false;
 var gShowToasts = gDebug;
 
-var kCanvasName = "canvas";
+var kCanvasName = "canvas"; // match: index.html
 var gLifecycle;
 
-// ----------------------------------------
-// lots of dunsel things wrt scaling. :-(
-// the game was designed based on this default aspect & resolution.
-
+// the game was designed based on this default aspect & resolution kindasorta.
 var kAspectRatio = 16/9;
-
-// these should be able to vary independently
-// as long as they keep the aspect ratio,
-// and everything should still draw 'correctly'.
-// (e.g. fonts scaled to fit in same relative area.)
-var kHtmlWidth = 512;
-var kHtmlHeight = 288;
+var kHtmlWidth = 512; // match: index.html
+var kHtmlHeight = 288; // match: index.html
 Assert(Math.abs(kHtmlWidth/kHtmlHeight - kAspectRatio) < 0.1, "unexpected html aspect ratio");
 var gWidth = kHtmlWidth;
 var gHeight = kHtmlHeight;
 Assert(Math.abs(gWidth/gHeight - kAspectRatio) < 0.1, "unexpected g aspect ratio");
 function getBorderFactor() {
+    // giving portrait more buffer on left and right for thumbs also
+    // because the overall playfield is visually smaller, has fewer pixels
+    // than landscape does.
     return getWindowAspect() > 1 ? 0.8 : 0.7;
 }
 function getWindowAspect() {
