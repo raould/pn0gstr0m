@@ -30,9 +30,14 @@ function ForCount(count, fn) {
     }
 }
 
+// away from zero by default.
+function NearestEven(n) {
+    return isEven(n) ? n : n+1;
+}
+
 // your fault if you don't pass an integer value.
 function isEven(n) {
-    return n%2 == 0;
+    return n%2 == 0 || n%2 == -0;
 }
 
 function Swap(a, b) {

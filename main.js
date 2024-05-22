@@ -151,11 +151,11 @@ function RecalculateConstants() {
     gUserMutedHeight = syi(30);
     gSparkWidth = sxi(2);
     gSparkHeight = syi(2);
-    gBigFontSize = gw(0.088);
-    gRegularFontSize = gw(0.047);
-    gReducedFontSize = gw(0.037);
-    gSmallFontSize = gw(0.027);
-    gSmallestFontSize = gw(0.018);
+    gBigFontSize = NearestEven(gw(0.088));
+    gRegularFontSize = NearestEven(gw(0.047));
+    gReducedFontSize = NearestEven(gw(0.037));
+    gSmallFontSize = NearestEven(gw(0.027));
+    gSmallestFontSize = NearestEven(gw(0.018));
     gBigFontSizePt = gBigFontSize + "pt";
     gRegularFontSizePt = gRegularFontSize + "pt";
     gReducedFontSizePt = gReducedFontSize + "pt";
@@ -1088,7 +1088,7 @@ function AddSparks(x, y, vx, vy) {
     self.Init();
 }
 
-// the spec is { x, y, w, h, vx, vy, label, ylb, testFn, boomFn, drawFn }
+// the spec is { name, x, y, w, h, vx, vy, label, ylb, testFn, boomFn, drawFn }
 // don't you wish this was all in typescript now?
 /*class*/ function Powerup( spec ) {
     var self = this;
@@ -1096,6 +1096,7 @@ function AddSparks(x, y, vx, vy) {
     self.Init = function() {
 	Assert(isntU(spec), "no spec");
 	self.id = gNextID++;
+	self.name = spec.name;
 	self.x = spec.x;
 	self.y = spec.y;
 	self.prevX = self.x;
@@ -1193,13 +1194,13 @@ function AddSparks(x, y, vx, vy) {
     self.startMs = gGameTime;
     self.endMs = self.startMs + lifespan;
     self.Step = function( dt, gameState ) {
-	startFn && startFn( gameState );
+	if (isntU(startFn)) { startFn( gameState ); }
 	startFn = undefined;
 	if (gGameTime <= self.endMs) {
 	    animFn( dt, gameState, self.startMs, self.endMs );
 	    return false;
 	}
-	endFn && endFn( gameState );
+	if (isntU(endFn)) { endFn( gameState ); }
 	return true;
     };
 }
@@ -1618,6 +1619,16 @@ function AddSparks(x, y, vx, vy) {
 	}
     };
 
+    self.DrawPowerup = function() {
+	if (isntU(gPowerup)) {
+	    gPowerup.Draw( self.Alpha() );
+	    Cxdo(() => {
+		gCx.fillStyle = "magenta";
+		DrawText(gPowerup.name, "center", gw(0.5), gh(0.9), gSmallFontSizePt);
+	    });
+	}
+    };
+
     self.Draw = function() {
 	if (!gResizing) {
 	    self.DrawMidLine();
@@ -1650,7 +1661,7 @@ function AddSparks(x, y, vx, vy) {
 	    // keep some things visible on z top.
 	    self.playerPaddle.Draw( self.Alpha() );
 	    self.cpuPaddle.Draw( self.Alpha() );
-	    gPowerup && gPowerup.Draw( self.Alpha() );
+	    self.DrawPowerup();
 	    self.DrawPauseButton();
 	    self.DrawTouchTarget();
 	    self.DrawCRTOutline();
@@ -2290,7 +2301,7 @@ function Start() {
     handlerMap[kMenu] = new MenuState();
     handlerMap[kGame] = new GameState();
     handlerMap[kGameOver] = new GameOverState();
-    gLifecycle && gLifecycle.Quit();
+    if (isntU(gLifecycle)) { gLifecycle.Quit(); }
     gLifecycle = new Lifecycle( handlerMap );
     gLifecycle.RunLoop();
 }

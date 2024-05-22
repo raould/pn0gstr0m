@@ -335,11 +335,13 @@ function MakeOptionSpec() {
 function MakeRandomPowerup(gameState) {
     var keys = Object.keys(gPowerupSpecs);
     var index = RandomRangeInt(0, keys.length-1);
-    var specBase = gPowerupSpecs[keys[index]]();
+    var name = keys[index];
+    var specBase = gPowerupSpecs[name]();
     var y = RandomChoice(gh(0.1), gh(0.9)-specBase.height);
     if (specBase.testFn(gameState)) {
 	var spec = {
 	    ...specBase,
+	    name: name.toUpperCase(), // font restriction.
 	    x: ForSide(gw(0.35), gw(0.65)),
 	    y,
 	    vx: ForSide(-1,1) * sx(3),
