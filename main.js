@@ -177,7 +177,7 @@ var kPuckArrayInitialSize = 300;
 var kSparkArrayInitialSize = 200;
 var kBarriersArrayInitialSize = 4;
 var kOptionsArrayInitialSize = 6;
-var kSpawnPowerupFactor = 0.001;
+var kSpawnPowerupFactor = 0.005;
 
 var gNextID = 0;
 
