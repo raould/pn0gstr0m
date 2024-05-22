@@ -823,9 +823,12 @@ function AddSparks(x, y, vx, vy) {
 	Cxdo(() => {
 	    // young pucks (mainly splits) render another color briefly.
 	    var dt = GameTime01(1000, self.startTime);
-	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? self.spliColor : RandomCyan(amod);
+	    gCx.globalAlpha = amod;
+	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? self.splitColor : RandomCyan();
 	    gCx.fillRect( wx, wy, self.width, self.height );
+	    // a thin outline keeps things crisp when there are lots of pucks.
 	    gCx.lineWidth = sx1(1);
+	    gCx.globalAlpha = 1;
 	    gCx.strokeStyle = "black";
 	    gCx.strokeRect( wx-1, wy-1, self.width+2, self.height+2 );
 	});
@@ -1087,8 +1090,8 @@ function AddSparks(x, y, vx, vy) {
     };
 
     self.CollisionTest = function( puck ) {
-	var okvx = ForSide(1, -1);
-	if (Sign(puck.vx) != okvx) {
+	var blockvx = ForSide(-1, 1);
+	if (Sign(puck.vx) == blockvx) {
 	    var hit = puck.CollisionTest( self );
 	    if (hit) {
 		self.hp--;
