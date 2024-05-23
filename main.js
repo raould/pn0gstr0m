@@ -1803,7 +1803,7 @@ function DrawTitle(flicker=true) {
     self.DrawWarning = function() {
 	gCx.fillStyle = warningColor;
 	var lineFactor = 1.5;
-	var y0 = gh(1) - (gSmallestFontSize * lineFactor * gWarning.length);
+	var y0 = gh(0.55);
 	Cxdo(() => {
 	    gWarning.forEach((t, i) => {
 		DrawText(t, "center", gw(0.5), y0 + i*(gSmallestFontSize * lineFactor), gSmallestFontSizePt, false, "monospace");
