@@ -1,5 +1,5 @@
 # pn0gstr0m
-* all the pn0gs are to be str0mmed
+* all the pn0gs are to be str0mmed.
 * gpl2 license.
 * don't come here looking for exemplary code!
 * this is a Desafortunados Games production.
