@@ -30,7 +30,7 @@ function RegisterSfx(name, basename) {
 }
 
 function RegisterSound(name, basename, isMusic=false) {
-    var files = ["aac", "mp3"].map((e) => `sound/${basename}.${e}`);
+    var files = ["ogg", "aac", "mp3"].map((e) => `sound/${basename}.${e}`);
     var howl = new Howl({
 	src: files,
 	onload: () => {
