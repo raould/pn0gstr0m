@@ -4,7 +4,7 @@
  */
 
 var gPowerupSpecs = {
-    reverse: MakeReverseSpec,
+    forcepush: MakeForcePushSpec,
     decimate: MakeDecimateSpec,
     engorge: MakeEngorgeSpec,
     split: MakeSplitSpec,
@@ -16,7 +16,7 @@ var gPowerupSpecs = {
 
 // spec x,y should be top,left.
 
-function MakeReverseSpec() {
+function MakeForcePushSpec() {
     var label = ForSide(">", "<");
     return {
 	width: sx(18), height: sy(18),
