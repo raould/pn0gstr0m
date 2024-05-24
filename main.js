@@ -1212,8 +1212,8 @@ function DrawBounds() {
 	var nextState = undefined;
 	if (gUserMutedButtonEnabled &&
 	    touching() &&
-	    (Math.abs(gUserMutedCenterX-gTouchX) < gUserMutedHeight ||
-	     Math.abs(gUserMutedCenterX-gTouchY) < gUserMutedWidth)) {
+	    (Math.abs(gUserMutedCenterX-gTouchX) < gUserMutedWidth*0.8 &&
+	     Math.abs(gUserMutedCenterY-gTouchY) < gUserMutedHeight*0.8)) {
 	    gUserMutedPressed = true;
 	}
 	if (gUserMutedPressed) {
