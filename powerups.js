@@ -3,6 +3,10 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+// note: each powerup
+// must have a unique pill,
+// and ideally a unique animation.
+
 var gPowerupSpecs = {
     forcepush: MakeForcePushSpec,
     decimate: MakeDecimateSpec,
@@ -10,11 +14,10 @@ var gPowerupSpecs = {
     split: MakeSplitSpec,
     defend: MakeDefendSpec,
     option: MakeOptionSpec,
+    neo: MakeNeoSpec,
 };
 
-// note: ideally each powerup type should have a unique animation.
-
-// spec x,y should be top,left.
+// all specs' x,y should be top,left (not mid points).
 
 function MakeForcePushSpec() {
     var label = ForSide(">", "<");
@@ -24,7 +27,7 @@ function MakeForcePushSpec() {
 	ylb: sy(17),
 	fontSize: gReducedFontSizePt,
 	testFn: (gameState) => {
-	    return gPucks.A.length > 5;
+	    return gPucks.A.length > 5 && isU(gNeo);
 	},
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
@@ -37,10 +40,10 @@ function MakeForcePushSpec() {
 		    p.vx = MinSigned(p.vx*1.4, gMaxVX);
 		}
 	    });
-	    gameState.animations[gNextID++] = MakeWaveAnimation({
+	    gameState.AddAnimation(MakeWaveAnimation({
 		lifespan: 250,
 		gameState
-	    });
+	    }));
 	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
@@ -91,10 +94,10 @@ function MakeDecimateSpec() {
 		    p.alive = false;
 		    AddSparks(p.x, p.y, p.vx, p.vy);
 		});
-		gameState.animations[gNextID++] = MakeTargetsLightningAnimation({
+		gameState.AddAnimation(MakeTargetsLightningAnimation({
 		    lifespan: 100,
 		    targets,
-		});
+		}));
 	    }
 	},
 	drawFn: (self, alpha) => {
@@ -141,10 +144,10 @@ function MakeEngorgeSpec() {
 	},
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
-	    gameState.animations[gNextID++] = MakeEngorgeAnimation({
+	    gameState.AddAnimation(MakeEngorgeAnimation({
 		lifespan: 1000 * 10,
 		gameState,
-	    });
+	    }));
 	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
@@ -182,10 +185,10 @@ function MakeSplitSpec() {
 	    targets.forEach((p) => {
 		gPucks.A.push(p.SplitPuck(true));
 	    });
-	    gameState.animations[gNextID++] = MakeSplitAnimation({
+	    gameState.AddAnimation(MakeSplitAnimation({
 		lifespan: 250,
 		targets,
-	    });
+	    }));
 	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
@@ -237,10 +240,10 @@ function MakeDefendSpec() {
 		});
 		targets.push({x: x+width/2, y: y+height/2});
 	    }
-	    gameState.animations[gNextID++] = MakeTargetsLightningAnimation({
+	    gameState.AddAnimation(MakeTargetsLightningAnimation({
 		lifespan: 150,
 		targets,
-	    });
+	    }));
 	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
@@ -296,7 +299,6 @@ function MakeOptionSpec() {
 		    stepSize: Math.max(1,(yMax-yMin)/10)
 		});
 	    });
-	    // todo: boom animation.
 	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
@@ -321,6 +323,56 @@ function MakeOptionSpec() {
     };
 }
 
+function MakeNeoSpec() {
+    var name = 'neo';
+    var lifespan = 1000 * 10;
+    var x = ForSide(gw(0.4), gw(0.6));
+    return {
+	width: sx(22), height: sy(22),
+	label: "#",
+	ylb: sy(15),
+	fontSize: gSmallestFontSizePt,
+	testFn: (gameState) => {
+	    return (gDebug || gPucks.A.length > 20) && isU(gNeo);
+	},
+	boomFn: (gameState) => {
+	    PlayPowerupBoom();
+	    gameState.AddNeo({
+		x, lifespan
+	    });
+	},
+	drawFn: (self, alpha) => {
+	    Cxdo(() => {
+		var wx = WX(self.x);
+		var wy = WY(self.y);
+		var mx = wx + ii(self.width/2);
+		var my = wy + ii(self.height/2);
+
+		gCx.beginPath();
+		gCx.moveTo(mx, wy);
+		gCx.lineTo(wx + self.width, my);
+		gCx.lineTo(mx, wy + self.height);
+		gCx.lineTo(wx, my);
+		gCx.closePath();
+		gCx.fillStyle = backgroundColor;
+		gCx.fill();
+
+		gCx.beginPath();
+		gCx.moveTo(mx, wy);
+		gCx.lineTo(wx + self.width, my);
+		gCx.lineTo(mx, wy + self.height);
+		gCx.lineTo(wx, my);
+		gCx.closePath();
+		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+		gCx.lineWidth = sx1(2);
+		gCx.stroke();
+
+		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
+	    });
+	},
+    };
+}
+
 function MakeRandomPowerup(gameState) {
     var keys = Object.keys(gPowerupSpecs);
     var index = RandomRangeInt(0, keys.length-1);
@@ -330,7 +382,7 @@ function MakeRandomPowerup(gameState) {
     if (specBase.testFn(gameState)) {
 	var spec = {
 	    ...specBase,
-	    name: name.toUpperCase(), // font restriction.
+	    name: name,
 	    x: ForSide(gw(0.35), gw(0.65)),
 	    y,
 	    vx: ForSide(-1,1) * sx(3),
@@ -347,14 +399,14 @@ function MakeTargetsLightningAnimation(props) {
 	lifespan,
 	animFn: (dt, gameState) => {
 	    targets.forEach((xy) => {
-		AddLightningPath(
-		    RandomColor(),
-		    gameState.playerPaddle.GetMidX(),
-		    gameState.playerPaddle.GetMidY(),
-		    xy.x,
-		    xy.y,
-		    20
-		);
+		AddLightningPath({
+		    color: RandomColor(),
+		    x0: gameState.playerPaddle.GetMidX(),
+		    y0: gameState.playerPaddle.GetMidY(),
+		    x1: xy.x,
+		    y1: xy.y,
+		    range: 20
+		});
 	    });
 	},
 	endFn
@@ -372,12 +424,12 @@ function MakeSplitAnimation(props) {
 	    var p0 = { x: gameState.playerPaddle.GetMidX(),
 		       y: gameState.playerPaddle.GetMidY() };
 	    targets.forEach((p1, i) => {
-		AddLightningPath(
-		    RandomColor(),
-		    p0.x, p0.y,
-		    p1.x, p1.y,
-		    10
-		);
+		AddLightningPath({
+		    color: RandomColor(),
+		    x0: p0.x, y0: p0.y,
+		    x1: p1.x, y1: p1.y,
+		    range: 10
+		});
 		p0 = p1;
 	    });
 	},
@@ -423,19 +475,19 @@ function MakeEngorgeAnimation(props) {
 	    var pp = gameState.playerPaddle;
 	    var t01 = GameTime01(endMs-startMs, startMs);
 	    var t10 = 1 - t01;
-	    AddLightningPath(
-		RandomColor(),
-                pp.GetMidX(), pp.y,
-                pp.GetMidX(), pp.y + pp.height,
-                Math.max(0.5, pp.width * 2 * t10)
-	    );
+	    AddLightningPath({
+		color: RandomColor(),
+                x0: pp.GetMidX(), y0: pp.y,
+                x1: pp.GetMidX(), y1: pp.y + pp.height,
+                range: Math.max(0.5, pp.width * 2 * t10)
+	    });
 	},
 	startFn: (gameState) => {
 	    gameState.playerPaddle.BeginEngorged();
 	},
 	endFn: (gameState) => {
 	    gameState.playerPaddle.EndEngorged();
-	    endFn && endFn(gameState);
+	    if (isntU(endFn)) { endFn(gameState); }
 	}
     });
 }
@@ -445,18 +497,20 @@ function Make2PtLightningAnimation(props) {
     return new Animation({
 	lifespan,
 	animFn: (dt, gameState) => {
-	    AddLightningPath(
-		RandomColor(),
+	    AddLightningPath({
+		color: RandomColor(),
 		x0, y0,
 		x1, y1,
 		range, steps
-	    );
+	    });
 	},
 	endFn
     });
 }
 
-function AddLightningPath( color, x0, y0, x1, y1, range, steps=5 ) {
+function AddLightningPath(spec) {
+    // spec = { color, x0, y0, x1, y1, range, steps=5 }
+    var { color, x0, y0, x1, y1, range, steps=5 } = spec;
     var sx = (x1 - x0)/steps;
     var sy = (y1 - y0)/steps;
     var points = [];

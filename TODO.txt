@@ -1,4 +1,6 @@
 * all the todo:s.
+* deperately need to refactor so many globals away.
+* perf is worse in firefox vs. chrome/edge.
 * apologize for not having a ui toolkit.
 * test gamepads.
 * handle device pixel ratio.
@@ -8,6 +10,7 @@
 * wavy scaline fx.
 * move A,B,SwapBuffers into reusableArray.
 * play blip if puck collides and doesn't split.
+* powerup pill timeout after say 10 seconds.
 * ugly inconsistencies:
   * resizing things & left vs. right e.g. gPauseButtonCx.
   * events queue vs. immediate.

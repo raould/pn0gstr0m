@@ -77,7 +77,7 @@ var gStartTime = 0;
 var gGameTime = 0;
 var gLastFrameTime = gStartTime;
 var gFrameCount = 0;
-var kMoveStep = 1;
+var kMoveStep = 1; // i don't really know what the units are here at all.
 var kAIPeriod = 5;
 var kAIMoveScale = 1.2;
 
@@ -244,12 +244,14 @@ var gCPUScore = 0;
 var gPucks; // { A:[], B:[] }
 var gSparks; // { A:[], B:[] }
 var gPowerup; // there can be (at most) only 1 (at a time).
-// these are a bit complicated.
-// { x, y, width, height,
+// barriers are { x, y, width, height,
 //   prevX, prevY,
-//   CollisionTest( paddle (todo: xywh) ) }
+//   CollisionTest()
 var gBarriers; // ( A:[], B:[] }
+// options are mini paddles.
 var gOptions; // ( A:[], B:[] }
+// neos are sticky fly traps.
+var gNeo; // [].
 
 var kNoop = -1;
 var kSplash = 0; // audio permission via user interaction effing eff.
@@ -426,6 +428,93 @@ function DrawTextFaint( data, align, x, y, size ) {
     DrawText( data, align, x, y, size, false );
 }
 
+function AddSparks(x, y, vx, vy) {
+    for( var s = 0; s < 2; s++ )
+    {
+	var svx = vx * RandomCentered( 0, 0.5 );
+	var svy = vy * RandomCentered( 0, 10 );
+	gSparks.A.push( new Spark( x, y, svx, svy ) );
+    }
+}
+
+function StepToasts() {
+    if (gToasts.length > 0) {
+	var now = Date.now();
+	gToasts = gToasts.filter((t) => { return t.end > now; });
+	var y = gh(0.5) - (gToasts.length * gSmallFontSize*1.2);
+	Cxdo(() => {
+	    gCx.fillStyle = "magenta";
+	    gToasts.forEach((t) => {
+		DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, "monospace");
+		y += gSmallestFontSize;
+	    });
+	});
+    }
+}
+
+function PushToast(msg, lifespan=1000) {
+    console.log(msg);
+    gToasts.push({
+	msg: msg.toUpperCase(),
+	end: Date.now() + lifespan
+    });
+}
+
+
+function ClearScreen() {
+    Cxdo(() => {
+	gCx.clearRect( 0, 0, gWidth, gHeight );
+    });
+}
+
+function DrawResizing() {
+    Cxdo(() => {
+	gCx.fillStyle = RandomColor();
+	for (var i = 0; i < 3; ++i) {
+	    var y = gh(0.4) + gh(0.1) * i;
+	    DrawText( "R E S I Z I N G", "center", gw(0.5), y, gSmallestFontSizePt );
+	}
+    });
+}
+
+function DrawTitle(flicker=true) {
+    Cxdo(() => {
+	gCx.fillStyle = flicker ?
+	    RandomForColor(cyan, RandomCentered(0.8,0.2)) :
+	    rgb255s(cyan.regular);
+	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
+	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.46), gSmallFontSizePt, flicker );
+    });
+}
+
+function DrawBounds() {
+    if (!gDebug) { return; }
+    Cxdo(() => {
+	gCx.beginPath();
+	gCx.moveTo(WX(0), WY(0));
+	gCx.lineTo(WX(gWidth), WY(gHeight));
+	gCx.moveTo(WX(gWidth), WY(0));
+	gCx.lineTo(WX(0), WY(gHeight));
+	gCx.strokeStyle = "rgba(255,255,255,0.25)";
+	gCx.lineWidth = 10;
+	gCx.stroke();
+	gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
+    });
+    Cxdo(() => {
+	gCx.beginPath();
+	gCx.moveTo(WX(0), WY(0));
+	gCx.lineTo(WX(gCanvas.width), WY(gCanvas.height));
+	gCx.moveTo(WX(gCanvas.width), WY(0));
+	gCx.lineTo(WX(0), WY(gCanvas.height));
+	gCx.strokeStyle = "rgba(255,0,255,0.5)";
+	gCx.lineWidth = 2;
+	gCx.stroke();
+	gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
+    });
+}
+
+//........................................
+
 /*class*/ function Lifecycle( handlerMap ) {
 
     var self = this;
@@ -482,732 +571,6 @@ function DrawTextFaint( data, align, x, y, size ) {
 	    }
 	}
 	setTimeout( self.RunLoop, Math.max(1, tt) );
-    };
-}
-
-function StepToasts() {
-    if (gToasts.length > 0) {
-	var now = Date.now();
-	gToasts = gToasts.filter((t) => { return t.end > now; });
-	var y = gh(0.5) - (gToasts.length * gSmallFontSize*1.2);
-	Cxdo(() => {
-	    gCx.fillStyle = "magenta";
-	    gToasts.forEach((t) => {
-		DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, "monospace");
-		y += gSmallestFontSize;
-	    });
-	});
-    }
-}
-
-function PushToast(msg, lifespan=1000) {
-    console.log(msg);
-    gToasts.push({
-	msg: msg.toUpperCase(),
-	end: Date.now() + lifespan
-    });
-}
-
-/*class*/ function Paddle(spec) {
-    /* spec is {
-       x, y,
-       yMin, yMax,
-       width, height,
-       label,
-       hp,
-       isSplitter,
-       stepSize,
-       }
-    */
-    var self = this;
-
-    self.Init = function(label) {
-	self.id = gNextID++;
-	self.hp0 = spec.hp;
-	self.hp = spec.hp;
-	self.x0 = spec.x;
-	self.x = spec.x;
-	self.y = spec.y;
-	self.yMin = aorb(spec.yMin, gYInset);
-	self.yMax = aorb(spec.yMax, gHeight-gYInset);
-	self.isAtLimit = false;
-	self.prevX = self.x;
-	self.prevY = self.y;
-	self.width = spec.width;
-	self.height = spec.height;
-	self.isSplitter = aorb(spec.isSpliter, true);
-	self.alive = isU(self.hp) || self.hp > 0;
-	self.engorgedHeight = gPaddleHeight * 2;
-	self.engorgedWidth = gPaddleWidth * 0.8;
-	self.targetAIPuck = undefined;
-	self.label = spec.label;
-	self.engorged = false;
-	self.stepSize = aorb(spec.stepSize, gPaddleStepSize);
-	self.nudgeX();
-    };
-
-    self.Hit = function() {
-	if (isntU(self.hp)) {
-	    self.hp--;
-	    self.alive = self.hp > 0;
-	}
-    };
-
-    self.BeginEngorged = function() {
-	self.width = self.engorgedWidth;
-	var h2 = self.engorgedHeight;
-	var yd = (h2 - self.height)/2;
-	self.height = h2;
-	// re-center.
-        self.y = Math.max(0, self.y - yd);
-	self.engorged = true;
-    };
-
-    self.EndEngorged = function() {
-	self.width = gPaddleWidth;
-	self.height = gPaddleHeight;
-	// re-center.
-	self.y += Math.abs(self.engorgedHeight - self.height)/2;
-	self.engorged = false;
-    };
-
-    self.GetMidX = function() {
-	return self.x + self.width/2;
-    };
-
-    self.GetMidY = function() {
-	return self.y + self.height/2;
-    };
-
-    self.nudgeX = function() {
-	// nudging horizontally to emulate crt curvature.
-	var ypos = self.y + self.height/2;
-	var mid = gh(0.5);
-	var factor = Clip01(Math.abs(mid - ypos)/mid);
-	var off = (10 * factor) * ((self.x < gw(0.5)) ? 1 : -1);
-	self.x = self.x0 + off;
-    };
-
-    self.getVX = function() {
-	return (self.x - self.prevX) / kTimeStep;
-    };
-
-    self.getVY = function() {
-	return (self.y - self.prevY) / kTimeStep;
-    };
-
-    self.Draw = function( alpha ) {
-	Cxdo(() => {
-	    gCx.fillStyle = RandomGreen(0.7 * alpha);
-	    var hpw = isU(self.hp) ?
-		self.width :
-		Math.max(sx1(2), ii(self.width * self.hp/self.hp0));
-	    var wx = WX(self.x + (self.width-hpw)/2);
-	    var wy = WY(self.y);
-	    gCx.fillRect( wx, wy, hpw, self.height );
-	    if (isntU(self.label) && gRandom() > GameTime01(kFadeInMsec)) {
-		gCx.fillStyle = RandomGreen(0.5 * alpha);
-		DrawText( self.label, "center", self.GetMidX(), self.y-20, gSmallFontSizePt );
-	    }
-	    if (false) {//gDebug) {
-		gCx.strokeStyle = "red";
-		gCx.strokeRect( self.x, self.y, self.width, self.height );
-		gCx.strokeStyle = "white";
-		gCx.strokeRect( self.x+1, self.yMin, self.width-2, self.yMax-self.yMin );
-	    }
-	});
-    };
-
-    self.MoveDown = function( dt, scale=1 ) {
-	self.prevY = self.y;
-	self.y += self.stepSize * scale * (dt/kTimeStep);
-	self.isAtLimit = false;
-	if( self.y+self.height > self.yMax ) {
-	    self.y = self.yMax-self.height;
-	    self.isAtLimit = true;
-	}
-	self.nudgeX();
-    };
-
-    self.MoveUp = function( dt, scale=1 ) {
-	self.prevY = self.y;
-	self.y -= self.stepSize * scale * (dt/kTimeStep);
-	self.isAtLimit = false;
-	if( self.y < self.yMin ) {
-	    self.y = self.yMin;
-	    self.isAtLimit = true;
-	}
-	self.nudgeX();
-    };
-
-    // ........................................ AI
-
-    self.aiCountdownToUpdate = kAIPeriod;
-    self.shouldUpdate = function() {
-	self.aiCountdownToUpdate--;
-	var should = isU(self.targetAIPuck);
-	if( ! should ) {
-	    should = self.aiCountdownToUpdate <= 0;
-	}
-	if( ! should ) {
-	    // track incoming puck.
-	    should = ! self.IsPuckMovingAway( self.targetAIPuck );
-	}
-	if( should ) {
-	    self.aiCountdownToUpdate = kAIPeriod;
-	}
-	return should;
-    };
-
-    self.AIMove = function( dt ) {
-	Cxdo(() => {
-	    gCx.fillStyle = "blue";
-	    if( self.shouldUpdate() ) {
-		self.UpdatePuckTarget();
-		if( isntU(self.targetAIPuck) ) {
-		    if (gDebug) { DrawTextFaint("TRACK", "center", gw(0.8), gh(0.1), gRegularFontSizePt); }
-		    var targetMid = self.targetAIPuck.GetMidY() + self.targetAIPuck.vy;
-		    var deadzone = (self.height*0.2);
-		    if( targetMid <= self.GetMidY() - deadzone) {
-			self.MoveUp( dt, kAIMoveScale );
-		    }
-		    else if( targetMid >= self.GetMidY() + deadzone) {
-			self.MoveDown( dt, kAIMoveScale );
-		    }
-		}
-		else {
-		    if (gDebug) { DrawTextFaint("NONE", "center", gw(0.8), gh(0.1), gRegularFontSizePt); }
-		}
-	    }
-	    else {
-		if (gDebug) { DrawTextFaint("SLEEP", "center", gw(0.8), gh(0.1), gRegularFontSizePt); }
-	    }
-	});
-    };
-
-    self.UpdatePuckTarget = function() {
-	self.targetAIPuck = self.MaybeChoosePuck();
-    };
-
-    self.IsPuckMovingAway = function( puck ) {
-	var away = false;
-	if( isntU(puck)) {
-	    var pnx = puck.x + puck.vx * 0.1;
-	    var d1 = Math.abs( puck.x - self.x );
-	    var d2 = Math.abs( pnx - self.x );
-	    away = d2 > d1;
-	}
-	return away;
-    };
-
-    self.MaybeChoosePuck = function() {
-	var bp = undefined;
-	gPucks.A.forEach((p) => {
-	    if (isU(bp) && isntU(p)) {
-		bp = p;
-		return;
-	    }
-	    if (!self.IsPuckMovingAway(p)) {
-		if (self.IsPuckMovingAway(bp)) {
-		    bp = p;
-		}
-		var dPuck = Math.abs( self.x - p.x );
-		var dBp = Math.abs( self.x - bp.x );
-		if (dPuck < dBp && !self.IsPuckMovingAway(p)) {
-		    bp = p;
-		}
-		if (p.vx > bp.vx) {
-		    bp = p;
-		}
-	    }
-	});
-	return bp;
-    };
-
-    self.Init(spec.label);
-}
-
-/*class*/ function Spark( x0, y0, vx, vy ) {
-    var self = this;
-
-    self.Init = function() {
-	self.id = gNextID++;
-	self.x = x0;
-	self.y = y0;
-	self.prevX = self.x;
-	self.prevY = self.y;
-	self.width = gSparkWidth * gRandom()*2;
-	self.height = gSparkHeight * gRandom()*2;
-	self.vx = vx;
-	self.vy = vy;
-	// randomize lifespan a little for visual variety.
-	self.frameCount = RandomRange(0, 5);
-	self.alive = true;
-    };
-
-    self.Draw = function( alpha ) {
-	Cxdo(() => {
-	    gCx.fillStyle = RandomRed( alpha );
-	    gCx.fillRect( self.x, self.y, self.width, self.height );
-	});
-	self.frameCount++;
-    };
-
-    self.Step = function( dt ) {
-	if (self.alive) {
-	    self.prevX = self.x;
-	    self.prevY = self.y;
-	    self.x += (self.vx * dt);
-	    self.y += (self.vy * dt);
-	    self.alive = self.frameCount < kMaxSparkFrame;
-	}
-    };
-
-    self.Init();
-}
-
-function AddSparks(x, y, vx, vy) {
-    for( var s = 0; s < 2; s++ )
-    {
-	var svx = vx * RandomCentered( 0, 0.5 );
-	var svy = vy * RandomCentered( 0, 10 );
-	gSparks.A.push( new Spark( x, y, svx, svy ) );
-    }
-}
-
-/*class*/ function Puck(spec) {
-    /* spec = { x, y, vx, vy, ur=true, forced=false } */
-
-    var self = this;
-
-    self.Init = function() {
-	self.id = gNextID++;
-	self.x = spec.x;
-	self.y = spec.y;
-	self.prevX = self.x;
-	self.prevY = self.y;
-	self.width = gPuckWidth;
-	self.height = gPuckHeight;
-	// tweak max vx to avoid everything being too visually lock-step.
-	self.vx = Sign(spec.vx) * Math.min(RandomCentered(gMaxVX, 1), Math.abs(spec.vx));
-	self.vy = AvoidZero(spec.vy, 0.8);
-	self.alive = true;
-	self.startTime = gGameTime;
-	self.splitColor = aorb(spec.forced, false) ? "yellow" : "white";
-	self.ur = aorb(spec.ur, true);
-    };
-
-    self.GetMidX = function() {
-	return self.x + self.width/2;
-    };
-
-    self.GetMidY = function() {
-	return self.y + self.height/2;
-    };
-
-    self.Draw = function( alpha ) {
-	var wx = self.x;
-	var wy = self.y;
-	// make things coming toward you be slightly easier to see.
-	var amod = alpha * ForSide(-1,1) == Sign(self.vx) ? 1 : 0.8;
-	Cxdo(() => {
-	    // young pucks (mainly splits) render another color briefly.
-	    var dt = GameTime01(1000, self.startTime);
-	    gCx.globalAlpha = amod;
-	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? self.splitColor : RandomCyan();
-	    gCx.fillRect( wx, wy, self.width, self.height );
-	    // a thin outline keeps things crisp when there are lots of pucks.
-	    gCx.lineWidth = sx1(1);
-	    gCx.globalAlpha = 1;
-	    gCx.strokeStyle = "black";
-	    gCx.strokeRect( wx-1, wy-1, self.width+2, self.height+2 );
-	});
-    };
-
-    self.Step = function( dt ) {
-	if( self.alive ) {
-	    self.prevX = self.x;
-	    self.prevY = self.y;
-	    self.x += (self.vx * dt);
-	    self.y += (self.vy * dt);
-	    var xout = self.x < 0 || self.x+self.width >= gWidth;
-	    var yout = self.y < 0 || self.y+self.height >= gHeight;
-	    self.alive = !(xout || yout);
-	}
-    };
-
-    self.SplitPuck = function(forced=false) {
-	var np = undefined;
-	var count = gPucks.A.length;
-	dosplit = forced || (count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && RandomBool(1.05-Clip01(Math.abs(self.vx/gMaxVX)))));
-
-	// sometimes force ejection to avoid too many pucks.
-	// if there are already too many pucks to allow for a split-spawned-puck,
-	// then we also want to sometimes eject the existing 'self' puck
- 	// to avoid ending up with just a linear stream of pucks.
-	var r = gRandom();
- 	var countFactor = Clip01(count/kEjectSpeedCountThreshold);
-	var ejectCountFactor = Math.pow(countFactor, 3);
-	var doejectCount = (count > kEjectCountThreshold) && (r < 0.1);
-	var doejectSpeed = (self.vx > gMaxVX*0.9) && (r < ejectCountFactor);
-	var doeject = doejectCount || doejectSpeed;
-
-	if (!forced && !dosplit) { // i cry here.
-	    if (doeject) {
-		self.vy *= 1.1;
-	    }
-	}
-	else {
-	    // i'm sure this set of heuristics is clearly genius.
-	    var slowCountFactor = Math.pow(countFactor, 1.5);
-	    var slow = !doejectSpeed && (self.vx > gMaxVX*0.7) && (gRandom() < slowCountFactor);
-	    var nvx = self.vx * (slow ? RandomRange(0.8, 0.9) : RandomRange(1.01, 1.1));
-	    var nvy = self.vy;
-	    nvy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
-	    np = new Puck({ x: self.x, y: self.y, vx: nvx, vy: nvy, ur: false, forced });
-	    PlayExplosion();
-
-	    // fyi because SplitPuck is called during MovePucks,
-	    // we return the new puck to go onto the B list, whereas
-	    // MoveSparks happens after so it goes onto the A list.
-	    AddSparks(self.x, self.y, self.vx, self.vy);
-	}
-
-	return np;
-    };
-
-    self.CollisionTest = function( xywh ) {
-	if( self.alive ) {
-	    var blockvx = xywh.x >= gw(0.5) ? 1 : -1;
-	    if (Sign(self.vx) == blockvx) {
-		// !? assuming small enough simulation stepping !?
-		// current step overlap?
-		var xRight = self.x >= xywh.x+xywh.width;
-		var xLeft = self.x+self.width < xywh.x;
-		var xOverlaps = ! ( xRight || xLeft );
-		var yTop = self.y >= xywh.y+xywh.height;
-		var yBottom = self.y+self.height < xywh.y;
-		var yOverlaps = ! ( yTop || yBottom );
-		// did previous step overlap?
-		// also trying to see which direction?
-		var pxRight = self.prevX >= xywh.prevX+xywh.width;
-		var pxLeft = self.prevX+self.width < xywh.prevX;
-		var pxOverlaps = ! ( pxRight || pxLeft );
-		// did it pass over the xywh? (paranoid check.)
-		var dxOverlaps = Sign(self.prevX - xywh.prevX) != Sign(self.x - xywh.x);
-		return (dxOverlaps || xOverlaps) && yOverlaps;
-	    }
-	}
-	return false;
-    };
-
-    self.BounceCollidableX = function( xywh ) {
-	var did = false;
-	if( self.vx > 0 ) {
-	    did = true;
-	    self.x = xywh.x - self.width;
-	}
-	else {
-	    did = true;
-	    self.x = xywh.x + xywh.width;
-	}
-	self.vx *= -1;
-	return did;
-    };
-
-    self.PaddleCollision = function( paddle ) {
-	var newPuck = undefined;
-	var hit = self.CollisionTest( paddle );
-	if ( hit ) {
-	    paddle.Hit( self );
-	    // todo: bounce Y.
-	    self.BounceCollidableX( paddle );
-
-	    // smallest bit of vertical english.
-	    // too much means you never get to 'streaming'.
-	    // too little means you maybe crash the machine :-)
-	    var dy = self.GetMidY() - paddle.GetMidY();
-	    var mody = gRandom() * 0.055 * Math.abs(dy);
-	    if( self.GetMidY() < paddle.GetMidY() ) {
-		self.vy -= mody;
-	    }
-	    else if( self.GetMidY() > paddle.GetMidY() ) {
-		self.vy += mody;
-	    }
-
-	    if (paddle.isSplitter) {
-		newPuck = self.SplitPuck();
-	    }
-	}
-	return newPuck;
-    };
-
-    self.AllPaddlesCollision = function( paddles ) {
-	var spawned = [];
-	if (self.alive) {
-	    paddles.forEach( function(paddle) {
-		var np = self.PaddleCollision(paddle);
-		if( isntU(np) ) {
-		    spawned.push( np );
-		}
-	    } );
-	}
-	return spawned;
-    };
-
-    self.BarriersCollision = function( barriers ) {
-	if (self.alive) {
-	    gBarriers.A.forEach( function(barrier) {
-		var hit = barrier.CollisionTest( self );
-		if (hit) {
-		    PlayBlip();
-		    // todo: bounds adjustment.
-		    self.vx *= -1;
-		}
-	    } );
-	}
-    };
-    
-    self.OptionsCollision = function( options ) {
-	if (self.alive) {
-	    gOptions.A.forEach( function(option) {
-		var hit = option.CollisionTest( self );
-		if (hit) {
-		    PlayBlip();
-		    // todo: bounds adjustment.
-		    self.vx *= -1;
-		}
-	    } );
-	}
-    };
-
-    self.WallsCollision = function() {
-	if (self.alive) {
-	    var did = false;
-	    if( self.y < gYInset ) {
-		did = true;
-		self.y = gYInset;
-	    }
-	    if( self.y+self.height > gHeight - gYInset ) {
-		did = true;
-		self.y = gHeight - gYInset - self.height;
-	    }
-	    if (did) {
-		self.vy *= -1;
-		PlayBlip();
-	    }
-	}
-    };
-
-    self.UpdateScore = function() {
-	if (!self.alive) {
-	    var wasLeft = self.x < gw(0.5);
-	    if (wasLeft) {
-		ForSide(
-		    () => { gCPUScore += kScoreIncrement; },
-		    () => { gPlayerScore += kScoreIncrement; }
-		)();
-	    }
-	    else {
-		ForSide(
-		    () => { gPlayerScore += kScoreIncrement; },
-		    () => { gCPUScore += kScoreIncrement; }
-		)();
-	    }
-	}
-    };
-
-    self.Init();
-}
-
-/*class*/ function Barrier( spec ) {
-    var self = this;
-
-    self.Init = function() {
-	self.id = gNextID++;
-	self.x = spec.x;
-	self.y = spec.y;
-	self.prevX = self.x;
-	self.prevY = self.y;
-
-	self.height = spec.height;
-	self.width = spec.width;
-
-	self.hp0 = spec.hp;
-	self.hp = self.hp0;
-	self.alive = spec.hp > 0;
-    };
-
-    self.Step = function( dt ) {
-	self.alive = self.hp > 0;
-    };
-
-    self.Draw = function( alpha ) {
-	Cxdo(() => {
-	    // front-side wedge cuts.
-	    var edge = sx1(5);
-	    // max() prevent getting too thin for wedge shape.
-	    var hpw = Math.max(edge, ii(self.width * self.hp/self.hp0)+edge);
-	    var r = WX(ForSide(self.x+hpw, self.x+self.width));
-	    var l = WX(ForSide(self.x, r-hpw));
-	    var t = WY(self.y+sy1(1));
-	    var b = WY(self.y+self.height-sy1(1));
-	    ForSide(
-		() => {
-		    gCx.beginPath();
-		    gCx.moveTo(l, t);
-		    gCx.lineTo(r-edge, t);
-		    gCx.lineTo(r, t+edge);
-		    gCx.lineTo(r, b-edge);
-		    gCx.lineTo(r-edge, b);
-		    gCx.lineTo(l, b);
-		    gCx.closePath();
-		},
-		() => {
-		    gCx.beginPath();
-		    gCx.moveTo(r, t);
-		    gCx.lineTo(l+edge, t);
-		    gCx.lineTo(l, t+edge);
-		    gCx.lineTo(l, b-edge);
-		    gCx.lineTo(l+edge, b);
-		    gCx.lineTo(r, b);
-		    gCx.closePath();
-		}
-	    )();
-	    gCx.fillStyle = RandomBlue( alpha * 0.5 );
-	    gCx.fill();
-	});
-    };
-
-    self.CollisionTest = function( puck ) {
-	var blockvx = ForSide(-1, 1);
-	if (Sign(puck.vx) == blockvx) {
-	    var hit = puck.CollisionTest( self );
-	    if (hit) {
-		self.hp--;
-	    }
-	    return hit;
-	}
-	return false;
-    };
-
-    self.Init();
-}
-
-// the spec is { name, x, y, w, h, vx, vy, label, ylb, testFn, boomFn, drawFn }
-// don't you wish this was all in typescript now?
-/*class*/ function Powerup( spec ) {
-    var self = this;
-
-    self.Init = function() {
-	Assert(isntU(spec), "no spec");
-	self.id = gNextID++;
-	self.name = spec.name;
-	self.x = spec.x;
-	self.y = spec.y;
-	self.prevX = self.x;
-	self.prevY = self.y;
-	self.width = spec.width;
-	self.height = spec.height;
-	self.vx = spec.vx;
-	self.vy = spec.vy;
-	self.label = spec.label;
-	self.ylb = spec.ylb;
-	self.fontSize = spec.fontSize;
-	self.boomFn = spec.boomFn;
-	self.drawFn = spec.drawFn;
-	if (self.x >= gw(0.5)) {
-	    self.leftBound = gw(0.5);
-	    self.rightBound = gw(1);
-	}
-	else {
-	    self.leftBound = 0;
-	    self.rightBound = gw(0.5);
-	}
-	self.topBound = 0;
-	self.bottomBound = gHeight;
-    };
-
-    self.Draw = function( alpha ) {
-	self.drawFn( self, alpha );
-    };
-
-    self.Step = function( dt ) {
-	self.prevX = self.x;
-	self.prevY = self.y;
-	self.x += (self.vx * dt);
-	self.y += (self.vy * dt);
-	if (self.x <= self.leftBound) {
-	    self.vx = Math.abs(self.vx);
-	    self.x = self.leftBound + 1;
-	}
-	else if (self.x + self.width >= self.rightBound) {
-	    self.vx = -1 * Math.abs(self.vx);
-	    self.x = self.rightBound - self.width - 1;
-	}
-	if (self.y <= self.topBound) {
-	    self.vy = Math.abs(self.vy);
-	    self.y = self.topBound + 1;
-	}
-	else if (self.y + self.height >= self.bottomBound) {
-	    self.vy = -1 * Math.abs(self.vy);
-	    self.y = self.bottomBound - self.height - 1;
-	}
-    };
-
-    // todo: reuse collision xywh code.
-    self.PaddleCollision = function( paddle ) {
-	// !? assuming small enough simulation stepping !?
-	// current step overlap?
-	var xRight = self.x >= paddle.x+paddle.width;
-	var xLeft = self.x+self.width < paddle.x ;
-	var xOverlaps = ! ( xRight || xLeft );
-	var yTop = self.y >= paddle.y+paddle.height;
-	var yBottom = self.y+self.height < paddle.y;
-	var yOverlaps = ! ( yTop || yBottom );
-
-	// did previous step overlap?
-	// also trying to see which direction?
-	var pxRight = self.prevX >= paddle.prevX+paddle.width;
-	var pxLeft = self.prevX+self.width < paddle.prevX;
-	var pxOverlaps = ! ( pxRight || pxLeft );
-
-	// did it pass over the paddle? (paranoid check.)
-	var dxOverlaps = Sign(self.prevX - paddle.prevX) != Sign(self.x - paddle.x);
-
-	return (dxOverlaps || xOverlaps) && yOverlaps;
-    };
-    
-    self.AllPaddlesCollision = function( gameState, paddles ) {
-	var nextSelf = self;
-	paddles.forEach( function(paddle) {
-	    var hit = self.PaddleCollision(paddle);
-	    if( hit ) {
-		self.boomFn(gameState);
-		nextSelf = undefined;
-	    }
-	} );
-	return nextSelf;
-    };
-
-    self.Init();
-}
-
-/*class*/ function Animation( props ) {
-    var { lifespan, animFn, startFn, endFn } = props;
-    var self = this;
-    self.id = gNextID++;
-    self.startMs = gGameTime;
-    self.endMs = self.startMs + lifespan;
-    self.Step = function( dt, gameState ) {
-	if (isntU(startFn)) { startFn( gameState ); }
-	startFn = undefined;
-	if (gGameTime <= self.endMs) {
-	    animFn( dt, gameState, self.startMs, self.endMs );
-	    return false;
-	}
-	if (isntU(endFn)) { endFn( gameState ); }
-	return true;
     };
 }
 
@@ -1413,6 +776,10 @@ function AddSparks(x, y, vx, vy) {
 	}
     };
 
+    self.AddAnimation = function( a ) {
+	self.animations[gNextID++] = a;
+    };
+
     self.AddBarrier = function( spec ) {
 	var b = new Barrier(spec);
 	gBarriers.A.push(b);
@@ -1422,7 +789,11 @@ function AddSparks(x, y, vx, vy) {
 	var o = new Paddle(spec);
 	gOptions.A.push(o);
     };
-    
+
+    self.AddNeo = function( spec ) {
+	gNeo = new Neo(spec);
+    };
+
     self.StepMoveables = function( dt ) {
 	if (!self.paused) {
 	    if (self.attract) {
@@ -1434,13 +805,14 @@ function AddSparks(x, y, vx, vy) {
 	    self.MovePowerup( dt );
 	    self.MoveBarriers( dt );
 	    self.MoveOptions( dt );
+	    self.MoveNeo( dt );
 	}
     };
 
     self.MovePucks = function( dt ) {
 	gPucks.B.clear();
 	gPucks.A.forEach((p) => {
-	    p.Step( kMoveStep * (dt/kTimeStep) );
+	    p.Step( dt );
 	    if (!self.attract) {
 		p.UpdateScore();
 	    }
@@ -1449,6 +821,7 @@ function AddSparks(x, y, vx, vy) {
 		splits.push.apply( splits, p.AllPaddlesCollision( gOptions.A ) );
 		p.WallsCollision();
 		p.BarriersCollision();
+		p.NeoCollision();
 		gPucks.B.push( p );
 		if( !self.attract ) {
 		    gPucks.B.pushAll(splits);
@@ -1461,7 +834,7 @@ function AddSparks(x, y, vx, vy) {
     self.MoveSparks = function( dt ) {
 	gSparks.B.clear();
 	gSparks.A.forEach((s) => {
-	    s.Step( kMoveStep * (dt/kTimeStep) );
+	    s.Step( dt );
 	    s.alive && gSparks.B.push( s );
 	} );
 	SwapBuffers(gSparks);
@@ -1469,7 +842,7 @@ function AddSparks(x, y, vx, vy) {
 
     self.MovePowerup = function( dt ) {
 	if (isntU(gPowerup)) {
-	    gPowerup.Step( kMoveStep * (dt/kTimeStep) );
+	    gPowerup.Step( dt );
 	    // could in theory give powerups to the cpu side as well :-)
 	    gPowerup = gPowerup.AllPaddlesCollision( self, [ self.playerPaddle ] );
 	}
@@ -1478,7 +851,7 @@ function AddSparks(x, y, vx, vy) {
     self.MoveBarriers = function( dt ) {
 	gBarriers.B.clear();
 	gBarriers.A.forEach((s) => {
-	    s.Step( kMoveStep * (dt/kTimeStep) );
+	    s.Step( dt );
 	    s.alive && gBarriers.B.push( s );
 	} );
 	SwapBuffers(gBarriers);
@@ -1491,6 +864,12 @@ function AddSparks(x, y, vx, vy) {
 	    o.alive && gOptions.B.push( o );
 	} );
 	SwapBuffers(gOptions);
+    };
+
+    self.MoveNeo = function( dt ) {
+	if (isntU(gNeo)) {
+	    gNeo = gNeo.Step( dt );
+	}
     };
 
     self.Alpha = function( alpha ) {
@@ -1632,8 +1011,14 @@ function AddSparks(x, y, vx, vy) {
 	    gPowerup.Draw( self.Alpha() );
 	    Cxdo(() => {
 		gCx.fillStyle = "magenta";
-		DrawText(gPowerup.name, "center", gw(0.5), gh(0.9), gSmallFontSizePt);
+		DrawText(gPowerup.name.toUpperCase(), "center", gw(0.5), gh(0.9), gSmallFontSizePt);
 	    });
+	}
+    };
+
+    self.DrawNeo = function() {
+	if (isntU(gNeo)) {
+	    gNeo.Draw( self.Alpha() );
 	}
     };
 
@@ -1663,6 +1048,7 @@ function AddSparks(x, y, vx, vy) {
 	    gOptions.A.forEach((o) => {
 		o.Draw( self.Alpha() );
 	    });
+	    self.DrawNeo();
 	    self.playerPaddle.Draw( self.Alpha() );
 	    self.cpuPaddle.Draw( self.Alpha() );
 	    self.DrawPowerup();
@@ -1711,32 +1097,6 @@ function AddSparks(x, y, vx, vy) {
     };
 }
 
-function DrawBounds() {
-    if (!gDebug) { return; }
-    Cxdo(() => {
-	gCx.beginPath();
-	gCx.moveTo(WX(0), WY(0));
-	gCx.lineTo(WX(gWidth), WY(gHeight));
-	gCx.moveTo(WX(gWidth), WY(0));
-	gCx.lineTo(WX(0), WY(gHeight));
-	gCx.strokeStyle = "rgba(255,255,255,0.25)";
-	gCx.lineWidth = 10;
-	gCx.stroke();
-	gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
-    });
-    Cxdo(() => {
-	gCx.beginPath();
-	gCx.moveTo(WX(0), WY(0));
-	gCx.lineTo(WX(gCanvas.width), WY(gCanvas.height));
-	gCx.moveTo(WX(gCanvas.width), WY(0));
-	gCx.lineTo(WX(0), WY(gCanvas.height));
-	gCx.strokeStyle = "rgba(255,0,255,0.5)";
-	gCx.lineWidth = 2;
-	gCx.stroke();
-	gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
-    });
-}
-
 /*class*/ function NoopState(nextState) {
     var self = this;
     self.nextState = nextState;
@@ -1744,32 +1104,6 @@ function DrawBounds() {
     self.Step = function() { 
 	return self.nextState;
     };
-}
-
-function ClearScreen() {
-    Cxdo(() => {
-	gCx.clearRect( 0, 0, gWidth, gHeight );
-    });
-}
-
-function DrawResizing() {
-    Cxdo(() => {
-	gCx.fillStyle = RandomColor();
-	for (var i = 0; i < 3; ++i) {
-	    var y = gh(0.4) + gh(0.1) * i;
-	    DrawText( "R E S I Z I N G", "center", gw(0.5), y, gSmallestFontSizePt );
-	}
-    });
-}
-
-function DrawTitle(flicker=true) {
-    Cxdo(() => {
-	gCx.fillStyle = flicker ?
-	    RandomForColor(cyan, RandomCentered(0.8,0.2)) :
-	    rgb255s(cyan.regular);
-	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
-	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.46), gSmallFontSizePt, flicker );
-    });
 }
 
 /*class*/ function SplashState() {
