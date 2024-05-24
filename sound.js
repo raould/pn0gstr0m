@@ -213,6 +213,8 @@ function LoadAudio() {
     RegisterMusic("music20", "wickedmoose");
     RegisterMusic("music21", "youngchipmunk");
     RegisterMusic("music22", "youngprawn");
+    RegisterMusic("music23", "politetortoise");
+    RegisterMusic("music24", "poorhamster");
 
     Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("music")).length == kMusicSfxCount, "music count");
     Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("explosion")).length == kExplosionSfxCount, "explosion count");
