@@ -78,7 +78,7 @@ function OnSfxStop(name) {
     }
 }
 
-const kMusicSfxCount = 22;
+const kMusicSfxCount = 24;
 function BeginMusic() {
     EndMusic();
     if (!gUserMuted) {
