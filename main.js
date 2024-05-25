@@ -172,6 +172,7 @@ function anyKeyPressed() {
     var any = downs.length > 0;
     return any;
 }
+// pauseability currently only exists for the GameState.
 var gPauseButtonEnabled = false;
 var gPausePressed = false;
 var gUserMutedButtonEnabled = false;
@@ -200,26 +201,27 @@ var kEventStickDown = "stick_down";
 // due to history
 // "touch" also kinda
 // subsumes mouse pointer.
-var gTouchTapTimeout = 350;
-var gTouchingTime = { start: undefined, end: undefined };
-var gTouchX = -1;
-var gTouchY = -1;
-var gTouchScaleX = 1;
-var gTouchScaleY = 1;
+var gPointerTapTimeout = 350;
+var gPointerTimestamps = { start: undefined, end: undefined };
+var gPointerX = -1;
+var gPointerY = -1;
+var gPointerScaleX = 1;
+var gPointerScaleY = 1;
 var gMoveTargetY = undefined;
 var gMoveTargetStepY = 0;
 // this value is either undefined, or "left", or "right".
 // undefined means no taps seen, and means "right" due to history.
-var gTouchSide;
-function touchEnabled() {
-    return isntU(gTouchingTime.start);
+var gPointerSide;
+function isPointerEnabled() {
+    var is = isntU(gPointerTimestamps.start);
+    return is;
 }
-function touching() {
-    var is = touchEnabled() && isU(gTouchingTime.end);
+function isPointerDown() {
+    var is = isPointerEnabled() && isU(gPointerTimestamps.end);
     return is;
 }
 function cancelTouch() {
-    gTouchingTime.end = gGameTime;
+    gPointerTimestamps.end = gGameTime;
 }
 
 var kScoreIncrement = 1;
@@ -263,7 +265,7 @@ function GameTime01(period, start) {
 }
 
 function ForSide(left, right) {
-    if (gTouchSide == "left") {
+    if (gPointerSide == "left") {
 	return left;
     }
     return right;
@@ -316,19 +318,23 @@ function StepToasts() {
     if (gToasts.length > 0) {
 	var now = Date.now();
 	gToasts = gToasts.filter((t) => { return t.end > now; });
-	var y = gh(0.5) - (gToasts.length * gSmallFontSize*1.2);
-	Cxdo(() => {
-	    gCx.fillStyle = "magenta";
-	    gToasts.forEach((t) => {
-		DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, "monospace");
-		y += gSmallestFontSize;
+	if (gToasts.length > 0) {
+	    var y = gh(0.1);
+	    Cxdo(() => {
+		gCx.fillStyle = "magenta";
+		gToasts.forEach((t) => {
+		    console.log(t.msg, gw(0.5), y);
+		    DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, "monospace");
+		    y += gSmallestFontSize * 1.1;
+		    if (y > gh(0.8)) { y = gh(0.1); }
+		});
 	    });
-	});
+	}
     }
 }
 
 function PushToast(msg, lifespan=1000) {
-    console.log(msg);
+    console.log("PushToast", msg);
     gToasts.push({
 	msg: msg.toUpperCase(),
 	end: Date.now() + lifespan
@@ -345,10 +351,8 @@ function ClearScreen() {
 function DrawResizing() {
     Cxdo(() => {
 	gCx.fillStyle = RandomColor();
-	for (var i = 0; i < 3; ++i) {
-	    var y = gh(0.4) + gh(0.1) * i;
-	    DrawText( "R E S I Z I N G", "center", gw(0.5), y, gSmallestFontSizePt );
-	}
+	DrawText( "R E S I Z I N G", "center", gw(0.5), gh(0.3), gSmallestFontSizePt );
+	DrawText( "R E S I Z I N G", "center", gw(0.5), gh(0.7), gSmallestFontSizePt );
     });
 }
 
@@ -401,6 +405,11 @@ function DrawBounds() {
 
     self.Quit = function() {
 	self.stop = true;
+    };
+
+    self.Pause = function() {
+	var handler = self.handlerMap[self.state];
+	isntU(handler.Pause) && handler.Pause();
     };
 
     self.RunLoop = function() {
@@ -461,7 +470,7 @@ function DrawBounds() {
 	gPlayerScore = 0;
 	gCPUScore = 0;
 	gStateMuted = gMonochrome = self.attract;
-	gPauseButtonEnabled = !self.attract && touchEnabled();
+	gPauseButtonEnabled = false;
 	gStartTime = gGameTime;
 	self.paused = false;
 	self.animations = {};
@@ -506,6 +515,10 @@ function DrawBounds() {
 	PlayStart();
     };
 
+    self.Pause = function() {
+	self.paused = true;
+    };
+
     self.Step = function( dt ) {
 	if (!self.attract) { ClearScreen(); }
 	self.MaybeSpawnPowerup( dt );
@@ -523,7 +536,9 @@ function DrawBounds() {
 	    gPowerup = MakeRandomPowerup(self);
 	}
 	var nextState = self.CheckNoPucks();
-	gPauseButtonEnabled = isU(nextState);
+	if (isntU(nextState)) {
+	    gPauseButtonEnabled = false;
+	}
 	return nextState;
     };
 
@@ -596,9 +611,8 @@ function DrawBounds() {
 
     self.ProcessOneInput = function() {
 	if (gPauseButtonEnabled &&
-	    touching() &&
-	    Distance(gTouchX, gTouchY, gPauseCenterX, gPauseCenterY) < gPauseRadius*2) {
-	    gPausePressed = true;
+	    isPointerDown()) {
+	    gPausePressed = Distance2(gPointerX, gPointerY, gPauseCenterX, gPauseCenterY) < Pow2(gPauseRadius*2);
 	}
 	if( gPausePressed ) {
 	    self.paused = !self.paused;
@@ -640,7 +654,7 @@ function DrawBounds() {
 	    // paddle is close enough then don't
 	    // potentially wiggle steppming up & down
 	    // around gMoveTargetY.
-	    if( !touching() ) {
+	    if( !isPointerDown() ) {
 		if( Math.abs(self.playerPaddle.GetMidY() - gMoveTargetY) < gPaddleStepSize ) {
 		    gMoveTargetY = undefined;
 		}
@@ -720,9 +734,7 @@ function DrawBounds() {
 	    var x = gPowerup.x;
 	    var y = gPowerup.y;
 	    gPowerup = gPowerup.Step( dt );
-	    if (isU(gPowerup)) {
-		self.AddAnimation(MakePoofAnimation(x, y, 40));
-	    }
+	    isU(gPowerup) && self.AddAnimation(MakePoofAnimation(x, y, 40));
 	}
 	if (isntU(gPowerup)) {
 	    // could in theory give powerups to the cpu side as well some day? :-)
@@ -848,8 +860,7 @@ function DrawBounds() {
     };
 
     self.DrawPauseButton = function() {
-	// user might start using touch only after beginning the game.
-	if (isntU(gTouchSide) && !self.attract) {
+	if (!self.attract && isPointerEnabled()) {
 	    gPauseButtonEnabled = true;
 	    var cx = WX(gPauseCenterX);
 	    var cy = WY(gPauseCenterY);
@@ -938,6 +949,10 @@ function DrawBounds() {
 	    self.DrawPauseButton();
 	    self.DrawTouchTarget();
 	}
+	if (self.paused) {
+	    gCx.fillStyle = "silver";
+	    DrawText("P A U S E D", "center", gw(0.5), gh(0.55), gBigFontSizePt);
+	}
 	self.DrawDebug();
     };
 
@@ -948,7 +963,7 @@ function DrawBounds() {
 
 	Cxdo(() => {
 	    gCx.fillStyle = RandomColor();
-	    gCx.fillRect(gTouchX-5, gTouchY-5, 10, 10);
+	    gCx.fillRect(gPointerX-5, gPointerY-5, 10, 10);
 	});
 
 	Cxdo(() => {
@@ -1041,7 +1056,7 @@ function DrawBounds() {
     };
 
     self.ProcessOneInput = function() {
-	if (anyKeyPressed() ||  gStickUp || gStickDown || touching()) {
+	if (anyKeyPressed() ||  gStickUp || gStickDown || isPointerDown()) {
 	    return kMenu;
 	}
 	return undefined;
@@ -1094,9 +1109,9 @@ function DrawBounds() {
     self.ProcessOneInput = function() {
 	var nextState = undefined;
 	if (gUserMutedButtonEnabled &&
-	    touching() &&
-	    (Math.abs(gUserMutedCenterX-gTouchX) < gUserMutedWidth*0.8 &&
-	     Math.abs(gUserMutedCenterY-gTouchY) < gUserMutedHeight*0.8)) {
+	    isPointerDown() &&
+	    (Math.abs(gUserMutedCenterX-gPointerX) < gUserMutedWidth*0.8 &&
+	     Math.abs(gUserMutedCenterY-gPointerY) < gUserMutedHeight*0.8)) {
 	    gUserMutedPressed = true;
 	}
 	if (gUserMutedPressed) {
@@ -1108,7 +1123,7 @@ function DrawBounds() {
 	    BeginMusic();
 	}
 	else if ((gGameTime - self.started) > self.timeout &&
-		(anyKeyPressed() || gStickUp || gStickDown || touching())) {
+		(anyKeyPressed() || gStickUp || gStickDown || isPointerDown())) {
 	    nextState = kGame;
 	}
 	return nextState;
@@ -1227,7 +1242,7 @@ function DrawBounds() {
 
     self.ProcessOneInput = function(gotoMenu) {
 	var nextState = undefined;
-	if (gotoMenu && (anyKeyPressed() || gStickUp || gStickDown || touching())) {
+	if (gotoMenu && (anyKeyPressed() || gStickUp || gStickDown || isPointerDown())) {
             nextState = kMenu;
         }
 	else if (isU(nextState) && (gGameTime - self.started) > self.timeoutMsg+self.timeoutEnd) {
@@ -1334,8 +1349,8 @@ function SetPointerTarget(tx, ty, eventType) {
     gEventQueue.push({
 	eventType,
 	updateFn: () => {
-	    gTouchX = tx;
-	    gTouchY = ty;
+	    gPointerX = tx;
+	    gPointerY = ty;
 	    gMoveTargetY = ty;
 	},
     });
@@ -1346,18 +1361,18 @@ function TouchStart(e) {
     PointerProcess(
 	e.touches[0],
 	(tx, ty) => {
-	    if (isU(gTouchSide)) {
-		gTouchSide = tx < gw(0.5) ? "left" : "right";
+	    if (isU(gPointerSide)) {
+		gPointerSide = tx < gw(0.5) ? "left" : "right";
 	    }
 	    SetPointerTarget(tx, ty, kEventTouchStart);
-	    gTouchingTime = { start: gGameTime, end: undefined };
+	    gPointerTimestamps = { start: gGameTime, end: undefined };
 	}
     );
 }
 
 function TouchMove(e) {
     e.preventDefault();
-    if (isU(gTouchingTime.end)) {
+    if (isU(gPointerTimestamps.end)) {
 	PointerProcess(
 	    e.touches[0],
 	    (tx, ty) => {
@@ -1369,13 +1384,13 @@ function TouchMove(e) {
 
 function TouchEnd(e) {
     e.preventDefault();
-    var startTime = gTouchingTime.start;
+    var startTime = gPointerTimestamps.start;
     var endTime = gGameTime;
     gEventQueue.push({
 	eventType: kEventTouchEnd,
 	updateFn: () => {
 	    gMoveTargetStepY = 0;
-	    gTouchingTime.end = endTime;
+	    gPointerTimestamps.end = endTime;
 	}
     });
 }
@@ -1386,13 +1401,13 @@ function MouseDown(e) {
 	e,
 	(tx, ty) => {
 	    SetPointerTarget(tx, ty, kEventMouseDown);
-	    gTouchingTime = { start: gGameTime, end: undefined };
+	    gPointerTimestamps = { start: gGameTime, end: undefined };
 	}
     );
 }
 
 function MouseMove(e) {
-    if (isU(gTouchingTime.end)) {
+    if (isU(gPointerTimestamps.end)) {
 	PointerProcess(
 	    e,
 	    (tx, ty) => {
@@ -1404,13 +1419,13 @@ function MouseMove(e) {
 
 function MouseUp(e) {
     e.preventDefault();
-    var startTime = gTouchingTime.start;
+    var startTime = gPointerTimestamps.start;
     var endTime = gGameTime;
     gEventQueue.push({
 	eventType: kEventMouseUp,
 	updateFn: () => {
 	    gMoveTargetStepY = 0;
-	    gTouchingTime.end = endTime;
+	    gPointerTimestamps.end = endTime;
 	}
     });
 }
@@ -1424,7 +1439,7 @@ function ResetInput() {
     gMoveTargetY = undefined;
     gAddPuckPressed = false;
     gGameOverPressed = false;
-    gTouchSide = undefined;
+    gPointerSide = undefined;
 }
 
 function ResetGlobalStorage() {
@@ -1447,9 +1462,7 @@ function ResetGlobalStorage() {
 }
 
 function OnOrientationChange() {
-    if (isntU(gLifecycle) && gLifecycle.state == kMenu) {
-	Start(); // yes, just a full reboot. :-(
-    }
+    OnResize();
 }
 
 // the web is a pi(l)e of feces.
@@ -1459,10 +1472,17 @@ var gLastArea = 0;
 var gMatchedAreaCount = 0;
 var kMatchedAreaRequirement = 10;
 function OnResize() {
-    gResizing = true;
-    gLastArea = 0;
-    gMatchedAreaCount = 0;
-    ResizePoll();
+    if (isntU(gLifecycle)) {
+	if (gLifecycle.state == kGame) {
+	    gLifecycle.Pause();
+	}
+	else if (!gResizing) {
+	    gResizing = true;
+	    gLastArea = 0;
+	    gMatchedAreaCount = 0;
+	    ResizePoll();
+	}	    
+    }
 }
 
 function ResizePoll() {
@@ -1502,8 +1522,6 @@ function CheckResizeMatch() {
 }
 
 function Start() {
-    console.log("Start");
-
     var hs = localStorage.getItem(kHighScoreKey);
     if (isntU(hs)) {
 	gHighScore = parseInt(hs);

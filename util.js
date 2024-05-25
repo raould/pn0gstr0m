@@ -68,7 +68,17 @@ function Trim(f, decimals) {
 }
 
 function Distance(x0, y0, x1, y1) {
-    return Math.sqrt(Math.pow(x1-x0,2)+Math.pow(y1-y0,2));
+    var d = Math.sqrt(Distance2(x0, y0, x1, y1));
+    return d;
+}
+
+function Distance2(x0, y0, x1, y1) {
+    var d = Math.pow(x1-x0,2) + Math.pow(y1-y0,2);
+    return d;
+}
+
+function Pow2(v) {
+    return Math.pow(v, 2);
 }
 
 function F(n) {

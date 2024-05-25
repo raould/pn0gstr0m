@@ -29,17 +29,19 @@ function RegisterSfx(name, basename) {
     RegisterSound(name, basename, false);
 }
 
-function RegisterSound(name, basename, isMusic=false) {
+function RegisterSound(name, basename, isMusic) {
     var files = ["ogg", "aac", "mp3"].map((e) => `sound/${basename}.${e}`);
     var howl = new Howl({
 	src: files,
 	onload: () => {
 	    gAudio.name2meta[name].loaded = true;
-	    LoadNextSound(name);
+	    console.log("onload", name);
+	    isMusic && LoadNextSound(name);
 	},
 	onloaderror: () => {
 	    // well, poop. todo: something better.
-	    LoadNextSound(name);
+	    console.log("onloaderror", name);
+	    isMusic && LoadNextSound(name);
 	},
 	html5: false,
 	preload: false,
