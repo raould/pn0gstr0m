@@ -19,8 +19,8 @@
 * more bugs:
   * wrong side chosen because not clearing input.
   * music not always starting? permission? bad data?
+  * music sometimes playing more than one simultaenously.
   * somehow don't nuke player's game on rotation. :-(
-
   
 
   

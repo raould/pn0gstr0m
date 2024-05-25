@@ -3,6 +3,8 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+var k2Pi = Math.PI*2;
+
 function isU(u) {
     return u == undefined;
 }
@@ -92,4 +94,13 @@ function Clip01(f) {
 function Clip255(f) {
     var i = Math.floor(f);
     return Clip(i, 0, 255);
+}
+
+function T01(v, max) {
+    return Clip01(
+	Math.pow(
+	    v/(max==0?1:max),
+	    3
+	)
+    );
 }

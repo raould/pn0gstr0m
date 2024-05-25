@@ -11,6 +11,7 @@ function Powerup( spec ) {
     self.Init = function() {
 	Assert(isntU(spec), "no spec");
 	self.id = gNextID++;
+	self.lifespan = 1000 * 10; // they all eventually go away if not collected.
 	self.name = spec.name;
 	self.x = spec.x;
 	self.y = spec.y;
@@ -42,6 +43,7 @@ function Powerup( spec ) {
     };
 
     self.Step = function( dt ) {
+	self.lifespan -= dt;
 	dt = kMoveStep * (dt/kTimeStep);
 	self.prevX = self.x;
 	self.prevY = self.y;
@@ -63,6 +65,8 @@ function Powerup( spec ) {
 	    self.vy = -1 * Math.abs(self.vy);
 	    self.y = self.bottomBound - self.height - 1;
 	}
+	var alive = self.lifespan > 0;
+	return alive ? self : undefined;
     };
 
     // todo: reuse collision xywh code.
