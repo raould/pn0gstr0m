@@ -36,12 +36,12 @@ function RegisterSound(name, basename, isMusic) {
 	onload: () => {
 	    gAudio.name2meta[name].loaded = true;
 	    console.log("onload", name);
-	    isMusic && LoadNextSound(name);
+	    LoadNextSound(name);
 	},
 	onloaderror: () => {
 	    // well, poop. todo: something better.
 	    console.log("onloaderror", name);
-	    isMusic && LoadNextSound(name);
+	    LoadNextSound(name);
 	},
 	html5: false,
 	preload: false,
@@ -183,8 +183,7 @@ const kPowerupSfxCount = 1;
 const PlayPowerupBoom = MakePlayFn(kPowerupSfxCount, "powerupboom", PlaySoundDebounced);
 
 function LoadAudio() {
-    // these will load 1 by 1 in order.
-    RegisterMusic("music1", "nervouslynx");
+    // these will load in order 1 by 1 via onload().
     RegisterSfx("explosion1", "explosionA");
     RegisterSfx("explosion2", "explosionB");
     RegisterSfx("explosion3", "explosionC");
@@ -194,6 +193,7 @@ function LoadAudio() {
     RegisterSfx("start1", "powerUp");
     RegisterSfx("powerupboom1", "powerUp");
     RegisterSfx("gameover1", "gameover");
+    RegisterMusic("music1", "nervouslynx");
     RegisterMusic("music2", "candiddonkey");
     RegisterMusic("music3", "devotedhyena");
     RegisterMusic("music4", "sweetgorilla");

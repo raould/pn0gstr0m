@@ -225,7 +225,7 @@ var gPointerScaleY = 1;
 var gMoveTargetY = undefined;
 var gMoveTargetStepY = 0;
 function isPointerEnabled() {
-    var is = isntU(gPointerTimestamps.start);
+    var is = notU(gPointerTimestamps.start);
     return is;
 }
 function isPointerDown() {
@@ -424,7 +424,7 @@ function DrawBounds() {
 
     self.Pause = function() {
 	var handler = self.handlerMap[self.state];
-	isntU(handler.Pause) && handler.Pause();
+	notU(handler.Pause) && handler.Pause();
     };
 
     self.RunLoop = function() {
@@ -450,13 +450,13 @@ function DrawBounds() {
 	    }
 	    else {
 		var handler = self.handlerMap[self.state];
-		Assert(isntU(handler), self.state, "RunLoop");
+		Assert(notU(handler), self.state, "RunLoop");
 		if (self.transitioned) {
 		    handler.Reset();
 		    self.transitioned = false;
 		}
 		var next = handler.Step( dt );
-		if( isntU(next) && next !== self.state ) {
+		if( notU(next) && next !== self.state ) {
 		    console.log(`transitioned from ${self.state} to ${next}`);
 		    self.transitioned = true;
 		    self.state = next;
@@ -556,7 +556,7 @@ function DrawBounds() {
 	    gPill = MakeRandomPill(self);
 	}
 	var nextState = self.CheckNoPucks();
-	if (isntU(nextState)) {
+	if (notU(nextState)) {
 	    gPauseButtonEnabled = false;
 	}
 	return nextState;
@@ -569,7 +569,7 @@ function DrawBounds() {
 		RandomBool(gDebug ? 0.1 : kSpawnPillFactor) &&
 		isU(gPill)) {
 		gPill = MakeRandomPill(self);
-		if (isntU(gPill)) {
+		if (notU(gPill)) {
 		    gPillSpawnCountdown = kPillSpawnCooldown;
 		}
 	    }
@@ -657,7 +657,7 @@ function DrawBounds() {
 	if( gDownPressed || gStickDown ) {
 	    self.playerPaddle.MoveDown( dt );
 	}
-	if( isntU(gMoveTargetY) ) {
+	if( notU(gMoveTargetY) ) {
 	    var limit = gYInset + gPaddleHeight/2;
 	    gMoveTargetY = Clip(
 		gMoveTargetY + gMoveTargetStepY,
@@ -750,10 +750,10 @@ function DrawBounds() {
     };
 
     self.MovePill = function( dt ) {
-	if (isntU(gPill)) {
+	if (notU(gPill)) {
 	    gPill = gPill.Step( dt, self );
 	}
-	if (isntU(gPill)) {
+	if (notU(gPill)) {
 	    // could in theory give pills to the cpu side as well some day? :-)
 	    gPill = gPill.AllPaddlesCollision( self, [ self.playerPaddle ] );
 	}
@@ -778,7 +778,7 @@ function DrawBounds() {
     };
 
     self.MoveNeo = function( dt ) {
-	if (isntU(gNeo)) {
+	if (notU(gNeo)) {
 	    gNeo = gNeo.Step( dt, self );
 	}
     };
@@ -820,7 +820,7 @@ function DrawBounds() {
 	    gCx.fillStyle = RandomMagenta(self.Alpha(0.5));
 	    ForSide(
 		() => {
-		    if (isntU(gHighScore)) {
+		    if (notU(gHighScore)) {
 			DrawText( "HI: " + gHighScore, "left", gw(0.2), gh(0.1), gSmallFontSizePt );
 		    }
 		    if (!self.attract) {
@@ -829,7 +829,7 @@ function DrawBounds() {
 		    }
 		},
 		() => {
-		    if (isntU(gHighScore)) {
+		    if (notU(gHighScore)) {
 			DrawText( "HI: " + gHighScore, "right", gw(0.8), gh(0.1), gSmallFontSizePt );
 		    }
 		    if (!self.attract) {
@@ -842,7 +842,7 @@ function DrawBounds() {
     };
 
     self.DrawTouchTarget = function() {
-	if (isntU(gMoveTargetY) && !self.attract) {
+	if (notU(gMoveTargetY) && !self.attract) {
 	    var size = syi(7);
 	    var xoff = sxi((Clip01(Math.abs(gMoveTargetY - gh(0.5))/gh(0.5)))*5);
 	    ForSide(
@@ -917,7 +917,7 @@ function DrawBounds() {
     };
 
     self.DrawPill = function() {
-	if (isntU(gPill)) {
+	if (notU(gPill)) {
 	    gPill.Draw( self.Alpha() );
 	    Cxdo(() => {
 		gCx.fillStyle = "magenta";
@@ -928,7 +928,7 @@ function DrawBounds() {
     };
 
     self.DrawNeo = function() {
-	if (isntU(gNeo)) {
+	if (notU(gNeo)) {
 	    gNeo.Draw( self.Alpha() );
 	}
     };
@@ -989,7 +989,7 @@ function DrawBounds() {
 	});
 
 	var cpuAIPuckTarget = self.cpuPaddle.aiTarget;
-	if( isntU(cpuAIPuckTarget) ) {
+	if( notU(cpuAIPuckTarget) ) {
 	    Cxdo(() => {
 	    gCx.strokeStyle = "red";
 	    gCx.beginPath();
@@ -1001,7 +1001,7 @@ function DrawBounds() {
 	    });
 	}
 	var playerAIPuckTarget = self.playerPaddle.aiTarget;
-	if( isntU(playerAIPuckTarget) ) {
+	if( notU(playerAIPuckTarget) ) {
 	    Cxdo(() => {
 		gCx.strokeStyle = "magenta";
 		gCx.strokeRect(
@@ -1099,7 +1099,7 @@ function DrawBounds() {
 	self.attract.Step( dt );
 	nextState = self.ProcessInput();
 	self.Draw();
-	if (isntU(nextState)) {
+	if (notU(nextState)) {
 	    EndMusic();
 	    gUserMutedButtonEnabled = false;
 	}
@@ -1175,10 +1175,10 @@ function DrawBounds() {
     self.DrawMusicName = function() {
 	if (!gUserMuted) {
 	    var msg = "fetching music";
-	    if (isntU(gMusicID)) {
+	    if (notU(gMusicID)) {
 		var name = gAudio.id2name[gMusicID];
 		var meta = gAudio.name2meta[name];
-		if (isntU(meta?.basename) && !!(meta?.loaded)) {
+		if (notU(meta?.basename) && !!(meta?.loaded)) {
 		    var msg = `norcalledmvsic ${meta.basename}`;
 		}
 	    }
@@ -1254,7 +1254,7 @@ function DrawBounds() {
 	    });
 	    gEventQueue = [];
 	}
-	if (isntU(nextState)) {
+	if (notU(nextState)) {
 	    gHighScore = Math.max(self.finalScore, (aorb(gHighScore,self.finalScore)));
 	    localStorage.setItem(kHighScoreKey, gHighScore);
 	}
@@ -1347,7 +1347,7 @@ function RegisterGamepad(e) {
 }
 
 function RemoveGamepad() {
-    if (isntU(gGamepad)) {
+    if (notU(gGamepad)) {
 	gGamepad.removeEventListener("joystickmove", StandardMapping.Axis.JOYSTICK_LEFT);
 	gGamepad.removeEventListener("joystickmove", StandardMapping.Axis.JOYSTICK_RIGHT);
 	gGamepad = undefined;
@@ -1362,7 +1362,7 @@ function PointerProcess(t, updateFn) {
     // todo: handle window.devicePixelRatio.
     var tx = (t.clientX - cvx);
     var ty = (t.clientY - cvy);
-    Assert(isntU(updateFn), "PointerProcess");
+    Assert(notU(updateFn), "PointerProcess");
     updateFn(tx, ty);
 }
 
@@ -1484,7 +1484,7 @@ var gLastArea = 0;
 var gMatchedAreaCount = 0;
 var kMatchedAreaRequirement = 10;
 function OnResize() {
-    if (isntU(gLifecycle)) {
+    if (notU(gLifecycle)) {
 	if (gLifecycle.state == kGame) {
 	    gLifecycle.Pause();
 	}
@@ -1535,7 +1535,7 @@ function CheckResizeMatch() {
 
 function Start() {
     var hs = localStorage.getItem(kHighScoreKey);
-    if (isntU(hs)) {
+    if (notU(hs)) {
 	gHighScore = parseInt(hs);
     }
 
@@ -1552,7 +1552,7 @@ function Start() {
     handlerMap[kMenu] = new MenuState();
     handlerMap[kGame] = new GameState();
     handlerMap[kGameOver] = new GameOverState();
-    if (isntU(gLifecycle)) { gLifecycle.Quit(); }
+    if (notU(gLifecycle)) { gLifecycle.Quit(); }
     gLifecycle = new Lifecycle( handlerMap );
     gLifecycle.RunLoop();
 }

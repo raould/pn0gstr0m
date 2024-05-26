@@ -48,7 +48,7 @@ function Paddle(spec) {
 
     self.CollisionTest = function( puck ) {
 	var hit = puck.CollisionTest( self, self.blockvx );
-	if (hit && isntU(self.hp)) {
+	if (hit && notU(self.hp)) {
 	    self.hp--;
 	    self.alive = self.hp > 0;
 	}
@@ -107,7 +107,7 @@ function Paddle(spec) {
 	    var wx = WX(self.x + (self.width-hpw)/2);
 	    var wy = WY(self.y);
 	    gCx.fillRect( wx, wy, hpw, self.height );
-	    if (isntU(self.label) && gRandom() > GameTime01(kFadeInMsec)) {
+	    if (notU(self.label) && gRandom() > GameTime01(kFadeInMsec)) {
 		gCx.fillStyle = RandomGreen(0.5 * alpha);
 		DrawText( self.label, "center", self.GetMidX(), self.y-20, gSmallFontSizePt );
 	    }
@@ -165,7 +165,7 @@ function Paddle(spec) {
 	    gCx.fillStyle = "blue";
 	    if( self.shouldUpdate() ) {
 		self.UpdatePuckTarget();
-		if( isntU(self.aiTarget) ) {
+		if( notU(self.aiTarget) ) {
 		    if (gDebug) { DrawTextFaint("TRACK", "center", gw(0.8), gh(0.1), gRegularFontSizePt); }
 		    var targetMid = self.aiTarget.GetMidY() + self.aiTarget.vy;
 		    var deadzone = (self.height*0.2);
@@ -188,7 +188,7 @@ function Paddle(spec) {
 
     self.IsPuckAttacking = function( puck ) {
 	var is = false;
-	if(isntU(puck)) {
+	if(notU(puck)) {
 	    var vel = Math.abs(puck.x-self.x) < Math.abs(puck.prevX-self.x);
 	    var side = Sign(self.x-puck.x) != self.normalX;
 	    is = vel && side;
@@ -204,7 +204,7 @@ function Paddle(spec) {
 	    // todo: handle when best isLocked.
 	    var p = gPucks.A.read(i);
 	    if (isU(best)) {
-		Assert(isntU(p), "bad puck");
+		Assert(notU(p), "bad puck");
 		best = p;
 	    }
 	    else if (best != p && self.IsPuckAttacking(p)) {
@@ -221,7 +221,7 @@ function Paddle(spec) {
 		}
 	    }
 	}
-	if (isntU(best)) {
+	if (notU(best)) {
 	    self.aiTarget = best;
 	}
 	self.scanIndex += self.scanCount;

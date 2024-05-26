@@ -27,7 +27,7 @@ function rgb255s(array, alpha) {
 	_tc[3] = array[3];
     }
     var joined = _tc.map((ch,i) => ((i < 3) ? Clip255(ch) : ch)).join(",");
-    var str = ((array.length == 4 || isntU(alpha)) ? "rgba(" : "rgb(") + joined + ")";
+    var str = ((array.length == 4 || notU(alpha)) ? "rgba(" : "rgb(") + joined + ")";
     return  str;
 }
 

@@ -9,7 +9,7 @@ function isU(u) {
     return u == undefined;
 }
 
-function isntU(u) {
+function notU(u) {
     return u != undefined;
 }
 

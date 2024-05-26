@@ -30,7 +30,7 @@ function Neo( spec ) {
 		    range: self.width,
 		    steps: 20,
 		})
-	    )
+	    );
 	    self.locked.forEach((p) => {
 		p.isLocked = false;
 		p.vx = Math.abs(p.vx) * ForSide(1,-1) * RandomRange(1,1.3);

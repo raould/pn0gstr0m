@@ -15,7 +15,7 @@ function Animation( props ) {
     self.endMs = self.startMs + self.lifespan;
     self.Step = function(dt, gameState) {
 	// start.
-	if (isntU(startFn)) { startFn( gameState ); }
+	if (notU(startFn)) { startFn( gameState ); }
 	startFn = undefined;
 	// anim.
 	if (gGameTime <= self.endMs) {
@@ -24,7 +24,7 @@ function Animation( props ) {
 	    return false;
 	}
 	// end.
-	if (isntU(endFn)) { endFn( gameState ); }
+	if (notU(endFn)) { endFn( gameState ); }
 	return true;
     };
 }

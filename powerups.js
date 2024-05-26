@@ -32,7 +32,7 @@ function MakeRandomPill(gameState) {
     var y = RandomChoice(gh(0.1), gh(0.9)-specBase.height);
     if (specBase.testFn(gameState)) {
 	// allow some pills to last a differnet amount of time.
-	Assert(isntU(specBase.lifespan), "lifespan");
+	Assert(notU(specBase.lifespan), "lifespan");
 	var spec = {
 	    ...specBase,
 	    name: name,
@@ -542,7 +542,7 @@ function MakeEngorgeAnimation(props) {
 	},
 	endFn: (gameState) => {
 	    gameState.playerPaddle.EndEngorged();
-	    if (isntU(endFn)) { endFn(gameState); }
+	    if (notU(endFn)) { endFn(gameState); }
 	}
     });
 }

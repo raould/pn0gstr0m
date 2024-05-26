@@ -176,7 +176,7 @@ function Puck(spec) {
 	if (self.alive && !self.isLocked) {
 	    paddles.forEach( function(paddle) {
 		var np = self.PaddleCollision(paddle);
-		if( isntU(np) ) {
+		if( notU(np) ) {
 		    spawned.push( np );
 		}
 	    } );
@@ -211,7 +211,7 @@ function Puck(spec) {
     };
 
     self.NeoCollision = function() {
-	if (self.alive && !self.isLocked && isntU(gNeo)) {
+	if (self.alive && !self.isLocked && notU(gNeo)) {
 	    var hit = gNeo.CollisionTest( self );
 	    if (hit) {
 		PlayBlip();

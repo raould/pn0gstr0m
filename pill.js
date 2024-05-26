@@ -9,7 +9,7 @@ function Pill( spec ) {
     var self = this;
 
     self.Init = function() {
-	Assert(isntU(spec), "no spec");
+	Assert(notU(spec), "no spec");
 	self.id = gNextID++;
 	self.lifespan = spec.lifespan;
 	self.name = spec.name;
@@ -55,7 +55,7 @@ function Pill( spec ) {
 		    25
 		)
 	    );
-	    if (isntU(self.endFn)) {
+	    if (notU(self.endFn)) {
 		self.endFn();
 		self.endFn = undefined;
 	    }
