@@ -48,7 +48,13 @@ function Pill( spec ) {
 	self.Move( dt );
 	var alive = self.lifespan > 0;
 	if (!alive) {
-	    gameState.AddAnimation(MakePoofAnimation(self.x, self.y, 25));
+	    gameState.AddAnimation(
+		MakePoofAnimation(
+		    self.x + self.width/2,
+		    self.y + self.height/2,
+		    25
+		)
+	    );
 	    if (isntU(self.endFn)) {
 		self.endFn();
 		self.endFn = undefined;
