@@ -816,7 +816,7 @@ function DrawBounds() {
 
     self.DrawScoreHeader = function() {
 	Cxdo(() => {
-	    gCx.fillStyle = RandomGrey(self.Alpha(0.7));
+	    gCx.fillStyle = RandomMagenta(self.Alpha(0.5));
 	    ForSide(
 		() => {
 		    if (isntU(gHighScore)) {

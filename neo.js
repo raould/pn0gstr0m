@@ -23,7 +23,7 @@ function Neo( spec ) {
 	if (!self.alive) {
 	    self.locked.forEach((p) => {
 		p.isLocked = false;
-		p.vx = Math.abs(p.vx) * ForSide(1,-1) * RandomCentered(1.4,0.2);
+		p.vx = Math.abs(p.vx) * ForSide(1,-1) * RandomRange(1,1.3);
 		AddSparks(p.x, p.y, p.vx, p.vy);
 	    });
 	}
