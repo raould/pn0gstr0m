@@ -1012,8 +1012,8 @@ function DrawBounds( alpha=0.5 ) {
 	}
 
 	Cxdo(() => {
-	    gCx.fillStyle = "blue";
-	    DrawTextFaint( "DEBUG MODE", "center", gw(0.5), gh(0.8), gSmallFontSizePt );
+	    gCx.fillStyle = RandomForColor(blue, 0.3);
+	    DrawText( "D E B U G", "center", gw(0.5), gh(0.8), gBigFontSizePt );
 	});
     };
 }

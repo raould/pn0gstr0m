@@ -32,7 +32,7 @@ function MakeRandomPill(gameState) {
     var specBase = gPowerupSpecs[name]();
     var y = RandomChoice(gh(0.1), gh(0.9)-specBase.height);
     if (specBase.testFn(gameState)) {
-	// allow some pills to last a differnet amount of time.
+	// allows some pills to last a differnet amount of time, tho unused.
 	Assert(notU(specBase.lifespan), "lifespan");
 	var spec = {
 	    ...specBase,
@@ -57,7 +57,7 @@ function MakeForcePushSpec() {
 	fontSize: gReducedFontSizePt,
 	testFn: (gameState) => {
 	    // don't bother pushing into neo, i guess.
-	    return gPucks.A.length > 5 && isU(gNeo);
+	    return (gDebug || gPucks.A.length > 5) && isU(gNeo);
 	},
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
@@ -107,7 +107,7 @@ function MakeDecimateSpec() {
 	ylb: sy(18),
 	fontSize: gSmallFontSizePt,
 	testFn: (gameState) => {
-	    // looks unfun if there aren't enough puck to destroy.
+	    // looks unfun if there aren't enough pucks to destroy.
 	    return gDebug || gPucks.A.length > 20;
 	},
 	boomFn: (gameState) => {
@@ -361,7 +361,6 @@ function MakeOptionSpec() {
 
 function MakeNeoSpec() {
     var name = 'neo';
-    var lifespan = 1000 * 7;
     var x = ForSide(gw(0.4), gw(0.6));
     return {
 	width: sx(22), height: sy(22),
@@ -370,12 +369,13 @@ function MakeNeoSpec() {
 	ylb: sy(15),
 	fontSize: gSmallestFontSizePt,
 	testFn: (gameState) => {
-	    return (gDebug || gPucks.A.length > 20) && isU(gNeo);
+	    // todo: in some playtesting this was being spawned too often, maybe each spec needs a spawn weight too?
+	    return (gDebug || gPucks.A.length > kEjectCountThreshold/2) && isU(gNeo);
 	},
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
 	    gameState.AddNeo({
-		x, lifespan
+		x, lifespan: 1000 * 4,
 	    });
 	},
 	drawFn: (self, alpha) => {
