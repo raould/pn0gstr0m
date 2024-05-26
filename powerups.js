@@ -383,12 +383,13 @@ function MakeNeoSpec() {
 		var wy = WY(self.y);
 		var mx = wx + ii(self.width/2);
 		var my = wy + ii(self.height/2);
+		var o = sy1(5);
 
 		gCx.beginPath();
-		gCx.moveTo(mx, wy);
-		gCx.lineTo(wx + self.width, my);
-		gCx.lineTo(mx, wy + self.height);
-		gCx.lineTo(wx, my);
+		gCx.moveTo(mx, wy-o);
+		gCx.lineTo(wx+self.width+o, my);
+		gCx.lineTo(mx, wy+self.height+o);
+		gCx.lineTo(wx-o, my);
 		gCx.closePath();
 		gCx.fillStyle = backgroundColor;
 		gCx.fill();
@@ -400,7 +401,17 @@ function MakeNeoSpec() {
 		gCx.lineTo(wx, my);
 		gCx.closePath();
 		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-		gCx.lineWidth = sx1(2);
+		gCx.lineWidth = sx1(1);
+		gCx.stroke();
+
+		gCx.beginPath();
+		gCx.moveTo(mx, wy-o);
+		gCx.lineTo(wx+self.width+o, my);
+		gCx.lineTo(mx, wy+self.height+o);
+		gCx.lineTo(wx-o, my);
+		gCx.closePath();
+		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+		gCx.lineWidth = sx1(1);
 		gCx.stroke();
 
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
