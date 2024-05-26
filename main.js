@@ -273,7 +273,8 @@ var gRandom = MakeRandom(0xDEADBEEF);
 // note: not linear, aesthetically on purpose!
 function GameTime01(period, start) {
     var diff = gGameTime - aorb(start, gStartTime);
-    return T01(diff, (period > 0) ? period : 1000);
+    var t = T01(diff, (period > 0) ? period : 1000);
+    return t;
 }
 
 // (all) this really needs to go into GameState.
@@ -778,7 +779,7 @@ function DrawBounds() {
 
     self.MoveNeo = function( dt ) {
 	if (isntU(gNeo)) {
-	    gNeo = gNeo.Step( dt );
+	    gNeo = gNeo.Step( dt, self );
 	}
     };
 

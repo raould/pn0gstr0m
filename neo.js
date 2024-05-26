@@ -12,18 +12,29 @@ function Neo( spec ) {
 	self.y = 0;
 	self.width = sx1(10);
 	self.height = gh(1);
-	self.lifespan = spec.lifespan;
-	self.alive = spec.lifespan > 0;
+	self.lifespan0 = spec.lifespan;
+	self.lifespan = self.lifespan0;
+	self.alive = self.lifespan > 0;
 	self.locked = [];
     };
 
-    self.Step = function(dt) {
+    self.Step = function(dt, gameState) {
 	self.lifespan = Math.max(0, self.lifespan-dt);
 	self.alive = self.lifespan > 0;
 	if (!self.alive) {
+	    gameState.AddAnimation(
+		Make2PtLightningAnimation({
+		    lifespan: 500,
+		    x0: WX(self.x+self.width/2), y0: gYInset,
+		    x1: WX(self.x+self.width/2), y1: gh(1)-gYInset,
+		    range: self.width,
+		    steps: 20,
+		})
+	    )
 	    self.locked.forEach((p) => {
 		p.isLocked = false;
 		p.vx = Math.abs(p.vx) * ForSide(1,-1) * RandomRange(1,1.3);
+		// funny how sparks are global but animations aren't :-(
 		AddSparks(p.x, p.y, p.vx, p.vy);
 	    });
 	}
@@ -32,6 +43,8 @@ function Neo( spec ) {
 
     self.Draw = function( alpha ) {
 	var mx = self.x + self.width/2;
+	// neo blocks from 0 to gh(1),
+	// but draws inside the gYInset.
 	var y0 = Math.max(self.y, gYInset);
 	var y1 = Math.min(self.y+self.height, gh(1)-gYInset);
 	Cxdo(() => {
@@ -42,6 +55,7 @@ function Neo( spec ) {
 		gCx.fillRect(WX(x), y0, self.width+2*hw, y1-y0);
 	    }
 	});
+	var range = 5 + T10(self.lifespan, self.lifespan0) * sx1(10);
 	AddLightningPath({
 	    color: RandomBlue(alpha),
 	    x0: WX(self.x), y0,
@@ -53,7 +67,7 @@ function Neo( spec ) {
 	    color: RandomColor(alpha),
 	    x0: WX(mx), y0,
 	    x1: WX(mx), y1,
-	    range: 5,
+	    range: range,
 	    steps: 20
 	});
 	AddLightningPath({

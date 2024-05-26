@@ -547,22 +547,6 @@ function MakeEngorgeAnimation(props) {
     });
 }
 
-function Make2PtLightningAnimation(props) {
-    var { lifespan, x0, y0, x1, y1, width, range, steps, endFn } = props;
-    return new Animation({
-	lifespan,
-	animFn: (anim, dt, gameState) => {
-	    AddLightningPath({
-		color: RandomColor(),
-		x0, y0,
-		x1, y1,
-		range, steps
-	    });
-	},
-	endFn
-    });
-}
-
 function MakeDensityAnimation(props) {
     var { endFn } = props;
     return new Animation({

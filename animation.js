@@ -91,3 +91,19 @@ function MakePoofAnimation(x, y, radius) {
 	}
     });
 }
+
+function Make2PtLightningAnimation(props) {
+    var { lifespan, x0, y0, x1, y1, range, steps, endFn } = props;
+    return new Animation({
+	lifespan,
+	animFn: (anim, dt, gameState) => {
+	    AddLightningPath({
+		color: RandomColor(),
+		x0, y0,
+		x1, y1,
+		range, steps
+	    });
+	},
+	endFn
+    });
+}

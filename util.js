@@ -106,8 +106,16 @@ function Clip255(f) {
     return Clip(i, 0, 255);
 }
 
-function T01(v, max) {
+function T10(v, max) { // assumes min = 0 of course.
     return Clip01(
+	// bourgeois linear hah.
+	1-v/max
+    );
+}
+
+function T01(v, max) { // assumes min = 0 of course.
+    return Clip01(
+	// aesthetically non linear hah.
 	Math.pow(
 	    v/(max==0?1:max),
 	    3
