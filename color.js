@@ -4,6 +4,7 @@
  */
 
 var black = [0x0, 0x0, 0x0];
+var white = [0xFF, 0xFF, 0xFF];
 var grey = { regular: [0xA0, 0xA0, 0xA0], strong: [0xA0, 0xA0, 0xA0] };
 var green = { regular: [0x89, 0xCE, 0x00], strong: [0x00, 0xFF, 0x00] };
 var blue = { regular: [0x05, 0x71, 0xB0], strong: [0x00, 0x00, 0xFF] };
@@ -14,7 +15,7 @@ var magenta = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF] };
 var backgroundColor = "black"; // match: index.html background color.
 var warningColor = "grey";
 
-// array channels are 0-255, alpha is 0-1, like html/css.
+// array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 var _tc = Array(4);
 function rgb255s(array, alpha) {
     // detect any old style code that called this function.

@@ -381,7 +381,7 @@ function DrawTitle(flicker=true) {
     });
 }
 
-function DrawBounds() {
+function DrawBounds( alpha=0.5 ) {
     if (!gDebug) { return; }
     Cxdo(() => {
 	gCx.beginPath();
@@ -389,7 +389,7 @@ function DrawBounds() {
 	gCx.lineTo(WX(gWidth), WY(gHeight));
 	gCx.moveTo(WX(gWidth), WY(0));
 	gCx.lineTo(WX(0), WY(gHeight));
-	gCx.strokeStyle = "rgba(255,255,255,0.25)";
+	gCx.strokeStyle = rgb255s(white, alpha/2);
 	gCx.lineWidth = 10;
 	gCx.stroke();
 	gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
@@ -400,7 +400,7 @@ function DrawBounds() {
 	gCx.lineTo(WX(gCanvas.width), WY(gCanvas.height));
 	gCx.moveTo(WX(gCanvas.width), WY(0));
 	gCx.lineTo(WX(0), WY(gCanvas.height));
-	gCx.strokeStyle = "rgba(255,0,255,0.5)";
+	gCx.strokeStyle = rgb255s(magenta.regular, alpha);
 	gCx.lineWidth = 2;
 	gCx.stroke();
 	gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
@@ -482,6 +482,7 @@ function DrawBounds() {
 	RecalculateConstants();
 	ResetGlobalStorage();
 	ResetInput();
+	gPowerupLocks = {};
 
 	gPlayerScore = 0;
 	gCPUScore = 0;
@@ -976,7 +977,7 @@ function DrawBounds() {
     self.DrawDebug = function() {
 	if( ! gDebug ) { return; }
 
-	DrawBounds();
+	DrawBounds(0.2);
 
 	Cxdo(() => {
 	    gCx.fillStyle = RandomColor();
@@ -1009,6 +1010,11 @@ function DrawBounds() {
 		    playerAIPuckTarget.width + 10, playerAIPuckTarget.height + 10 );
 	    });
 	}
+
+	Cxdo(() => {
+	    gCx.fillStyle = "blue";
+	    DrawTextFaint( "DEBUG MODE", "center", gw(0.5), gh(0.8), gSmallFontSizePt );
+	});
     };
 }
 

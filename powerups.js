@@ -9,6 +9,7 @@
 
 kPillLifespan = 1000 * 10;
 
+// match: GameState.Reset(); :-(
 var gPowerupLocks = {};
 
 var gPowerupSpecs = {
@@ -563,13 +564,23 @@ function MakeDensityAnimation(props) {
     return new Animation({
 	lifespan: 1000 * 60,
 	animFn: (anim, dt, gameState) => {
-	    gCx.fillStyle = "rgba(128, 128, 128, 0.05)";
+	    // match: GameState paddle position at gh(0.5)
+	    // although this is hacked up more for aesthetics.
+	    var x = ForSide(
+		gXInset/2 + gPaddleWidth/2,
+		gw(1) - gXInset/2 - gPaddleWidth/2
+	    );
+	    var w = gPaddleWidth;
 	    Cxdo(() => {
+		gCx.fillStyle = "rgba(128, 128, 128, 0.05)";
 		gPucks.A.forEach((p) => {
+		    var y0 = Math.max(gYInset, p.y-p.height);
+		    var y1 = Math.min(gh(1)-gYInset, p.y+p.height*2);
+		    var h = y1 - y0;
 		    if (Sign(p.vx) == ForSide(-1,1)) {
 			gCx.fillRect(
-			    0, p.y - p.height,
-			    gw(1), p.height*2
+			    x-w/2, y0,
+			    w, h,
 			);
 		    }
 		});
