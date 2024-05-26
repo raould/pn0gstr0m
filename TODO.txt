@@ -1,8 +1,8 @@
 * all the todo:s.
 * deperately need to refactor so many globals away.
+* globals horrible also because of no good input/event model.
 * perf is worse in firefox vs. chrome/edge.
 * actually profile but it just says "gc" so who knows what as root cause... need placement-new object pooling?
-* profusely apologize for not having a ui toolkit.
 * test gamepads.
 * handle device pixel ratio.
 * orientation hell, including effing manifest.json?
@@ -12,9 +12,9 @@
 * play blip if puck collides and doesn't split.
 * powerup pill timeout after say 10 seconds.
 * super fugly inconsistencies:
-  * resizing things & left vs. right e.g. gPauseButtonCx.
-  * events queue vs. immediate.
+  * clashing styles of events queue vs. immediate changes.
   * gDebug stuff is sort of super hacky all over the place.
+  * the way powerups code is split up is ugly and confusing.
 * more bugs:
   * wrong side chosen because not clearing input?!
   * music not always starting? permission? bad data?

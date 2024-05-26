@@ -3,9 +3,13 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-// note: each powerup
-// must have a unique pill,
-// and ideally a unique animation.
+// note: each powerup must have a unique pill,
+// and the actual "powerup" is usually
+// done via (ideally a unique) animation.
+
+kPillLifespan = 1000 * 10;
+
+var gPowerupLocks = {};
 
 var gPowerupSpecs = {
     forcepush: MakeForcePushSpec,
@@ -15,18 +19,43 @@ var gPowerupSpecs = {
     defend: MakeDefendSpec,
     option: MakeOptionSpec,
     neo: MakeNeoSpec,
+    density: MakeDensitySpec,
 };
 
 // all specs' x,y should be top,left (not mid points).
+
+function MakeRandomPill(gameState) {
+    var keys = Object.keys(gPowerupSpecs);
+    var index = RandomRangeInt(0, keys.length-1);
+    var name = keys[index];
+    var specBase = gPowerupSpecs[name]();
+    var y = RandomChoice(gh(0.1), gh(0.9)-specBase.height);
+    if (specBase.testFn(gameState)) {
+	// allow some pills to last a differnet amount of time.
+	Assert(isntU(specBase.lifespan), "lifespan");
+	var spec = {
+	    ...specBase,
+	    name: name,
+	    x: ForSide(gw(0.35), gw(0.65)),
+	    y,
+	    vx: ForSide(-1,1) * sx(3),
+	    vy: RandomCentered(0, 4, 1)
+	};
+	return new Pill(spec);
+    }
+    return undefined;
+}
 
 function MakeForcePushSpec() {
     var label = ForSide(">", "<");
     return {
 	width: sx(18), height: sy(18),
+	lifespan: kPillLifespan,
 	label,
 	ylb: sy(17),
 	fontSize: gReducedFontSizePt,
 	testFn: (gameState) => {
+	    // don't bother pushing into neo, i guess.
 	    return gPucks.A.length > 5 && isU(gNeo);
 	},
 	boomFn: (gameState) => {
@@ -72,6 +101,7 @@ function MakeDecimateSpec() {
     var name = 'decimate';
     return {
 	width: sx(18), height: sy(18),
+	lifespan: kPillLifespan,
 	label: "*",
 	ylb: sy(18),
 	fontSize: gSmallFontSizePt,
@@ -136,6 +166,7 @@ function MakeEngorgeSpec() {
     var name = 'engorge';
     return {
 	width: sx(22), height: sy(22),
+	lifespan: kPillLifespan,
 	label: "+",
 	ylb: sy(32),
 	fontSize: gBigFontSizePt,
@@ -145,7 +176,7 @@ function MakeEngorgeSpec() {
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
 	    gameState.AddAnimation(MakeEngorgeAnimation({
-		lifespan: 1000 * 10,
+		lifespan: 1000 * 12,
 		gameState,
 	    }));
 	},
@@ -170,6 +201,7 @@ function MakeEngorgeSpec() {
 function MakeSplitSpec() {
     return {
 	width: sx(30), height: sy(24),
+	lifespan: kPillLifespan,
 	label: "//",
 	ylb: sy(18),
 	fontSize: gSmallFontSizePt,
@@ -217,6 +249,7 @@ function MakeSplitSpec() {
 function MakeDefendSpec() {
     return {
 	width: sx(20), height: sy(30),
+	lifespan: kPillLifespan,
 	label: "#",
 	ylb: sy(20),
 	fontSize: gSmallFontSizePt,
@@ -226,8 +259,8 @@ function MakeDefendSpec() {
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
 	    var n = 4; // match: kBarriersArrayInitialSize.
-	    var hp = 20;
-	    var width = sx1(hp);
+	    var hp = 60;
+	    var width = sx1(hp/3);
 	    var height = (gHeight-gYInset*2) / n;
 	    var x = gw(ForSide(0.1, 0.9));
 	    var targets = [];
@@ -271,6 +304,7 @@ function MakeDefendSpec() {
 function MakeOptionSpec() {
     return {
 	width: sx(22), height: sy(22),
+	lifespan: kPillLifespan,
 	label: "!!",
 	ylb: sy(16),
 	fontSize: gSmallFontSizePt,
@@ -296,7 +330,8 @@ function MakeOptionSpec() {
 		    width, height,
 		    hp,
 		    isSplitter: false,
-		    stepSize: Math.max(1,(yMax-yMin)/10)
+		    stepSize: Math.max(1,(yMax-yMin)/10),
+		    normalX: ForSide(1, -1),
 		});
 	    });
 	},
@@ -325,10 +360,11 @@ function MakeOptionSpec() {
 
 function MakeNeoSpec() {
     var name = 'neo';
-    var lifespan = 1000 * 10;
+    var lifespan = 1000 * 7;
     var x = ForSide(gw(0.4), gw(0.6));
     return {
 	width: sx(22), height: sy(22),
+	lifespan: kPillLifespan,
 	label: "#",
 	ylb: sy(15),
 	fontSize: gSmallestFontSizePt,
@@ -373,24 +409,43 @@ function MakeNeoSpec() {
     };
 }
 
-function MakeRandomPowerup(gameState) {
-    var keys = Object.keys(gPowerupSpecs);
-    var index = RandomRangeInt(0, keys.length-1);
-    var name = keys[index];
-    var specBase = gPowerupSpecs[name]();
-    var y = RandomChoice(gh(0.1), gh(0.9)-specBase.height);
-    if (specBase.testFn(gameState)) {
-	var spec = {
-	    ...specBase,
-	    name: name,
-	    x: ForSide(gw(0.35), gw(0.65)),
-	    y,
-	    vx: ForSide(-1,1) * sx(3),
-	    vy: RandomCentered(0, 4, 1)
-	};
-	return new Powerup(spec);
-    }
-    return undefined;
+function MakeDensitySpec() {
+    var name = 'density';
+    var x = ForSide(gw(0.4), gw(0.6));
+    return {
+	width: sx(32), height: sy(22),
+	lifespan: kPillLifespan,
+	label: "(())",
+	ylb: sy(15),
+	fontSize: gSmallestFontSizePt,
+	testFn: (gameState) => {
+	    return (gDebug || gPucks.A.length > 20) && !gPowerupLocks[name];
+	},
+	boomFn: (gameState) => {
+	    PlayPowerupBoom();
+	    gPowerupLocks[name] = true;
+	    gameState.AddAnimation(MakeDensityAnimation({}));
+	},
+	endFn: () => {
+	    delete gPowerupLocks[name];
+	},
+	drawFn: (self, alpha) => {
+	    Cxdo(() => {
+		var wx = WX(self.x);
+		var wy = WY(self.y);
+		gCx.beginPath();
+		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, 3 );
+		gCx.fillStyle = backgroundColor;
+		gCx.fill();
+		gCx.beginPath();
+		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, 3 );
+		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+		gCx.lineWidth = sx1(2);
+		gCx.stroke();
+		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
+	    });
+	},
+    };
 }
 
 function MakeTargetsLightningAnimation(props) {
@@ -502,6 +557,27 @@ function Make2PtLightningAnimation(props) {
 		x0, y0,
 		x1, y1,
 		range, steps
+	    });
+	},
+	endFn
+    });
+}
+
+function MakeDensityAnimation(props) {
+    var { endFn } = props;
+    return new Animation({
+	lifespan: 1000 * 60,
+	animFn: (anim, dt, gameState) => {
+	    gCx.fillStyle = "rgba(128, 128, 128, 0.05)";
+	    Cxdo(() => {
+		gPucks.A.forEach((p) => {
+		    if (Sign(p.vx) == ForSide(-1,1)) {
+			gCx.fillRect(
+			    0, p.y - p.height,
+			    gw(1), p.height*2
+			);
+		    }
+		});
 	    });
 	},
 	endFn

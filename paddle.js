@@ -12,6 +12,7 @@ function Paddle(spec) {
        hp,
        isSplitter,
        stepSize,
+       normalX,
        }
     */
     var self = this;
@@ -35,10 +36,13 @@ function Paddle(spec) {
 	self.alive = isU(self.hp) || self.hp > 0;
 	self.engorgedHeight = gPaddleHeight * 2;
 	self.engorgedWidth = gPaddleWidth * 0.8;
-	self.targetAIPuck = undefined;
+	self.aiTarget = undefined;
 	self.label = spec.label;
 	self.engorged = false;
 	self.stepSize = aorb(spec.stepSize, gPaddleStepSize);
+	self.normalX = spec.normalX;
+	self.scanIndex = 0;
+	self.scanCount = 10;
 	self.nudgeX();
     };
 
@@ -143,13 +147,12 @@ function Paddle(spec) {
     self.aiCountdownToUpdate = kAIPeriod;
     self.shouldUpdate = function() {
 	self.aiCountdownToUpdate--;
-	var should = isU(self.targetAIPuck);
+	var should = isU(self.aiTarget);
 	if( ! should ) {
 	    should = self.aiCountdownToUpdate <= 0;
 	}
 	if( ! should ) {
-	    // track incoming puck.
-	    should = ! self.IsPuckMovingAway( self.targetAIPuck );
+	    should = self.IsPuckAttacking( self.aiTarget );
 	}
 	if( should ) {
 	    self.aiCountdownToUpdate = kAIPeriod;
@@ -162,9 +165,9 @@ function Paddle(spec) {
 	    gCx.fillStyle = "blue";
 	    if( self.shouldUpdate() ) {
 		self.UpdatePuckTarget();
-		if( isntU(self.targetAIPuck) ) {
+		if( isntU(self.aiTarget) ) {
 		    if (gDebug) { DrawTextFaint("TRACK", "center", gw(0.8), gh(0.1), gRegularFontSizePt); }
-		    var targetMid = self.targetAIPuck.GetMidY() + self.targetAIPuck.vy;
+		    var targetMid = self.aiTarget.GetMidY() + self.aiTarget.vy;
 		    var deadzone = (self.height*0.2);
 		    if( targetMid <= self.GetMidY() - deadzone) {
 			self.MoveUp( dt, kAIMoveScale );
@@ -183,43 +186,48 @@ function Paddle(spec) {
 	});
     };
 
-    self.UpdatePuckTarget = function() {
-	self.targetAIPuck = self.MaybeChoosePuck();
-    };
-
-    self.IsPuckMovingAway = function( puck ) {
-	var away = false;
-	if( isntU(puck)) {
-	    var pnx = puck.x + puck.vx * 0.1;
-	    var d1 = Math.abs( puck.x - self.x );
-	    var d2 = Math.abs( pnx - self.x );
-	    away = d2 > d1;
+    self.IsPuckAttacking = function( puck ) {
+	var is = false;
+	if(isntU(puck)) {
+	    var vel = Math.abs(puck.x-self.x) < Math.abs(puck.prevX-self.x);
+	    var side = Sign(self.x-puck.x) != self.normalX;
+	    is = vel && side;
 	}
-	return away;
+	return is;
     };
 
-    self.MaybeChoosePuck = function() {
-	var bp = undefined;
-	gPucks.A.forEach((p) => {
-	    if (isU(bp) && isntU(p)) {
-		bp = p;
-		return;
+    self.UpdatePuckTarget = function() {
+	var best = self.aiTarget;
+	var istart = Math.min(self.scanIndex, gPucks.A.length-1);
+	var iend = Math.min(self.scanIndex+self.scanCount, gPucks.A.length);
+	for (var i = istart; i < iend; ++i) {
+	    // todo: handle when best isLocked.
+	    var p = gPucks.A.read(i);
+	    if (isU(best)) {
+		Assert(isntU(p), "bad puck");
+		best = p;
 	    }
-	    if (!self.IsPuckMovingAway(p)) {
-		if (self.IsPuckMovingAway(bp)) {
-		    bp = p;
+	    else if (best != p && self.IsPuckAttacking(p)) {
+		var dPuck = Distance2(self.x, self.y, p.x, p.y);
+		var dBest = Distance2(self.x, self.y, best.x, best.y);
+		if (!self.IsPuckAttacking(best)) {
+		    best = p;
 		}
-		var dPuck = Math.abs( self.x - p.x );
-		var dBp = Math.abs( self.x - bp.x );
-		if (dPuck < dBp && !self.IsPuckMovingAway(p)) {
-		    bp = p;
+		else if (dPuck < dBest) {
+		    best = p;
 		}
-		if (p.vx > bp.vx) {
-		    bp = p;
+		else if (Math.abs(p.vx) > Math.abs(best.vx*2)) {
+		    best = p;
 		}
 	    }
-	});
-	return bp;
+	}
+	if (isntU(best)) {
+	    self.aiTarget = best;
+	}
+	self.scanIndex += self.scanCount;
+	if (self.scanIndex > gPucks.A.length-1) {
+	    self.scanIndex = 0;
+	}
     };
 
     self.Init(spec.label);

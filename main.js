@@ -155,9 +155,9 @@ var kPuckArrayInitialSize = 300;
 var kSparkArrayInitialSize = 200;
 var kBarriersArrayInitialSize = 4;
 var kOptionsArrayInitialSize = 6;
-var kSpawnPowerupFactor = 0.004;
-var kPowerupSpawnCooldown = 1000 * 10;
-var gPowerupSpawnCountdown = kPowerupSpawnCooldown;
+var kSpawnPillFactor = 0.004;
+var kPillSpawnCooldown = 1000 * 10;
+var gPillSpawnCountdown = kPillSpawnCooldown;
 
 var gNextID = 0;
 
@@ -172,8 +172,9 @@ function anyKeyPressed() {
     var any = downs.length > 0;
     return any;
 }
-// pauseability currently only exists for the GameState.
-var gPauseButtonEnabled = false;
+
+// these must match ResetInput.
+var gPauseButtonEnabled = false; // really only for GameState.
 var gPausePressed = false;
 var gUserMutedButtonEnabled = false;
 var gUserMutedPressed = false;
@@ -183,8 +184,22 @@ var gStickUp = false;
 var gStickDown = false;
 var gAddPuckPressed = false;
 var gGameOverPressed = false;
-var gSpawnPowerupPressed = false;
+var gSpawnPillPressed = false;
 var gNextMusicPressed = false;
+function ResetInput() { // abomination.
+    gPausePressed = false;
+    gUserMutePressed = false;
+    gUpPressed = false;
+    gDownPressed = false;
+    gStickUp = false;
+    gStickDown = false;
+    gMoveTargetY = undefined;
+    gAddPuckPressed = false;
+    gGameOverPressed = false;
+    gSpawnPillPressed = false;
+    gNextMusicPressed = false;
+}
+var gPointerSide = undefined;
 
 var gEventQueue = [];
 var kEventKeyDown = "key_down";
@@ -209,9 +224,6 @@ var gPointerScaleX = 1;
 var gPointerScaleY = 1;
 var gMoveTargetY = undefined;
 var gMoveTargetStepY = 0;
-// this value is either undefined, or "left", or "right".
-// undefined means no taps seen, and means "right" due to history.
-var gPointerSide;
 function isPointerEnabled() {
     var is = isntU(gPointerTimestamps.start);
     return is;
@@ -232,7 +244,7 @@ var gCPUScore = 0;
 // todo: use typescript.
 var gPucks; // { A:[], B:[] }
 var gSparks; // { A:[], B:[] }
-var gPowerup; // there can be (at most) only 1 (at a time).
+var gPill; // there can be (at most) only 1 (at a time).
 // barriers are { x, y, width, height,
 //   prevX, prevY,
 //   CollisionTest()
@@ -264,7 +276,9 @@ function GameTime01(period, start) {
     return T01(diff, (period > 0) ? period : 1000);
 }
 
+// (all) this really needs to go into GameState.
 function ForSide(left, right) {
+    // due to history, undefined means right.
     if (gPointerSide == "left") {
 	return left;
     }
@@ -416,14 +430,13 @@ function DrawBounds() {
 	if (self.stop) {
 	    return;
 	}
-
 	// note: pausing game time is only handled/supported in GameState.
-
 	var tt = kTimeStep;
 	var now = Date.now();
 	var clockDiff = now - self.lastTime;
 
-	// oy veh oh brother sheesh barf.
+	// oy veh oh brother sheesh barf, trying to not progress time
+	// if we were stopped in the debugger.
 	if (clockDiff >= kMaybeWasPausedInTheDangedDebuggerMsec) {
 	    self.lastTime = now;
 	}
@@ -464,9 +477,11 @@ function DrawBounds() {
     self.attract = attract;
 
     self.Reset = function() {
-	// this reset business is kind of a mess.
+	// this reset business is kind of a mess...
 	RecalculateConstants();
 	ResetGlobalStorage();
+	ResetInput();
+
 	gPlayerScore = 0;
 	gCPUScore = 0;
 	gStateMuted = gMonochrome = self.attract;
@@ -485,13 +500,15 @@ function DrawBounds() {
 		    x: lp.x, y: lp.y,
 		    width: gPaddleWidth, height: gPaddleHeight,
 		    label: p1label,
-		    isSplitter: true
+		    isSplitter: true,
+		    normalX: 1,
 		});
 		self.cpuPaddle = new Paddle({
 		    x: rp.x, y: rp.y,
-		    width: gPaddleWidth, height: gPaddleHeight
+		    width: gPaddleWidth, height: gPaddleHeight,
+		    normalX: -1,
 		});
-		ForCount(gDebug ? 50 : 1, () => { 
+		ForCount(gDebug ? 3 : 1, () => { 
 		    gPucks.A.push( self.CreateStartingPuck(1) );
 		});
 	    },
@@ -500,13 +517,15 @@ function DrawBounds() {
 		    x: rp.x, y: rp.y,
 		    width: gPaddleWidth, height: gPaddleHeight,
 		    label: p1label,
-		    isSplitter: true
+		    isSplitter: true,
+		    normalX: -1,
 		});
 		self.cpuPaddle = new Paddle({
 		    x: lp.x, y: lp.y,
-		    width: gPaddleWidth, height: gPaddleHeight
+		    width: gPaddleWidth, height: gPaddleHeight,
+		    normalX: 1,
 		});
-		ForCount(gDebug ? 50 : 1, () => { 
+		ForCount(gDebug ? 3 : 1, () => { 
 		    gPucks.A.push( self.CreateStartingPuck(-1) );
 		});
 	    }
@@ -521,7 +540,7 @@ function DrawBounds() {
 
     self.Step = function( dt ) {
 	if (!self.attract) { ClearScreen(); }
-	self.MaybeSpawnPowerup( dt );
+	self.MaybeSpawnPill( dt );
 	self.ProcessInput();
 	self.StepPlayer( dt );
 	self.StepMoveables( dt );
@@ -531,9 +550,9 @@ function DrawBounds() {
 	    gGameOverPressed = false;
 	    return kGameOver;
 	}
-	if (self.paused && gSpawnPowerupPressed) {
-	    gSpawnPowerupPressed = false;
-	    gPowerup = MakeRandomPowerup(self);
+	if (self.paused && gSpawnPillPressed) {
+	    gSpawnPillPressed = false;
+	    gPill = MakeRandomPill(self);
 	}
 	var nextState = self.CheckNoPucks();
 	if (isntU(nextState)) {
@@ -542,15 +561,15 @@ function DrawBounds() {
 	return nextState;
     };
 
-    self.MaybeSpawnPowerup = function( dt ) {
+    self.MaybeSpawnPill = function( dt ) {
 	if (!self.paused && !self.attract) {
-	    gPowerupSpawnCountdown = Math.max(0, gPowerupSpawnCountdown-dt);
-	    if (gPowerupSpawnCountdown <= 0 &&
-		RandomBool(gDebug ? 0.1 : kSpawnPowerupFactor) &&
-		isU(gPowerup)) {
-		gPowerup = MakeRandomPowerup(self);
-		if (isntU(gPowerup)) {
-		    gPowerupSpawnCountdown = kPowerupSpawnCooldown;
+	    gPillSpawnCountdown = Math.max(0, gPillSpawnCountdown-dt);
+	    if (gPillSpawnCountdown <= 0 &&
+		RandomBool(gDebug ? 0.1 : kSpawnPillFactor) &&
+		isU(gPill)) {
+		gPill = MakeRandomPill(self);
+		if (isntU(gPill)) {
+		    gPillSpawnCountdown = kPillSpawnCooldown;
 		}
 	    }
 	}
@@ -619,7 +638,7 @@ function DrawBounds() {
 	    gPausePressed = false;
 	}
 	if( self.paused && gAddPuckPressed ) {
-	    gPucks.A.push( self.CreateRandomPuck() );
+	    ForCount(10, () => { gPucks.A.push( self.CreateRandomPuck() ); });
 	    gAddPuckPressed = false;
 	}
 	if (self.paused) {
@@ -691,7 +710,7 @@ function DrawBounds() {
 	    self.cpuPaddle.AIMove( dt );
 	    self.MovePucks( dt );
 	    self.MoveSparks( dt );
-	    self.MovePowerup( dt );
+	    self.MovePill( dt );
 	    self.MoveBarriers( dt );
 	    self.MoveOptions( dt );
 	    self.MoveNeo( dt );
@@ -729,16 +748,13 @@ function DrawBounds() {
 	SwapBuffers(gSparks);
     };
 
-    self.MovePowerup = function( dt ) {
-	if (isntU(gPowerup)) {
-	    var x = gPowerup.x;
-	    var y = gPowerup.y;
-	    gPowerup = gPowerup.Step( dt );
-	    isU(gPowerup) && self.AddAnimation(MakePoofAnimation(x, y, 40));
+    self.MovePill = function( dt ) {
+	if (isntU(gPill)) {
+	    gPill = gPill.Step( dt, self );
 	}
-	if (isntU(gPowerup)) {
-	    // could in theory give powerups to the cpu side as well some day? :-)
-	    gPowerup = gPowerup.AllPaddlesCollision( self, [ self.playerPaddle ] );
+	if (isntU(gPill)) {
+	    // could in theory give pills to the cpu side as well some day? :-)
+	    gPill = gPill.AllPaddlesCollision( self, [ self.playerPaddle ] );
 	}
     };
 
@@ -793,14 +809,14 @@ function DrawBounds() {
 	    gCx.beginPath();
 	    gCx.roundRect(wx, wy, gWidth-wx*2, gHeight-wy*2, 20);
 	    gCx.lineWidth = sx1(2);
-	    gCx.strokeStyle = RandomCyan(self.Alpha(0.3));
+	    gCx.strokeStyle = RandomForColor(grey, self.Alpha(0.3));
 	    gCx.stroke();
 	});
     };
 
     self.DrawScoreHeader = function() {
 	Cxdo(() => {
-	    gCx.fillStyle = RandomMagenta(self.Alpha(0.7));
+	    gCx.fillStyle = RandomGrey(self.Alpha(0.7));
 	    ForSide(
 		() => {
 		    if (isntU(gHighScore)) {
@@ -877,7 +893,7 @@ function DrawBounds() {
 		    gCx.moveTo( cx + o, cy - o*2 );
 		    gCx.lineTo( cx + o, cy + o*2 );
 		    gCx.lineWidth = 2;
-		    gCx.strokeStyle = RandomGreen(0.4);
+		    gCx.strokeStyle = RandomGreen(0.25);
 		    gCx.stroke();
 		});
 	    } else {
@@ -899,12 +915,12 @@ function DrawBounds() {
 	}
     };
 
-    self.DrawPowerup = function() {
-	if (isntU(gPowerup)) {
-	    gPowerup.Draw( self.Alpha() );
+    self.DrawPill = function() {
+	if (isntU(gPill)) {
+	    gPill.Draw( self.Alpha() );
 	    Cxdo(() => {
 		gCx.fillStyle = "magenta";
-		msg = `${gPowerup.name.toUpperCase()} ${ii(gPowerup.lifespan/1000)}`;
+		msg = `${gPill.name.toUpperCase()} ${ii(gPill.lifespan/1000)}`;
 		DrawText(msg, "center", gw(0.5), gh(0.9), gSmallFontSizePt);
 	    });
 	}
@@ -945,13 +961,13 @@ function DrawBounds() {
 	    self.DrawNeo();
 	    self.playerPaddle.Draw( self.Alpha() );
 	    self.cpuPaddle.Draw( self.Alpha() );
-	    self.DrawPowerup();
+	    self.DrawPill();
 	    self.DrawPauseButton();
 	    self.DrawTouchTarget();
 	}
 	if (self.paused) {
-	    gCx.fillStyle = "silver";
-	    DrawText("P A U S E D", "center", gw(0.5), gh(0.55), gBigFontSizePt);
+	    gCx.fillStyle = "darkblue";
+	    DrawText("P A U S E D", "center", WX(gw(0.5)), WY(gh(0.55)), gBigFontSizePt);
 	}
 	self.DrawDebug();
     };
@@ -971,7 +987,7 @@ function DrawBounds() {
 	    DrawTextFaint( gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt );
 	});
 
-	var cpuAIPuckTarget = self.cpuPaddle.targetAIPuck;
+	var cpuAIPuckTarget = self.cpuPaddle.aiTarget;
 	if( isntU(cpuAIPuckTarget) ) {
 	    Cxdo(() => {
 	    gCx.strokeStyle = "red";
@@ -983,7 +999,7 @@ function DrawBounds() {
 	    gCx.stroke();
 	    });
 	}
-	var playerAIPuckTarget = self.playerPaddle.targetAIPuck;
+	var playerAIPuckTarget = self.playerPaddle.aiTarget;
 	if( isntU(playerAIPuckTarget) ) {
 	    Cxdo(() => {
 		gCx.strokeStyle = "magenta";
@@ -1142,6 +1158,8 @@ function DrawBounds() {
 		var msg = "CONTROLS: TAP / W S / ARROWS / GAMEPAD";
 		if ((gGameTime - self.started) <= self.timeout) {
 		    var msg = "LOADING...";
+		    // the "start game" tap decides left vs. right for P1.
+		    gPointerSide = undefined;
 		}
 		DrawText( msg, "center", gw(0.5), gh(0.5)+80, gSmallFontSizePt );
 	    });
@@ -1210,8 +1228,10 @@ function DrawBounds() {
 	self.started = gGameTime;
 	self.finalScore = gPlayerScore - gCPUScore;
 	PlayGameOver();
+
 	// ok, yes, i'm a terrible coder.
-	gPowerup = undefined;
+	gPill = undefined;
+	gPointerSide = undefined;
     };
 
     self.Step = function() {
@@ -1400,6 +1420,9 @@ function MouseDown(e) {
     PointerProcess(
 	e,
 	(tx, ty) => {
+	    if (isU(gPointerSide)) {
+		gPointerSide = tx < gw(0.5) ? "left" : "right";
+	    }
 	    SetPointerTarget(tx, ty, kEventMouseDown);
 	    gPointerTimestamps = { start: gGameTime, end: undefined };
 	}
@@ -1428,18 +1451,6 @@ function MouseUp(e) {
 	    gPointerTimestamps.end = endTime;
 	}
     });
-}
-
-function ResetInput() {
-    gPausePressed = false;
-    gUpPressed = false;
-    gDownPressed = false;
-    gStickUp = false;
-    gStickDown = false;
-    gMoveTargetY = undefined;
-    gAddPuckPressed = false;
-    gGameOverPressed = false;
-    gPointerSide = undefined;
 }
 
 function ResetGlobalStorage() {
@@ -1630,7 +1641,7 @@ function InitEvents() {
 	    gEventQueue.push({
 		eventType: kEventKeyDown,
 		updateFn: () => {
-		    if (gDebug) { gSpawnPowerupPressed = true; }
+		    if (gDebug) { gSpawnPillPressed = true; }
 		}
 	    });
 	}
@@ -1713,7 +1724,7 @@ function InitEvents() {
 	    gEventQueue.push({
 		eventType: kEventKeyUp,
 		updateFn: () => {
-		    gSpawnPowerupPressed = false;
+		    gSpawnPillPressed = false;
 		}
 	    });
 	}

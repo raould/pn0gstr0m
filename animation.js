@@ -3,6 +3,8 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+// note: Animations are hardcoded to only work in GameState.
+
 function Animation( props ) {
     var { lifespan, animFn, startFn, endFn } = props;
     var self = this;
@@ -85,7 +87,7 @@ function MakePoofAnimation(x, y, radius) {
 			 0, k2Pi );
 		gCx.stroke();
 	    });
-	    r += dt/kTimeStep;
+	    r += dt/kTimeStep*1.5;
 	}
     });
 }

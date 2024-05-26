@@ -3,15 +3,15 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-// the spec is { name, x, y, w, h, vx, vy, label, ylb, testFn, boomFn, drawFn }
+// the spec is { name, x, y, w, h, vx, vy, lifespan, label, ylb, testFn, boomFn, drawFn, endFn }
 // don't you wish this was all in typescript now?
-function Powerup( spec ) {
+function Pill( spec ) {
     var self = this;
 
     self.Init = function() {
 	Assert(isntU(spec), "no spec");
 	self.id = gNextID++;
-	self.lifespan = 1000 * 10; // they all eventually go away if not collected.
+	self.lifespan = spec.lifespan;
 	self.name = spec.name;
 	self.x = spec.x;
 	self.y = spec.y;
@@ -26,6 +26,7 @@ function Powerup( spec ) {
 	self.fontSize = spec.fontSize;
 	self.boomFn = spec.boomFn;
 	self.drawFn = spec.drawFn;
+	self.endFn = spec.endFn;
 	if (self.x >= gw(0.5)) {
 	    self.leftBound = gw(0.5);
 	    self.rightBound = gw(1);
@@ -42,8 +43,21 @@ function Powerup( spec ) {
 	self.drawFn( self, alpha );
     };
 
-    self.Step = function( dt ) {
+    self.Step = function( dt, gameState ) {
 	self.lifespan -= dt;
+	self.Move( dt );
+	var alive = self.lifespan > 0;
+	if (!alive) {
+	    gameState.AddAnimation(MakePoofAnimation(self.x, self.y, 25));
+	    if (isntU(self.endFn)) {
+		self.endFn();
+		self.endFn = undefined;
+	    }
+	}
+	return alive ? self : undefined;
+    };
+
+    self.Move = function( dt ) {
 	dt = kMoveStep * (dt/kTimeStep);
 	self.prevX = self.x;
 	self.prevY = self.y;
@@ -65,8 +79,6 @@ function Powerup( spec ) {
 	    self.vy = -1 * Math.abs(self.vy);
 	    self.y = self.bottomBound - self.height - 1;
 	}
-	var alive = self.lifespan > 0;
-	return alive ? self : undefined;
     };
 
     // todo: reuse collision xywh code.

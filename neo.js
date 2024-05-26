@@ -22,8 +22,8 @@ function Neo( spec ) {
 	self.alive = self.lifespan > 0;
 	if (!self.alive) {
 	    self.locked.forEach((p) => {
-		p.locked = false;
-		p.vx = Math.abs(p.vx) * ForSide(1,-1);
+		p.isLocked = false;
+		p.vx = Math.abs(p.vx) * ForSide(1,-1) * RandomCentered(1.4,0.2);
 		AddSparks(p.x, p.y, p.vx, p.vy);
 	    });
 	}
@@ -34,6 +34,14 @@ function Neo( spec ) {
 	var mx = self.x + self.width/2;
 	var y0 = Math.max(self.y, gYInset);
 	var y1 = Math.min(self.y+self.height, gh(1)-gYInset);
+	Cxdo(() => {
+	    gCx.fillStyle = RandomCyan(0.15);
+	    for (var i = 0; i < 3; ++i) {
+		var hw = i * sx1(5);
+		var x = self.x - hw;
+		gCx.fillRect(WX(x), y0, self.width+2*hw, y1-y0);
+	    }
+	});
 	AddLightningPath({
 	    color: RandomBlue(alpha),
 	    x0: WX(self.x), y0,

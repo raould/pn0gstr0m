@@ -63,7 +63,7 @@ function Barrier( spec ) {
     };
 
     self.CollisionTest = function( puck ) {
-	var hit = puck.CollisionTest( self );
+	var hit = puck.CollisionTest( self, ForSide(-1,1) );
 	if (hit) {
 	    self.hp--;
 	}

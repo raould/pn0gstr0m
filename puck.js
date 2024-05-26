@@ -23,7 +23,7 @@ function Puck(spec) {
 	self.startTime = gGameTime;
 	self.splitColor = aorb(spec.forced, false) ? "yellow" : "white";
 	self.ur = aorb(spec.ur, true);
-	self.locked = false;
+	self.isLocked = false;
     };
 
     self.GetMidX = function() {
@@ -54,7 +54,7 @@ function Puck(spec) {
     };
 
     self.Step = function( dt ) {
-	if( self.alive && !self.locked ) {
+	if( self.alive && !self.isLocked ) {
 	    dt = kMoveStep * (dt/kTimeStep);
 	    self.prevX = self.x;
 	    self.prevY = self.y;
@@ -107,7 +107,7 @@ function Puck(spec) {
     };
 
     self.CollisionTest = function( xywh, blockvx ) {
-	if( self.alive && !self.locked ) {
+	if( self.alive && !self.isLocked ) {
 	    if (isU(blockvx) || Sign(self.vx) == blockvx) {
 		// !? assuming small enough simulation stepping !?
 
@@ -173,7 +173,7 @@ function Puck(spec) {
 
     self.AllPaddlesCollision = function( paddles ) {
 	var spawned = [];
-	if (self.alive && !self.locked) {
+	if (self.alive && !self.isLocked) {
 	    paddles.forEach( function(paddle) {
 		var np = self.PaddleCollision(paddle);
 		if( isntU(np) ) {
@@ -185,7 +185,7 @@ function Puck(spec) {
     };
 
     self.BarriersCollision = function() {
-	if (self.alive && !self.locked) {
+	if (self.alive && !self.isLocked) {
 	    gBarriers.A.forEach( function(barrier) {
 		var hit = barrier.CollisionTest( self );
 		if (hit) {
@@ -198,7 +198,7 @@ function Puck(spec) {
     };
     
     self.OptionsCollision = function() {
-	if (self.alive && !self.locked) {
+	if (self.alive && !self.isLocked) {
 	    gOptions.A.forEach( function(option) {
 		var hit = option.CollisionTest( self, ForSide(-1,1) );
 		if (hit) {
@@ -211,17 +211,17 @@ function Puck(spec) {
     };
 
     self.NeoCollision = function() {
-	if (self.alive && !self.locked && isntU(gNeo)) {
+	if (self.alive && !self.isLocked && isntU(gNeo)) {
 	    var hit = gNeo.CollisionTest( self );
 	    if (hit) {
 		PlayBlip();
-		self.locked = true;
+		self.isLocked = true;
 	    }
 	}
     };
 
     self.WallsCollision = function() {
-	if (self.alive && !self.locked) {
+	if (self.alive && !self.isLocked) {
 	    var did = false;
 	    if( self.y < gYInset ) {
 		did = true;
