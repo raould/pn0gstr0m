@@ -30,7 +30,8 @@ function Barrier( spec ) {
 	    // front-side wedge cuts.
 	    var edge = sx1(5);
 	    // max() prevent getting too thin for wedge shape.
-	    var hpw = Math.max(edge, ii(self.width * self.hp/self.hp0)+edge);
+	    var h01 = Clip01(self.hp/self.hp0);
+	    var hpw = Math.max(edge, ii(self.width * h01)+edge);
 	    var r = WX(ForSide(self.x+hpw, self.x+self.width));
 	    var l = WX(ForSide(self.x, r-hpw));
 	    var t = WY(self.y+sy1(1));
@@ -57,7 +58,7 @@ function Barrier( spec ) {
 		    gCx.closePath();
 		}
 	    )();
-	    gCx.fillStyle = RandomBlue( alpha * 0.5 );
+	    gCx.fillStyle = RandomForColor((h01 > 0.2) ? blueSpec : yellowSpec, alpha*0.5);
 	    gCx.fill();
 	});
     };
