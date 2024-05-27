@@ -113,15 +113,13 @@ function BeginMusic() {
 }
 
 function EndMusic() {
-    if (gMusicID != undefined) {
-	var name = gAudio.id2name[gMusicID];
-	var meta = gAudio.name2meta[name];
+    Object.values(gAudio.name2meta).forEach(meta => {
 	if (meta != undefined) {
 	    meta.howl.stop();
+	    delete gAudio.id2name[meta.id];
 	    delete meta.id;
-	    delete gAudio.id2name[gMusicID];
 	}
-    }
+    });
     gMusicID = undefined;
 }
 
