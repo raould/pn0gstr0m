@@ -6,7 +6,7 @@
 var black = [0x0, 0x0, 0x0];
 var white = [0xFF, 0xFF, 0xFF];
 var backgroundColor = "black"; // match: index.html background color.
-var scanlineColor = "rgba(0,0,0,0.5)";
+var scanlineColor = "rgba(0,0,0,0.2)";
 var warningColor = "grey";
 var greySpec = { regular: [0xA0, 0xA0, 0xA0], strong: [0xA0, 0xA0, 0xA0] };
 var greenSpec = { regular: [0x89, 0xCE, 0x00], strong: [0x00, 0xFF, 0x00] };
