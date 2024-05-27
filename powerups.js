@@ -559,6 +559,10 @@ function MakeEngorgeAnimation(props) {
     });
 }
 
+// bounty: somebody should make this actually
+// line trace into the future so the graph
+// is literally where you should be w/in the
+// next few seconds accouting for all bounces.
 function MakeDensityAnimation(props) {
     var { endFn } = props;
     return new Animation({
