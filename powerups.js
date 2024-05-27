@@ -21,6 +21,7 @@ var gPowerupSpecs = {
     option: MakeOptionSpec,
     neo: MakeNeoSpec,
     density: MakeDensitySpec,
+    inversion: MakeInversionSpec,
 };
 
 // all specs' x,y should be top,left (not mid points).
@@ -40,7 +41,7 @@ function MakeRandomPill(gameState) {
 	    x: ForSide(gw(0.35), gw(0.65)),
 	    y,
 	    vx: ForSide(-1,1) * sx(3),
-	    vy: RandomCentered(0, 4, 1)
+	    vy: RandomCentered(0, 2, 0.5)
 	};
 	return new Pill(spec);
     }
@@ -459,6 +460,52 @@ function MakeDensitySpec() {
 	},
     };
 }
+
+function MakeInversionSpec() {
+    var name = 'inversion';
+    return {
+	width: sx(20), height: sy(20),
+	lifespan: kPillLifespan,
+	label: ["|", "/", "--", "\\", "|", "/", "--", "\\"],
+	ylb: sy(15),
+	fontSize: gSmallestFontSizePt,
+	testFn: (gameState) => {
+	    return (gDebug || gPucks.A.length > 10);
+	},
+	boomFn: (gameState) => {
+	    PlayPowerupBoom();
+	    gPucks.A.forEach((p) => p.vy *= -1.1);
+	    gameState.AddAnimation(
+		Make2PtLightningAnimation({
+		    lifespan: 100,
+		    x0: 0, y0: gh(0.5),
+		    x1: gw(1), y1: gh(0.5),
+		    range: 10,
+		    steps: 50,
+		})
+	    );
+	},
+	drawFn: (self, alpha) => {
+	    Cxdo(() => {
+		var wx = WX(self.x);
+		var wy = WY(self.y);
+		gCx.beginPath();
+		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, 3 );
+		gCx.fillStyle = backgroundColor;
+		gCx.fill();
+		gCx.beginPath();
+		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, 3 );
+		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+		gCx.lineWidth = sx1(2);
+		gCx.stroke();
+		var i = ii(gFrameCount/5) % self.label.length;
+		DrawText( self.label[i], "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
+	    });
+	},
+    };
+}
+
+//----------------------------------------
 
 function MakeTargetsLightningAnimation(props) {
     var { lifespan, targets, endFn } = props;
