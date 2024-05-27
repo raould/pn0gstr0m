@@ -37,12 +37,12 @@ function RegisterSound(name, basename, isMusic) {
 	    onload: () => {
 		gAudio.name2meta[name].loaded = true;
 		console.log("onload", name);
-		LoadNextSound(name);
+		LoadNextSound();
 	    },
 	    onloaderror: () => {
 		// well, poop. todo: something better.
 		console.log("onloaderror", name);
-		LoadNextSound(name);
+		LoadNextSound();
 	    },
 	    html5: false,
 	    preload: false,
@@ -62,7 +62,7 @@ function RegisterSound(name, basename, isMusic) {
     }
 }
 
-function LoadNextSound(prev) {
+function LoadNextSound() {
     var report = gAudio.names.map((n) => {
 	return gAudio.name2meta[n].loaded ? "1" : "0";
     }).join('');
