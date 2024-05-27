@@ -155,8 +155,8 @@ var kPuckArrayInitialSize = 300;
 var kSparkArrayInitialSize = 200;
 var kBarriersArrayInitialSize = 4;
 var kOptionsArrayInitialSize = 6;
-var kSpawnPillFactor = 0.004;
-var kPillSpawnCooldown = 1000 * 10;
+var kSpawnPillFactor = gDebug ? 0.1 : 0.004;
+var kPillSpawnCooldown = 1000 * (gDebug ? 1 : 10);
 var gPillSpawnCountdown = kPillSpawnCooldown;
 
 var gNextID = 0;
