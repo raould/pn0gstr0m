@@ -30,34 +30,36 @@ function RegisterSfx(name, basename) {
 }
 
 function RegisterSound(name, basename, isMusic) {
-    var files = ["ogg", "aac", "mp3"].map((e) => `sound/${basename}.${e}`);
-    var howl = new Howl({
-	src: files,
-	onload: () => {
-	    gAudio.name2meta[name].loaded = true;
-	    console.log("onload", name);
-	    LoadNextSound(name);
-	},
-	onloaderror: () => {
-	    // well, poop. todo: something better.
-	    console.log("onloaderror", name);
-	    LoadNextSound(name);
-	},
-	html5: false,
-	preload: false,
-	// only 1 concurrent playback per name.
-	onend: () => OnSfxStop(name),
-    });
-    Assert(!gAudio.names.includes(name), `RegisterSound ${name}`);
-    gAudio.names.push(name);
-    gAudio.name2meta[name] = /*meta*/ {
-	...gAudio[name],
-	basename,
-	howl,
-	isMusic,
-	last: 0,
-	loaded: false,
-    };
+    if (isU(gAudio.name2meta[name])) {
+	var files = ["ogg", "aac", "mp3"].map((e) => `sound/${basename}.${e}`);
+	var howl = new Howl({
+	    src: files,
+	    onload: () => {
+		gAudio.name2meta[name].loaded = true;
+		console.log("onload", name);
+		LoadNextSound(name);
+	    },
+	    onloaderror: () => {
+		// well, poop. todo: something better.
+		console.log("onloaderror", name);
+		LoadNextSound(name);
+	    },
+	    html5: false,
+	    preload: false,
+	    // only 1 concurrent playback per name.
+	    onend: () => OnSfxStop(name),
+	});
+	Assert(!gAudio.names.includes(name), `RegisterSound ${name}`);
+	gAudio.names.push(name);
+	gAudio.name2meta[name] = /*meta*/ {
+	    ...gAudio[name],
+	    basename,
+	    howl,
+	    isMusic,
+	    last: 0,
+	    loaded: false,
+	};
+    }
 }
 
 function LoadNextSound(prev) {
@@ -66,9 +68,9 @@ function LoadNextSound(prev) {
     }).join('');
     console.log(report);
 
-    var pi = gAudio.names.indexOf(prev);
-    if (pi >= 0 && pi < gAudio.names.length-1) {
-	gAudio.name2meta[gAudio.names[pi+1]].howl.load();
+    var next = Object.values(gAudio.name2meta).find(m => !m.loaded);
+    if (notU(next)) {
+	next.howl.load();
     }
 }
 
