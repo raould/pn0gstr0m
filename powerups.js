@@ -12,25 +12,24 @@ kPillLifespan = 1000 * 10;
 // match: GameState.Reset(); :-(
 var gPowerupLocks = {};
 
-var gPowerupSpecs = {
-    forcepush: MakeForcePushSpec,
-    decimate: MakeDecimateSpec,
-    engorge: MakeEngorgeSpec,
-    split: MakeSplitSpec,
-    defend: MakeDefendSpec,
-    option: MakeOptionSpec,
-    neo: MakeNeoSpec,
-    density: MakeDensitySpec,
-    inversion: MakeInversionSpec,
-};
+var gPowerupSpecs = [
+    MakeForcePushSpec,
+    MakeDecimateSpec,
+    MakeEngorgeSpec,
+    MakeSplitSpec,
+    MakeDefendSpec,
+    MakeOptionSpec,
+    MakeNeoSpec,
+    MakeDensitySpec,
+    MakeInversionSpec,
+];
 
-// all specs' x,y should be top,left (not mid points).
+// cycle through the powerups 1 by 1 in (some browser determined) order,
+// although not all will be spawned, based on their testFn.
+var gPowerupDeck;
 
 function MakeRandomPill(gameState) {
-    var keys = Object.keys(gPowerupSpecs);
-    var index = RandomRangeInt(0, keys.length-1);
-    var name = keys[index];
-    var specBase = gPowerupSpecs[name]();
+    var specBase = NextSpecBase();
     var y = RandomChoice(gh(0.1), gh(0.9)-specBase.height);
     if (specBase.testFn(gameState)) {
 	// allows some pills to last a differnet amount of time, tho unused.
@@ -46,6 +45,13 @@ function MakeRandomPill(gameState) {
 	return new Pill(spec);
     }
     return undefined;
+}
+
+function NextSpecBase() {
+    if (isU(gPowerupDeck) || gPowerupDeck.length < 1) {
+	gPowerupDeck = [...gPowerupSpecs];
+    }
+    return gPowerupDeck.pop()();
 }
 
 function MakeForcePushSpec() {
