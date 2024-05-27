@@ -1572,6 +1572,8 @@ function Start() {
     if (notU(gLifecycle)) { gLifecycle.Quit(); }
     gLifecycle = new Lifecycle( handlerMap );
     gLifecycle.RunLoop();
+
+    EndMusic();
 }
 
 // er, i'm lazy and never un-register so be sure this only gets called once.
