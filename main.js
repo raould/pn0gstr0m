@@ -430,9 +430,9 @@ function DrawBounds( alpha=0.5 ) {
     self.DrawCRTScanlines = function() {
 	Cxdo(() => {
 	    gCx.fillStyle = scanlineColor;
-	    var start = isEven(gFrameCount) ? 0 : 1;
-	    for (var y = 0; y < gHeight; y += 2) {
-		gCx.fillRect(0, y, gWidth, 1);
+	    var start = isEven(gFrameCount) ? 0 : 2;
+	    for (var y = 0; y < gHeight; y += 4) {
+		gCx.fillRect(0, y, gWidth, 2);
 	    }
 	});
     };
