@@ -26,6 +26,13 @@ function Assert(result, msg) {
     }
 }
 
+function Peek(a) {
+    if (Array.isArray(a) && a.length > 0) {
+	return a[a.length-1];
+    }
+    return undefined;
+}
+
 function ForCount(count, fn) {
     for (var i = 0; i < count; ++i) {
 	fn(i);
