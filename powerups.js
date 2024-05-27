@@ -7,6 +7,21 @@
 // and the actual "powerup" is usually
 // done via (ideally a unique) animation.
 
+// note: look at the Make*Spec() functions below
+// to see what-all fields need to be defined i.e.
+/* {
+   name,
+   width, height,
+   lifespan,
+   label,
+   ylb,
+   fontSize,
+   testFn: (gameState) => {},
+   skip,
+   boomFn: (gameState) => {},
+   }
+*/
+
 kPillLifespan = 1000 * 10;
 
 // match: GameState.Reset(); :-(
@@ -24,19 +39,20 @@ var gPowerupSpecs = [
     MakeInversionSpec,
 ];
 
-// cycle through the powerups 1 by 1 in (some browser determined) order,
-// although not all will be spawned, based on their testFn.
+// cycle through the powerups in order
+// so we have some control over when they
+// are presented in the course of the game.
 var gPowerupDeck;
 
 function MakeRandomPill(gameState) {
-    var specBase = NextSpecBase();
-    var y = RandomChoice(gh(0.1), gh(0.9)-specBase.height);
-    if (specBase.testFn(gameState)) {
-	// allows some pills to last a differnet amount of time, tho unused.
+    var specBase = NextSpecBase(gameState);
+    if (notU(specBase) && specBase.testFn(gameState)) {
+	// fyi allow pills to have differnet lifespans, tho currently they are all the same.
 	Assert(notU(specBase.lifespan), "lifespan");
+	var y = RandomChoice(gh(0.1), gh(0.9)-specBase.height);
 	var spec = {
 	    ...specBase,
-	    name: name,
+	    name: specBase.name,
 	    x: ForSide(gw(0.35), gw(0.65)),
 	    y,
 	    vx: ForSide(-1,1) * sx(3),
@@ -47,16 +63,22 @@ function MakeRandomPill(gameState) {
     return undefined;
 }
 
-function NextSpecBase() {
+function NextSpecBase(gameState) {
     if (isU(gPowerupDeck) || gPowerupDeck.length < 1) {
-	gPowerupDeck = [...gPowerupSpecs];
+	gPowerupDeck = [...gPowerupSpecs].reverse();
     }
-    return gPowerupDeck.pop()();
+    var s = Peek(gPowerupDeck)();
+    if (s.testFn(gameState) || !!s.skip) {
+	gPowerupDeck.pop();
+	return s;
+    }
+    return undefined;
 }
 
 function MakeForcePushSpec() {
     var label = ForSide(">", "<");
     return {
+	name: "forcepush",
 	width: sx(18), height: sy(18),
 	lifespan: kPillLifespan,
 	label,
@@ -106,8 +128,8 @@ function MakeForcePushSpec() {
 }
 
 function MakeDecimateSpec() {
-    var name = 'decimate';
     return {
+	name: 'decimate',
 	width: sx(18), height: sy(18),
 	lifespan: kPillLifespan,
 	label: "*",
@@ -117,6 +139,7 @@ function MakeDecimateSpec() {
 	    // looks unfun if there aren't enough pucks to destroy.
 	    return gDebug || gPucks.A.length > 20;
 	},
+	skip: true,
 	boomFn: (gameState) => {
 	    // try to destroy at least 1, but leave at least 1 still alive.
 	    // prefer destroying the ones closest to the player.
@@ -171,8 +194,8 @@ function MakeDecimateSpec() {
 }
 
 function MakeEngorgeSpec() {
-    var name = 'engorge';
     return {
+	name: 'engorge',
 	width: sx(22), height: sy(22),
 	lifespan: kPillLifespan,
 	label: "+",
@@ -181,6 +204,7 @@ function MakeEngorgeSpec() {
 	testFn: (gameState) => {
 	    return !gameState.playerPaddle.engorged;
 	},
+	skip: true,
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
 	    gameState.AddAnimation(MakeEngorgeAnimation({
@@ -208,6 +232,7 @@ function MakeEngorgeSpec() {
 
 function MakeSplitSpec() {
     return {
+	name: 'split',
 	width: sx(30), height: sy(24),
 	lifespan: kPillLifespan,
 	label: "//",
@@ -256,6 +281,7 @@ function MakeSplitSpec() {
 
 function MakeDefendSpec() {
     return {
+	name: 'defend',
 	width: sx(20), height: sy(30),
 	lifespan: kPillLifespan,
 	label: "#",
@@ -264,6 +290,7 @@ function MakeDefendSpec() {
 	testFn: (gameState) => {
 	    return gBarriers.A.length == 0 && (gDebug || gPucks.A.length > 25);
 	},
+	skip: true,
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
 	    var n = 4; // match: kBarriersArrayInitialSize.
@@ -311,6 +338,7 @@ function MakeDefendSpec() {
 
 function MakeOptionSpec() {
     return {
+	name: 'option',
 	width: sx(22), height: sy(22),
 	lifespan: kPillLifespan,
 	label: "!!",
@@ -319,6 +347,7 @@ function MakeOptionSpec() {
 	testFn: (gameState) => {
 	    return gOptions.A.length == 0 && (gDebug || gPucks.A.length > 20);
 	},
+	skip: true,
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
 	    var n = 6; // match: kOptionsArrayInitialSize.
@@ -367,9 +396,9 @@ function MakeOptionSpec() {
 }
 
 function MakeNeoSpec() {
-    var name = 'neo';
     var x = ForSide(gw(0.4), gw(0.6));
     return {
+	name: 'neo',
 	width: sx(22), height: sy(22),
 	lifespan: kPillLifespan,
 	label: "#",
@@ -379,6 +408,7 @@ function MakeNeoSpec() {
 	    // todo: in some playtesting this was being spawned too often, maybe each spec needs a spawn weight too?
 	    return (gDebug || gPucks.A.length > kEjectCountThreshold/2) && isU(gNeo);
 	},
+	skip: true,
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
 	    gameState.AddNeo({
@@ -432,6 +462,7 @@ function MakeDensitySpec() {
     var name = 'density';
     var x = ForSide(gw(0.4), gw(0.6));
     return {
+	name,
 	width: sx(32), height: sy(22),
 	lifespan: kPillLifespan,
 	label: "(())",
@@ -440,6 +471,7 @@ function MakeDensitySpec() {
 	testFn: (gameState) => {
 	    return (gDebug || gPucks.A.length > 20) && !gPowerupLocks[name];
 	},
+	skip: true,
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
 	    gPowerupLocks[name] = true;
@@ -468,8 +500,8 @@ function MakeDensitySpec() {
 }
 
 function MakeInversionSpec() {
-    var name = 'inversion';
     return {
+	name: 'inversion',
 	width: sx(20), height: sy(20),
 	lifespan: kPillLifespan,
 	label: ["|", "/", "--", "\\", "|", "/", "--", "\\"],
