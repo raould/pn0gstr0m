@@ -1117,7 +1117,7 @@ function DrawBounds( alpha=0.5 ) {
 	nextState = self.ProcessInput();
 	self.Draw();
 	if (notU(nextState)) {
-	    EndMusic();
+	    StopAudio();
 	    gUserMutedButtonEnabled = false;
 	}
 	return nextState;
@@ -1150,7 +1150,7 @@ function DrawBounds( alpha=0.5 ) {
 	}
 	if (gUserMutedPressed) {
 	    gUserMuted = !gUserMuted;
-	    gUserMuted ? EndMusic() : BeginMusic();
+	    gUserMuted ? StopAudio() : BeginMusic();
 	    gUserMutedPressed = false;
 	}
 	else if (gNextMusicPressed) {
@@ -1573,7 +1573,7 @@ function Start() {
     gLifecycle = new Lifecycle( handlerMap );
     gLifecycle.RunLoop();
 
-    EndMusic();
+    StopAudio();
 }
 
 // er, i'm lazy and never un-register so be sure this only gets called once.

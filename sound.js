@@ -82,7 +82,7 @@ function OnSfxStop(name) {
 
 const kMusicSfxCount = 24;
 function BeginMusic() {
-    EndMusic();
+    StopAudio();
     if (!gUserMuted) {
 	// max list of music numbers in order (javascript sucks?).
 	var unplayedAll = Array(kMusicSfxCount).fill().map((_,i) => {return i+1;});
@@ -112,7 +112,7 @@ function BeginMusic() {
     }
 }
 
-function EndMusic() {
+function StopAudio() {
     Object.values(gAudio.name2meta).forEach(meta => {
 	if (meta != undefined) {
 	    meta.howl.stop();
