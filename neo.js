@@ -31,7 +31,7 @@ function Neo( spec ) {
 		    steps: 20,
 		})
 	    );
-	    self.locked.forEach((p) => {
+	    self.locked.forEach(p => {
 		p.isLocked = false;
 		p.vx = Math.abs(p.vx) * ForSide(1,-1) * RandomRange(1,1.3);
 		// funny how sparks are global but animations aren't :-(

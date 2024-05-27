@@ -33,7 +33,7 @@ function ReuseArray( initialCapacity ) {
     };
 
     self.pushAll = function( a ) {
-	a.forEach((e) => { self.push(e); });
+	a.forEach(e => { self.push(e); });
     };
 
     self.map = function(mfn) {

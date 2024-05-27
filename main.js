@@ -337,7 +337,7 @@ function StepToasts() {
 	    var y = gh(0.1);
 	    Cxdo(() => {
 		gCx.fillStyle = "magenta";
-		gToasts.forEach((t) => {
+		gToasts.forEach(t => {
 		    console.log(t.msg, gw(0.5), y);
 		    DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, "monospace");
 		    y += gSmallestFontSize * 1.1;
@@ -633,7 +633,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.ProcessInput = function() {
 	if( !self.attract ) {
-	    gEventQueue.forEach((event,i) => {
+	    gEventQueue.forEach((event, i) => {
 		event.updateFn();
 		self.ProcessOneInput();
 	    });
@@ -732,7 +732,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.MovePucks = function( dt ) {
 	gPucks.B.clear();
-	gPucks.A.forEach((p) => {
+	gPucks.A.forEach(p => {
 	    p.Step( dt );
 	    if (!self.attract) {
 		p.UpdateScore();
@@ -754,7 +754,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.MoveSparks = function( dt ) {
 	gSparks.B.clear();
-	gSparks.A.forEach((s) => {
+	gSparks.A.forEach(s => {
 	    s.Step( dt );
 	    s.alive && gSparks.B.push( s );
 	} );
@@ -773,7 +773,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.MoveBarriers = function( dt ) {
 	gBarriers.B.clear();
-	gBarriers.A.forEach((s) => {
+	gBarriers.A.forEach(s => {
 	    s.Step( dt );
 	    s.alive && gBarriers.B.push( s );
 	} );
@@ -782,7 +782,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.MoveOptions = function( dt ) {
 	gOptions.B.clear();
-	gOptions.A.forEach((o) => {
+	gOptions.A.forEach(o => {
 	    o.AIMove( dt );
 	    o.alive && gOptions.B.push( o );
 	} );
@@ -952,23 +952,23 @@ function DrawBounds( alpha=0.5 ) {
 	    self.DrawMidLine();
 	    self.DrawScoreHeader();
 	    // z order pucks rendering overkill nuance. :-)
-	    gPucks.A.forEach((p) => {
+	    gPucks.A.forEach(p => {
 		if (Sign(p.vx) == ForSide(1,-1)) {
 		    p.Draw( self.Alpha() );
 		}
 	    });
-	    gPucks.A.forEach((p) => {
+	    gPucks.A.forEach(p => {
 		if (Sign(p.vx) == ForSide(-1,1)) {
 		    p.Draw( self.Alpha() );
 		}
 	    });
-	    gSparks.A.forEach((s) => {
+	    gSparks.A.forEach(s => {
 		s.Draw( self.Alpha() );
 	    });
-	    gBarriers.A.forEach((b) => {
+	    gBarriers.A.forEach(b => {
 		b.Draw( self.Alpha() );
 	    });
-	    gOptions.A.forEach((o) => {
+	    gOptions.A.forEach(o => {
 		o.Draw( self.Alpha() );
 	    });
 	    self.DrawNeo();
@@ -1079,7 +1079,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.ProcessInput = function() {
 	var nextState = undefined;
-	gEventQueue.forEach((event,i) => {
+	gEventQueue.forEach((event, i) => {
 	    event.updateFn();
 	    if (isU(nextState)) {
 		nextState = self.ProcessOneInput();
@@ -1127,7 +1127,7 @@ function DrawBounds( alpha=0.5 ) {
 	var nextState = undefined;
 	var hasEvents = gEventQueue.length > 0;
 	if (hasEvents) {
-	    gEventQueue.forEach((event,i) => {
+	    gEventQueue.forEach((event, i) => {
 		event.updateFn();
 		if (isU(nextState) &&
 		    event.eventType != kEventTouchMove &&
@@ -1265,7 +1265,7 @@ function DrawBounds( alpha=0.5 ) {
 	var nextState = undefined;
 	var hasEvents = gEventQueue.length > 0;
 	if (hasEvents) {
-	    gEventQueue.forEach((event,i) => {
+	    gEventQueue.forEach((event, i) => {
 		event.updateFn();
 		nextState = self.ProcessOneInput(gotoMenu);
 	    });

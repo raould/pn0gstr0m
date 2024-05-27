@@ -69,7 +69,7 @@ function MakeForcePushSpec() {
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
 	    var targetSign = ForSide(-1, 1);
-	    gPucks.A.forEach((p) => {
+	    gPucks.A.forEach(p => {
 		if (Sign(p.vx) == targetSign) {
 		    p.vx *= -1;
 		}
@@ -128,7 +128,7 @@ function MakeDecimateSpec() {
 		    sort((a,b) => { return a.d - b.d; });
 		var targets = byd.slice(0, count).map((e) => { return e.p; });
 		Assert(targets.length < gPucks.A.length);
-		targets.forEach((p) => {
+		targets.forEach(p => {
 		    p.alive = false;
 		    AddSparks(p.x, p.y, p.vx, p.vy);
 		});
@@ -222,7 +222,7 @@ function MakeSplitSpec() {
 		return i < 1 ? true : RandomBool(r);
 	    });
 	    Assert(targets.length > 0, "split.boomFn");
-	    targets.forEach((p) => {
+	    targets.forEach(p => {
 		gPucks.A.push(p.SplitPuck(true));
 	    });
 	    gameState.AddAnimation(MakeSplitAnimation({
@@ -473,23 +473,15 @@ function MakeInversionSpec() {
 	width: sx(20), height: sy(20),
 	lifespan: kPillLifespan,
 	label: ["|", "/", "--", "\\", "|", "/", "--", "\\"],
-	ylb: sy(15),
+	ylb: sy(14),
 	fontSize: gSmallestFontSizePt,
 	testFn: (gameState) => {
 	    return (gDebug || gPucks.A.length > 10);
 	},
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
-	    gPucks.A.forEach((p) => p.vy *= -1.1);
-	    gameState.AddAnimation(
-		Make2PtLightningAnimation({
-		    lifespan: 100,
-		    x0: 0, y0: gh(0.5),
-		    x1: gw(1), y1: gh(0.5),
-		    range: 10,
-		    steps: 50,
-		})
-	    );
+	    gPucks.A.forEach(p => p.vy *= -1.1);
+	    gameState.AddAnimation(MakeInversionAnimation({}));
 	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
@@ -518,7 +510,7 @@ function MakeTargetsLightningAnimation(props) {
     return new Animation({
 	lifespan,
 	animFn: (anim, dt, gameState) => {
-	    targets.forEach((xy) => {
+	    targets.forEach(xy => {
 		AddLightningPath({
 		    color: RandomColor(),
 		    x0: gameState.playerPaddle.GetMidX(),
@@ -630,7 +622,7 @@ function MakeDensityAnimation(props) {
 	    var w = gPaddleWidth;
 	    Cxdo(() => {
 		gCx.fillStyle = "rgba(128, 128, 128, 0.05)";
-		gPucks.A.forEach((p) => {
+		gPucks.A.forEach(p => {
 		    var y0 = Math.max(gYInset, p.y-p.height);
 		    var y1 = Math.min(gh(1)-gYInset, p.y+p.height*2);
 		    var h = y1 - y0;
@@ -641,6 +633,29 @@ function MakeDensityAnimation(props) {
 			);
 		    }
 		});
+	    });
+	},
+	endFn
+    });
+}
+
+function MakeInversionAnimation(props) {
+    var { endFn } = props;
+    return new Animation({
+	lifespan: 150,
+	animFn: (anim, dt, gameState) => {
+	    gPucks.A.forEach(p => {
+		if (RandomBool(0.5)) {
+		    AddLightningPath({
+			color: RandomForColor(magentaSpec, 0.5),
+			x0: p.x,
+			y0: Sign(p.vy)==1 ? gYInset : gh(1)-gYInset,
+			x1: p.x,
+			y1: p.y,
+			range: 5,
+			steps: 5,
+		    });
+		}
 	    });
 	},
 	endFn
