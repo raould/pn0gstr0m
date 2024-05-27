@@ -374,8 +374,8 @@ function DrawResizing() {
 function DrawTitle(flicker=true) {
     Cxdo(() => {
 	gCx.fillStyle = flicker ?
-	    RandomForColor(cyan, RandomCentered(0.8,0.2)) :
-	    rgb255s(cyan.regular);
+	    RandomForColor(cyanSpec, RandomCentered(0.8,0.2)) :
+	    rgb255s(cyanSpec.regular);
 	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
 	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.46), gSmallFontSizePt, flicker );
     });
@@ -400,7 +400,7 @@ function DrawBounds( alpha=0.5 ) {
 	gCx.lineTo(WX(gCanvas.width), WY(gCanvas.height));
 	gCx.moveTo(WX(gCanvas.width), WY(0));
 	gCx.lineTo(WX(0), WY(gCanvas.height));
-	gCx.strokeStyle = rgb255s(magenta.regular, alpha);
+	gCx.strokeStyle = rgb255s(magentaSpec.regular, alpha);
 	gCx.lineWidth = 2;
 	gCx.stroke();
 	gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
@@ -425,6 +425,16 @@ function DrawBounds( alpha=0.5 ) {
     self.Pause = function() {
 	var handler = self.handlerMap[self.state];
 	notU(handler.Pause) && handler.Pause();
+    };
+
+    self.DrawCRTScanlines = function() {
+	Cxdo(() => {
+	    gCx.fillStyle = scanlineColor;
+	    var start = isEven(gFrameCount) ? 0 : 1;
+	    for (var y = 0; y < gHeight; y += 2) {
+		gCx.fillRect(0, y, gWidth, 1);
+	    }
+	});
     };
 
     self.RunLoop = function() {
@@ -464,6 +474,7 @@ function DrawBounds( alpha=0.5 ) {
 		}
 		gLastFrameTime = gGameTime;
 		++gFrameCount;
+		self.DrawCRTScanlines();
 		if (gShowToasts) { StepToasts(); }
 		tt = kTimeStep-(dt-kTimeStep);
 	    }
@@ -811,7 +822,7 @@ function DrawBounds( alpha=0.5 ) {
 	    gCx.beginPath();
 	    gCx.roundRect(wx, wy, gWidth-wx*2, gHeight-wy*2, 20);
 	    gCx.lineWidth = sx1(2);
-	    gCx.strokeStyle = RandomForColor(grey, self.Alpha(0.3));
+	    gCx.strokeStyle = RandomForColor(greySpec, self.Alpha(0.3));
 	    gCx.stroke();
 	});
     };
@@ -1012,7 +1023,7 @@ function DrawBounds( alpha=0.5 ) {
 	}
 
 	Cxdo(() => {
-	    gCx.fillStyle = RandomForColor(blue, 0.3);
+	    gCx.fillStyle = RandomForColor(blueSpec, 0.3);
 	    DrawText( "D E B U G", "center", gw(0.5), gh(0.8), gBigFontSizePt );
 	});
     };
@@ -1046,7 +1057,7 @@ function DrawBounds( alpha=0.5 ) {
 	    self.DrawWarning();
 	    if (getWindowAspect() <= 1) {
 		Cxdo(() => {
-		    gCx.fillStyle = rgb255s(cyan.regular);
+		    gCx.fillStyle = rgb255s(cyanSpec.regular);
 		    DrawText("HINT: PLAYS BETTER IN LANDSCAPE MODE", "center", gw(0.5), gh(0.9), gSmallFontSizePt, false);
 		});
 	    }
@@ -1189,7 +1200,7 @@ function DrawBounds( alpha=0.5 ) {
 		}
 	    }
 	    Cxdo(() => {
-		gCx.fillStyle = rgb255s(grey.strong, 0.5);
+		gCx.fillStyle = rgb255s(greySpec.strong, 0.5);
 		DrawText(msg.toUpperCase(),
 			 "right",
 			 gw(0.95),

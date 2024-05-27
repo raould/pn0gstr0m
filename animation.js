@@ -69,7 +69,7 @@ function MakePoofAnimation(x, y, radius) {
 	animFn: (anim, dt, gameState) => {
 	    var alpha = T01(anim.lifespan, anim.lifespan0);
 	    Cxdo(() => {
-		gCx.strokeStyle = RandomForColor(red, alpha);
+		gCx.strokeStyle = RandomForColor(redSpec, alpha);
 		gCx.lineWidth = sx1(2);
 		gCx.beginPath();
 		gCx.arc( WX(x), WY(y),
