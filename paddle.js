@@ -5,6 +5,7 @@
 
 function Paddle(spec) {
     /* spec is {
+       isPlayer,
        x, y,
        yMin, yMax,
        width, height,
@@ -18,6 +19,22 @@ function Paddle(spec) {
     var self = this;
 
     self.Init = function(label) {
+	self.isPlayer = spec.isPlayer;
+	// barriers are { x, y, width, height,
+	//   prevX, prevY,
+	//   CollisionTest()
+	self.barriers = {
+	    A: new ReuseArray(kBarriersArrayInitialSize),
+	    B: new ReuseArray(kBarriersArrayInitialSize)
+	};
+	// options are mini paddles.
+	self.options = {
+	    A: new ReuseArray(kOptionsArrayInitialSize),
+	    B: new ReuseArray(kOptionsArrayInitialSize)
+	};
+	// neos are sticky fly traps.
+	self.neo = undefined;
+
 	self.id = gNextID++;
 	self.hp0 = spec.hp;
 	self.hp = spec.hp;
@@ -32,23 +49,71 @@ function Paddle(spec) {
 	self.width = spec.width;
 	self.height = spec.height;
 	self.blockvx = self.x >= gw(0.5) ? 1 : -1;
-	self.isSplitter = aorb(spec.isSpliter, true);
+	self.isSplitter = aorb(spec.isSplitter, false);
 	self.alive = isU(self.hp) || self.hp > 0;
 	self.engorgedHeight = gPaddleHeight * 2;
 	self.engorgedWidth = gPaddleWidth * 0.8;
-	self.aiTarget = undefined;
+	// admitedly these names are too visually similar. :-(
+	self.aiPuck = undefined;
+	self.aiPill = undefined;
+	self.aiCountdownToUpdate = kAIPeriod;
 	self.label = spec.label;
 	self.engorged = false;
 	self.stepSize = aorb(spec.stepSize, gPaddleStepSize);
 	self.normalX = spec.normalX;
 	self.scanIndex = 0;
 	self.scanCount = 10;
+	self.attackingNearCount = 0;
 	self.nudgeX();
+    };
+
+    self.AddBarrier = function( spec ) {
+	var b = new Barrier(spec);
+	self.barriers.A.push(b);
+    };
+
+    self.AddOption = function( spec ) {
+	var o = new Paddle(spec);
+	self.options.A.push(o);
+    };
+
+    self.AddNeo = function( spec ) {
+	self.neo = new Neo(spec);
+    };
+
+    self.StepPowerups = function( dt, gameState ) {
+	self.StepBarriers( dt );
+	self.StepOptions( dt, gameState );
+	self.StepNeo( dt, gameState );
+    };
+
+    self.StepBarriers = function( dt ) {
+	self.barriers.B.clear();
+	self.barriers.A.forEach(s => {
+	    s.Step( dt );
+	    s.alive && self.barriers.B.push( s );
+	} );
+	SwapBuffers(self.barriers);
+    };
+
+    self.StepOptions = function( dt, gameState ) {
+	self.options.B.clear();
+	self.options.A.forEach(o => {
+	    o.Step( dt, gameState );
+	    o.alive && self.options.B.push( o );
+	} );
+	SwapBuffers(self.options);
+    };
+
+    self.StepNeo = function( dt, gameState ) {
+	if (exists(self.neo)) {
+	    self.neo = self.neo.Step( dt, gameState );
+	}
     };
 
     self.CollisionTest = function( puck ) {
 	var hit = puck.CollisionTest( self, self.blockvx );
-	if (hit && notU(self.hp)) {
+	if (hit && exists(self.hp)) {
 	    self.hp--;
 	    self.alive = self.hp > 0;
 	}
@@ -99,23 +164,37 @@ function Paddle(spec) {
     };
 
     self.Draw = function( alpha ) {
+	self.barriers.A.forEach(b => {
+	    b.Draw( alpha );
+	});
+	self.options.A.forEach(o => {
+	    o.Draw( alpha );
+	});
+	if (exists(self.neo)) {
+	    self.neo.Draw( alpha );
+	}
 	Cxdo(() => {
 	    gCx.fillStyle = RandomGreen(0.7 * alpha);
+
 	    var hpw = isU(self.hp) ?
 		self.width :
 		Math.max(sx1(2), ii(self.width * self.hp/self.hp0));
 	    var wx = WX(self.x + (self.width-hpw)/2);
 	    var wy = WY(self.y);
 	    gCx.fillRect( wx, wy, hpw, self.height );
-	    if (notU(self.label) && gRandom() > GameTime01(kFadeInMsec)) {
-		gCx.fillStyle = RandomGreen(0.5 * alpha);
-		DrawText( self.label, "center", self.GetMidX(), self.y-20, gSmallFontSizePt );
-	    }
-	    if (false) {//gDebug) {
-		gCx.strokeStyle = "red";
-		gCx.strokeRect( self.x, self.y, self.width, self.height );
-		gCx.strokeStyle = "white";
-		gCx.strokeRect( self.x+1, self.yMin, self.width-2, self.yMax-self.yMin );
+
+	    if (exists(self.label)) {
+		// label lives longer so newbies can notice it.
+		var fadeInMsec = kFadeInMsec * 3;
+		var gt01 = GameTime01(fadeInMsec);
+		if (gt01 >= 1) {
+		    self.label = undefined;
+		}
+		else {
+		    var bright = gRandom() > gt01;
+		    gCx.fillStyle = RandomGreen(alpha * bright?1:0.5);
+		    DrawText( self.label, "center", self.GetMidX(), self.y-20, gSmallFontSizePt );
+		}
 	    }
 	});
     };
@@ -142,53 +221,124 @@ function Paddle(spec) {
 	self.nudgeX();
     };
 
-    // ........................................ AI
+    self.Step = function( dt, gameState ) {
+	if (self.isPlayer) {
+	    self.StepPlayer( dt );
+	}
+	else {
+	    self.StepAI( dt, gameState );
+	}
+	self.StepPowerups( dt, gameState );
+    };
 
-    self.aiCountdownToUpdate = kAIPeriod;
+    //---------------------------------------- player.
+
+    self.StepPlayer = function( dt ) {
+	if( gUpPressed || gStickUp ) {
+	    self.MoveUp( dt );
+	}
+	if( gDownPressed || gStickDown ) {
+	    self.MoveDown( dt );
+	}
+	if( exists(gMoveTargetY) ) {
+	    var limit = gYInset + gPaddleHeight/2;
+	    gMoveTargetY = Clip(
+		gMoveTargetY + gMoveTargetStepY,
+		limit,
+		gHeight - limit
+	    );
+	    if( gMoveTargetY < self.GetMidY() ) {
+		self.MoveUp( dt );
+	    }
+	    if( gMoveTargetY > self.GetMidY() ) {
+		self.MoveDown( dt );
+	    }
+	    // if the player isn't touching and the
+	    // paddle is close enough then don't
+	    // potentially wiggle steppming up & down
+	    // around gMoveTargetY.
+	    if( !isPointerDown() ) {
+		if( Math.abs(self.GetMidY() - gMoveTargetY) < gPaddleStepSize ) {
+		    gMoveTargetY = undefined;
+		}
+		if( self.isAtLimit ) {
+		    gMoveTargetY = undefined;
+		}
+	    }
+	}
+    };
+
+
+    // ........................................ AI (hacky junk).
+
+    self.OnPuck = function( p, i ) {
+	if (i == 0) {
+	    self.attackingNearCount = 0;
+	}
+	if (Sign(p.vx) != self.normalX &&
+	    Math.abs(p.x-self.x) < Math.abs(gw(0.5)-self.x)) {
+	    self.attackingNearCount++;
+	}
+    };
+
+    self.StepAI = function( dt, gameState ) {
+	if (isU(self.aiPuck) || !self.aiPuck.alive) { self.aiPuck = undefined; }
+	if (isU(self.aiPill) || !self.aiPill.alive) { self.aiPill = undefined; }
+	self.AISeek( dt );
+	if (self.shouldUpdate()) {
+	    self.UpdatePuckTarget();
+	    self.UpdatePillTarget(gameState);
+	}
+    };
+
+    self.AISeek = function( dt ) {
+	if (self.attackingNearCount == 0 && exists(self.aiPill)) {
+	    self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2 );
+	    return;
+	}
+
+	if (exists(self.aiPuck) && self.isPuckAttacking(self.aiPuck)) {
+	    self.AISeekTargetMidY( dt, self.aiPuck.GetMidY() );
+	    return;
+	}
+
+	if (exists(self.aiPill)) {
+	    self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2 );
+	    return;
+	}
+    };
+
     self.shouldUpdate = function() {
 	self.aiCountdownToUpdate--;
-	var should = isU(self.aiTarget);
-	if( ! should ) {
+	var hasPuck = self.aiPuck?.alive ?? false;
+	var hasPill = self.aiPill?.alive ?? false;
+	var should = !hasPuck && !hasPill;
+	if( !should ) {
 	    should = self.aiCountdownToUpdate <= 0;
 	}
-	if( ! should ) {
-	    should = self.IsPuckAttacking( self.aiTarget );
+	if( !should && hasPuck ) {
+	    should = !self.isPuckAttacking( self.aiPuck );
 	}
+
 	if( should ) {
 	    self.aiCountdownToUpdate = kAIPeriod;
 	}
 	return should;
     };
 
-    self.AIMove = function( dt ) {
-	Cxdo(() => {
-	    gCx.fillStyle = "blue";
-	    if( self.shouldUpdate() ) {
-		self.UpdatePuckTarget();
-		if( notU(self.aiTarget) ) {
-		    if (gDebug) { DrawTextFaint("TRACK", "center", gw(0.8), gh(0.1), gRegularFontSizePt); }
-		    var targetMid = self.aiTarget.GetMidY() + self.aiTarget.vy;
-		    var deadzone = (self.height*0.2);
-		    if( targetMid <= self.GetMidY() - deadzone) {
-			self.MoveUp( dt, kAIMoveScale );
-		    }
-		    else if( targetMid >= self.GetMidY() + deadzone) {
-			self.MoveDown( dt, kAIMoveScale );
-		    }
-		}
-		else {
-		    if (gDebug) { DrawTextFaint("NONE", "center", gw(0.8), gh(0.1), gRegularFontSizePt); }
-		}
-	    }
-	    else {
-		if (gDebug) { DrawTextFaint("SLEEP", "center", gw(0.8), gh(0.1), gRegularFontSizePt); }
-	    }
-	});
+    self.AISeekTargetMidY = function( dt, tmy ) {
+	var deadzone = (self.height*0.2);
+	if( tmy <= self.GetMidY() - deadzone) {
+	    self.MoveUp( dt, kAIMoveScale );
+	}
+	else if( tmy >= self.GetMidY() + deadzone) {
+	    self.MoveDown( dt, kAIMoveScale );
+	}
     };
 
-    self.IsPuckAttacking = function( puck ) {
+    self.isPuckAttacking = function( puck ) {
 	var is = false;
-	if(notU(puck)) {
+	if(exists(puck)) {
 	    var vel = Math.abs(puck.x-self.x) < Math.abs(puck.prevX-self.x);
 	    var side = Sign(self.x-puck.x) != self.normalX;
 	    is = vel && side;
@@ -197,20 +347,20 @@ function Paddle(spec) {
     };
 
     self.UpdatePuckTarget = function() {
-	var best = self.aiTarget;
+	var best = self.aiPuck;
 	var istart = Math.min(self.scanIndex, gPucks.A.length-1);
 	var iend = Math.min(self.scanIndex+self.scanCount, gPucks.A.length);
 	for (var i = istart; i < iend; ++i) {
 	    // todo: handle when best isLocked.
 	    var p = gPucks.A.read(i);
 	    if (isU(best)) {
-		Assert(notU(p), "bad puck");
+		Assert(exists(p), "bad puck");
 		best = p;
 	    }
-	    else if (best != p && self.IsPuckAttacking(p)) {
+	    else if (best != p && self.isPuckAttacking(p)) {
 		var dPuck = Distance2(self.x, self.y, p.x, p.y);
 		var dBest = Distance2(self.x, self.y, best.x, best.y);
-		if (!self.IsPuckAttacking(best)) {
+		if (!self.isPuckAttacking(best)) {
 		    best = p;
 		}
 		else if (dPuck < dBest) {
@@ -221,13 +371,17 @@ function Paddle(spec) {
 		}
 	    }
 	}
-	if (notU(best)) {
-	    self.aiTarget = best;
+	if (exists(best)) {
+	    self.aiPuck = best;
 	}
 	self.scanIndex += self.scanCount;
 	if (self.scanIndex > gPucks.A.length-1) {
 	    self.scanIndex = 0;
 	}
+    };
+
+    self.UpdatePillTarget = function(gameState) {
+	self.aiPill = gameState.cpuPill;
     };
 
     self.Init(spec.label);

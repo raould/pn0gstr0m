@@ -21,27 +21,27 @@ var kMusicStorageKey = "pn0g_music";
 var gStateMuted = true;
 var gUserMuted = false;
 
-function RegisterMusic(name, basename) {
-    RegisterSound(name, basename, true);
+function RegisterMusic(name, basename, props) {
+    RegisterSound(name, basename, props, true);
 }
 
-function RegisterSfx(name, basename) {
-    RegisterSound(name, basename, false);
+function RegisterSfx(name, basename, props) {
+    RegisterSound(name, basename, props, false);
 }
 
-function RegisterSound(name, basename, isMusic) {
+function RegisterSound(name, basename, props, isMusic) {
     if (isU(gAudio.name2meta[name])) {
 	var files = ["ogg", "aac", "mp3"].map((e) => `sound/${basename}.${e}`);
 	var howl = new Howl({
+	    ...props,
 	    src: files,
 	    onload: () => {
 		gAudio.name2meta[name].loaded = true;
-		console.log("onload", name);
 		LoadNextSound();
 	    },
 	    onloaderror: () => {
-		// well, poop. todo: something better.
-		console.log("onloaderror", name);
+		// well, poop.
+		console.error("onloaderror", name);
 		LoadNextSound();
 	    },
 	    html5: false,
@@ -69,7 +69,7 @@ function LoadNextSound() {
     console.log(report);
 
     var next = Object.values(gAudio.name2meta).find(m => !m.loaded);
-    if (notU(next)) {
+    if (exists(next)) {
 	next.howl.load();
     }
 }
@@ -184,12 +184,12 @@ const PlayPowerupBoom = MakePlayFn(kPowerupSfxCount, "powerupboom", PlaySoundDeb
 
 function LoadAudio() {
     // these will load in order 1 by 1 via onload().
-    RegisterSfx("explosion1", "explosionA");
-    RegisterSfx("explosion2", "explosionB");
-    RegisterSfx("explosion3", "explosionC");
-    RegisterSfx("blip1", "blipSelectA");
-    RegisterSfx("blip2", "blipSelectB");
-    RegisterSfx("blip3", "blipSelectC");
+    RegisterSfx("explosion1", "explosionA", { volume: 0.5 });
+    RegisterSfx("explosion2", "explosionB", { volume: 0.5 });
+    RegisterSfx("explosion3", "explosionC", { volume: 0.5 });
+    RegisterSfx("blip1", "blipSelectA", { volume: 0.3 });
+    RegisterSfx("blip2", "blipSelectB", { volume: 0.3 });
+    RegisterSfx("blip3", "blipSelectC", { volume: 0.3 });
     RegisterSfx("start1", "powerUp");
     RegisterSfx("powerupboom1", "powerUp");
     RegisterSfx("gameover1", "gameover");

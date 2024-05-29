@@ -3,13 +3,14 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-function Neo( spec ) {
+function Neo( spec /*{x, sign, lifespan}*/ ) {
     var self = this;
 
     self.Init = function() {
 	self.id = gNextID++;
 	self.x = spec.x;
 	self.y = 0;
+	self.sign = spec.sign;
 	self.width = sx1(10);
 	self.height = gh(1);
 	self.lifespan0 = spec.lifespan;
@@ -19,7 +20,6 @@ function Neo( spec ) {
     };
 
     self.Step = function(dt, gameState) {
-	self.lifespan = Math.max(0, self.lifespan-dt);
 	self.alive = self.lifespan > 0;
 	if (!self.alive) {
 	    gameState.AddAnimation(
@@ -33,11 +33,13 @@ function Neo( spec ) {
 	    );
 	    self.locked.forEach(p => {
 		p.isLocked = false;
-		p.vx = Math.abs(p.vx) * ForSide(1,-1) * RandomRange(1,1.3);
-		// funny how sparks are global but animations aren't :-(
+		p.vx = Math.abs(p.vx) * self.sign * RandomRange(1,1.5);
+		// funny how sparks are global but animations aren't because history.
 		AddSparks(p.x, p.y, p.vx, p.vy);
 	    });
 	}
+	self.lifespan = Math.max(0, self.lifespan-dt);
+	console.log(self.lifespan, self.lifespan0);
 	return self.alive ? self : undefined;
     };
 
