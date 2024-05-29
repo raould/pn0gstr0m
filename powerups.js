@@ -9,6 +9,7 @@
 
 // note: look at the Make*Spec() functions below
 // to see what-all fields need to be defined i.e.
+// (the business about ForSide and paddle references is wugly.)
 /* {
    name,
    width, height,
@@ -17,68 +18,98 @@
    ylb,
    fontSize,
    testFn: (gameState) => {},
-   skip,
+   skip, // don't get stuck waiting on this one's testFn to pass.
+   drawFn: (self, alpha) => {},
    boomFn: (gameState) => {},
+   endFn: () => {},
    }
 */
 
-kPillLifespan = 1000 * 10;
+// needs to be longish so the cpu has any chance of getting it.
+kPillLifespan = 1000 * 20;
 
-// match: GameState.Reset(); :-(
-var gPowerupLocks = {};
+/* props = {
+   isPlayer,
+   side,
+   paddle,
+   }
+*/
+/*class*/ function Powerups( props ) {
 
-var gPowerupSpecs = [
-    MakeForcePushSpec,
-    MakeDecimateSpec,
-    MakeEngorgeSpec,
-    MakeSplitSpec,
-    MakeDefendSpec,
-    MakeOptionSpec,
-    MakeNeoSpec,
-    MakeDensitySpec,
-    MakeInversionSpec,
-];
+    var self = this;
 
-// cycle through the powerups in order
-// so we have some control over when they
-// are presented in the course of the game.
-var gPowerupDeck;
+    self.Init = function() {
+	self.isPlayer = props.isPlayer;
+	self.side = props.side;
+	self.paddle = props.paddle;
+	
+	// defines the powerup pills and their spawn order.
+	self.powerupSpecs = [];
+	self.powerupSpecs.push(MakeForcePushSpec);
+	self.powerupSpecs.push(MakeDecimateSpec);
+	self.powerupSpecs.push(MakeEngorgeSpec);
+	self.powerupSpecs.push(MakeSplitSpec);
+	self.powerupSpecs.push(MakeDefendSpec);
+	self.powerupSpecs.push(MakeOptionSpec);
+	self.powerupSpecs.push(MakeNeoSpec);
+	self.powerupSpecs.push(MakeChaosSpec);
+	self.isPlayer && self.powerupSpecs.push(MakeDensitySpec);
 
-function MakeRandomPill(gameState) {
-    var specBase = NextSpecBase(gameState);
-    if (notU(specBase) && specBase.testFn(gameState)) {
-	// fyi allow pills to have differnet lifespans, tho currently they are all the same.
-	Assert(notU(specBase.lifespan), "lifespan");
-	var y = RandomChoice(gh(0.1), gh(0.9)-specBase.height);
-	var spec = {
-	    ...specBase,
-	    name: specBase.name,
-	    x: ForSide(gw(0.35), gw(0.65)),
-	    y,
-	    vx: ForSide(-1,1) * sx(3),
-	    vy: RandomCentered(0, 2, 0.5)
-	};
-	return new Pill(spec);
-    }
-    return undefined;
-}
+	self.powerupLocks = {};
 
-function NextSpecBase(gameState) {
-    if (isU(gPowerupDeck) || gPowerupDeck.length < 1) {
-	gPowerupDeck = [...gPowerupSpecs].reverse();
-    }
-    var s = Peek(gPowerupDeck)();
-    if (s.testFn(gameState) || !!s.skip) {
-	gPowerupDeck.pop();
-	return s;
-    }
-    return undefined;
-}
+	// cycle through the powerups in order
+	// so we have some control over when they
+	// are presented in the course of the game.
+	self.powerupDeck = [];
+    };
 
-function MakeForcePushSpec() {
-    var label = ForSide(">", "<");
+    self.MakeRandomPill = function(gameState) {
+	var specBase = self.NextSpecBase(gameState);
+	if (exists(specBase)) {
+	    // fyi allow pills to have different lifespans, tho currently they are all the same.
+	    Assert(exists(specBase.lifespan), "lifespan");
+	    var y = RandomChoice(gh(0.1), gh(0.9)-specBase.height);
+	    var spec = {
+		...specBase,
+		name: specBase.name,
+		x: ForSide(self.side, gw(0.35), gw(0.65)),
+		y,
+		vx: ForSide(self.side, -1,1) * sx(3),
+		vy: RandomCentered(0, 2, 0.5),
+	    };
+	    return new Pill(spec);
+	}
+	return undefined;
+    };
+
+    self.NextSpecBase = function(gameState) {
+	if (isU(self.powerupDeck) || self.powerupDeck.length < 1) {
+	    self.powerupDeck = [...self.powerupSpecs].reverse();
+	}
+	var maybeS = Peek(self.powerupDeck);
+	if (isU(maybeS)) {
+	    return undefined;
+	}
+	var s = maybeS(self);
+	if (s.testFn(gameState)) {
+	    self.powerupDeck.pop();
+	    return s;
+	}
+	else if (!!s.skip) {
+	    self.powerupDeck.pop();
+	    return undefined;
+	}
+	return undefined;
+    };
+
+    self.Init();
+};
+
+function MakeForcePushSpec(maker) {
+    var label = ForSide(maker.side, ">", "<");
+    var name = "forcepush";
     return {
-	name: "forcepush",
+	name,
 	width: sx(18), height: sy(18),
 	lifespan: kPillLifespan,
 	label,
@@ -86,23 +117,7 @@ function MakeForcePushSpec() {
 	fontSize: gReducedFontSizePt,
 	testFn: (gameState) => {
 	    // don't bother pushing into neo, i guess.
-	    return (gDebug || gPucks.A.length > 5) && isU(gNeo);
-	},
-	boomFn: (gameState) => {
-	    PlayPowerupBoom();
-	    var targetSign = ForSide(-1, 1);
-	    gPucks.A.forEach(p => {
-		if (Sign(p.vx) == targetSign) {
-		    p.vx *= -1;
-		}
-		else {
-		    p.vx = MinSigned(p.vx*1.4, gMaxVX);
-		}
-	    });
-	    gameState.AddAnimation(MakeWaveAnimation({
-		lifespan: 250,
-		gameState
-	    }));
+	    return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
 	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
@@ -124,12 +139,30 @@ function MakeForcePushSpec() {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
+	boomFn: (gameState) => {
+	    PlayPowerupBoom();
+	    var targetSign = ForSide(maker.side, -1, 1);
+	    gPucks.A.forEach(p => {
+		if (Sign(p.vx) == targetSign) {
+		    p.vx *= -1;
+		}
+		else {
+		    p.vx = MinSigned(p.vx*1.4, gMaxVX);
+		}
+	    });
+	    gameState.AddAnimation(MakeWaveAnimation({
+		lifespan: 250,
+		side: maker.side,
+		paddle: maker.paddle,
+	    }));
+	},
     };
 }
 
-function MakeDecimateSpec() {
+function MakeDecimateSpec(maker) {
+    var name = 'decimate';
     return {
-	name: 'decimate',
+	name,
 	width: sx(18), height: sy(18),
 	lifespan: kPillLifespan,
 	label: "*",
@@ -140,27 +173,6 @@ function MakeDecimateSpec() {
 	    return gDebug || gPucks.A.length > 20;
 	},
 	skip: true,
-	boomFn: (gameState) => {
-	    // try to destroy at least 1, but leave at least 1 still alive.
-	    // prefer destroying the ones closest to the player.
-	    var count = Math.max(1, Math.floor(gPucks.A.length*0.6)); // technically not "deci"mate, i know.
-	    if (count < gPucks.A.length-1) {
-		PlayPowerupBoom();
-		var byd = gPucks.A.
-		    map((p) => { return {d:Math.abs(p.x-gameState.playerPaddle.x), p:p}; }).
-		    sort((a,b) => { return a.d - b.d; });
-		var targets = byd.slice(0, count).map((e) => { return e.p; });
-		Assert(targets.length < gPucks.A.length);
-		targets.forEach(p => {
-		    p.alive = false;
-		    AddSparks(p.x, p.y, p.vx, p.vy);
-		});
-		gameState.AddAnimation(MakeTargetsLightningAnimation({
-		    lifespan: 100,
-		    targets,
-		}));
-	    }
-	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
 		var wx = WX(self.x);
@@ -190,28 +202,44 @@ function MakeDecimateSpec() {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
+	boomFn: (gameState) => {
+	    // try to destroy at least 1, but leave at least 1 still alive.
+	    // prefer destroying the ones closest to the player.
+	    var count = Math.max(1, Math.floor(gPucks.A.length*0.6)); // technically not "deci"mate, i know.
+	    if (count < gPucks.A.length-1) {
+		PlayPowerupBoom();
+		var byd = gPucks.A.
+		    map((p) => { return {d:Math.abs(p.x-maker.paddle.x), p:p}; }).
+		    sort((a,b) => { return a.d - b.d; });
+		var targets = byd.slice(0, count).map((e) => { return e.p; });
+		Assert(targets.length < gPucks.A.length);
+		targets.forEach(p => {
+		    p.alive = false;
+		    AddSparks(p.x, p.y, p.vx, p.vy);
+		});
+		gameState.AddAnimation(MakeTargetsLightningAnimation({
+		    lifespan: 100,
+		    targets,
+		    paddle: maker.paddle,
+		}));
+	    }
+	},
     };
 }
 
-function MakeEngorgeSpec() {
+function MakeEngorgeSpec(maker) {
+    var name = 'engorge';
     return {
-	name: 'engorge',
+	name,
 	width: sx(22), height: sy(22),
 	lifespan: kPillLifespan,
 	label: "+",
 	ylb: sy(32),
 	fontSize: gBigFontSizePt,
 	testFn: (gameState) => {
-	    return !gameState.playerPaddle.engorged;
+	    return !maker.paddle.engorged;
 	},
 	skip: true,
-	boomFn: (gameState) => {
-	    PlayPowerupBoom();
-	    gameState.AddAnimation(MakeEngorgeAnimation({
-		lifespan: 1000 * 12,
-		gameState,
-	    }));
-	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
 		var wx = WX(self.x);
@@ -227,12 +255,20 @@ function MakeEngorgeSpec() {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
+	boomFn: (gameState) => {
+	    PlayPowerupBoom();
+	    gameState.AddAnimation(MakeEngorgeAnimation({
+		lifespan: 1000 * 12,
+		paddle: maker.paddle,
+	    }));
+	},
     };
-}
+};
 
-function MakeSplitSpec() {
+function MakeSplitSpec(maker) {
+    var name = 'split';
     return {
-	name: 'split',
+	name,
 	width: sx(30), height: sy(24),
 	lifespan: kPillLifespan,
 	label: "//",
@@ -240,20 +276,6 @@ function MakeSplitSpec() {
 	fontSize: gSmallFontSizePt,
 	testFn: (gameState) => {
 	    return true;
-	},
-	boomFn: (gameState) => {
-	    var r = 10/gPucks.A.length;
-	    var targets = gPucks.A.filter((p, i) => {
-		return i < 1 ? true : RandomBool(r);
-	    });
-	    Assert(targets.length > 0, "split.boomFn");
-	    targets.forEach(p => {
-		gPucks.A.push(p.SplitPuck(true));
-	    });
-	    gameState.AddAnimation(MakeSplitAnimation({
-		lifespan: 250,
-		targets,
-	    }));
 	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
@@ -276,43 +298,37 @@ function MakeSplitSpec() {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
+	boomFn: (gameState) => {
+	    var r = 10/gPucks.A.length;
+	    var targets = gPucks.A.filter((p, i) => {
+		return i < 1 ? true : RandomBool(r);
+	    });
+	    targets.forEach(p => {
+		gPucks.A.push(p.SplitPuck(true));
+	    });
+	    gameState.AddAnimation(MakeSplitAnimation({
+		lifespan: 250,
+		targets,
+		side: maker.side,
+		paddle: maker.paddle,
+	    }));
+	},
     };
 }
 
-function MakeDefendSpec() {
+function MakeDefendSpec(maker) {
+    var name = 'defend';
     return {
-	name: 'defend',
+	name,
 	width: sx(20), height: sy(30),
 	lifespan: kPillLifespan,
 	label: "#",
 	ylb: sy(20),
 	fontSize: gSmallFontSizePt,
 	testFn: (gameState) => {
-	    return gBarriers.A.length == 0 && (gDebug || gPucks.A.length > 25);
+	    return maker.paddle.barriers.A.length == 0 && (gDebug || gPucks.A.length > 25);
 	},
 	skip: true,
-	boomFn: (gameState) => {
-	    PlayPowerupBoom();
-	    var n = 4; // match: kBarriersArrayInitialSize.
-	    var hp = 60;
-	    var width = sx1(hp/3);
-	    var height = (gHeight-gYInset*2) / n;
-	    var x = gw(ForSide(0.1, 0.9));
-	    var targets = [];
-	    for (var i = 0; i < n; ++i) {
-		var y = gYInset + i * height;
-		gameState.AddBarrier({
-		    x, y,
-		    width, height,
-		    hp,
-		});
-		targets.push({x: x+width/2, y: y+height/2});
-	    }
-	    gameState.AddAnimation(MakeTargetsLightningAnimation({
-		lifespan: 150,
-		targets,
-	    }));
-	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
 		var wx = WX(self.x);
@@ -333,45 +349,46 @@ function MakeDefendSpec() {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
+	boomFn: (gameState) => {
+	    PlayPowerupBoom();
+	    var n = 4; // match: kBarriersArrayInitialSize.
+	    var hp = 30;
+	    var width = sx1(hp/3);
+	    var height = (gHeight-gYInset*2) / n;
+	    var x = gw(ForSide(maker.side, 0.1, 0.9));
+	    var targets = [];
+	    for (var i = 0; i < n; ++i) {
+		var y = gYInset + i * height;
+		maker.paddle.AddBarrier({
+		    x, y,
+		    width, height,
+		    hp,
+		    side: maker.side,
+		});
+		targets.push({x: x+width/2, y: y+height/2});
+	    }
+	    gameState.AddAnimation(MakeTargetsLightningAnimation({
+		lifespan: 150,
+		targets,
+		paddle: maker.paddle,
+	    }));
+	},
     };
 }
 
-function MakeOptionSpec() {
+function MakeOptionSpec(maker) {
+    var name = 'option';
     return {
-	name: 'option',
+	name,
 	width: sx(22), height: sy(22),
 	lifespan: kPillLifespan,
 	label: "!!",
 	ylb: sy(16),
 	fontSize: gSmallFontSizePt,
 	testFn: (gameState) => {
-	    return gOptions.A.length == 0 && (gDebug || gPucks.A.length > 20);
+	    return maker.paddle.options.A.length == 0 && (gDebug || gPucks.A.length > 20);
 	},
 	skip: true,
-	boomFn: (gameState) => {
-	    PlayPowerupBoom();
-	    var n = 6; // match: kOptionsArrayInitialSize.
-	    var yy = (gHeight-gYInset*2)/n; // todo: center.
-	    var width = gPaddleWidth*2/3;
-	    var height = Math.min(gPaddleHeight/2, yy/2);
-	    var hp = 30;
-	    ForCount(n, (i) => {
-		var x = ForSide(gw(0.15), gw(0.85));
-		var xoff = isEven(i) ? 0 : gw(0.02);
-		var y = gYInset+yy*i;
-		var yMin = y;
-		var yMax = y+yy;
-		gameState.AddOption({
-		    x: x+xoff, y,
-		    yMin, yMax,
-		    width, height,
-		    hp,
-		    isSplitter: false,
-		    stepSize: Math.max(1,(yMax-yMin)/10),
-		    normalX: ForSide(1, -1),
-		});
-	    });
-	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
 		var wx = WX(self.x);
@@ -392,13 +409,38 @@ function MakeOptionSpec() {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
+	boomFn: (gameState) => {
+	    PlayPowerupBoom();
+	    var n = 6; // match: kOptionsArrayInitialSize.
+	    var yy = (gHeight-gYInset*2)/n;
+	    var width = gPaddleWidth*2/3;
+	    var height = Math.min(gPaddleHeight/2, yy/2);
+	    var hp = 30;
+	    ForCount(n, (i) => {
+		var x = ForSide(maker.side, gw(0.15), gw(0.85));
+		var xoff = isEven(i) ? 0 : gw(0.02);
+		var y = gYInset+yy*i;
+		var yMin = y;
+		var yMax = y+yy;
+		maker.paddle.AddOption({
+		    isPlayer: false,
+		    x: x+xoff, y,
+		    yMin, yMax,
+		    width, height,
+		    hp,
+		    isSplitter: true,
+		    stepSize: Math.max(1,(yMax-yMin)/10),
+		    normalX: ForSide(maker.side, 1, -1),
+		});
+	    });
+	},
     };
 }
 
-function MakeNeoSpec() {
-    var x = ForSide(gw(0.4), gw(0.6));
+function MakeNeoSpec(maker) {
+    var name = 'neo';
     return {
-	name: 'neo',
+	name,
 	width: sx(22), height: sy(22),
 	lifespan: kPillLifespan,
 	label: "#",
@@ -406,15 +448,9 @@ function MakeNeoSpec() {
 	fontSize: gSmallestFontSizePt,
 	testFn: (gameState) => {
 	    // todo: in some playtesting this was being spawned too often, maybe each spec needs a spawn weight too?
-	    return (gDebug || gPucks.A.length > kEjectCountThreshold/2) && isU(gNeo);
+	    return (gDebug || gPucks.A.length > kEjectCountThreshold/2) && isU(maker.paddle.neo);
 	},
 	skip: true,
-	boomFn: (gameState) => {
-	    PlayPowerupBoom();
-	    gameState.AddNeo({
-		x, lifespan: 1000 * 4,
-	    });
-	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
 		var wx = WX(self.x);
@@ -455,31 +491,32 @@ function MakeNeoSpec() {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
+	boomFn: (gameState) => {
+	    PlayPowerupBoom();
+	    maker.paddle.AddNeo({
+		x: ForSide(maker.side, gw(0.4), gw(0.6)),
+		sign: ForSide(maker.side, 1, -1),
+		lifespan: 1000 * 4,
+	    });
+	},
     };
 }
 
-function MakeDensitySpec() {
+function MakeDensitySpec(maker) {
     var name = 'density';
-    var x = ForSide(gw(0.4), gw(0.6));
+    var x = ForSide(maker.side, gw(0.4), gw(0.6));
     return {
 	name,
-	width: sx(32), height: sy(22),
+	width: sx(18), height: sy(18),
 	lifespan: kPillLifespan,
-	label: "(())",
-	ylb: sy(15),
+	label: "?",
+	ylb: sy(14),
 	fontSize: gSmallestFontSizePt,
 	testFn: (gameState) => {
-	    return (gDebug || gPucks.A.length > 20) && !gPowerupLocks[name];
+	    // there can be only one per maker, and it lasts for ever.
+	    return (gDebug || gPucks.A.length > 20) && !maker.powerupLocks[name];
 	},
 	skip: true,
-	boomFn: (gameState) => {
-	    PlayPowerupBoom();
-	    gPowerupLocks[name] = true;
-	    gameState.AddAnimation(MakeDensityAnimation({}));
-	},
-	endFn: () => {
-	    delete gPowerupLocks[name];
-	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
 		var wx = WX(self.x);
@@ -496,12 +533,20 @@ function MakeDensitySpec() {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
+	boomFn: (gameState) => {
+	    PlayPowerupBoom();
+	    maker.powerupLocks[name] = true;
+	    gameState.AddAnimation(MakeDensityAnimation({
+		side: maker.side
+	    }));
+	},
     };
 }
 
-function MakeInversionSpec() {
+function MakeChaosSpec(maker) {
+    var name = 'chaos';
     return {
-	name: 'inversion',
+	name,
 	width: sx(20), height: sy(20),
 	lifespan: kPillLifespan,
 	label: ["|", "/", "--", "\\", "|", "/", "--", "\\"],
@@ -509,11 +554,6 @@ function MakeInversionSpec() {
 	fontSize: gSmallestFontSizePt,
 	testFn: (gameState) => {
 	    return (gDebug || gPucks.A.length > 10);
-	},
-	boomFn: (gameState) => {
-	    PlayPowerupBoom();
-	    gPucks.A.forEach(p => p.vy *= -1.1);
-	    gameState.AddAnimation(MakeInversionAnimation({}));
 	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
@@ -532,164 +572,18 @@ function MakeInversionSpec() {
 		DrawText( self.label[i], "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
+	boomFn: (gameState) => {
+	    PlayPowerupBoom();
+	    var targets = [];
+	    gPucks.A.forEach((p,i) => {
+		if (isEven(i)) {
+		    p.vy *= -1.6;
+		    targets.push(p);
+		}
+	    });
+	    gameState.AddAnimation(MakeChaosAnimation({
+		targets
+	    }));
+	},
     };
-}
-
-//----------------------------------------
-
-function MakeTargetsLightningAnimation(props) {
-    var { lifespan, targets, endFn } = props;
-    return new Animation({
-	lifespan,
-	animFn: (anim, dt, gameState) => {
-	    targets.forEach(xy => {
-		AddLightningPath({
-		    color: RandomColor(),
-		    x0: gameState.playerPaddle.GetMidX(),
-		    y0: gameState.playerPaddle.GetMidY(),
-		    x1: xy.x,
-		    y1: xy.y,
-		    range: 20
-		});
-	    });
-	},
-	endFn
-    });
-}
-
-function MakeSplitAnimation(props) {
-    var { lifespan, targets, endFn } = props;
-    // start chain at nearest puck, assumes rhs default.
-    targets.sort((a,b) => b.x-a.x);
-    ForSide(() => targets.reverse, () => {})();
-    return new Animation({
-	lifespan,
-	animFn: (anim, dt, gameState) => {
-	    var p0 = { x: gameState.playerPaddle.GetMidX(),
-		       y: gameState.playerPaddle.GetMidY() };
-	    targets.forEach((p1, i) => {
-		AddLightningPath({
-		    color: RandomColor(),
-		    x0: p0.x, y0: p0.y,
-		    x1: p1.x, y1: p1.y,
-		    range: 10
-		});
-		p0 = p1;
-	    });
-	},
-	endFn
-    });
-}
-
-function MakeWaveAnimation(props) {
-    var { lifespan, gameState, endFn } = props;
-    var t0 = gGameTime;
-    var x0 = gameState.playerPaddle.GetMidX();
-    var y0 = gameState.playerPaddle.GetMidY();
-    var offset = ForSide(-Math.PI*1/2, Math.PI*1/2);
-    var a0 = offset;
-    var a1 = offset + Math.PI;
-    return new Animation({
-	lifespan,
-	animFn: (anim, dt, gameState) => {
-	    Cxdo(() => {
-		var t = GameTime01(lifespan, t0);
-		gCx.lineWidth = sx1(2);
-		gCx.strokeStyle = "magenta";
-		for (var ri = 1; ri <= 3; ++ri) {
-		    gCx.beginPath();
-		    gCx.arc( x0, y0,
-			     gw(t) + sx(5*ri),
-			     a0,
-			     a1 );
-		    gCx.stroke();
-		}
-	    });
-	},
-	endFn
-    });
-}
-
-function MakeEngorgeAnimation(props) {
-    var { lifespan, gameState, endFn } = props;
-    var ph0 = gameState.playerPaddle.height;
-    return new Animation({
-	lifespan,
-	animFn: (anim, dt, gameState, startMs, endMs) => {
-	    var pp = gameState.playerPaddle;
-	    var t01 = GameTime01(endMs-startMs, startMs);
-	    var t10 = 1 - t01;
-	    AddLightningPath({
-		color: RandomColor(),
-                x0: pp.GetMidX(), y0: pp.y,
-                x1: pp.GetMidX(), y1: pp.y + pp.height,
-                range: Math.max(0.5, pp.width * 2 * t10)
-	    });
-	},
-	startFn: (gameState) => {
-	    gameState.playerPaddle.BeginEngorged();
-	},
-	endFn: (gameState) => {
-	    gameState.playerPaddle.EndEngorged();
-	    if (notU(endFn)) { endFn(gameState); }
-	}
-    });
-}
-
-// bounty: somebody should make this actually
-// line trace into the future so the graph
-// is literally where you should be w/in the
-// next few seconds accouting for all bounces.
-function MakeDensityAnimation(props) {
-    var { endFn } = props;
-    return new Animation({
-	lifespan: 1000 * 60,
-	animFn: (anim, dt, gameState) => {
-	    // match: GameState paddle position at gh(0.5)
-	    // although this is hacked up more for aesthetics.
-	    var x = ForSide(
-		gXInset/2 + gPaddleWidth/2,
-		gw(1) - gXInset/2 - gPaddleWidth/2
-	    );
-	    var w = gPaddleWidth;
-	    Cxdo(() => {
-		gCx.fillStyle = "rgba(128, 128, 128, 0.05)";
-		gPucks.A.forEach(p => {
-		    var y0 = Math.max(gYInset, p.y-p.height);
-		    var y1 = Math.min(gh(1)-gYInset, p.y+p.height*2);
-		    var h = y1 - y0;
-		    if (Sign(p.vx) == ForSide(-1,1)) {
-			gCx.fillRect(
-			    x-w/2, y0,
-			    w, h,
-			);
-		    }
-		});
-	    });
-	},
-	endFn
-    });
-}
-
-function MakeInversionAnimation(props) {
-    var { endFn } = props;
-    return new Animation({
-	lifespan: 150,
-	animFn: (anim, dt, gameState) => {
-	    gPucks.A.forEach(p => {
-		if (RandomBool(0.5)) {
-		    AddLightningPath({
-			color: RandomForColor(magentaSpec, 0.5),
-			x0: p.x,
-			y0: Sign(p.vy)==1 ? gYInset : gh(1)-gYInset,
-			x1: p.x,
-			y1: p.y,
-			range: 5,
-			steps: 5,
-		    });
-		}
-	    });
-	},
-	endFn
-    });
 }

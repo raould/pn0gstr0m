@@ -38,7 +38,7 @@ function Puck(spec) {
 	var wx = self.x;
 	var wy = self.y;
 	// make things coming toward you be slightly easier to see.
-	var amod = alpha * ForSide(-1,1) == Sign(self.vx) ? 1 : 0.8;
+	var amod = alpha * ForSide(gPointerSide, -1,1) == Sign(self.vx) ? 1 : 0.8;
 	Cxdo(() => {
 	    // young pucks (mainly splits) render another color briefly.
 	    var dt = GameTime01(1000, self.startTime);
@@ -171,12 +171,12 @@ function Puck(spec) {
 	return newPuck;
     };
 
-    self.AllPaddlesCollision = function( paddles ) {
+    self.AllPaddlesCollision = function(paddles) {
 	var spawned = [];
 	if (self.alive && !self.isLocked) {
-	    paddles.forEach( function(paddle) {
+	    paddles.forEach( paddle => {
 		var np = self.PaddleCollision(paddle);
-		if( notU(np) ) {
+		if( exists(np) ) {
 		    spawned.push( np );
 		}
 	    } );
@@ -184,9 +184,9 @@ function Puck(spec) {
 	return spawned;
     };
 
-    self.BarriersCollision = function() {
-	if (self.alive && !self.isLocked) {
-	    gBarriers.A.forEach( function(barrier) {
+    self.BarriersCollision = function(barriers) {
+	if (self.alive && !self.isLocked && exists(barriers)) {
+	    barriers.forEach( barrier => {
 		var hit = barrier.CollisionTest( self );
 		if (hit) {
 		    PlayBlip();
@@ -197,10 +197,10 @@ function Puck(spec) {
 	}
     };
     
-    self.OptionsCollision = function() {
-	if (self.alive && !self.isLocked) {
-	    gOptions.A.forEach( function(option) {
-		var hit = option.CollisionTest( self, ForSide(-1,1) );
+    self.OptionsCollision = function(options) {
+	if (self.alive && !self.isLocked && exists(options)) {
+	    options.forEach( function(option) {
+		var hit = option.CollisionTest( self, ForSide(gPointerSide, -1,1) );
 		if (hit) {
 		    PlayBlip();
 		    // todo: bounds adjustment.
@@ -210,9 +210,9 @@ function Puck(spec) {
 	}
     };
 
-    self.NeoCollision = function() {
-	if (self.alive && !self.isLocked && notU(gNeo)) {
-	    var hit = gNeo.CollisionTest( self );
+    self.NeoCollision = function(neo) {
+	if (self.alive && !self.isLocked && exists(neo)) {
+	    var hit = neo.CollisionTest( self );
 	    if (hit) {
 		PlayBlip();
 		self.isLocked = true;
@@ -239,16 +239,16 @@ function Puck(spec) {
     };
 
     self.UpdateScore = function() {
-	if (!self.alive) { // oh, well, i hope this never gets called twice, ya know?
+	if (!self.alive) {
 	    var wasLeft = self.x < gw(0.5);
 	    if (wasLeft) {
-		ForSide(
+		ForSide(gPointerSide,
 		    () => { gCPUScore += kScoreIncrement; },
 		    () => { gPlayerScore += kScoreIncrement; }
 		)();
 	    }
 	    else {
-		ForSide(
+		ForSide(gPointerSide,
 		    () => { gPlayerScore += kScoreIncrement; },
 		    () => { gCPUScore += kScoreIncrement; }
 		)();

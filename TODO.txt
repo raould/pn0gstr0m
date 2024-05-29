@@ -11,15 +11,16 @@
 * move A,B,SwapBuffers into reusableArray.
 * play blip if puck collides and doesn't split.
 * powerup pill timeout after say 10 seconds.
+* the ForSide() thing has gotten ever more ugly & confusing.
 * super fugly inconsistencies:
+  * should extract all the left vs. right stuff into a Side class.
   * clashing styles of events queue vs. immediate changes.
   * gDebug stuff is sort of super hacky all over the place.
   * the way powerups code is split up is ugly and confusing.
+  * sorry the "class" coding style is so needlessly ugly.
+  * step vs. draw should really be split out everywhere.
 * more bugs:
   * wrong side chosen because not clearing input?!
   * music not always starting? permission? bad data?
   * music sometimes playing more than one simultaenously.
   * somehow don't nuke player's game on rotation. :-(
-  
-
-  

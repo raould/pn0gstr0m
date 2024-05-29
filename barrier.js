@@ -3,7 +3,7 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-function Barrier( spec ) {
+function Barrier( spec /*x, y, height, width, hp, side*/) {
     var self = this;
 
     self.Init = function() {
@@ -19,6 +19,8 @@ function Barrier( spec ) {
 	self.hp0 = spec.hp;
 	self.hp = self.hp0;
 	self.alive = spec.hp > 0;
+
+	self.side = spec.side;
     };
 
     self.Step = function( dt ) {
@@ -32,11 +34,11 @@ function Barrier( spec ) {
 	    // max() prevent getting too thin for wedge shape.
 	    var h01 = Clip01(self.hp/self.hp0);
 	    var hpw = Math.max(edge, ii(self.width * h01)+edge);
-	    var r = WX(ForSide(self.x+hpw, self.x+self.width));
-	    var l = WX(ForSide(self.x, r-hpw));
+	    var r = WX(ForSide(self.side, self.x+hpw, self.x+self.width));
+	    var l = WX(ForSide(self.side, self.x, r-hpw));
 	    var t = WY(self.y+sy1(1));
 	    var b = WY(self.y+self.height-sy1(1));
-	    ForSide(
+	    ForSide(self.side,
 		() => {
 		    gCx.beginPath();
 		    gCx.moveTo(l, t);
@@ -64,7 +66,7 @@ function Barrier( spec ) {
     };
 
     self.CollisionTest = function( puck ) {
-	var hit = puck.CollisionTest( self, ForSide(-1,1) );
+	var hit = puck.CollisionTest( self, ForSide(self.side, -1,1) );
 	if (hit) {
 	    self.hp--;
 	}

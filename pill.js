@@ -9,9 +9,8 @@ function Pill( spec ) {
     var self = this;
 
     self.Init = function() {
-	Assert(notU(spec), "no spec");
+	Assert(exists(spec), "no spec");
 	self.id = gNextID++;
-	self.lifespan = spec.lifespan;
 	self.name = spec.name;
 	self.x = spec.x;
 	self.y = spec.y;
@@ -21,12 +20,15 @@ function Pill( spec ) {
 	self.height = spec.height;
 	self.vx = spec.vx;
 	self.vy = spec.vy;
+	self.lifespan = spec.lifespan;
+	self.alive = self.lifespan > 0;
 	self.label = spec.label;
 	self.ylb = spec.ylb;
 	self.fontSize = spec.fontSize;
 	self.boomFn = spec.boomFn;
 	self.drawFn = spec.drawFn;
 	self.endFn = spec.endFn;
+
 	if (self.x >= gw(0.5)) {
 	    self.leftBound = gw(0.5);
 	    self.rightBound = gw(1);
@@ -44,10 +46,9 @@ function Pill( spec ) {
     };
 
     self.Step = function( dt, gameState ) {
-	self.lifespan -= dt;
 	self.Move( dt );
-	var alive = self.lifespan > 0;
-	if (!alive) {
+	self.alive = self.lifespan > 0;
+	if (!self.alive) {
 	    gameState.AddAnimation(
 		MakePoofAnimation(
 		    self.x + self.width/2,
@@ -55,12 +56,13 @@ function Pill( spec ) {
 		    25
 		)
 	    );
-	    if (notU(self.endFn)) {
+	    if (exists(self.endFn)) {
 		self.endFn();
 		self.endFn = undefined;
 	    }
 	}
-	return alive ? self : undefined;
+	self.lifespan -= dt;
+	return self.alive ? self : undefined;
     };
 
     self.Move = function( dt ) {

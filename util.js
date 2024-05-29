@@ -5,11 +5,18 @@
 
 var k2Pi = Math.PI*2;
 
+function Assert(result, msg) {
+    if (!result) {
+	console.error("ASSERTION FAILED", msg);
+	debugger;
+    }
+}
+
 function isU(u) {
     return u == undefined;
 }
 
-function notU(u) {
+function exists(u) {
     return u != undefined;
 }
 
@@ -18,13 +25,6 @@ function aorb(a, b) {
 }
 
 function noOp() {}
-
-function Assert(result, msg) {
-    if (!result) {
-	console.error("ASSERTION FAILED", msg);
-	debugger;
-    }
-}
 
 function Peek(a) {
     if (Array.isArray(a) && a.length > 0) {
@@ -113,18 +113,19 @@ function Clip255(f) {
     return Clip(i, 0, 255);
 }
 
-function T10(v, max) { // assumes min = 0 of course.
-    return Clip01(
-	// bourgeois linear hah.
-	1-v/max
-    );
+// v expected to go from 0 to max.
+function T10(v, max) { 
+    // bourgeois linear hah.
+    return Clip01(1 - v/max);
 }
 
-function T01(v, max) { // assumes min = 0 of course.
+// v expected to go from 0 to max.
+function T01(v, max) {
+    max = max == 0 ? 1 : max;
     return Clip01(
 	// aesthetically non linear hah.
 	Math.pow(
-	    v/(max==0?1:max),
+	    v/max,
 	    3
 	)
     );
