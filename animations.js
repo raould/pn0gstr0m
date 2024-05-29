@@ -35,6 +35,32 @@ function AddLightningPath(spec) {
     });
 }
 
+function MakeGameStartAnimation() {
+    var lifespan = 400;
+    return new Animation({
+	name: "gamestart",
+	lifespan,
+	drawFn: (anim) => {
+	    var t = T10(anim.lifespan, anim.lifespan0);
+	    var y = gYInset + t * gHeight;
+	    var h = gh(0.02);
+	    var c = 10;
+	    Cxdo(() => {
+		for (var i = 0; i < ii(c/2); ++i) {
+		    var yo = y + i*h;
+		    gCx.fillStyle = RandomGreen(1/c*i);
+		    gCx.fillRect(gXInset, yo, gWidth-2*gXInset, h);
+		}
+		for (var i = ii(c/2); i < c; ++i) {
+		    var yo = y + i*h;
+		    gCx.fillStyle = RandomGreen(1-1/c*i);
+		    gCx.fillRect(gXInset, yo, gWidth-2*gXInset, h);
+		}
+	    });
+	}
+    });
+}
+
 function MakePoofAnimation(x, y, radius) {
     var lifespan = 1000 * 1;
     var r = radius;
