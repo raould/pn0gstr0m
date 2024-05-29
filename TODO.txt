@@ -19,6 +19,7 @@
   * the way powerups code is split up is ugly and confusing.
   * sorry the "class" coding style is so needlessly ugly.
   * step vs. draw should really be split out everywhere.
+  * things probably should always get 1 last draw call when lifespan is zero.
 * more bugs:
   * wrong side chosen because not clearing input?!
   * music not always starting? permission? bad data?

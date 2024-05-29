@@ -3,19 +3,20 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-function Neo( spec /*{x, sign, lifespan}*/ ) {
+function Neo( props /*{x, normalX, lifespan, side}*/ ) {
     var self = this;
 
     self.Init = function() {
 	self.id = gNextID++;
-	self.x = spec.x;
+	self.x = props.x;
 	self.y = 0;
-	self.sign = spec.sign;
+	self.normalX = props.normalX;
 	self.width = sx1(10);
 	self.height = gh(1);
-	self.lifespan0 = spec.lifespan;
+	self.lifespan0 = props.lifespan;
 	self.lifespan = self.lifespan0;
 	self.alive = self.lifespan > 0;
+	self.side = props.side;
 	self.locked = [];
     };
 
@@ -33,7 +34,7 @@ function Neo( spec /*{x, sign, lifespan}*/ ) {
 	    );
 	    self.locked.forEach(p => {
 		p.isLocked = false;
-		p.vx = Math.abs(p.vx) * self.sign * RandomRange(1,1.5);
+		p.vx = Math.abs(p.vx) * self.normalX * RandomRange(1,1.5);
 		// funny how sparks are global but animations aren't because history.
 		AddSparks(p.x, p.y, p.vx, p.vy);
 	    });
@@ -43,7 +44,7 @@ function Neo( spec /*{x, sign, lifespan}*/ ) {
 	return self.alive ? self : undefined;
     };
 
-    self.Draw = function( alpha ) {
+    self.Draw = function( alpha, gameState ) {
 	var mx = self.x + self.width/2;
 	// neo blocks from 0 to gh(1),
 	// but draws inside the gYInset.
@@ -57,7 +58,8 @@ function Neo( spec /*{x, sign, lifespan}*/ ) {
 		gCx.fillRect(WX(x), y0, self.width+2*hw, y1-y0);
 	    }
 	});
-	var range = 5 + T10(self.lifespan, self.lifespan0) * sx1(10);
+	var t = T01(self.lifespan0-self.lifespan, self.lifespan0);
+	var range = 5 + t * sx1(10);
 	AddLightningPath({
 	    color: RandomBlue(alpha),
 	    x0: WX(self.x), y0,
@@ -79,6 +81,25 @@ function Neo( spec /*{x, sign, lifespan}*/ ) {
 	    range: 5,
 	    steps: 20
 	});
+
+	if (RandomBool(t)) {
+	    var x0 = mx;
+	    var y0 = RandomCentered(gh(0.5), gh(0.2));
+	    var x1 = ForSide(self.side,
+			     RandomRange(self.x + self.width*4, gw(1)-gXInset),
+			     RandomRange(self.x - self.width*3, gXInset));
+	    var y1 = y0 < gh(0.5) ? 0 : gh(1);
+	    gameState.AddAnimation(
+		MakeCrawlingLightningAnimation({
+		    lifespan: 250,
+		    x0, y0, x1, y1,
+		    range: 5,
+		    steps: 50,
+		    substeps: 10,
+		    color: "green",
+		})
+	    );
+	}
     };
 
     self.CollisionTest = function( puck ) {

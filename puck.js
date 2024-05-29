@@ -3,26 +3,26 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-function Puck(spec) {
-    /* spec = { x, y, vx, vy, ur=true, forced=false } */
+function Puck(props) {
+    /* props = { x, y, vx, vy, ur=true, forced=false } */
 
     var self = this;
 
     self.Init = function() {
 	self.id = gNextID++;
-	self.x = spec.x;
-	self.y = spec.y;
+	self.x = props.x;
+	self.y = props.y;
 	self.prevX = self.x;
 	self.prevY = self.y;
 	self.width = gPuckWidth;
 	self.height = gPuckHeight;
 	// tweak max vx to avoid everything being too visually lock-step.
-	self.vx = Sign(spec.vx) * Math.min(RandomCentered(gMaxVX, 1), Math.abs(spec.vx));
-	self.vy = AvoidZero(spec.vy, 0.8);
+	self.vx = Sign(props.vx) * Math.min(RandomCentered(gMaxVX, 1), Math.abs(props.vx));
+	self.vy = AvoidZero(props.vy, 0.8);
 	self.alive = true;
 	self.startTime = gGameTime;
-	self.splitColor = aorb(spec.forced, false) ? "yellow" : "white";
-	self.ur = aorb(spec.ur, true);
+	self.splitColor = aorb(props.forced, false) ? "yellow" : "white";
+	self.ur = aorb(props.ur, true);
 	self.isLocked = false;
     };
 

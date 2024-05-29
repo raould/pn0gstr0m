@@ -69,9 +69,9 @@ function AvoidZero(value, radius) {
     return value;
 }
 
-function Trim(f, decimals) {
+function Trim(n, decimals) {
     const m = Math.pow(10, decimals ?? 2);
-    return Math.floor(f*m)/m;
+    return Math.floor(n*m)/m;
 }
 
 function Distance(x0, y0, x1, y1) {
@@ -92,24 +92,24 @@ function F(n) {
     return Math.floor(n*100)/100;
 }
 
-function Clip(f, min, max) {
+function Clip(n, min, max) {
     if (min > max) {
 	var tmp = min; min = max; max = tmp;
     }
-    return Math.min(max, Math.max(min, f));
+    return Math.min(max, Math.max(min, n));
 }
 
-function MinSigned(f, max) {
-    var fm = Math.min(Math.abs(f), Math.abs(max));
-    return Sign(f) * fm;
+function MinSigned(n, max) {
+    var fm = Math.min(Math.abs(n), Math.abs(max));
+    return Sign(n) * fm;
 }
 
-function Clip01(f) {
-    return Clip(f, 0, 1);
+function Clip01(n) {
+    return Clip(n, 0, 1);
 }
 
-function Clip255(f) {
-    var i = Math.floor(f);
+function Clip255(n) {
+    var i = Math.floor(n);
     return Clip(i, 0, 255);
 }
 

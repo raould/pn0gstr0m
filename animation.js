@@ -18,11 +18,11 @@ function Animation( props ) {
 	self.animFn = props.animFn; // ( anim.self, dt, gameState )
 	self.endFn = props.endFn; // ( gameState )
 	Assert(exists(props.drawFn), "props.drawFn");
-	self.drawFn = props.drawFn; // ( anim.self )
+	self.drawFn = props.drawFn; // ( anim.self, gameState )
     };
 
-    self.Draw = function() {
-	props.drawFn(self);
+    self.Draw = function(gameState) {
+	props.drawFn(self, gameState);
     };
 
     self.Step = function(dt, gameState) {
