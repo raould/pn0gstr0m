@@ -960,7 +960,7 @@ function DrawBounds( alpha=0.5 ) {
     self.Draw = function() {
 	if (!gResizing) {
 	    // painter's z-algorithm here below, keep important things last.
-	    self.DrawCRTBackground();
+	    // ugly: self.DrawCRTBackground();
 	    self.DrawMidLine();
 	    self.DrawScoreHeader();
 	    // z order pucks rendering overkill nuance. :-)
