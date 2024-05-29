@@ -46,7 +46,11 @@ function NearestEven(n) {
 
 // your fault if you don't pass an integer value.
 function isEven(n) {
-    return n%2 == 0 || n%2 == -0;
+    return Math.abs(n)%2 == 0;
+}
+
+function isMultiple(v, m) {
+    return Math.abs(v)%m == 0;
 }
 
 function Swap(a, b) {
