@@ -3,24 +3,24 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-function Barrier( spec /*x, y, height, width, hp, side*/) {
+function Barrier( props /*x, y, height, width, hp, side*/) {
     var self = this;
 
     self.Init = function() {
 	self.id = gNextID++;
-	self.x = spec.x;
-	self.y = spec.y;
+	self.x = props.x;
+	self.y = props.y;
 	self.prevX = self.x;
 	self.prevY = self.y;
 
-	self.height = spec.height;
-	self.width = spec.width;
+	self.height = props.height;
+	self.width = props.width;
 
-	self.hp0 = spec.hp;
+	self.hp0 = props.hp;
 	self.hp = self.hp0;
-	self.alive = spec.hp > 0;
+	self.alive = props.hp > 0;
 
-	self.side = spec.side;
+	self.side = props.side;
     };
 
     self.Step = function( dt ) {

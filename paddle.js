@@ -3,8 +3,8 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-function Paddle(spec) {
-    /* spec is {
+function Paddle(props) {
+    /* props is {
        isPlayer,
        x, y,
        yMin, yMax,
@@ -19,7 +19,7 @@ function Paddle(spec) {
     var self = this;
 
     self.Init = function(label) {
-	self.isPlayer = spec.isPlayer;
+	self.isPlayer = props.isPlayer;
 	// barriers are { x, y, width, height,
 	//   prevX, prevY,
 	//   CollisionTest()
@@ -36,20 +36,20 @@ function Paddle(spec) {
 	self.neo = undefined;
 
 	self.id = gNextID++;
-	self.hp0 = spec.hp;
-	self.hp = spec.hp;
-	self.x0 = spec.x;
-	self.x = spec.x;
-	self.y = spec.y;
-	self.yMin = aorb(spec.yMin, gYInset);
-	self.yMax = aorb(spec.yMax, gHeight-gYInset);
+	self.hp0 = props.hp;
+	self.hp = props.hp;
+	self.x0 = props.x;
+	self.x = props.x;
+	self.y = props.y;
+	self.yMin = aorb(props.yMin, gYInset);
+	self.yMax = aorb(props.yMax, gHeight-gYInset);
 	self.isAtLimit = false;
 	self.prevX = self.x;
 	self.prevY = self.y;
-	self.width = spec.width;
-	self.height = spec.height;
+	self.width = props.width;
+	self.height = props.height;
 	self.blockvx = self.x >= gw(0.5) ? 1 : -1;
-	self.isSplitter = aorb(spec.isSplitter, false);
+	self.isSplitter = aorb(props.isSplitter, false);
 	self.alive = isU(self.hp) || self.hp > 0;
 	self.engorgedHeight = gPaddleHeight * 2;
 	self.engorgedWidth = gPaddleWidth * 0.8;
@@ -57,28 +57,28 @@ function Paddle(spec) {
 	self.aiPuck = undefined;
 	self.aiPill = undefined;
 	self.aiCountdownToUpdate = kAIPeriod;
-	self.label = spec.label;
+	self.label = props.label;
 	self.engorged = false;
-	self.stepSize = aorb(spec.stepSize, gPaddleStepSize);
-	self.normalX = spec.normalX;
+	self.stepSize = aorb(props.stepSize, gPaddleStepSize);
+	self.normalX = props.normalX;
 	self.scanIndex = 0;
 	self.scanCount = 10;
 	self.attackingNearCount = 0;
 	self.nudgeX();
     };
 
-    self.AddBarrier = function( spec ) {
-	var b = new Barrier(spec);
+    self.AddBarrier = function( props ) {
+	var b = new Barrier(props);
 	self.barriers.A.push(b);
     };
 
-    self.AddOption = function( spec ) {
-	var o = new Paddle(spec);
+    self.AddOption = function( props ) {
+	var o = new Paddle(props);
 	self.options.A.push(o);
     };
 
-    self.AddNeo = function( spec ) {
-	self.neo = new Neo(spec);
+    self.AddNeo = function( props ) {
+	self.neo = new Neo(props);
     };
 
     self.StepPowerups = function( dt, gameState ) {
@@ -163,15 +163,15 @@ function Paddle(spec) {
 	return (self.y - self.prevY) / kTimeStep;
     };
 
-    self.Draw = function( alpha ) {
+    self.Draw = function( alpha, gameState ) {
 	self.barriers.A.forEach(b => {
 	    b.Draw( alpha );
 	});
 	self.options.A.forEach(o => {
-	    o.Draw( alpha );
+	    o.Draw( alpha, gameState );
 	});
 	if (exists(self.neo)) {
-	    self.neo.Draw( alpha );
+	    self.neo.Draw( alpha, gameState );
 	}
 	Cxdo(() => {
 	    gCx.fillStyle = RandomGreen(0.7 * alpha);
@@ -390,5 +390,5 @@ function Paddle(spec) {
 	self.aiPill = gameState.cpuPill;
     };
 
-    self.Init(spec.label);
+    self.Init(props.label);
 }

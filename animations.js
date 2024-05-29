@@ -3,31 +3,39 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-function AddLightningPath(spec) {
-    // spec = { color, x0, y0, x1, y1, range, steps=5 }
-    var { color, x0, y0, x1, y1, range, steps=5 } = spec;
+function GenerateLightningPath(props) {
+    // props = { x0, y0, x1, y1, range, steps=5 }
+    var { x0, y0, x1, y1, range, steps=5 } = props;
+    if (steps == 0) { steps = 1; }
     var sx = (x1 - x0)/steps;
     var sy = (y1 - y0)/steps;
     var points = [];
-    for (var t = 1; t <= steps-1; ++t) {
+    points.push([x0, y0]);
+    for (var t = 1; t < steps; ++t) {
 	var x = RandomCentered(x0 + (sx*t), range);
 	var y = RandomCentered(y0 + (sy*t), range);
 	points.push({x, y});
     }
+    return points;
+}
+
+function AddLightningPath(props) {
+    // props = { color, x0, y0, x1, y1, range, steps=5 }
+    var { color, x0, y0, x1, y1 } = props;
+    points = GenerateLightningPath(props);
     Cxdo(() => {
-	gCx.beginPath();
 	gCx.strokeStyle = color;
 
-	gCx.moveTo(x0, y0);
-	points.forEach(p => gCx.lineTo(p.x, p.y));
-	gCx.lineTo(x1, y1);
+	gCx.beginPath();
+	gCx.moveTo(points[0].x, points[0].y);
+	points.forEach((p,i) => { if (i>0) { gCx.lineTo(p.x, p.y); } });
 	gCx.lineWidth = sx1(3);
 	gCx.globalAlpha = 0.3;
 	gCx.stroke();
 
 	gCx.beginPath();
-	gCx.moveTo(x0, y0);
-	points.forEach(p => gCx.lineTo(p.x, p.y));
+	gCx.moveTo(points[0].x, points[0].y);
+	points.forEach((p,i) => { if (i>0) { gCx.lineTo(p.x, p.y); } });
 	gCx.lineTo(x1, y1);
 	gCx.lineWidth = sx1(1);
 	gCx.globalAlpha = 1;
@@ -93,6 +101,49 @@ function MakePoofAnimation(x, y, radius) {
 		gCx.stroke();
 	    });
 	}
+    });
+}
+
+// bounty: make it follow a curve to look more like arcing.
+function MakeCrawlingLightningAnimation(props) {
+    var { color, lifespan, x0, y0, x1, y1, range, steps, substeps, endFn } = props;
+    var points = GenerateLightningPath(props);
+    var pz = Array(substeps).fill(points[0]);
+    return new Animation({
+	name: "crawllightning",
+	lifespan,
+	animFn: (anim, dt, gameState) => {
+	    var t = T01(anim.lifespan0-anim.lifespan, anim.lifespan0);
+	    var ti = ii(points.length * t);
+	    for (var i = 0; i < substeps; ++i) {
+		var index = Clip(ti+i, 0, points.length-1);
+		pz[i] = points[index];
+	    }
+	},
+	drawFn: (anim) => {
+	    Cxdo(() => {
+		gCx.strokeStyle = color;
+
+		gCx.lineWidth = sx1(3);
+		gCx.beginPath();
+		gCx.moveTo(pz[0].x, pz[0].y);
+		for (var i = 0; i < substeps; ++i) {
+		    gCx.lineTo(pz[i].x, pz[i].y);
+		}
+		gCx.globalAlpha = 0.3;
+		gCx.stroke();
+
+		gCx.lineWidth = sx1(1);
+		gCx.beginPath();
+		gCx.moveTo(pz[0].x, pz[0].y);
+		for (var i = 0; i < substeps; ++i) {
+		    gCx.lineTo(pz[i].x, pz[i].y);
+		}
+		gCx.globalAlpha = 1;
+		gCx.stroke();
+	    });
+	},
+	endFn
     });
 }
 

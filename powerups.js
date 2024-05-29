@@ -7,7 +7,7 @@
 // and the actual "powerup" is usually
 // done via (ideally a unique) animation.
 
-// note: look at the Make*Spec() functions below
+// note: look at the Make*Props() functions below
 // to see what-all fields need to be defined i.e.
 // (the business about ForSide and paddle references is wugly.)
 /* {
@@ -44,16 +44,16 @@ kPillLifespan = 1000 * 20;
 	self.paddle = props.paddle;
 	
 	// defines the powerup pills and their spawn order.
-	self.powerupSpecs = [];
-	self.powerupSpecs.push(MakeForcePushSpec);
-	self.powerupSpecs.push(MakeDecimateSpec);
-	self.powerupSpecs.push(MakeEngorgeSpec);
-	self.powerupSpecs.push(MakeSplitSpec);
-	self.powerupSpecs.push(MakeDefendSpec);
-	self.powerupSpecs.push(MakeOptionSpec);
-	self.powerupSpecs.push(MakeNeoSpec);
-	self.powerupSpecs.push(MakeChaosSpec);
-	self.isPlayer && self.powerupSpecs.push(MakeDensitySpec);
+	self.powerupProps = [];
+	self.powerupProps.push(MakeForcePushProps);
+	self.powerupProps.push(MakeDecimateProps);
+	self.powerupProps.push(MakeEngorgeProps);
+	self.powerupProps.push(MakeSplitProps);
+	self.powerupProps.push(MakeDefendProps);
+	self.powerupProps.push(MakeOptionProps);
+	self.powerupProps.push(MakeNeoProps);
+	self.powerupProps.push(MakeChaosProps);
+	self.isPlayer && self.powerupProps.push(MakeDensityProps);
 
 	self.powerupLocks = {};
 
@@ -64,27 +64,27 @@ kPillLifespan = 1000 * 20;
     };
 
     self.MakeRandomPill = function(gameState) {
-	var specBase = self.NextSpecBase(gameState);
-	if (exists(specBase)) {
+	var propsBase = self.NextPropsBase(gameState);
+	if (exists(propsBase)) {
 	    // fyi allow pills to have different lifespans, tho currently they are all the same.
-	    Assert(exists(specBase.lifespan), "lifespan");
-	    var y = RandomChoice(gh(0.1), gh(0.9)-specBase.height);
-	    var spec = {
-		...specBase,
-		name: specBase.name,
+	    Assert(exists(propsBase.lifespan), "lifespan");
+	    var y = RandomChoice(gh(0.1), gh(0.9)-propsBase.height);
+	    var props = {
+		...propsBase,
+		name: propsBase.name,
 		x: ForSide(self.side, gw(0.35), gw(0.65)),
 		y,
 		vx: ForSide(self.side, -1,1) * sx(3),
 		vy: RandomCentered(0, 2, 0.5),
 	    };
-	    return new Pill(spec);
+	    return new Pill(props);
 	}
 	return undefined;
     };
 
-    self.NextSpecBase = function(gameState) {
+    self.NextPropsBase = function(gameState) {
 	if (isU(self.powerupDeck) || self.powerupDeck.length < 1) {
-	    self.powerupDeck = [...self.powerupSpecs].reverse();
+	    self.powerupDeck = [...self.powerupProps].reverse();
 	}
 	var maybeS = Peek(self.powerupDeck);
 	if (isU(maybeS)) {
@@ -105,7 +105,7 @@ kPillLifespan = 1000 * 20;
     self.Init();
 };
 
-function MakeForcePushSpec(maker) {
+function MakeForcePushProps(maker) {
     var label = ForSide(maker.side, ">", "<");
     var name = "forcepush";
     return {
@@ -159,7 +159,7 @@ function MakeForcePushSpec(maker) {
     };
 }
 
-function MakeDecimateSpec(maker) {
+function MakeDecimateProps(maker) {
     var name = 'decimate';
     return {
 	name,
@@ -227,7 +227,7 @@ function MakeDecimateSpec(maker) {
     };
 }
 
-function MakeEngorgeSpec(maker) {
+function MakeEngorgeProps(maker) {
     var name = 'engorge';
     return {
 	name,
@@ -265,7 +265,7 @@ function MakeEngorgeSpec(maker) {
     };
 };
 
-function MakeSplitSpec(maker) {
+function MakeSplitProps(maker) {
     var name = 'split';
     return {
 	name,
@@ -316,7 +316,7 @@ function MakeSplitSpec(maker) {
     };
 }
 
-function MakeDefendSpec(maker) {
+function MakeDefendProps(maker) {
     var name = 'defend';
     return {
 	name,
@@ -376,7 +376,7 @@ function MakeDefendSpec(maker) {
     };
 }
 
-function MakeOptionSpec(maker) {
+function MakeOptionProps(maker) {
     var name = 'option';
     return {
 	name,
@@ -437,7 +437,7 @@ function MakeOptionSpec(maker) {
     };
 }
 
-function MakeNeoSpec(maker) {
+function MakeNeoProps(maker) {
     var name = 'neo';
     return {
 	name,
@@ -447,7 +447,7 @@ function MakeNeoSpec(maker) {
 	ylb: sy(15),
 	fontSize: gSmallestFontSizePt,
 	testFn: (gameState) => {
-	    // todo: in some playtesting this was being spawned too often, maybe each spec needs a spawn weight too?
+	    // todo: in some playtesting this was being spawned too often, maybe each props needs a spawn weight too?
 	    return (gDebug || gPucks.A.length > kEjectCountThreshold/2) && isU(maker.paddle.neo);
 	},
 	skip: true,
@@ -495,14 +495,15 @@ function MakeNeoSpec(maker) {
 	    PlayPowerupBoom();
 	    maker.paddle.AddNeo({
 		x: ForSide(maker.side, gw(0.4), gw(0.6)),
-		sign: ForSide(maker.side, 1, -1),
+		normalX: ForSide(maker.side, 1, -1),
 		lifespan: 1000 * 4,
+		side: maker.side,
 	    });
 	},
     };
 }
 
-function MakeDensitySpec(maker) {
+function MakeDensityProps(maker) {
     var name = 'density';
     var x = ForSide(maker.side, gw(0.4), gw(0.6));
     return {
@@ -543,7 +544,7 @@ function MakeDensitySpec(maker) {
     };
 }
 
-function MakeChaosSpec(maker) {
+function MakeChaosProps(maker) {
     var name = 'chaos';
     return {
 	name,

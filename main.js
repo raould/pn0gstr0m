@@ -954,7 +954,7 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.DrawAnimations = function() {
-	Object.values(self.animations).forEach(a => a.Draw());
+	Object.values(self.animations).forEach(a => a.Draw(self));
     };
 
     self.Draw = function() {
@@ -977,8 +977,8 @@ function DrawBounds( alpha=0.5 ) {
 	    gSparks.A.forEach(s => {
 		s.Draw( self.Alpha() );
 	    });
-	    self.playerPaddle.Draw( self.Alpha() );
-	    self.cpuPaddle.Draw( self.Alpha() );
+	    self.playerPaddle.Draw( self.Alpha(), self );
+	    self.cpuPaddle.Draw( self.Alpha(),self );
 	    self.DrawPills();
 	    self.DrawAnimations();
 	    self.DrawPauseButton();

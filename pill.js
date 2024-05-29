@@ -3,31 +3,31 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-// the spec is { name, x, y, w, h, vx, vy, lifespan, label, ylb, testFn, boomFn, drawFn, endFn }
+// the props is { name, x, y, w, h, vx, vy, lifespan, label, ylb, testFn, boomFn, drawFn, endFn }
 // don't you wish this was all in typescript now?
-function Pill( spec ) {
+function Pill( props ) {
     var self = this;
 
     self.Init = function() {
-	Assert(exists(spec), "no spec");
+	Assert(exists(props), "no props");
 	self.id = gNextID++;
-	self.name = spec.name;
-	self.x = spec.x;
-	self.y = spec.y;
+	self.name = props.name;
+	self.x = props.x;
+	self.y = props.y;
 	self.prevX = self.x;
 	self.prevY = self.y;
-	self.width = spec.width;
-	self.height = spec.height;
-	self.vx = spec.vx;
-	self.vy = spec.vy;
-	self.lifespan = spec.lifespan;
+	self.width = props.width;
+	self.height = props.height;
+	self.vx = props.vx;
+	self.vy = props.vy;
+	self.lifespan = props.lifespan;
 	self.alive = self.lifespan > 0;
-	self.label = spec.label;
-	self.ylb = spec.ylb;
-	self.fontSize = spec.fontSize;
-	self.boomFn = spec.boomFn;
-	self.drawFn = spec.drawFn;
-	self.endFn = spec.endFn;
+	self.label = props.label;
+	self.ylb = props.ylb;
+	self.fontSize = props.fontSize;
+	self.boomFn = props.boomFn;
+	self.drawFn = props.drawFn;
+	self.endFn = props.endFn;
 
 	if (self.x >= gw(0.5)) {
 	    self.leftBound = gw(0.5);
