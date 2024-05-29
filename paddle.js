@@ -191,15 +191,16 @@ function Paddle(props) {
 		    self.label = undefined;
 		}
 		else {
+		    var ly = self.y-20;
 		    var bright = gRandom() > gt01;
 		    // alpha flicker progressing toward fully faded then gone.
 		    var bm = bright ? 1 : 0.5;
 		    // a hack: also use alpha to "clip" the label before it renders out of crt bounds.
-		    var am = Math.pow( T10( Math.abs(self.GetMidY() - gh(0.5)), gh(0.5) ), 3 );
+		    var am = T10( Math.abs(ly - gh(0.5)), gh(0.4) );
 		    var a = bm * am * alpha;
 		    gCx.fillStyle = RandomGreen(a);
 		    console.log(F(self.GetMidY()), F(am), F(a));
-		    DrawText( self.label, "center", self.GetMidX(), self.y-20, gSmallFontSizePt );
+		    DrawText( self.label, "center", self.GetMidX(), ly, gSmallFontSizePt );
 		}
 	    }
 	});

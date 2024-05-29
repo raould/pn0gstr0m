@@ -31,14 +31,14 @@ function Pill( props ) {
 
 	if (self.x >= gw(0.5)) {
 	    self.leftBound = gw(0.5);
-	    self.rightBound = gw(1);
+	    self.rightBound = gw(1)-gXInset;
 	}
 	else {
-	    self.leftBound = 0;
+	    self.leftBound = gXInset;
 	    self.rightBound = gw(0.5);
 	}
-	self.topBound = 0;
-	self.bottomBound = gHeight;
+	self.topBound = gYInset;
+	self.bottomBound = gHeight-gYInset;
     };
 
     self.Draw = function( alpha ) {

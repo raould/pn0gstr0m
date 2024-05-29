@@ -376,6 +376,11 @@ function DrawTitle(flicker=true) {
 function DrawBounds( alpha=0.5 ) {
     if (!gDebug) { return; }
     Cxdo(() => {
+	gCx.strokeStyle = "red";
+	gCx.lineWidth = 1;
+	gCx.strokeRect(gXInset, gYInset, gWidth-gXInset*2, gHeight-gYInset*2);
+    });
+    Cxdo(() => {
 	gCx.beginPath();
 	gCx.moveTo(WX(0), WY(0));
 	gCx.lineTo(WX(gWidth), WY(gHeight));
@@ -673,7 +678,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.CreateStartingPuck = function(sign) {
 	var p = new Puck({ x: gw(RandomRange(0.45, 0.48)),
-			   y: gh(RandomRange(0.45, 0.5)),
+			   y: gh(RandomRange(0.2, 0.3)),
 			   vx: sign * gMaxVX/5,
 			   vy: RandomCentered(1, 0.2),
 			   ur: true });
@@ -681,8 +686,8 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.CreateRandomPuck = function() {
-	var p = new Puck({ x: gw(RandomRange(3/8, 4/8)),
-			   y: gh(RandomRange(3/8, 4/8)),
+	var p = new Puck({ x: gw(RandomRange(1/8, 7/8)),
+			   y: gh(RandomRange(2/8, 6/8)),
 			   vx: RandomRange(gMaxVX/5, gMaxVX/10),
 			   vy: RandomCentered(1, 0.5),
 			   ur: true });
@@ -822,12 +827,26 @@ function DrawBounds( alpha=0.5 ) {
 
     self.DrawCRTOutline = function() {
 	if (!self.isAttract) {
-	    var inset = 2;
-	    var wx = WX(inset);
-	    var wy = WY(inset);
+	    var inset = ii(Math.min(gXInset, gYInset) * 1);
 	    Cxdo(() => {
 		gCx.beginPath();
-		gCx.roundRect(wx, wy, gWidth-wx*2, gHeight-wy*2, 20);
+		//gCx.roundRect(wx, wy, gWidth-wx*2, gHeight-wy*2, 30);
+		gCx.moveTo(inset, inset);
+		gCx.bezierCurveTo(inset, 0,
+				  gw(1)-inset, 0,
+				  gw(1)-inset, inset);
+		gCx.bezierCurveTo(gw(1), inset,
+				  gw(1), gh(1)-inset,
+				  gw(1)-inset, gh(1)-inset);
+
+		gCx.moveTo(inset, inset);
+		gCx.bezierCurveTo(0, inset,
+				  0, gh(1)-inset,
+				  inset, gh(1)-inset);
+		gCx.bezierCurveTo(inset, gh(1),
+				  gw(1)-inset, gh(1),
+				  gw(1)-inset, gh(1)-inset);
+
 		gCx.lineWidth = sx1(2);
 		gCx.strokeStyle = "rgb(42, 42, 42)";
 		gCx.stroke();

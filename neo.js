@@ -88,7 +88,7 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
 	    var x1 = ForSide(self.side,
 			     RandomRange(self.x + self.width*4, gw(1)-gXInset),
 			     RandomRange(self.x - self.width*3, gXInset));
-	    var y1 = y0 < gh(0.5) ? 0 : gh(1);
+	    var y1 = y0 < gh(0.5) ? gYInset : gh(1)-gYInset;
 	    gameState.AddAnimation(
 		MakeCrawlingLightningAnimation({
 		    lifespan: 250,
