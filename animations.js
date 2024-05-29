@@ -6,12 +6,11 @@
 function GenerateLightningPath(props) {
     // props = { x0, y0, x1, y1, range, steps=5 }
     var { x0, y0, x1, y1, range, steps=5 } = props;
-    if (steps == 0) { steps = 1; }
+    if (steps <= 0) { steps = 1; }
     var sx = (x1 - x0)/steps;
     var sy = (y1 - y0)/steps;
     var points = [];
-    points.push([x0, y0]);
-    for (var t = 1; t < steps; ++t) {
+    for (var t = 0; t <= steps; ++t) {
 	var x = RandomCentered(x0 + (sx*t), range);
 	var y = RandomCentered(y0 + (sy*t), range);
 	points.push({x, y});
@@ -308,18 +307,18 @@ function MakeChaosAnimation(props) {
     var { targets, endFn } = props;
     return new Animation({
 	name: "chaos",
-	lifespan: 250,
+	lifespan: 200,
 	drawFn: () => {
 	    targets.forEach((p, i) => {
-		if (p.alive && RandomBool(0.5)) {
+		if (p.alive) {
 		    AddLightningPath({
-			color: RandomForColor(magentaSpec),
+			color: RandomForColor(RandomBool(0.5) ? magentaSpec : yellowSpec),
 			x0: p.x,
 			y0: Sign(p.vy)==1 ? gYInset : gh(1)-gYInset,
 			x1: p.x,
 			y1: p.y,
-			range: 5,
-			steps: 5,
+			range: 10,
+			steps: 10,
 		    });
 		}
 	    });

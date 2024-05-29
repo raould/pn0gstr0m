@@ -38,11 +38,18 @@ function Puck(props) {
 	var wx = self.x;
 	var wy = self.y;
 	// make things coming toward you be slightly easier to see.
-	var amod = alpha * ForSide(gPointerSide, -1,1) == Sign(self.vx) ? 1 : 0.8;
+	var avx = ForSide(gPointerSide, -1,1) == Sign(self.vx) ? 1 : 0.8;
+	// fade pucks outside insets.
+	var ai = (self.x < gXInset ||
+		  self.x+self.width > gw(1)-gXInset ||
+		  self.y < gYInset ||
+		  self.y+self.height > gh(1)-gYInset) ?
+	    0.3 : 1;
+	var a = alpha * avx * ai;
 	Cxdo(() => {
 	    // young pucks (mainly splits) render another color briefly.
 	    var dt = GameTime01(1000, self.startTime);
-	    gCx.globalAlpha = amod;
+	    gCx.globalAlpha = a;
 	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? self.splitColor : RandomCyan();
 	    gCx.fillRect( wx, wy, self.width, self.height );
 	    // a thin outline keeps things crisp when there are lots of pucks.

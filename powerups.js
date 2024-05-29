@@ -577,8 +577,8 @@ function MakeChaosProps(maker) {
 	    PlayPowerupBoom();
 	    var targets = [];
 	    gPucks.A.forEach((p,i) => {
-		if (isEven(i)) {
-		    p.vy *= -1.6;
+		if (isMultiple(i, 3)) {
+		    p.vy *= -2;
 		    targets.push(p);
 		}
 	    });
