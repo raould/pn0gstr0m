@@ -43,7 +43,7 @@ function AddLightningPath(props) {
 }
 
 function MakeGameStartAnimation() {
-    var lifespan = 400;
+    var lifespan = 700;
     return new Animation({
 	name: "gamestart",
 	lifespan,
@@ -56,12 +56,12 @@ function MakeGameStartAnimation() {
 		for (var i = 0; i < ii(c/2); ++i) {
 		    var yo = y + i*h;
 		    gCx.fillStyle = RandomGreen(1/c*i);
-		    gCx.fillRect(gXInset, yo, gWidth-2*gXInset, h);
+		    gCx.fillRect(gXInset, yo, gWidth-2*gXInset, h*0.8);
 		}
 		for (var i = ii(c/2); i < c; ++i) {
 		    var yo = y + i*h;
 		    gCx.fillStyle = RandomGreen(1-1/c*i);
-		    gCx.fillRect(gXInset, yo, gWidth-2*gXInset, h);
+		    gCx.fillRect(gXInset, yo, gWidth-2*gXInset, h*0.8);
 		}
 	    });
 	}
