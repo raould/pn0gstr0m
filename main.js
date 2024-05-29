@@ -122,7 +122,7 @@ function RecalculateConstants() {
     gPaddleStepSize = gPaddleHeight * 0.2;
     gPuckHeight = gPuckWidth = gh(0.015);
     gPauseCenterX = gw(0.54);
-    gPauseCenterY = gh(0.08);
+    gPauseCenterY = gh(0.1);
     gPauseRadius = sxi(10);
     gUserMutedCenterX = gw(0.9);
     gUserMutedCenterY = gh(0.85);
