@@ -115,12 +115,18 @@ function Clip255(f) {
 
 // v expected to go from 0 to max.
 function T10(v, max) { 
-    // bourgeois linear hah.
+    max = max == 0 ? 1 : max;
     return Clip01(1 - v/max);
 }
 
 // v expected to go from 0 to max.
 function T01(v, max) {
+    max = max == 0 ? 1 : max;
+    return Clip01(v/max);
+}
+
+// v expected to go from 0 to max.
+function T01nl(v, max) {
     max = max == 0 ? 1 : max;
     return Clip01(
 	// aesthetically non linear hah.

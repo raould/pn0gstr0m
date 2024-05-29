@@ -50,6 +50,7 @@ var kDrawAIPuckTarget = true;
 
 // i.e. attract mode.
 var gMonochrome;
+// see: GameTime01 and color.js
 var kFadeInMsec = gDebug ? 1000 : 7000;
 
 var kHighScoreKey = 'pn0g_high';
@@ -109,8 +110,8 @@ function sy(y) { return y * gHeight/kHtmlHeight; }
 function sx1(x) { return Math.max(1, sxi(x)); }
 function sy1(y) { return Math.max(1, syi(y)); }
 // "percent" scaling helpers.
-function gw(x=1) { return x == 1 ? gWidth : ii(x * gWidth); }
-function gh(y=1) { return y == 1 ? gHeight : ii(y * gHeight); }
+function gw(x=1) { return ii(x * gWidth); }
+function gh(y=1) { return ii(y * gHeight); }
 function RecalculateConstants() {
     gDashedLineCount = syi(15);
     gDashedLineWidth = sx1(2);
@@ -264,7 +265,7 @@ var gRandom = MakeRandom(0xDEADBEEF);
 // note: not linear, aesthetically on purpose!
 function GameTime01(period, start) {
     var diff = gGameTime - aorb(start, gStartTime);
-    var t = T01(diff, (period > 0) ? period : 1000);
+    var t = T01nl(diff, (period > 0) ? period : 1000);
     return t;
 }
 
@@ -505,6 +506,7 @@ function DrawBounds( alpha=0.5 ) {
 	var lp = { x: gXInset, y: gh(0.5) };
 	var rp = { x: gWidth-gXInset-gPaddleWidth, y: gh(0.5) };
 	var p1label = self.isAttract ? undefined : "P1";
+	var cpulabel = self.isAttract ? undefined : "GPT";
 	ForSide(gPointerSide, 
 	    () => {
 		self.playerPaddle = new Paddle({
@@ -519,6 +521,7 @@ function DrawBounds( alpha=0.5 ) {
 		    isPlayer: false,
 		    x: rp.x, y: rp.y,
 		    width: gPaddleWidth, height: gPaddleHeight,
+		    label: cpulabel,
 		    isSplitter: true,
 		    normalX: -1,
 		});
@@ -539,6 +542,7 @@ function DrawBounds( alpha=0.5 ) {
 		    isPlayer: false,
 		    x: lp.x, y: lp.y,
 		    width: gPaddleWidth, height: gPaddleHeight,
+		    label: cpulabel,
 		    isSplitter: true,
 		    normalX: 1,
 		});
@@ -562,6 +566,10 @@ function DrawBounds( alpha=0.5 ) {
 	self.cpuPill = undefined;
 	// make sure the cpu doesn't get one first, that looks too mean.
 	self.didSpawnPlayerPill = false;
+
+	if (!self.isAttract) {
+	    self.AddAnimation(MakeGameStartAnimation());
+	}
 
 	PlayStart();
     };
@@ -799,39 +807,57 @@ function DrawBounds( alpha=0.5 ) {
 	}
     };
 
+    self.DrawCRTBackground = function() {
+	if (!self.isAttract) {
+	    var xi = gXInset * 0.6;
+	    var yi = gYInset;
+	    Cxdo(() => {
+		gCx.beginPath();
+		gCx.roundRect(xi, yi, gWidth-xi*2, gHeight-yi*2, 15);
+		gCx.fillStyle = "rgb(0, 24, 0)";
+		gCx.fill();
+	    });
+	}
+    };
+
     self.DrawCRTOutline = function() {
-	var inset = 2;
-	var wx = WX(inset);
-	var wy = WY(inset);
-	Cxdo(() => {
-	    gCx.beginPath();
-	    gCx.roundRect(wx, wy, gWidth-wx*2, gHeight-wy*2, 20);
-	    gCx.lineWidth = sx1(2);
-	    gCx.strokeStyle = RandomForColor(greySpec, self.Alpha(0.3));
-	    gCx.stroke();
-	});
+	if (!self.isAttract) {
+	    var inset = 2;
+	    var wx = WX(inset);
+	    var wy = WY(inset);
+	    Cxdo(() => {
+		gCx.beginPath();
+		gCx.roundRect(wx, wy, gWidth-wx*2, gHeight-wy*2, 20);
+		gCx.lineWidth = sx1(2);
+		gCx.strokeStyle = "rgb(42, 42, 42)";
+		gCx.stroke();
+	    });
+	}
     };
 
     self.DrawScoreHeader = function() {
 	Cxdo(() => {
-	    gCx.fillStyle = RandomMagenta(self.Alpha(0.5));
+	    var a = 0.5;
+	    var style = RandomMagenta(self.Alpha(a));
 	    ForSide(gPointerSide, 
 		() => {
+		    gCx.fillStyle = style;
 		    if (exists(gHighScore)) {
-			DrawText( "HI: " + gHighScore, "left", gw(0.2), gh(0.1), gSmallFontSizePt );
+			DrawText( "HI: " + gHighScore, "left", gw(0.2), gh(0.12), gSmallFontSizePt );
 		    }
 		    if (!self.isAttract) {
-			DrawText( "GPT: " + gCPUScore, "right", gw(0.8), gh(0.19), gRegularFontSizePt );
-			DrawText( "P1: " + gPlayerScore, "left", gw(0.2), gh(0.19), gRegularFontSizePt );
+			DrawText( "GPT: " + gCPUScore, "right", gw(0.8), gh(0.22), gRegularFontSizePt );
+			DrawText( "P1: " + gPlayerScore, "left", gw(0.2), gh(0.22), gRegularFontSizePt );
 		    }
 		},
 		() => {
+		    gCx.fillStyle = style;
 		    if (exists(gHighScore)) {
-			DrawText( "HI: " + gHighScore, "right", gw(0.8), gh(0.1), gSmallFontSizePt );
+			DrawText( "HI: " + gHighScore, "right", gw(0.8), gh(0.12), gSmallFontSizePt );
 		    }
 		    if (!self.isAttract) {
-			DrawText( "GPT: " + gCPUScore, "left", gw(0.2), gh(0.19), gRegularFontSizePt );
-			DrawText( "P1: " + gPlayerScore, "right", gw(0.8), gh(0.19), gRegularFontSizePt );
+			DrawText( "GPT: " + gCPUScore, "left", gw(0.2), gh(0.22), gRegularFontSizePt );
+			DrawText( "P1: " + gPlayerScore, "right", gw(0.8), gh(0.22), gRegularFontSizePt );
 		    }
 		}
 	    )();
@@ -934,7 +960,7 @@ function DrawBounds( alpha=0.5 ) {
     self.Draw = function() {
 	if (!gResizing) {
 	    // painter's z-algorithm here below, keep important things last.
-	    self.DrawCRTOutline();
+	    self.DrawCRTBackground();
 	    self.DrawMidLine();
 	    self.DrawScoreHeader();
 	    // z order pucks rendering overkill nuance. :-)
@@ -957,6 +983,7 @@ function DrawBounds( alpha=0.5 ) {
 	    self.DrawAnimations();
 	    self.DrawPauseButton();
 	    self.DrawTouchTarget();
+	    self.DrawCRTOutline();
 	}
 	if (self.paused) {
 	    gCx.fillStyle = "darkblue";
@@ -1142,7 +1169,7 @@ function DrawBounds( alpha=0.5 ) {
 	    BeginMusic();
 	}
 	else if ((gGameTime - self.started) > self.timeout &&
-		(anyKeyPressed() || gStickUp || gStickDown || isPointerDown())) {
+		(gUpPressed || gDownPressed || gStickUp || gStickDown || isPointerDown())) {
 	    nextState = kGame;
 	}
 	return nextState;
