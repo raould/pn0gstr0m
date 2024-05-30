@@ -684,7 +684,7 @@ function DrawBounds( alpha=0.5 ) {
 			   vx: sign * gMaxVX/5,
 			   vy: (self.isAttract ?
 				RandomCentered(0, 2, 1) :
-				RandomRange(0.1, 0.2)),
+				0.3),
 			   ur: true });
 	return p;
     };

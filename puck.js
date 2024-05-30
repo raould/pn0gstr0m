@@ -18,7 +18,7 @@ function Puck(props) {
 	self.height = gPuckHeight;
 	// tweak max vx to avoid everything being too visually lock-step.
 	self.vx = Sign(props.vx) * Math.min(RandomCentered(gMaxVX, 1), Math.abs(props.vx));
-	self.vy = AvoidZero(props.vy, 0.8);
+	self.vy = AvoidZero(props.vy, 0.1);
 	self.alive = true;
 	self.startTime = gGameTime;
 	self.splitColor = aorb(props.forced, false) ? "yellow" : "white";
@@ -37,13 +37,17 @@ function Puck(props) {
     self.Draw = function( alpha ) {
 	var wx = self.x;
 	var wy = self.y;
+	// slight crt distortion.
+	var distort = T10( Math.abs(self.x-gw(0.5)), gw(0.5)) * 0.4 + 1;
+	var width = self.width * distort;
+	var height = self.height * distort;
 	// make things coming toward you be slightly easier to see.
 	var avx = ForSide(gPointerSide, -1,1) == Sign(self.vx) ? 1 : 0.8;
 	// fade pucks outside insets.
 	var ai = (self.x < gXInset ||
-		  self.x+self.width > gw(1)-gXInset ||
+		  self.x+width > gw(1)-gXInset ||
 		  self.y < gYInset ||
-		  self.y+self.height > gh(1)-gYInset) ?
+		  self.y+height > gh(1)-gYInset) ?
 	    0.3 : 1;
 	var a = alpha * avx * ai;
 	Cxdo(() => {
@@ -51,12 +55,12 @@ function Puck(props) {
 	    var dt = GameTime01(1000, self.startTime);
 	    gCx.globalAlpha = a;
 	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? self.splitColor : RandomCyan();
-	    gCx.fillRect( wx, wy, self.width, self.height );
+	    gCx.fillRect( wx, wy, width, height );
 	    // a thin outline keeps things crisp when there are lots of pucks.
 	    gCx.lineWidth = sx1(1);
 	    gCx.globalAlpha = 1;
 	    gCx.strokeStyle = "black";
-	    gCx.strokeRect( wx-1, wy-1, self.width+2, self.height+2 );
+	    gCx.strokeRect( wx-1, wy-1, width+2, height+2 );
 	});
     };
 

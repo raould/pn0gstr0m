@@ -199,7 +199,6 @@ function Paddle(props) {
 		    var am = T10( Math.abs(ly - gh(0.5)), gh(0.4) );
 		    var a = bm * am * alpha;
 		    gCx.fillStyle = RandomGreen(a);
-		    console.log(F(self.GetMidY()), F(am), F(a));
 		    DrawText( self.label, "center", self.GetMidX(), ly, gSmallFontSizePt );
 		}
 	    }
