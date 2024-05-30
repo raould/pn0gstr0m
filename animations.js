@@ -285,7 +285,7 @@ function MakeDensityAnimation(props) {
 	lifespan: undefined,
 	drawFn: () => {
 	    Cxdo(() => {
-		gCx.fillStyle = "rgba(200, 200, 0, 0.05)";
+		gCx.fillStyle = "rgba(200, 200, 0, 0.08)";
 		gPucks.A.forEach(p => {
 		    var y0 = Math.max(gYInset, p.y-p.height);
 		    var y1 = Math.min(gh(1)-gYInset, p.y+p.height*2);
