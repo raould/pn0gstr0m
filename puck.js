@@ -143,17 +143,13 @@ function Puck(props) {
     };
 
     self.BounceCollidableX = function( xywh ) {
-	var did = false;
 	if( self.vx > 0 ) {
-	    did = true;
 	    self.x = xywh.x - self.width;
 	}
 	else {
-	    did = true;
 	    self.x = xywh.x + xywh.width;
 	}
 	self.vx *= -1;
-	return did;
     };
 
     self.PaddleCollision = function( paddle ) {
@@ -201,8 +197,7 @@ function Puck(props) {
 		var hit = barrier.CollisionTest( self );
 		if (hit) {
 		    PlayBlip();
-		    // todo: bounds adjustment.
-		    self.vx *= -1;
+		    self.BounceCollidableX( barrier );
 		}
 	    } );
 	}
@@ -214,8 +209,7 @@ function Puck(props) {
 		var hit = option.CollisionTest( self, ForSide(gPointerSide, -1,1) );
 		if (hit) {
 		    PlayBlip();
-		    // todo: bounds adjustment.
-		    self.vx *= -1;
+		    self.BounceCollidableX( barrier );
 		}
 	    } );
 	}
