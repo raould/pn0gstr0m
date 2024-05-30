@@ -45,14 +45,14 @@ kPillLifespan = 1000 * 20;
 	
 	// defines the powerup pills and their spawn order.
 	self.powerupProps = [];
-	// self.powerupProps.push(MakeForcePushProps);
-	// self.powerupProps.push(MakeDecimateProps);
-	// self.powerupProps.push(MakeEngorgeProps);
-	// self.powerupProps.push(MakeSplitProps);
-	// self.powerupProps.push(MakeDefendProps);
-	// self.powerupProps.push(MakeOptionProps);
-	// self.powerupProps.push(MakeNeoProps);
-	// self.powerupProps.push(MakeChaosProps);
+	self.powerupProps.push(MakeForcePushProps);
+	self.powerupProps.push(MakeDecimateProps);
+	self.powerupProps.push(MakeEngorgeProps);
+	self.powerupProps.push(MakeSplitProps);
+	self.powerupProps.push(MakeDefendProps);
+	self.powerupProps.push(MakeOptionProps);
+	self.powerupProps.push(MakeNeoProps);
+	self.powerupProps.push(MakeChaosProps);
 	self.isPlayer && self.powerupProps.push(MakeDensityProps);
 
 	self.powerupLocks = {};
