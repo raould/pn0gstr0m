@@ -49,9 +49,11 @@ function MakeGameStartAnimation() {
 	lifespan,
 	drawFn: (anim) => {
 	    var t = T10(anim.lifespan, anim.lifespan0);
-	    var y = gYInset + t * gHeight;
-	    var h = gh(0.02);
+	    var h = gh(0.05);
 	    var c = 10;
+	    var ybase  = -(h*c);
+	    var yrange = gHeight + 2*(h*c);
+	    var y = ybase + t * yrange;
 	    Cxdo(() => {
 		for (var i = 0; i < ii(c/2); ++i) {
 		    var yo = y + i*h;
