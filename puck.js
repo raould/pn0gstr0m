@@ -209,7 +209,7 @@ function Puck(props) {
 		var hit = option.CollisionTest( self, ForSide(gPointerSide, -1,1) );
 		if (hit) {
 		    PlayBlip();
-		    self.BounceCollidableX( barrier );
+		    self.BounceCollidableX( option );
 		}
 	    } );
 	}
