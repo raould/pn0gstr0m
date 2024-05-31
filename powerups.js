@@ -424,13 +424,13 @@ function MakeOptionProps(maker) {
 		var yMax = y+yy;
 		maker.paddle.AddOption({
 		    isPlayer: false,
+		    side: maker.side,
 		    x: x+xoff, y,
 		    yMin, yMax,
 		    width, height,
 		    hp,
 		    isSplitter: true,
 		    stepSize: Math.max(1,(yMax-yMin)/10),
-		    normalX: ForSide(maker.side, 1, -1),
 		});
 	    });
 	},

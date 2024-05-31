@@ -144,3 +144,11 @@ function T01nl(v, max) {
 	)
     );
 }
+
+function xyNudge(y, ysize, scale, side) {
+    var ypos = y + ysize/2;
+    var mid = gh(0.5);
+    var factor = Clip01(Math.abs(mid - ypos)/mid);
+    var xoff = (scale * factor) * ForSide(side, 1, -1);
+    return xoff;
+}
