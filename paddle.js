@@ -240,6 +240,7 @@ function Paddle(props) {
     //---------------------------------------- player.
 
     self.StepPlayer = function( dt ) {
+	console.log("paddle", gStickUp, gStickDown);
 	if( gUpPressed || gStickUp ) {
 	    self.MoveUp( dt );
 	}
