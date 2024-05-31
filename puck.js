@@ -37,10 +37,14 @@ function Puck(props) {
     self.Draw = function( alpha ) {
 	var wx = self.x;
 	var wy = self.y;
+	// fewer = bigger, more = smaller.
+	var countScale = 1 + T10(gPucks.A.length, kEjectCountThreshold) * 0.4;
 	// slight crt distortion.
-	var distort = T10( Math.abs(self.x-gw(0.5)), gw(0.5)) * 0.4 + 1;
-	var width = self.width * distort;
-	var height = self.height * distort;
+	var crtScale = T10( Math.abs(self.x-gw(0.5)), gw(0.5)) * 0.4 + 1;
+
+	var width = self.width * countScale * crtScale;
+	var height = self.height * countScale * crtScale;
+
 	// make things coming toward you be slightly easier to see.
 	var avx = ForSide(gPointerSide, -1,1) == Sign(self.vx) ? 1 : 0.8;
 	// fade pucks when behind paddle.
