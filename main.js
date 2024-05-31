@@ -177,6 +177,7 @@ function anyKeyPressed() {
 // these must match ResetInput.
 var gPauseButtonEnabled = false; // really only for GameState.
 var gPausePressed = false;
+var gClearHighScorePressed = false;
 var gUserMutedButtonEnabled = false;
 var gUserMutedPressed = false;
 var gUpPressed = false;
@@ -710,6 +711,13 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.ProcessOneInput = function() {
+	if (gClearHighScorePressed) {
+	    if (self.paused) {
+		gHighScore = undefined;
+		localStorage.removeItem(kHighScoreKey);
+	    }
+	    gClearHighScorePressed = false;
+	}
 	if (gButtonPressed) {
 	    gPausePressed = true;
 	}
@@ -1314,7 +1322,7 @@ function DrawBounds( alpha=0.5 ) {
 	Cxdo(() => {
 	    gCx.fillStyle = RandomMagentaSolid();
 	    if (isU(gHighScore) || self.finalScore > gHighScore) {
-		DrawText( "NEW HIGH SCORE", "center", x, y - 80, gRegularFontSizePt );
+		DrawText( "NEW HIGH SCORE!", "center", x, y - 80, gRegularFontSizePt );
 	    }
 	    var msg = `FINAL SCORE: ${gPlayerScore} - ${gCPUScore} = ${self.finalScore}`;
 	    DrawText( msg, "center", x, y, gRegularFontSizePt );
@@ -1752,10 +1760,7 @@ function InitEvents() {
 	    gEventQueue.push({
 		eventType: kEventKeyDown,
 		updateFn: () => {
-		    if (gDebug) {
-			gHighScore = undefined;
-			localStorage.removeItem(kHighScoreKey);
-		    }
+		    gClearHighScorePressed = true;
 		}
 	    });
 	}
