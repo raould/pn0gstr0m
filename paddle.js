@@ -6,6 +6,7 @@
 function Paddle(props) {
     /* props is {
        isPlayer,
+       side,
        x, y,
        yMin, yMax,
        width, height,
@@ -13,13 +14,13 @@ function Paddle(props) {
        hp,
        isSplitter,
        stepSize,
-       normalX,
        }
     */
     var self = this;
 
     self.Init = function(label) {
 	self.isPlayer = props.isPlayer;
+	self.side = props.side;
 	// barriers are { x, y, width, height,
 	//   prevX, prevY,
 	//   CollisionTest()
@@ -60,7 +61,7 @@ function Paddle(props) {
 	self.label = props.label;
 	self.engorged = false;
 	self.stepSize = aorb(props.stepSize, gPaddleStepSize);
-	self.normalX = props.normalX;
+	self.normalX = ForSide(self.side, 1, -1);
 	self.scanIndex = 0;
 	self.scanCount = 10;
 	self.attackingNearCount = 0;
@@ -147,12 +148,8 @@ function Paddle(props) {
     };
 
     self.nudgeX = function() {
-	// nudging horizontally to emulate crt curvature.
-	var ypos = self.y + self.height/2;
-	var mid = gh(0.5);
-	var factor = Clip01(Math.abs(mid - ypos)/mid);
-	var off = (10 * factor) * ((self.x < gw(0.5)) ? 1 : -1);
-	self.x = self.x0 + off;
+	var xoff = xyNudge(self.y, self.height, 10, self.side);
+	self.x = self.x0 + xoff;
     };
 
     self.getVX = function() {

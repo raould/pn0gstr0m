@@ -120,7 +120,7 @@ function RecalculateConstants() {
     gPaddleHeight = gh(0.11);
     gPaddleWidth = sxi(6);
     gPaddleStepSize = gPaddleHeight * 0.2;
-    gPuckHeight = gPuckWidth = gh(0.015);
+    gPuckHeight = gPuckWidth = gh(0.012);
     gPauseCenterX = gw(0.54);
     gPauseCenterY = gh(0.1);
     gPauseRadius = sxi(10);
@@ -352,9 +352,7 @@ function PushToast(msg, lifespan=1000) {
 
 
 function ClearScreen() {
-    Cxdo(() => {
-	gCx.clearRect( 0, 0, gWidth, gHeight );
-    });
+    gCx.clearRect( 0, 0, gWidth, gHeight );
 }
 
 function DrawResizing() {
@@ -371,7 +369,8 @@ function DrawTitle(flicker=true) {
 	    RandomForColor(cyanSpec, RandomCentered(0.8,0.2)) :
 	    rgb255s(cyanSpec.regular);
 	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
-	DrawText( "ETERNAL BETA", "right", gw(0.92), gh(0.46), gSmallFontSizePt, flicker );
+	var msg = RandomBool(0.98) ? "ETERNAL BETA" : "ETERNAL BUGS";
+	DrawText( msg, "right", gw(0.92), gh(0.46), gSmallFontSizePt, flicker );
     });
 }
 
@@ -469,17 +468,23 @@ function DrawBounds( alpha=0.5 ) {
 		    self.handler = self.handlerMap[self.state]();
 		    self.transitioned = false;
 		}
+
 		var next = self.handler.Step( dt );
+		self.handler.Draw();
+
 		if( exists(next) && next !== self.state ) {
 		    console.log(`transitioned from ${self.state} to ${next}`);
 		    self.transitioned = true;
 		    self.state = next;
 		    cancelTouch();
 		}
+
 		gLastFrameTime = gGameTime;
 		++gFrameCount;
+
 		self.DrawCRTScanlines();
 		if (gShowToasts) { StepToasts(); }
+
 		tt = kTimeStep-(dt-kTimeStep);
 	    }
 	}
@@ -518,19 +523,19 @@ function DrawBounds( alpha=0.5 ) {
 	    () => {
 		self.playerPaddle = new Paddle({
 		    isPlayer: !self.isAttract,
+		    side: "left",
 		    x: lp.x, y: lp.y,
 		    width: gPaddleWidth, height: gPaddleHeight,
 		    label: p1label,
 		    isSplitter: true,
-		    normalX: 1,
 		});
 		self.cpuPaddle = new Paddle({
 		    isPlayer: false,
+		    side: "right",
 		    x: rp.x, y: rp.y,
 		    width: gPaddleWidth, height: gPaddleHeight,
 		    label: cpulabel,
 		    isSplitter: true,
-		    normalX: -1,
 		});
 		ForCount(gDebug ? 20 : 1, () => { 
 		    gPucks.A.push( self.CreateStartingPuck(1) );
@@ -539,19 +544,19 @@ function DrawBounds( alpha=0.5 ) {
 	    () => {
 		self.playerPaddle = new Paddle({
 		    isPlayer: !self.isAttract,
+		    side: "right",
 		    x: rp.x, y: rp.y,
 		    width: gPaddleWidth, height: gPaddleHeight,
 		    label: p1label,
 		    isSplitter: true,
-		    normalX: -1,
 		});
 		self.cpuPaddle = new Paddle({
 		    isPlayer: false,
+		    side: "left",
 		    x: lp.x, y: lp.y,
 		    width: gPaddleWidth, height: gPaddleHeight,
 		    label: cpulabel,
 		    isSplitter: true,
-		    normalX: 1,
 		});
 		ForCount(gDebug ? 20 : 1, () => { 
 		    gPucks.A.push( self.CreateStartingPuck(-1) );
@@ -586,8 +591,6 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.Step = function( dt ) {
-	if (!self.isAttract) { ClearScreen(); }
-
 	self.MaybeSpawnPills( dt );
 
 	self.ProcessInput();
@@ -598,8 +601,6 @@ function DrawBounds( alpha=0.5 ) {
 	    self.StepMoveables( dt );
 	    self.StepAnimations( dt );
 	}
-
-	self.Draw();
 
 	if (self.paused && gGameOverPressed) {
 	    gGameOverPressed = false;
@@ -819,43 +820,12 @@ function DrawBounds( alpha=0.5 ) {
 	}
     };
 
-    self.DrawCRTBackground = function() {
-	if (!self.isAttract) {
-	    var xi = gXInset * 0.6;
-	    var yi = gYInset;
-	    Cxdo(() => {
-		gCx.beginPath();
-		gCx.roundRect(xi, yi, gWidth-xi*2, gHeight-yi*2, 15);
-		gCx.fillStyle = "rgb(0, 24, 0)";
-		gCx.fill();
-	    });
-	}
-    };
-
     self.DrawCRTOutline = function() {
 	if (!self.isAttract) {
-	    var inset = ii(Math.min(gXInset, gYInset) * 1);
 	    Cxdo(() => {
-		gCx.beginPath();
-		//gCx.roundRect(wx, wy, gWidth-wx*2, gHeight-wy*2, 30);
-		gCx.moveTo(inset, inset);
-		gCx.bezierCurveTo(inset, 0,
-				  gw(1)-inset, 0,
-				  gw(1)-inset, inset);
-		gCx.bezierCurveTo(gw(1), inset,
-				  gw(1), gh(1)-inset,
-				  gw(1)-inset, gh(1)-inset);
-
-		gCx.moveTo(inset, inset);
-		gCx.bezierCurveTo(0, inset,
-				  0, gh(1)-inset,
-				  inset, gh(1)-inset);
-		gCx.bezierCurveTo(inset, gh(1),
-				  gw(1)-inset, gh(1),
-				  gw(1)-inset, gh(1)-inset);
-
-		gCx.lineWidth = sx1(2);
-		gCx.strokeStyle = "rgb(42, 42, 42)";
+		CreateCRTOutlinePath();
+		gCx.lineWidth = sx1(4);
+		gCx.strokeStyle = crtOutlineColorStr;
 		gCx.stroke();
 	    });
 	}
@@ -892,30 +862,31 @@ function DrawBounds( alpha=0.5 ) {
 
     self.DrawTouchTarget = function() {
 	if (exists(gMoveTargetY) && !self.isAttract) {
-	    var size = syi(7);
-	    var xoff = sxi((Clip01(Math.abs(gMoveTargetY - gh(0.5))/gh(0.5)))*5);
+	    var xsize = syi(12);
+	    var ysize = syi(7);
+	    var xoff = xyNudge(gMoveTargetY, ysize, 10, gPointerSide);
 	    ForSide(gPointerSide, 
 		() => {
-		    var left = WX(gXInset*0.2) + xoff;
-		    var right = left + size;
+		    var left = xoff;
+		    var right = left + xsize;
 		    var y = WY(gMoveTargetY);
 		    Cxdo(() => {
 			gCx.beginPath();
-			gCx.moveTo( left, y-size );
-			gCx.lineTo( left, y+size );
+			gCx.moveTo( left, y-ysize );
+			gCx.lineTo( left, y+ysize );
 			gCx.lineTo( right, y );
 			gCx.fillStyle = RandomGreen(0.5);
 			gCx.fill();
 		    });
 		},
 		() => {
-		    var right = WX(gWidth - gXInset*0.2) - xoff;
-		    var left = right - size;
+		    var right = gw()+xoff;
+		    var left = right - xsize;
 		    var y = WY(gMoveTargetY);
 		    Cxdo(() => {
 			gCx.beginPath();
-			gCx.moveTo( right, y-size );
-			gCx.lineTo( right, y+size );
+			gCx.moveTo( right, y-ysize );
+			gCx.lineTo( right, y+ysize );
 			gCx.lineTo( left, y );
 			gCx.fillStyle = RandomGreen(0.5);
 			gCx.fill();
@@ -984,9 +955,9 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.Draw = function() {
+	if (!self.isAttract) { ClearScreen(); }
 	if (!gResizing) {
 	    // painter's z-algorithm here below, keep important things last.
-	    // ugly: self.DrawCRTBackground();
 	    self.DrawMidLine();
 	    self.DrawScoreHeader();
 	    // z order pucks rendering overkill nuance. :-)
@@ -1010,10 +981,11 @@ function DrawBounds( alpha=0.5 ) {
 	    self.DrawPauseButton();
 	    self.DrawTouchTarget();
 	    self.DrawCRTOutline();
-	}
-	if (self.paused) {
-	    gCx.fillStyle = "darkblue";
-	    DrawText("P A U S E D", "center", WX(gw(0.5)), WY(gh(0.55)), gBigFontSizePt);
+
+	    if (self.paused) {
+		gCx.fillStyle = "darkblue";
+		DrawText("P A U S E D", "center", WX(gw(0.5)), WY(gh(0.55)), gBigFontSizePt);
+	    }
 	}
 	self.DrawDebug();
     };
@@ -1072,6 +1044,8 @@ function DrawBounds( alpha=0.5 ) {
     self.Step = function() { 
 	return self.nextState;
     };
+    self.Draw = function() {
+    };
     self.Init();
 }
 
@@ -1084,8 +1058,13 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.Step = function() {
-	ClearScreen();
 	var nextState = undefined;
+	nextState = self.ProcessInput();		
+	return nextState;
+    };
+
+    self.Draw = function() {
+	ClearScreen();
 	if (gResizing) {
 	    DrawResizing();
 	}
@@ -1098,9 +1077,7 @@ function DrawBounds( alpha=0.5 ) {
 		    DrawText("HINT: PLAYS BETTER IN LANDSCAPE MODE", "center", gw(0.5), gh(0.9), gSmallFontSizePt, false);
 		});
 	    }
-	    nextState = self.ProcessInput();		
 	}
-	return nextState;
     };
 
     self.DrawWarning = function() {
@@ -1143,17 +1120,15 @@ function DrawBounds( alpha=0.5 ) {
 	ResetInput();
 	gUserMutedButtonEnabled = true;
 	self.attract = new GameState( true );
-	self.timeout = 1000 * 1.5;
+	self.timeout = gDebug ? 1 : (1000 * 1.5);
 	self.started = gGameTime;
 	BeginMusic();
     };
 
     self.Step = function( dt ) {
 	var nextState = undefined;
-	ClearScreen();
 	self.attract.Step( dt );
 	nextState = self.ProcessInput();
-	self.Draw();
 	if (exists(nextState)) {
 	    StopAudio();
 	    gUserMutedButtonEnabled = false;
@@ -1206,12 +1181,14 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.Draw = function(advance) {
+	ClearScreen();
 	if (gResizing) {
 	    self.started = gGameTime;
 	    DrawResizing();
 	}
 	else {
 	    Cxdo(() => {
+		self.attract.Draw();
 		DrawTitle();
 		self.DrawAudio();
 		gCx.fillStyle = RandomGreen();
@@ -1296,20 +1273,18 @@ function DrawBounds( alpha=0.5 ) {
 
     self.Step = function() {
 	var nextState = undefined;
-	var gotoMenu = (gGameTime - self.started) > self.timeoutMsg;
-	ClearScreen();
-	nextState = self.ProcessInput(gotoMenu);
-	self.Draw(gotoMenu);
+	self.gotoMenu = (gGameTime - self.started) > self.timeoutMsg;
+	nextState = self.ProcessInput();
 	return nextState;
     };
 
-    self.ProcessInput = function(gotoMenu) {
+    self.ProcessInput = function() {
 	var nextState = undefined;
 	var hasEvents = gEventQueue.length > 0;
 	if (hasEvents) {
 	    gEventQueue.forEach((event, i) => {
 		event.updateFn();
-		nextState = self.ProcessOneInput(gotoMenu);
+		nextState = self.ProcessOneInput();
 	    });
 	    gEventQueue = [];
 	}
@@ -1320,9 +1295,9 @@ function DrawBounds( alpha=0.5 ) {
 	return nextState;
     };
 
-    self.ProcessOneInput = function(gotoMenu) {
+    self.ProcessOneInput = function() {
 	var nextState = undefined;
-	if (gotoMenu && (anyKeyPressed() || gStickUp || gStickDown || gButtonPressed || isPointerDown())) {
+	if (self.gotoMenu && (anyKeyPressed() || gStickUp || gStickDown || gButtonPressed || isPointerDown())) {
             nextState = kMenu;
         }
 	else if (isU(nextState) && (gGameTime - self.started) > self.timeoutMsg+self.timeoutEnd) {
@@ -1331,7 +1306,7 @@ function DrawBounds( alpha=0.5 ) {
 	return nextState;
     };
     
-    self.Draw = function(gotoMenu) {
+    self.Draw = function() {
 	ClearScreen();
 	var x = gw(0.5);
 	var y = gh(0.5) - 20;
@@ -1344,7 +1319,7 @@ function DrawBounds( alpha=0.5 ) {
 	    var msg = `FINAL SCORE: ${gPlayerScore} - ${gCPUScore} = ${self.finalScore}`;
 	    DrawText( msg, "center", x, y, gRegularFontSizePt );
 
-	    if (gotoMenu) {
+	    if (self.gotoMenu) {
 		gCx.fillStyle = RandomYellowSolid();
 		DrawText( "GO TO MENU", "center", x, y+120, gReducedFontSizePt );
 	    }
@@ -1360,7 +1335,9 @@ function DrawBounds( alpha=0.5 ) {
     var self = this;
     self.Init = function() {};
     self.Step = function() {
-	gCx.clearRect( 0, 0, gCanvas.width, gHeight );
+    };
+    self.Draw = function() {
+	ClearScreen();
     };
     self.Init();
 }
@@ -1608,6 +1585,34 @@ function CheckResizeMatch() {
     }	
 }
 
+
+function CreateCRTOutlinePath() {
+    // beware: specifically not in Cxdo().
+    var inset = ii(Math.min(gXInset, gYInset));
+    gCx.beginPath();
+    gCx.moveTo(inset, inset);
+    gCx.bezierCurveTo(inset, 0,
+		      gw(1)-inset, 0,
+		      gw(1)-inset, inset);
+    gCx.bezierCurveTo(gw(1), inset,
+		      gw(1), gh(1)-inset,
+		      gw(1)-inset, gh(1)-inset);
+
+    gCx.moveTo(inset, inset);
+    gCx.bezierCurveTo(0, inset,
+		      0, gh(1)-inset,
+		      inset, gh(1)-inset);
+    gCx.bezierCurveTo(inset, gh(1),
+		      gw(1)-inset, gh(1),
+		      gw(1)-inset, gh(1)-inset);
+}
+
+function ResetClipping() {
+    gCx.clearRect(0, 0, gw(), gh());
+    self.CreateCRTOutlinePath();
+    gCx.clip();
+}
+
 function Start() {
     var hs = localStorage.getItem(kHighScoreKey);
     if (exists(hs)) {
@@ -1618,6 +1623,8 @@ function Start() {
     gCx = gCanvas.getContext( '2d' );
     DoResize();
     RecalculateConstants();
+
+    ResetClipping();
 
     var handlerMap = {};
     // ugh the splash is just so we can get
@@ -1836,4 +1843,4 @@ function InitEvents() {
     window.addEventListener( 'resize', OnResize, false );
 }
 
-window.addEventListener( 'load', () => { Start(); InitEvents(); }, false );
+window.addEventListener( 'load', () => { Start(); InitEvents(); }, false )

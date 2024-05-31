@@ -43,11 +43,9 @@ function Puck(props) {
 	var height = self.height * distort;
 	// make things coming toward you be slightly easier to see.
 	var avx = ForSide(gPointerSide, -1,1) == Sign(self.vx) ? 1 : 0.8;
-	// fade pucks outside insets.
+	// fade pucks when behind paddle.
 	var ai = (self.x < gXInset ||
-		  self.x+width > gw(1)-gXInset ||
-		  self.y < gYInset ||
-		  self.y+height > gh(1)-gYInset) ?
+		  self.x+width > gw(1)-gXInset) ?
 	    0.3 : 1;
 	var a = alpha * avx * ai;
 	Cxdo(() => {
