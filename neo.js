@@ -40,7 +40,6 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
 	    });
 	}
 	self.lifespan = Math.max(0, self.lifespan-dt);
-	console.log(self.lifespan, self.lifespan0);
 	return self.alive ? self : undefined;
     };
 

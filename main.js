@@ -167,7 +167,7 @@ var gNextID = 0;
 // fyi pausing is a feature only of GameState, no other states.
 var gDownKeys = {};
 function clearKeysPressed() { gDownKeys = {}; }
-// "any" is a misnomer in that it is only valid game keys.
+// ok ok "any" is a misnomer in that it is only the valid game keys!
 function anyKeyPressed() {
     var downs = Object.keys(gDownKeys);
     var any = downs.length > 0;
@@ -183,6 +183,7 @@ var gUpPressed = false;
 var gDownPressed = false;
 var gStickUp = false;
 var gStickDown = false;
+var gButtonPressed = false;
 var gAddPuckPressed = false;
 var gGameOverPressed = false;
 var gSpawnPillPressed = false;
@@ -213,6 +214,8 @@ var kEventMouseMove = "mouse_move";
 var kEventMouseUp = "mouse_up";
 var kEventStickUp = "stick_up";
 var kEventStickDown = "stick_down";
+var kEventAnyButtonDown = "button_down";
+var kEventAnyButtonUp = "button_up";
 
 // due to history
 // "touch" also kinda
@@ -330,7 +333,6 @@ function StepToasts() {
 	    Cxdo(() => {
 		gCx.fillStyle = "magenta";
 		gToasts.forEach(t => {
-		    console.log(t.msg, gw(0.5), y);
 		    DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, "monospace");
 		    y += gSmallestFontSize * 1.1;
 		    if (y > gh(0.8)) { y = gh(0.1); }
@@ -642,7 +644,6 @@ function DrawBounds( alpha=0.5 ) {
 	    var can_factor = RandomBool(gDebug ? 0.1 : spawnFactor);
 	    var can_empty = isU(prev);
 	    var can = can_timer && can_factor && can_empty;
-	    //console.log(`MaybeSpawnPill:`, can.toString().toUpperCase(), maker.isPlayer ? "player" : "cpu", `// t:${can_timer}, f:${can_factor}, e:${can_empty}`);
 	    if (can) {
 		return maker.MakeRandomPill(self);
 	    }
@@ -670,7 +671,6 @@ function DrawBounds( alpha=0.5 ) {
 	Object.entries(self.animations).forEach(([id, anim]) => {
 	    var done = anim.Step( dt, self );
 	    if (done) {
-		console.log(anim.name, "done", done);
 		delete self.animations[id];
 	    }
 	});
@@ -709,6 +709,9 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.ProcessOneInput = function() {
+	if (gButtonPressed) {
+	    gPausePressed = true;
+	}
 	if (gPauseButtonEnabled &&
 	    isPointerDown()) {
 	    gPausePressed = Distance2(gPointerX, gPointerY, gPauseCenterX, gPauseCenterY) < Pow2(gPauseRadius*2);
@@ -1124,7 +1127,7 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.ProcessOneInput = function() {
-	if (anyKeyPressed() ||  gStickUp || gStickDown || isPointerDown()) {
+	if (anyKeyPressed() || gStickUp || gStickDown || gButtonPressed || isPointerDown()) {
 	    return kMenu;
 	}
 	return undefined;
@@ -1164,6 +1167,7 @@ function DrawBounds( alpha=0.5 ) {
 	if (hasEvents) {
 	    gEventQueue.forEach((event, i) => {
 		event.updateFn();
+		// use only the first event that changes the state.
 		if (isU(nextState) &&
 		    event.eventType != kEventTouchMove &&
 		    event.eventType != kEventMouseMove) {
@@ -1192,7 +1196,10 @@ function DrawBounds( alpha=0.5 ) {
 	    BeginMusic();
 	}
 	else if ((gGameTime - self.started) > self.timeout &&
-		(gUpPressed || gDownPressed || gStickUp || gStickDown || isPointerDown())) {
+		 // not allowing non-controlling keys to start the game,
+		 // on the other hand i think users would find it odd
+		 // not to ble able to press a controller button to start.
+		(gUpPressed || gDownPressed || gStickUp || gStickDown || gButtonPressed || isPointerDown())) {
 	    nextState = kGame;
 	}
 	return nextState;
@@ -1315,7 +1322,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.ProcessOneInput = function(gotoMenu) {
 	var nextState = undefined;
-	if (gotoMenu && (anyKeyPressed() || gStickUp || gStickDown || isPointerDown())) {
+	if (gotoMenu && (anyKeyPressed() || gStickUp || gStickDown || gButtonPressed || isPointerDown())) {
             nextState = kMenu;
         }
 	else if (isU(nextState) && (gGameTime - self.started) > self.timeoutMsg+self.timeoutEnd) {
@@ -1360,48 +1367,72 @@ function DrawBounds( alpha=0.5 ) {
 
 //........................................
 
-function JoystickMove(e) {
-    if (e.verticalValue < 0) {
-	gStickUp = false;
-	gStickDopn = false;
-	if (e.verticalValue < -kJoystickDeadZone) {
-	    gEventQueue.push({
-		eventType: kEventStickUp,
-		updateFn: () => {
-		    gStickUp = true;
-		    gStickDopn = false;
-		    gMoveTargetY = undefined;
-		}
-	    });
-	}
+function GamepadJoystickMove(e) {
+    if (Math.abs(e.verticalValue) <= kJoystickDeadZone) {
+	gEventQueue.push({
+	    eventType: kEventStickUp,
+	    updateFn: () => {
+		gStickUp = false;
+		gStickDown = false;
+		gMoveTargetY = undefined;
+	    }
+	});
     }
-    if (e.verticalValue > 0) {
-	gStickUp = false;
-	gStickDopn = false;
-	if (e.verticalValue > kJoystickDeadZone) {
-	    gEventQueue.push({
-		eventType: kEventStickDown,
-		updateFn: () => {
-		    gStickUp = false;
-		    gStickDown = true;
-		    gMoveTargetY = undefined;
-		}
-	    });
-	}
+    if (e.verticalValue < -kJoystickDeadZone) {
+	gEventQueue.push({
+	    eventType: kEventStickUp,
+	    updateFn: () => {
+		gStickUp = true;
+		gStickDown = false;
+		gMoveTargetY = undefined;
+	    }
+	});
+    }
+    if (e.verticalValue > kJoystickDeadZone) {
+	gEventQueue.push({
+	    eventType: kEventStickDown,
+	    updateFn: () => {
+		gStickUp = false;
+		gStickDown = true;
+		gMoveTargetY = undefined;
+	    }
+	});
+    }
+}
+
+function GamepadButtonChange(e) {
+    // a quick and dirty hack, doesn't track each button individually.
+    if (e.gamepad.gamepad.buttons.some(b => b.pressed || b.value > 0)) {
+	gEventQueue.push({
+	    eventType: kEventAnyButtonDown,
+	    updateFn: () => {
+		gButtonPressed = true;
+	    },
+	});
+    }
+    else {
+	gEventQueue.push({
+	    eventType: kEventAnyButtonUp,
+	    updateFn: () => {
+		gButtonPressed = false;
+	    },
+	});
     }
 }
 
 function RegisterGamepad(e) {
     RemoveGamepad(e);
+    e.gamepad.addEventListener("joystickmove", GamepadJoystickMove, StandardMapping.Axis.JOYSTICK_LEFT);
+    e.gamepad.addEventListener("joystickmove", GamepadJoystickMove, StandardMapping.Axis.JOYSTICK_RIGHT);
+    e.gamepad.addEventListener("buttonvaluechange", GamepadButtonChange);
     gGamepad = e.gamepad.gamepad;
-    e.gamepad.addEventListener("joystickmove", JoystickMove, StandardMapping.Axis.JOYSTICK_LEFT);
-    e.gamepad.addEventListener("joystickmove", JoystickMove, StandardMapping.Axis.JOYSTICK_RIGHT);
 }
 
 function RemoveGamepad() {
     if (exists(gGamepad)) {
-	gGamepad.removeEventListener("joystickmove", StandardMapping.Axis.JOYSTICK_LEFT);
+	gGamepad.removeEventListener("buttonvaluechange", GamepadButtonChange);
 	gGamepad.removeEventListener("joystickmove", StandardMapping.Axis.JOYSTICK_RIGHT);
+	gGamepad.removeEventListener("joystickmove", StandardMapping.Axis.JOYSTICK_LEFT);
 	gGamepad = undefined;
     }
 }
