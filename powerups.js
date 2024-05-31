@@ -359,8 +359,9 @@ function MakeDefendProps(maker) {
 	    var targets = [];
 	    for (var i = 0; i < n; ++i) {
 		var y = gYInset + i * height;
+		var xoff = xyNudge(y, height, 10, maker.side);
 		maker.paddle.AddBarrier({
-		    x, y,
+		    x: x+xoff, y,
 		    width, height,
 		    hp,
 		    side: maker.side,

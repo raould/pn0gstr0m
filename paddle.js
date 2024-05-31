@@ -297,17 +297,17 @@ function Paddle(props) {
 
     self.AISeek = function( dt ) {
 	if (self.attackingNearCount == 0 && exists(self.aiPill)) {
-	    self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2 );
+	    self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, 1.2 );
 	    return;
 	}
 
 	if (exists(self.aiPuck) && self.isPuckAttacking(self.aiPuck)) {
-	    self.AISeekTargetMidY( dt, self.aiPuck.GetMidY() );
+	    self.AISeekTargetMidY( dt, self.aiPuck.GetMidY(), 1 );
 	    return;
 	}
 
 	if (exists(self.aiPill)) {
-	    self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2 );
+	    self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, 1.2 );
 	    return;
 	}
     };
@@ -330,13 +330,13 @@ function Paddle(props) {
 	return should;
     };
 
-    self.AISeekTargetMidY = function( dt, tmy ) {
+    self.AISeekTargetMidY = function( dt, tmy, scale ) {
 	var deadzone = (self.height*0.2);
 	if( tmy <= self.GetMidY() - deadzone) {
-	    self.MoveUp( dt, kAIMoveScale );
+	    self.MoveUp( dt, kAIMoveScale * scale );
 	}
 	else if( tmy >= self.GetMidY() + deadzone) {
-	    self.MoveDown( dt, kAIMoveScale );
+	    self.MoveDown( dt, kAIMoveScale * scale );
 	}
     };
 
