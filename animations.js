@@ -277,11 +277,9 @@ function MakeEngorgeAnimation(props) {
 function MakeDensityAnimation(props) {
     var { side, endFn } = props;
     // match: GameState paddle inset position at gh(0.5)
-    // although this is hacked up more for aesthetics.
-    var x = ForSide(side, 
-		    gXInset/2 + gPaddleWidth/2,
-		    gw(1) - gXInset/2 - gPaddleWidth/2);
-    var w = gPaddleWidth;
+    // although this is hacked up even more for aesthetics.
+    var w = gXInset * 0.8;
+    var x = ForSide(side, 0, gWidth-w);
     return new Animation({
 	name: "density",
 	lifespan: undefined,
@@ -290,13 +288,11 @@ function MakeDensityAnimation(props) {
 		gCx.fillStyle = "rgba(200, 200, 0, 0.08)";
 		gPucks.A.forEach(p => {
 		    var y0 = Math.max(gYInset, p.y-p.height);
-		    var y1 = Math.min(gh(1)-gYInset, p.y+p.height*2);
+		    var y1 = Math.min(gHeight-gYInset, p.y+p.height*2);
+		    var xoff = xyNudge(p.GetMidY(), p.height, 10, side);
 		    var h = y1 - y0;
 		    if (Sign(p.vx) == ForSide(side, -1,1)) {
-			gCx.fillRect(
-			    x-w/2, y0,
-			    w, h,
-			);
+			gCx.fillRect( x+xoff, y0, w, h );
 		    }
 		});
 	    });
@@ -316,7 +312,7 @@ function MakeChaosAnimation(props) {
 		    AddLightningPath({
 			color: RandomForColor(RandomBool(0.5) ? magentaSpec : yellowSpec),
 			x0: p.x,
-			y0: Sign(p.vy)==1 ? gYInset : gh(1)-gYInset,
+			y0: Sign(p.vy)==1 ? gYInset : gHeight-gYInset,
 			x1: p.x,
 			y1: p.y,
 			range: 10,
