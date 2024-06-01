@@ -862,7 +862,7 @@ function DrawBounds( alpha=0.5 ) {
     self.DrawMidLine = function() {
 	if (!self.isAttract) {
 	    Cxdo(() => {
-		gCx.fillStyle = RandomGreen(self.Alpha(RandomRange(0.4, 0.6)));
+		gCx.fillStyle = RandomForColor(greenDarkSpec, self.Alpha(RandomRange(0.4, 0.6)));
 		var dashStep = (gHeight - 2*gYInset)/(gDashedLineCount*2);
 		var x = gw(0.5) - ii(gDashedLineWidth/2);
 		for( var y = gYInset; y < gHeight-gYInset; y += dashStep*2 ) {

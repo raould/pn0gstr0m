@@ -5,17 +5,32 @@
 
 // sorry there are so many different ways of representing things here,
 // though i do partially blame the utterly asinine canvas string based api.
+// there really needs to be a cleanup of all this, like how spec.dark works.
 
 var black = [0x0, 0x0, 0x0];
 var white = [0xFF, 0xFF, 0xFF];
 
+function MakeDark(spec) {
+    return {
+	strong: spec.regular,
+	regular: spec.regular.map(c => Math.ceil(c/2)),
+    };
+}
+
 var greySpec = { regular: [0xA0, 0xA0, 0xA0], strong: [0xA0, 0xA0, 0xA0] };
-var greenSpec = { regular: [0x89, 0xCE, 0x00], strong: [0x00, 0xFF, 0x00] };
+var greyDarkSpec = MakeDark(greySpec);
+var greenSpec = { regular: [0x10, 0xE0, 0x00], strong: [0x00, 0xFF, 0x00] };
+var greenDarkSpec = MakeDark(greenSpec);
 var blueSpec = { regular: [0x05, 0x71, 0xB0], strong: [0x00, 0x00, 0xFF] };
+var blueDarkSpec = MakeDark(blueSpec);
 var redSpec = { regular: [0xB5, 0x19, 0x19], strong: [0xFF, 0x00, 0x00] };
+var redDarkSpec = MakeDark(redSpec);
 var cyanSpec = { regular: [0x57, 0xC4, 0xAD], strong: [0x00, 0xFF, 0xFF] };
+var cyanDarkSpec = MakeDark(cyanSpec);
 var yellowSpec = { regular: [0xED, 0xA2, 0x47], strong: [0xFF, 0xFF, 0x00] };
+var yellowDarkSpec = MakeDark(yellowSpec);
 var magentaSpec = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF] };
+var magentaDarkSpec = MakeDark(magentaSpec);
 
 var backgroundColorStr = "black"; // match: index.html background color.
 var scanlineColorStr = "rgba(0,0,0,0.2)";
@@ -52,7 +67,7 @@ function RandomColor(alpha) {
 
 function RandomForColor(spec, alpha) {
     if (alpha == undefined) { alpha = 1; }
-    if (RandomBool(0.8)) {
+    if (RandomBool(0.01)) {
 	// some aesthetic flickers of strong color.
 	return rgb255s(spec.strong, alpha);
     }
@@ -65,7 +80,11 @@ function RandomForColor(spec, alpha) {
     }
 }
 
-function RandomForColorFadein(color, alpha) {
+// evil globals herein.
+// everything starts off all green to harken back to pongy games,
+// even if they weren't actually all on green screens, hah, 
+// then gradually flickers into the given color. 
+function RandomForColorFadeIn(color, alpha) {
     if (alpha == undefined) { alpha = 1; }
     if (gMonochrome) {
 	// i.e. attract mode.
@@ -81,50 +100,50 @@ function RandomForColorFadein(color, alpha) {
 }
 
 function RandomGreySolid() {
-    return RandomForColorFadein(greySpec, 1);
+    return RandomForColorFadeIn(greySpec, 1);
 }
 function RandomGrey(alpha) {
-    return RandomForColorFadein(greySpec, alpha);
+    return RandomForColorFadeIn(greySpec, alpha);
 }
 
 function RandomGreenSolid() {
-    return RandomForColorFadein(greenSpec, 1);
+    return RandomForColor(greenSpec, 1);
 }
 function RandomGreen(alpha) {
-    return RandomForColorFadein(greenSpec, alpha);
+    return RandomForColor(greenSpec, alpha);
 }
 
 function RandomRedSolid() {
-    return RandomForColorFadein(redSpec, 1);
+    return RandomForColorFadeIn(redSpec, 1);
 }
 function RandomRed(alpha) {
-    return RandomForColorFadein(redSpec, alpha);
+    return RandomForColorFadeIn(redSpec, alpha);
 }
 
 function RandomBlueSolid() {
-    return RandomForColorFadein(blueSpec, 1);
+    return RandomForColorFadeIn(blueSpec, 1);
 }
 function RandomBlue(alpha) {
-    return RandomForColorFadein(blueSpec, alpha);
+    return RandomForColorFadeIn(blueSpec, alpha);
 }
 
 function RandomCyanSolid() {
-    return RandomForColorFadein(cyanSpec, 1);
+    return RandomForColorFadeIn(cyanSpec, 1);
 }
 function RandomCyan(alpha) {
-    return RandomForColorFadein(cyanSpec, alpha);
+    return RandomForColorFadeIn(cyanSpec, alpha);
 }
 
 function RandomYellowSolid() {
-    return RandomForColorFadein(yellowSpec, 1);
+    return RandomForColorFadeIn(yellowSpec, 1);
 }
 function RandomYellow(alpha) {
-    return RandomForColorFadein(yellowSpec, alpha);
+    return RandomForColorFadeIn(yellowSpec, alpha);
 }
 
 function RandomMagentaSolid() {
-    return RandomForColorFadein(magentaSpec, 1);
+    return RandomForColorFadeIn(magentaSpec, 1);
 }
 function RandomMagenta(alpha) {
-    return RandomForColorFadein(magentaSpec, alpha);
+    return RandomForColorFadeIn(magentaSpec, alpha);
 }
