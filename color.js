@@ -35,7 +35,7 @@ var magentaDarkSpec = MakeDark(magentaSpec);
 var backgroundColorStr = "black"; // match: index.html background color.
 var scanlineColorStr = "rgba(0,0,0,0.2)";
 var warningColorStr = "grey";
-var crtOutlineColorStr = "rgb(16, 32, 16)";
+var crtOutlineColorStr = "rgb(16, 64, 16)";
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 var _tc = Array(4);
@@ -90,11 +90,15 @@ function RandomForColorFadeIn(color, alpha) {
 	// i.e. attract mode.
 	return rgb255s(greenSpec.strong, alpha);
     }
-    else if (gRandom() > GameTime01(kFadeInMsec)) {
+    else if (gRandom() > GameTime01(kGreenFadeInMsec)) {
 	// gradully go from green to color at game start.
 	return rgb255s(greenSpec.strong, alpha);
     }
     else {
+	alpha = Math.min(
+	    alpha,
+	    Clip01(GameTime01(kAlphaFadeInMsec))
+	);
 	return RandomForColor(color, alpha);
     }
 }

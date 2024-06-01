@@ -177,16 +177,16 @@ function Paddle(props) {
 	    var wx = WX(self.x + (self.width-hpw)/2);
 	    var wy = WY(self.y);
 
-	    gCx.fillStyle = RandomGreen(0.3 * alpha);
+	    gCx.fillStyle = RandomGreen(0.4 * alpha);
 	    gCx.fillRect( wx-2, wy-2, hpw+4, self.height+4 );
 	    gCx.fillStyle = backgroundColorStr;
 	    gCx.fillRect( wx, wy, hpw, self.height );
-	    gCx.fillStyle = RandomGreen(0.7 * alpha);
+	    gCx.fillStyle = RandomGreen(0.8 * alpha);
 	    gCx.fillRect( wx, wy, hpw, self.height );
 
 	    if (exists(self.label)) {
 		// label lives longer so newbies can notice it.
-		var fadeInMsec = kFadeInMsec * 3;
+		var fadeInMsec = kGreenFadeInMsec * 3;
 		var gt01 = GameTime01(fadeInMsec);
 		if (gt01 >= 1) {
 		    self.label = undefined;
