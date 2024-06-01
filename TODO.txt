@@ -23,4 +23,5 @@
 * bounties:
   * see misc bounty comments in code.
   * power meter that goes up/down on hit/missed pucks, for some kind of bonus.
+    * power meter also goes up with things like decimate powerup.
   * ai no line of sight through barrier == ignore pucks on that row.
