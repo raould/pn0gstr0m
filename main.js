@@ -277,13 +277,16 @@ function GameTime01(period, start) {
     return t;
 }
 
-// (all) this really needs to go into GameState.
+// (all) this really needs to go into GameState???
 function ForSide(src, left, right) {
     // due to history, undefined means right.
     if (src == "left") {
 	return left;
     }
     return right;
+}
+function ForOtherSide(src, left, right) {
+    return ForSide(src, right, left);
 }
 
 function SwapBuffers(buffers) {
@@ -983,20 +986,6 @@ function DrawBounds( alpha=0.5 ) {
 	}
     };
 
-    self.DrawPills = function() {
-	if (exists(self.level.cpuPill)) {
-	    self.level.cpuPill.Draw( self.Alpha() );
-	}
-	if (exists(self.level.playerPill)) {
-	    self.level.playerPill.Draw( self.Alpha() );
-	    Cxdo(() => {
-		gCx.fillStyle = "magenta";
-		msg = `${self.level.playerPill.name.toUpperCase()} ${ii(self.level.playerPill.lifespan/1000)}`;
-		DrawText(msg, "center", gw(0.5), gPillTextY, gSmallFontSizePt);
-	    });
-	}
-    };
-
     self.DrawAnimations = function() {
 	Object.values(self.animations).forEach(a => a.Draw(self));
     };
@@ -1023,8 +1012,7 @@ function DrawBounds( alpha=0.5 ) {
 	    });
 	    self.playerPaddle.Draw( self.Alpha(), self );
 	    self.cpuPaddle.Draw( self.Alpha(),self );
-	    self.DrawPills();
-	    self.level.Draw();
+	    self.level.Draw( self.Alpha() );
 	    self.DrawAnimations();
 	    self.DrawPauseButton();
 	    self.DrawTouchTarget();
