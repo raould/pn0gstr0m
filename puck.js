@@ -245,23 +245,5 @@ function Puck(props) {
 	}
     };
 
-    self.UpdateScore = function() {
-	if (!self.alive) {
-	    var wasLeft = self.x < gw(0.5);
-	    if (wasLeft) {
-		ForSide(gPointerSide,
-		    () => { gCPUScore += kScoreIncrement; },
-		    () => { gPlayerScore += kScoreIncrement; }
-		)();
-	    }
-	    else {
-		ForSide(gPointerSide,
-		    () => { gPlayerScore += kScoreIncrement; },
-		    () => { gCPUScore += kScoreIncrement; }
-		)();
-	    }
-	}
-    };
-
     self.Init();
 }

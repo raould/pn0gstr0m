@@ -98,6 +98,8 @@ var gSmallFontSizePt;
 var gSmallestFontSizePt;
 var gMinVX;
 var gMaxVX;
+var gPillTextY;
+var gPucksTextY;
 function ii(v) { return Math.floor(0.5 + v); }
 // "absolute" casling helpers to scale values based on actual canvas resolution.
 // arbiraryily trying to consistently use sx() for symmetrics e.g. lineWidth.
@@ -142,6 +144,8 @@ function RecalculateConstants() {
     gSmallestFontSizePt = gSmallestFontSize + "pt";
     gMinVX = Math.max(0.5, sxi(1));
     gMaxVX = sxi(14);
+    gPillTextY = gh(0.9);
+    gPucksTextY = gh(0.85);
 }
 
 // anything here below that ends up depending on
@@ -311,11 +315,6 @@ function DrawText( data, align, x, y, size, wiggle, font ) {
     gCx.fillText( data.toString(), x, y );
 }
 
-function DrawTextFaint( data, align, x, y, size ) {
-    gCx.globalAlpha = 0.5;
-    DrawText( data, align, x, y, size, false );
-}
-
 function AddSparks(x, y, vx, vy) {
     for( var s = 0; s < 2; s++ )
     {
@@ -416,6 +415,7 @@ function DrawBounds( alpha=0.5 ) {
 	self.handlerMap = handlerMap;
 	self.state = kRoot;
 	self.handler = handlerMap[self.state]();
+	self.paused = false;
 	self.stop = false;
 	self.transitioned = false;
 	self.lastTime = Date.now();
@@ -425,10 +425,10 @@ function DrawBounds( alpha=0.5 ) {
 	self.stop = true;
     };
 
-    self.Pause = function() {
-	if (exists(self.handler) &&
-	    exists(self.handler.Pause)) {
-	    handler.Pause();
+    self.Pause = function(pause) {
+	self.paused = pause;
+	if (exists(self.handler?.Pause)) {
+	    self.handler.Pause(pause);
 	}
     };
 
@@ -470,7 +470,9 @@ function DrawBounds( alpha=0.5 ) {
 		    self.transitioned = false;
 		}
 
-		var next = self.handler.Step( dt );
+		// even when paused, must Step to handle input.
+		// also call Draw to keep the screen in sync.
+		var next = self.handler.Step( self.paused ? 0 : dt );
 		self.handler.Draw();
 
 		if( exists(next) && next !== self.state ) {
@@ -565,18 +567,8 @@ function DrawBounds( alpha=0.5 ) {
 	    }
 	)();
 
-	self.playerPowerups = new Powerups({
-	    isPlayer: true,
-	    side: ForSide(gPointerSide, "left", "right"),
-	    paddle: self.playerPaddle,
-	});
-	self.playerPill = undefined;
-	self.cpuPowerups = new Powerups({
-	    isPlayer: false,
-	    side: ForSide(gPointerSide, "right", "left"),
-	    paddle: self.cpuPaddle,
-	});
-	self.cpuPill = undefined;
+	// todo: get powerups.
+
 	// make sure the cpu doesn't get one first, that looks too mean.
 	self.didSpawnPlayerPill = false;
 
@@ -584,16 +576,38 @@ function DrawBounds( alpha=0.5 ) {
 	    self.AddAnimation(MakeGameStartAnimation());
 	}
 
+	self.MakeLevels();
+	self.level = self.levels[0]; // todo: progression.
+
 	PlayStart();
     };
 
-    self.Pause = function() {
-	self.paused = true;
+    self.MakeLevels = function() {
+	self.levels = [
+	    new Level({
+		maxVX: sxi(14),
+		speedupFactor: 0.01,
+		speedupTimeout: 1000 * 60,
+		puckCount: 99,
+		pills: [
+		    MakeForcePushProps,
+		    MakeDecimateProps,
+		],
+		playerPaddle: self.playerPaddle,
+		cpuPaddle: self.cpuPaddle,
+	    }),
+	];
+    };
+
+    self.Pause = function(pause) {
+	self.paused = pause;
     };
 
     self.Step = function( dt ) {
-	self.MaybeSpawnPills( dt );
+	self.level.Step( dt );
+	gMaxVX = self.level.maxVX;
 
+	self.MaybeSpawnPills( dt );
 	self.ProcessInput();
 
 	if (!self.paused) {
@@ -607,11 +621,14 @@ function DrawBounds( alpha=0.5 ) {
 	    gGameOverPressed = false;
 	    return kGameOver;
 	}
+
 	if (self.paused && gSpawnPillPressed) {
+	    // todo: move all pill code to the Level.
+	    self.level.playerPill = self.level.playerPowerups.MakeRandomPill(self);
+	    self.level.cpuPill = self.level.cpuPowerups.MakeRandomPill(self);
 	    gSpawnPillPressed = false;
-	    self.playerPill = self.playerPowerups.MakeRandomPill(self);
-	    self.cpuPill = self.cpuPowerups.MakeRandomPill(self);
 	}
+
 	var nextState = self.CheckNoPucks();
 	if (exists(nextState)) {
 	    gPauseButtonEnabled = false;
@@ -620,19 +637,19 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.MaybeSpawnPills = function( dt ) {
-	if (isU(self.playerPill)) {
-	    self.playerPill = self.MaybeSpawnPill(
-		dt, self.playerPill, kSpawnPlayerPillFactor, self.playerPowerups
+	if (isU(self.level.playerPill)) {
+	    self.level.playerPill = self.MaybeSpawnPill(
+		dt, self.level.playerPill, kSpawnPlayerPillFactor, self.level.playerPowerups
 	    );
-	    if (exists(self.playerPill)) {
+	    if (exists(self.level.playerPill)) {
 		gPillSpawnCountdown = kPillSpawnCooldown;
 	    }
-	    self.didSpawnPlayerPill |= exists(self.playerPill);
+	    self.didSpawnPlayerPill |= exists(self.level.playerPill);
 	}
 
-	if (self.didSpawnPlayerPill && isU(self.cpuPill)) {
-	    self.cpuPill = self.MaybeSpawnPill(
-		dt, self.cpuPill, kSpawnPlayerPillFactor*0.7, self.cpuPowerups
+	if (self.didSpawnPlayerPill && isU(self.level.cpuPill)) {
+	    self.level.cpuPill = self.MaybeSpawnPill(
+		dt, self.level.cpuPill, kSpawnPlayerPillFactor*0.7, self.level.cpuPowerups
 	    );
 	}
     };
@@ -683,7 +700,7 @@ function DrawBounds( alpha=0.5 ) {
 			   y: (self.isAttract ?
 			       gh(RandomRange(0.4, 0.6)) :
 			       gh(0.3)),
-			   vx: sign * gMaxVX/5,
+			   vx: sign * gMaxVX, // todo: sign * gMaxVX/5,
 			   vy: (self.isAttract ?
 				RandomCentered(0, 2, 1) :
 				0.3),
@@ -726,7 +743,7 @@ function DrawBounds( alpha=0.5 ) {
 	    gPausePressed = Distance2(gPointerX, gPointerY, gPauseCenterX, gPauseCenterY) < Pow2(gPauseRadius*2);
 	}
 	if( gPausePressed ) {
-	    self.paused = !self.paused;
+	    gLifecycle.Pause( !self.paused ); // i apologize.
 	    gPausePressed = false;
 	}
 	if( self.paused && gAddPuckPressed ) {
@@ -748,12 +765,29 @@ function DrawBounds( alpha=0.5 ) {
 	self.MovePills( dt );
     };
 
+    self.UpdateScore = function(p) {
+	self.level.OnPuckLost();
+	var wasLeft = p.x < gw(0.5);
+	if (wasLeft) {
+	    ForSide(gPointerSide,
+		    () => { gCPUScore += kScoreIncrement; },
+		    () => { gPlayerScore += kScoreIncrement; }
+		   )();
+	}
+	else {
+	    ForSide(gPointerSide,
+		    () => { gPlayerScore += kScoreIncrement; },
+		    () => { gCPUScore += kScoreIncrement; }
+		   )();
+	}
+    }
+
     self.MovePucks = function( dt ) {
 	gPucks.B.clear();
 	gPucks.A.forEach((p, i) => {
 	    p.Step( dt );
-	    if (!self.isAttract) {
-		p.UpdateScore();
+	    if (!self.isAttract && !p.alive) {
+		self.UpdateScore(p);
 	    }
 	    if (p.alive) {
 		// options, barriers, neos do not split pucks,
@@ -792,20 +826,20 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.MovePlayerPill = function( dt ) {
-	if (exists(self.playerPill)) {
-	    self.playerPill = self.playerPill.Step( dt, self );
+	if (exists(self.level.playerPill)) {
+	    self.level.playerPill = self.level.playerPill.Step( dt, self );
 	}
-	if (exists(self.playerPill)) {
-	    self.playerPill = self.playerPill.AllPaddlesCollision( self, [ self.playerPaddle ] );
+	if (exists(self.level.playerPill)) {
+	    self.level.playerPill = self.level.playerPill.AllPaddlesCollision( self, [ self.playerPaddle ] );
 	}
     };
 
     self.MoveCPUPill = function( dt ) {
-	if (exists(self.cpuPill)) {
-	    self.cpuPill = self.cpuPill.Step( dt, self );
+	if (exists(self.level.cpuPill)) {
+	    self.level.cpuPill = self.level.cpuPill.Step( dt, self );
 	}
-	if (exists(self.cpuPill)) {
-	    self.cpuPill = self.cpuPill.AllPaddlesCollision( self, [ self.cpuPaddle ] );
+	if (exists(self.level.cpuPill)) {
+	    self.level.cpuPill = self.level.cpuPill.AllPaddlesCollision( self, [ self.cpuPaddle ] );
 	}
     };
 
@@ -945,15 +979,15 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.DrawPills = function() {
-	if (exists(self.cpuPill)) {
-	    self.cpuPill.Draw( self.Alpha() );
+	if (exists(self.level.cpuPill)) {
+	    self.level.cpuPill.Draw( self.Alpha() );
 	}
-	if (exists(self.playerPill)) {
-	    self.playerPill.Draw( self.Alpha() );
+	if (exists(self.level.playerPill)) {
+	    self.level.playerPill.Draw( self.Alpha() );
 	    Cxdo(() => {
 		gCx.fillStyle = "magenta";
-		msg = `${self.playerPill.name.toUpperCase()} ${ii(self.playerPill.lifespan/1000)}`;
-		DrawText(msg, "center", gw(0.5), gh(0.9), gSmallFontSizePt);
+		msg = `${self.level.playerPill.name.toUpperCase()} ${ii(self.level.playerPill.lifespan/1000)}`;
+		DrawText(msg, "center", gw(0.5), gPillTextY, gSmallFontSizePt);
 	    });
 	}
     };
@@ -985,6 +1019,7 @@ function DrawBounds( alpha=0.5 ) {
 	    self.playerPaddle.Draw( self.Alpha(), self );
 	    self.cpuPaddle.Draw( self.Alpha(),self );
 	    self.DrawPills();
+	    self.level.Draw();
 	    self.DrawAnimations();
 	    self.DrawPauseButton();
 	    self.DrawTouchTarget();
@@ -1004,13 +1039,21 @@ function DrawBounds( alpha=0.5 ) {
 	DrawBounds(0.2);
 
 	Cxdo(() => {
+	    gCx.fillStyle = RandomGrey();
+	    var mvx = gPucks.A.reduce((m,p) => Math.max(m, Math.abs(p.vx)), 0);
+	    DrawText(F(mvx.toString()), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
+	    gCx.fillStyle = "red";
+	    DrawText(F(self.level.maxVX.toString()), "left", gw(0.1), gh(0.1)+gSmallFontSize, gSmallFontSizePt);
+	});
+
+	Cxdo(() => {
 	    gCx.fillStyle = RandomColor();
 	    gCx.fillRect(gPointerX-5, gPointerY-5, 10, 10);
 	});
 
 	Cxdo(() => {
-	    gCx.fillStyle = "blue";
-	    DrawTextFaint( gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt );
+	    gCx.fillStyle = RandomBlue(0.5);
+	    DrawText( gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt );
 	});
 
 	var cpuAIPuckTarget = self.cpuPaddle.aiTarget;
@@ -1546,7 +1589,7 @@ var kMatchedAreaRequirement = 10;
 function OnResize() {
     if (exists(gLifecycle)) {
 	if (gLifecycle.state == kGame) {
-	    gLifecycle.Pause();
+	    gLifecycle.Pause(true);
 	}
 	else if (!gResizing) {
 	    gResizing = true;
@@ -1848,4 +1891,4 @@ function InitEvents() {
     window.addEventListener( 'resize', OnResize, false );
 }
 
-window.addEventListener( 'load', () => { Start(); InitEvents(); }, false )
+window.addEventListener( 'load', () => { Start(); InitEvents(); }, false );
