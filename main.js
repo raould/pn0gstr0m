@@ -369,7 +369,8 @@ function DrawTitle(flicker=true) {
 	    RandomForColor(cyanSpec, RandomCentered(0.8,0.2)) :
 	    rgb255s(cyanSpec.regular);
 	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
-	var msg = RandomBool(0.98) ? "ETERNAL BETA" : "ETERNAL BUGS";
+	var msg = "ETERNAL BETA";
+	if (flicker && RandomBool(0.05)) { msg = "ETERNAL BUGS"; }
 	DrawText( msg, "right", gw(0.92), gh(0.46), gSmallFontSizePt, flicker );
     });
 }
