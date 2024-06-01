@@ -3,7 +3,10 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-// the props is { name, x, y, w, h, vx, vy, lifespan, label, ylb, testFn, boomFn, drawFn, endFn }
+// the props is (at least?)
+/*
+{ name, x, y, w, h, vx, vy, lifespan, label, ylb, isUrgent, testFn, boomFn, drawFn, endFn }
+*/
 // don't you wish this was all in typescript now?
 function Pill( props ) {
     var self = this;
@@ -24,6 +27,7 @@ function Pill( props ) {
 	self.alive = self.lifespan > 0;
 	self.label = props.label;
 	self.ylb = props.ylb;
+	self.isUrgent = !!props.isUrgent;
 	self.fontSize = props.fontSize;
 	self.boomFn = props.boomFn;
 	self.drawFn = props.drawFn;

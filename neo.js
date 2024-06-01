@@ -28,7 +28,7 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
 		    lifespan: 500,
 		    x0: WX(self.x+self.width/2), y0: gYInset,
 		    x1: WX(self.x+self.width/2), y1: gh(1)-gYInset,
-		    range: self.width,
+		    range: self.width * 2,
 		    steps: 20,
 		})
 	    );
@@ -44,44 +44,47 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
     };
 
     self.Draw = function( alpha, gameState ) {
-	var mx = self.x + self.width/2;
-	// neo blocks from 0 to gh(1),
-	// but draws inside the gYInset.
-	var y0 = Math.max(self.y, gYInset);
-	var y1 = Math.min(self.y+self.height, gh(1)-gYInset);
-	Cxdo(() => {
-	    gCx.fillStyle = RandomCyan(0.15);
-	    for (var i = 0; i < 3; ++i) {
-		var hw = i * sx1(5);
+	var t = T01(self.lifespan0-self.lifespan, self.lifespan0);
+	var y0 = 0;
+	var y1 = gh();
+
+	Cxdo(() => { // background.
+	    gCx.fillStyle = RandomCyan(0.2*t);
+	    for (var i = 0; i < 4; ++i) {
+		var hw = i * sx1(2);
 		var x = self.x - hw;
-		gCx.fillRect(WX(x), y0, self.width+2*hw, y1-y0);
+		gCx.fillRect(
+		    WX(x), y0,
+		    self.width+2*hw, y1,
+		);
 	    }
 	});
-	var t = T01(self.lifespan0-self.lifespan, self.lifespan0);
+
+	var mx = self.x + self.width/2;
 	var range = 5 + t * sx1(10);
-	AddLightningPath({
-	    color: RandomBlue(alpha),
-	    x0: WX(self.x), y0,
-	    x1: WX(self.x), y1,
-	    range: 5,
-	    steps: 20
-	});
-	AddLightningPath({
+	AddLightningPath({ // growing.
 	    color: RandomColor(alpha),
 	    x0: WX(mx), y0,
 	    x1: WX(mx), y1,
-	    range: range,
+	    range,
 	    steps: 20
 	});
-	AddLightningPath({
+	AddLightningPath({ // left edge.
+	    color: RandomBlue(alpha),
+	    x0: WX(self.x), y0,
+	    x1: WX(self.x), y1,
+	    range: sx1(2),
+	    steps: 20
+	});
+	AddLightningPath({ // right edge.
 	    color: RandomBlue(alpha),
 	    x0: WX(self.x+self.width), y0,
 	    x1: WX(self.x+self.width), y1,
-	    range: 5,
+	    range: sx1(2),
 	    steps: 20
 	});
 
-	if (RandomBool(t)) {
+	if (RandomBool(t)) { // streamers.
 	    var x0 = mx;
 	    var y0 = RandomCentered(gh(0.5), gh(0.2));
 	    var x1 = ForSide(self.side,
@@ -90,11 +93,11 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
 	    var y1 = y0 < gh(0.5) ? gYInset : gh(1)-gYInset;
 	    gameState.AddAnimation(
 		MakeCrawlingLightningAnimation({
-		    lifespan: 250,
+		    lifespan: ii(100 + 250 * t),
 		    x0, y0, x1, y1,
 		    range: 5,
 		    steps: 50,
-		    substeps: 10,
+		    substeps: ii(5 + 5 * t),
 		    color: "green",
 		})
 	    );
