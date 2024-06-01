@@ -50,8 +50,11 @@ var kDrawAIPuckTarget = true;
 
 // i.e. attract mode.
 var gMonochrome;
-// see: GameTime01 and color.js
-var kFadeInMsec = gDebug ? 1000 : 7000;
+
+// "fade" from all-green to specified colors. see: GameTime01 and color.js
+var kGreenFadeInMsec = gDebug ? 1000 : 7000;
+// "fade" in from 0 alpha to specified alphas. see: MakeGameStartAnimation.
+var kAlphaFadeInMsec = 1000;
 
 var kHighScoreKey = 'pn0g_high';
 var gHighScore;
@@ -117,8 +120,8 @@ function gh(y=1) { return ii(y * gHeight); }
 function RecalculateConstants() {
     gDashedLineCount = syi(15);
     gDashedLineWidth = sx1(2);
-    gXInset = sxi(15);
-    gYInset = sxi(15);
+    gXInset = sxi(20);
+    gYInset = sxi(20);
     gPaddleHeight = gh(0.11);
     gPaddleWidth = sxi(6);
     gPaddleStepSize = gPaddleHeight * 0.2;
@@ -271,9 +274,10 @@ var gRandom = MakeRandom(0xDEADBEEF);
 // ----------------------------------------
 
 // note: not linear, aesthetically on purpose!
-function GameTime01(period, start) {
-    var diff = gGameTime - aorb(start, gStartTime);
-    var t = T01nl(diff, (period > 0) ? period : 1000);
+function GameTime01(period, start=gStartTime) {
+    var diff = gGameTime - start;
+    period = Math.max(1, period);
+    var t = T01nl(diff, period);
     return t;
 }
 
@@ -862,7 +866,7 @@ function DrawBounds( alpha=0.5 ) {
     self.DrawMidLine = function() {
 	if (!self.isAttract) {
 	    Cxdo(() => {
-		gCx.fillStyle = RandomForColor(greenDarkSpec, self.Alpha(RandomRange(0.4, 0.6)));
+		gCx.fillStyle = RandomGreen(0.6);
 		var dashStep = (gHeight - 2*gYInset)/(gDashedLineCount*2);
 		var x = gw(0.5) - ii(gDashedLineWidth/2);
 		for( var y = gYInset; y < gHeight-gYInset; y += dashStep*2 ) {
@@ -1016,9 +1020,9 @@ function DrawBounds( alpha=0.5 ) {
 	    self.playerPaddle.Draw( self.Alpha(), self );
 	    self.cpuPaddle.Draw( self.Alpha(),self );
 	    self.level.Draw( self.Alpha() );
-	    self.DrawAnimations();
 	    self.DrawPauseButton();
 	    self.DrawTouchTarget();
+	    self.DrawAnimations(); // late/high z order so the animations can clear the screen if desired.
 	    self.DrawCRTOutline();
 
 	    if (self.paused) {
@@ -1614,8 +1618,8 @@ function CheckResizeMatch() {
 
 
 function CreateCRTOutlinePath() {
-    // beware: specifically not in Cxdo().
-    var inset = ii(Math.min(gXInset, gYInset));
+    // beware: this is specifically not in Cxdo().
+    var inset = ii(Math.min(gXInset, gYInset)*0.8);
     gCx.beginPath();
     gCx.moveTo(inset, inset);
     gCx.bezierCurveTo(inset, 0,

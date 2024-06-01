@@ -52,17 +52,18 @@ function Puck(props) {
 
 	// make things coming toward you be slightly easier to see.
 	var avx = ForSide(gPointerSide, -1,1) == Sign(self.vx) ? 1 : 0.8;
-	// fade pucks when behind paddle.
-	var ai = (self.x < gXInset ||
-		  self.x+width > gw(1)-gXInset) ?
-	    0.3 : 1;
-	var a = alpha * avx * ai;
+
+	// young pucks (mainly splits) render another color briefly.
+	var dt = GameTime01(1000, self.startTime);
+
+	var regularStyle = (!self.ur && gRandom() > dt) ? self.splitColor : RandomCyan();
+	var lostStyle = RandomYellow(0.7);
+	var isLost = (self.x+self.width < gXInset || self.x > gw(1)-gXInset);
+	var style = isLost ? lostStyle : regularStyle;
 
 	Cxdo(() => {
-	    // young pucks (mainly splits) render another color briefly.
-	    var dt = GameTime01(1000, self.startTime);
-	    gCx.globalAlpha = a;
-	    gCx.fillStyle = (!self.ur && gRandom() > dt) ? self.splitColor : RandomCyan();
+	    gCx.globalAlpha = alpha * avx;
+	    gCx.fillStyle = style;
 	    gCx.fillRect( wx, wy, width, height );
 	    // a thin outline keeps things crisp when there are lots of pucks.
 	    gCx.lineWidth = sx1(1);
@@ -71,12 +72,14 @@ function Puck(props) {
 	    gCx.strokeRect( wx-1, wy-1, width+2, height+2 );
 	});
 
+	/*
 	if (gDebug) {
 	    Cxdo(() => {
 		gCx.fillStyle = "red";
 		gCx.fillRect(self.x, self.y, self.width, self.height);
 	    });
 	}
+	*/
     };
 
     self.Step = function( dt ) {
