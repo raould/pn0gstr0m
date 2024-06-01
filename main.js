@@ -881,7 +881,7 @@ function DrawBounds( alpha=0.5 ) {
 	Cxdo(() => {
 	    var a = 0.5;
 	    var style = RandomMagenta(self.Alpha(a));
-	    ForSide(gPointerSide, 
+	    ForSide(self.isAttract ? "right" : gPointerSide, 
 		() => {
 		    gCx.fillStyle = style;
 		    if (exists(gHighScore)) {
