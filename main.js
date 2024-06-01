@@ -586,12 +586,13 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.MakeLevels = function() {
+	// just a proof of ocncept under the covers.
 	self.levels = [
 	    new Level({
 		maxVX: sxi(14),
 		speedupFactor: 0.01,
 		speedupTimeout: 1000 * 60,
-		puckCount: 99,
+		puckCount: Number.MAX_SAFE_INTEGER,
 		pills: [
 		    MakeForcePushProps,
 		    MakeDecimateProps,
