@@ -54,7 +54,7 @@
 	}
     };
 
-    self.Draw = function() {
+    self.Draw = function( alpha ) {
 	if (self.puckCount < 100) {
 	    Cxdo(() => {
 		gCx.fillStyle = gCx.strokeStyle = "magenta";
@@ -66,6 +66,26 @@
 		);
 	    });
 	}
+	self.DrawPills( alpha );
+    };
+
+    self.DrawPills = function( alpha ) {
+	if (exists(self.playerPill)) {
+	    self.DrawPill(alpha, self.playerPill, gPointerSide, RandomMagenta(alpha));
+	}
+	if (exists(self.cpuPill)) {
+	    self.DrawPill(alpha, self.cpuPill, ForOtherSide(gPointerSide, "left", "right"), RandomGrey(alpha));
+	}
+    }
+
+    self.DrawPill = function( alpha, pill, side, color ) {
+	pill.Draw( alpha );
+	Cxdo(() => {
+	    gCx.fillStyle = color;
+	    msg = `${pill.name.toUpperCase()} ${ii(pill.lifespan/1000)}`;
+	    var x = ForSide(side, gw(0.25), gw(0.75));
+	    DrawText(msg, "center", x, gPillTextY, gSmallestFontSizePt);
+	});
     };
 
     self.Init();
