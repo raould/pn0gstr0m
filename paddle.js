@@ -171,7 +171,6 @@ function Paddle(props) {
 	    self.neo.Draw( alpha, gameState );
 	}
 	Cxdo(() => {
-
 	    var hpw = isU(self.hp) ?
 		self.width :
 		Math.max(sx1(2), ii(self.width * self.hp/self.hp0));

@@ -299,10 +299,10 @@ function Cxdo(fn) { // get it?
 }
 
 function WX( v ) {
-    return v + RandomCentered(0,0.4);
+    return v + RandomCentered(0, sx(0.2));
 }
 function WY( v ) {
-    return v + RandomCentered(0,0.4);
+    return v + RandomCentered(0, sy(0.2));
 }
 
 function DrawText( data, align, x, y, size, wiggle, font ) {
@@ -879,8 +879,8 @@ function DrawBounds( alpha=0.5 ) {
 
     self.DrawScoreHeader = function() {
 	Cxdo(() => {
-	    var a = 0.5;
-	    var style = RandomMagenta(self.Alpha(a));
+	    var a = 0.4;
+	    var style = RandomGrey(self.Alpha(a));
 	    ForSide(self.isAttract ? "right" : gPointerSide, 
 		() => {
 		    gCx.fillStyle = style;
