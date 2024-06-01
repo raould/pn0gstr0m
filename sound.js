@@ -63,10 +63,10 @@ function RegisterSound(name, basename, props, isMusic) {
 }
 
 function LoadNextSound() {
-    var report = gAudio.names.map((n) => {
-	return gAudio.name2meta[n].loaded ? "1" : "0";
-    }).join('');
-    console.log(report);
+    // var report = gAudio.names.map((n) => {
+    // 	return gAudio.name2meta[n].loaded ? "1" : "0";
+    // }).join('');
+    // console.log(report);
 
     var next = Object.values(gAudio.name2meta).find(m => !m.loaded);
     if (exists(next)) {
