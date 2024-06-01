@@ -35,15 +35,20 @@ function Puck(props) {
     };
 
     self.Draw = function( alpha ) {
-	var wx = self.x;
-	var wy = self.y;
 	// fewer = bigger, more = smaller.
 	var countScale = 1 + T10(gPucks.A.length, kEjectCountThreshold) * 0.4;
-	// slight crt distortion.
+	// slight crt distortion of size based on horizontal position.
 	var crtScale = T10( Math.abs(self.x-gw(0.5)), gw(0.5)) * 0.5 + 1;
-
 	var width = self.width * countScale * crtScale;
+	var dw = width - self.width;
 	var height = self.height * countScale * crtScale;
+	var dh = height - self.height;
+
+	// slight crt distortion of position based on vertical position.
+	var wx = self.x - dw/2;
+	var dy = self.y-gh(0.5);
+	var aoy = T10( Math.abs(dy), gh(0.5)) * 2 + 1;
+	var wy = self.y - dh/2 + Sign(dy) * aoy;
 
 	// make things coming toward you be slightly easier to see.
 	var avx = ForSide(gPointerSide, -1,1) == Sign(self.vx) ? 1 : 0.8;
@@ -52,6 +57,7 @@ function Puck(props) {
 		  self.x+width > gw(1)-gXInset) ?
 	    0.3 : 1;
 	var a = alpha * avx * ai;
+
 	Cxdo(() => {
 	    // young pucks (mainly splits) render another color briefly.
 	    var dt = GameTime01(1000, self.startTime);
@@ -64,6 +70,13 @@ function Puck(props) {
 	    gCx.strokeStyle = "black";
 	    gCx.strokeRect( wx-1, wy-1, width+2, height+2 );
 	});
+
+	if (gDebug) {
+	    Cxdo(() => {
+		gCx.fillStyle = "red";
+		gCx.fillRect(self.x, self.y, self.width, self.height);
+	    });
+	}
     };
 
     self.Step = function( dt ) {
