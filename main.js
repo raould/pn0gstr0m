@@ -590,12 +590,15 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.MakeLevels = function() {
-	// just a proof of ocncept under the covers.
+	// just a proof of ocncept under the covers,
+	// not actually using the timeouts or count
+	// since there is only one level at the moment.
+	// bounty: somebody add (and playtest!) more levels.
 	self.levels = [
 	    new Level({
 		maxVX: sxi(14),
 		speedupFactor: 0.01,
-		speedupTimeout: 1000 * 60,
+		speedupTimeout: Number.MAX_SAFE_INTEGER,
 		puckCount: Number.MAX_SAFE_INTEGER,
 		pills: [
 		    MakeForcePushProps,
