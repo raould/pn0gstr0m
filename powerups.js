@@ -28,12 +28,6 @@
 // needs to be longish so the cpu has any chance of getting it.
 kPillLifespan = 1000 * 20;
 
-/* props = {
-   isPlayer,
-   side,
-   paddle,
-   }
-*/
 /*class*/ function Powerups( props ) {
 
     var self = this;
@@ -42,25 +36,12 @@ kPillLifespan = 1000 * 20;
 	self.isPlayer = props.isPlayer;
 	self.side = props.side;
 	self.paddle = props.paddle;
-	
-	// defines the powerup pills and their spawn order.
-	self.powerupProps = [];
-	self.powerupProps.push(MakeForcePushProps);
-	self.powerupProps.push(MakeDecimateProps);
-	self.powerupProps.push(MakeEngorgeProps);
-	self.powerupProps.push(MakeSplitProps);
-	self.powerupProps.push(MakeDefendProps);
-	self.powerupProps.push(MakeOptionProps);
-	self.powerupProps.push(MakeNeoProps);
-	self.powerupProps.push(MakeChaosProps);
-	self.isPlayer && self.powerupProps.push(MakeDensityProps);
-
-	self.powerupLocks = {};
-
+	self.specs = props.specs;
 	// cycle through the powerups in order
 	// so we have some control over when they
 	// are presented in the course of the game.
 	self.powerupDeck = [];
+	self.powerupLocks = {};
     };
 
     self.MakeRandomPill = function(gameState) {
@@ -84,7 +65,7 @@ kPillLifespan = 1000 * 20;
 
     self.NextPropsBase = function(gameState) {
 	if (isU(self.powerupDeck) || self.powerupDeck.length < 1) {
-	    self.powerupDeck = [...self.powerupProps].reverse();
+	    self.powerupDeck = [...self.specs].reverse();
 	}
 	var maybeS = Peek(self.powerupDeck);
 	if (isU(maybeS)) {

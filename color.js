@@ -79,7 +79,7 @@ function RandomGreySolid() {
     return RandomForColorFadein(greySpec, 1);
 }
 function RandomGrey(alpha) {
-    return RandomForColorFadein(greySpecSpec, alpha);
+    return RandomForColorFadein(greySpec, alpha);
 }
 
 function RandomGreenSolid() {

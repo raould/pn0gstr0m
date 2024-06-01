@@ -55,6 +55,14 @@ function ReuseArray( initialCapacity ) {
 	return acc;
     };
 
+    self.reduce = function(rfn, zero) {
+	var z = zero;
+	for( var i = 0; i < self.length; ++i ) {
+	    z = rfn(z, self.array[i]);
+	}
+	return z;
+    }
+
     self.forEach = function( cb ) {
 	for( var i = 0; i < self.length; ++i ) {
 	    cb(self.array[i], i, self.array);
