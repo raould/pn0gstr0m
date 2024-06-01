@@ -16,6 +16,7 @@
    lifespan,
    label,
    ylb,
+   isUrgent,
    fontSize,
    testFn: (gameState) => {},
    skip, // don't get stuck waiting on this one's testFn to pass.
@@ -97,7 +98,6 @@ function MakeForcePushProps(maker) {
 	ylb: sy(17),
 	fontSize: gReducedFontSizePt,
 	testFn: (gameState) => {
-	    // don't bother pushing into neo, i guess.
 	    return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
 	},
 	drawFn: (self, alpha) => {
@@ -108,7 +108,7 @@ function MakeForcePushProps(maker) {
 
 		gCx.beginPath();
 		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, r );
-		gCx.fillStyle = backgroundColor;
+		gCx.fillStyle = backgroundColorStr;
 		gCx.fill();
 
 		gCx.beginPath();
@@ -167,7 +167,7 @@ function MakeDecimateProps(maker) {
 		gCx.lineTo(mx, wy + self.height);
 		gCx.lineTo(wx, my);
 		gCx.closePath();
-		gCx.fillStyle = backgroundColor;
+		gCx.fillStyle = backgroundColorStr;
 		gCx.fill();
 
 		gCx.beginPath();
@@ -199,7 +199,7 @@ function MakeDecimateProps(maker) {
 		    AddSparks(p.x, p.y, p.vx, p.vy);
 		});
 		gameState.AddAnimation(MakeTargetsLightningAnimation({
-		    lifespan: 100,
+		    lifespan: 250,
 		    targets,
 		    paddle: maker.paddle,
 		}));
@@ -216,6 +216,7 @@ function MakeEngorgeProps(maker) {
 	lifespan: kPillLifespan,
 	label: "+",
 	ylb: sy(32),
+	isUrgent: true,
 	fontSize: gBigFontSizePt,
 	testFn: (gameState) => {
 	    return !maker.paddle.engorged;
@@ -226,7 +227,7 @@ function MakeEngorgeProps(maker) {
 		var wx = WX(self.x);
 		var wy = WY(self.y);
 
-		gCx.fillStyle = backgroundColor;
+		gCx.fillStyle = backgroundColorStr;
 		gCx.fillRect( WX(wx), WY(wy), self.width, self.height );
 
 		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
@@ -267,7 +268,7 @@ function MakeSplitProps(maker) {
 
 		gCx.beginPath();
 		gCx.roundRect(wx, wy, self.width, self.height, 20);
-		gCx.fillStyle = backgroundColor;
+		gCx.fillStyle = backgroundColorStr;
 		gCx.fill();
 
 		gCx.beginPath();
@@ -305,6 +306,7 @@ function MakeDefendProps(maker) {
 	lifespan: kPillLifespan,
 	label: "#",
 	ylb: sy(20),
+	isUrgent: true,
 	fontSize: gSmallFontSizePt,
 	testFn: (gameState) => {
 	    return maker.paddle.barriers.A.length == 0 && (gDebug || gPucks.A.length > 25);
@@ -318,7 +320,7 @@ function MakeDefendProps(maker) {
 
 		gCx.beginPath();
 		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, r );
-		gCx.fillStyle = backgroundColor;
+		gCx.fillStyle = backgroundColorStr;
 		gCx.fill();
 
 		gCx.beginPath();
@@ -366,6 +368,7 @@ function MakeOptionProps(maker) {
 	lifespan: kPillLifespan,
 	label: "!!",
 	ylb: sy(16),
+	isUrgent: true,
 	fontSize: gSmallFontSizePt,
 	testFn: (gameState) => {
 	    return maker.paddle.options.A.length == 0 && (gDebug || gPucks.A.length > 20);
@@ -379,7 +382,7 @@ function MakeOptionProps(maker) {
 
 		gCx.beginPath();
 		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, r );
-		gCx.fillStyle = backgroundColor;
+		gCx.fillStyle = backgroundColorStr;
 		gCx.fill();
 
 		gCx.beginPath();
@@ -427,6 +430,7 @@ function MakeNeoProps(maker) {
 	lifespan: kPillLifespan,
 	label: "#",
 	ylb: sy(15),
+	isUrgent: true,
 	fontSize: gSmallestFontSizePt,
 	testFn: (gameState) => {
 	    // todo: in some playtesting this was being spawned too often, maybe each props needs a spawn weight too?
@@ -447,7 +451,7 @@ function MakeNeoProps(maker) {
 		gCx.lineTo(mx, wy+self.height+o);
 		gCx.lineTo(wx-o, my);
 		gCx.closePath();
-		gCx.fillStyle = backgroundColor;
+		gCx.fillStyle = backgroundColorStr;
 		gCx.fill();
 
 		gCx.beginPath();
@@ -493,7 +497,7 @@ function MakeDensityProps(maker) {
 	width: sx(18), height: sy(18),
 	lifespan: kPillLifespan,
 	label: "?",
-	ylb: sy(14),
+	ylb: sy(13),
 	fontSize: gSmallestFontSizePt,
 	testFn: (gameState) => {
 	    // there can be only one per maker, and it lasts for ever.
@@ -506,7 +510,7 @@ function MakeDensityProps(maker) {
 		var wy = WY(self.y);
 		gCx.beginPath();
 		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, 3 );
-		gCx.fillStyle = backgroundColor;
+		gCx.fillStyle = backgroundColorStr;
 		gCx.fill();
 		gCx.beginPath();
 		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, 3 );
@@ -536,7 +540,7 @@ function MakeChaosProps(maker) {
 	ylb: sy(14),
 	fontSize: gSmallestFontSizePt,
 	testFn: (gameState) => {
-	    return (gDebug || gPucks.A.length > 10);
+	    return (gDebug || gPucks.A.length > 10) && isU(maker.paddle.neo);
 	},
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
@@ -544,7 +548,7 @@ function MakeChaosProps(maker) {
 		var wy = WY(self.y);
 		gCx.beginPath();
 		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, 3 );
-		gCx.fillStyle = backgroundColor;
+		gCx.fillStyle = backgroundColorStr;
 		gCx.fill();
 		gCx.beginPath();
 		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, 3 );
@@ -560,7 +564,7 @@ function MakeChaosProps(maker) {
 	    var targets = [];
 	    gPucks.A.forEach((p,i) => {
 		if (isMultiple(i, 3)) {
-		    p.vy *= -2;
+		    p.vy *= -RandomCentered(4, 2);
 		    targets.push(p);
 		}
 	    });

@@ -292,7 +292,7 @@ function SwapBuffers(buffers) {
     buffers.B = tmp;
 }
 
-function Cxdo(fn) {
+function Cxdo(fn) { // get it?
     gCx.save();
     fn();
     gCx.restore();
@@ -434,10 +434,13 @@ function DrawBounds( alpha=0.5 ) {
 
     self.DrawCRTScanlines = function() {
 	Cxdo(() => {
-	    gCx.fillStyle = scanlineColor;
-	    var start = isEven(gFrameCount) ? 0 : 2;
-	    for (var y = 0; y < gHeight; y += 4) {
-		gCx.fillRect(0, y, gWidth, 2);
+	    gCx.fillStyle = scanlineColorStr;
+	    var height = 2;
+	    var skip = 20;
+	    var step = skip/height;
+	    var start = gFrameCount % skip;
+	    for (var y = gHeight-start; y >= 0; y -= step) {
+		gCx.fillRect(0, y, gWidth, height);
 	    }
 	});
     };
@@ -700,7 +703,7 @@ function DrawBounds( alpha=0.5 ) {
 			   y: (self.isAttract ?
 			       gh(RandomRange(0.4, 0.6)) :
 			       gh(0.3)),
-			   vx: sign * gMaxVX, // todo: sign * gMaxVX/5,
+			   vx: sign * gMaxVX/5,
 			   vy: (self.isAttract ?
 				RandomCentered(0, 2, 1) :
 				0.3),
@@ -1056,27 +1059,7 @@ function DrawBounds( alpha=0.5 ) {
 	    DrawText( gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt );
 	});
 
-	var cpuAIPuckTarget = self.cpuPaddle.aiTarget;
-	if( exists(cpuAIPuckTarget) ) {
-	    Cxdo(() => {
-	    gCx.strokeStyle = "red";
-	    gCx.beginPath();
-	    gCx.arc( cpuAIPuckTarget.GetMidX(), cpuAIPuckTarget.GetMidY(),
-		     cpuAIPuckTarget.width * 1.5,
-		     0, k2Pi,
-		     true );
-	    gCx.stroke();
-	    });
-	}
-	var playerAIPuckTarget = self.playerPaddle.aiTarget;
-	if( exists(playerAIPuckTarget) ) {
-	    Cxdo(() => {
-		gCx.strokeStyle = "magenta";
-		gCx.strokeRect(
-		    playerAIPuckTarget.x - 5, playerAIPuckTarget.y - 5,
-		    playerAIPuckTarget.width + 10, playerAIPuckTarget.height + 10 );
-	    });
-	}
+	self.cpuPaddle.DebugDraw();
 
 	Cxdo(() => {
 	    gCx.fillStyle = RandomForColor(blueSpec, 0.3);
@@ -1132,7 +1115,7 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.DrawWarning = function() {
-	gCx.fillStyle = warningColor;
+	gCx.fillStyle = warningColorStr;
 	var lineFactor = 1.5;
 	var y0 = gh(0.55);
 	Cxdo(() => {
@@ -1291,7 +1274,7 @@ function DrawBounds( alpha=0.5 ) {
 	Cxdo(() => {
 	    gCx.beginPath();
 	    gCx.roundRect(cx-ox, cy-oy, gUserMutedWidth, gUserMutedHeight, 10);
-	    gCx.fillStyle = backgroundColor;
+	    gCx.fillStyle = backgroundColorStr;
 	    gCx.fill();
 	    gCx.roundRect(cx-ox, cy-oy, gUserMutedWidth, gUserMutedHeight, 10);
 	    if (gUserMuted) {

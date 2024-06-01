@@ -171,13 +171,18 @@ function Paddle(props) {
 	    self.neo.Draw( alpha, gameState );
 	}
 	Cxdo(() => {
-	    gCx.fillStyle = RandomGreen(0.7 * alpha);
 
 	    var hpw = isU(self.hp) ?
 		self.width :
 		Math.max(sx1(2), ii(self.width * self.hp/self.hp0));
 	    var wx = WX(self.x + (self.width-hpw)/2);
 	    var wy = WY(self.y);
+
+	    gCx.fillStyle = RandomGreen(0.3 * alpha);
+	    gCx.fillRect( wx-2, wy-2, hpw+4, self.height+4 );
+	    gCx.fillStyle = backgroundColorStr;
+	    gCx.fillRect( wx, wy, hpw, self.height );
+	    gCx.fillStyle = RandomGreen(0.7 * alpha);
 	    gCx.fillRect( wx, wy, hpw, self.height );
 
 	    if (exists(self.label)) {
@@ -200,6 +205,32 @@ function Paddle(props) {
 		}
 	    }
 	});
+    };
+
+    self.DebugDraw = function() {
+	if (gDebug) {
+	    Cxdo(() => {
+		if (exists(self.debugMsg)) {
+		    gCx.fillStyle = "blue";
+		    DrawText(
+			self.debugMsg,
+			ForSide(self.side, "left", "right"),
+			ForSide(self.side, gw(0.1), gw(0.9)),
+			gh(0.2),
+			gSmallFontSizePt
+		    );
+		}
+		if( exists(self.aiPuck)) {
+		    gCx.strokeStyle = "red";
+		    gCx.beginPath();
+		    gCx.arc( self.aiPuck.GetMidX(), self.aiPuck.GetMidY(),
+			     self.aiPuck.width * 1.5,
+			     0, k2Pi,
+			     true );
+		    gCx.stroke();
+		}
+	    });
+	}
     };
 
     self.MoveDown = function( dt, scale=1 ) {
@@ -237,7 +268,6 @@ function Paddle(props) {
     //---------------------------------------- player.
 
     self.StepPlayer = function( dt ) {
-	console.log("paddle", gStickUp, gStickDown);
 	if( gUpPressed || gStickUp ) {
 	    self.MoveUp( dt );
 	}
@@ -296,17 +326,26 @@ function Paddle(props) {
     };
 
     self.AISeek = function( dt ) {
+	if (!!self.aiPill?.isUrgent) {
+	    self.debugMsg = "PILL_1";
+	    self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, 1.2 );
+	    return;
+	}
+
 	if (self.attackingNearCount == 0 && exists(self.aiPill)) {
+	    self.debugMsg = "PILL_2";
 	    self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, 1.2 );
 	    return;
 	}
 
 	if (exists(self.aiPuck) && self.isPuckAttacking(self.aiPuck)) {
+	    self.debugMsg = "PUCK";
 	    self.AISeekTargetMidY( dt, self.aiPuck.GetMidY(), 1 );
 	    return;
 	}
 
 	if (exists(self.aiPill)) {
+	    self.debugMsg = "PILL_3";
 	    self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, 1.2 );
 	    return;
 	}

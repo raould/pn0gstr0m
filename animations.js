@@ -5,15 +5,31 @@
 
 function GenerateLightningPath(props) {
     // props = { x0, y0, x1, y1, range, steps=5 }
+    // i wish i had started off this thing in typescript, you know?
     var { x0, y0, x1, y1, range, steps=5 } = props;
+    var points = [[x0, y0]];
+    if (isU(x0), isU(y0), isU(x1), isU(y1)) {
+	Assert(false, "bad props");
+	return points;
+    }
+    if (isU(range)) { range = Math.min(Math.abs((x1-x0)/10), Math.abs((y1-y0)/10)); }
     if (steps <= 0) { steps = 1; }
     var sx = (x1 - x0)/steps;
     var sy = (y1 - y0)/steps;
-    var points = [];
-    for (var t = 0; t <= steps; ++t) {
-	var x = RandomCentered(x0 + (sx*t), range);
-	var y = RandomCentered(y0 + (sy*t), range);
-	points.push({x, y});
+    for (var t = 1; t <= steps; ++t) {
+	var px = points[t-1][0];
+	var py = points[t-1][1];
+	var x = x0 + (sx*t);
+	var y = y0 + (sy*t);
+	var dx = x-px;
+	var dy = y-py;
+	var n = Math.sqrt(dx*dx+dy*dy);
+	if (n == 0) { n = 1; }
+	var nx = -dy/n;
+	var ny = dx/n;
+	var xo = x + (nx * RandomCentered(0, range, range/2));
+	var yo = y + (ny * RandomCentered(0, range, range/2));
+	points.push([xo, yo]);
     }
     return points;
 }
@@ -26,15 +42,15 @@ function AddLightningPath(props) {
 	gCx.strokeStyle = color;
 
 	gCx.beginPath();
-	gCx.moveTo(points[0].x, points[0].y);
-	points.forEach((p,i) => { if (i>0) { gCx.lineTo(p.x, p.y); } });
+	gCx.moveTo(points[0][0], points[0][1]);
+	points.forEach((p,i) => { if (i>0) { gCx.lineTo(p[0], p[1]); } });
 	gCx.lineWidth = sx1(3);
 	gCx.globalAlpha = 0.3;
 	gCx.stroke();
 
 	gCx.beginPath();
-	gCx.moveTo(points[0].x, points[0].y);
-	points.forEach((p,i) => { if (i>0) { gCx.lineTo(p.x, p.y); } });
+	gCx.moveTo(points[0][0], points[0][1]);
+	points.forEach((p,i) => { if (i>0) { gCx.lineTo(p[0], p[1]); } });
 	gCx.lineTo(x1, y1);
 	gCx.lineWidth = sx1(1);
 	gCx.globalAlpha = 1;
@@ -127,18 +143,18 @@ function MakeCrawlingLightningAnimation(props) {
 
 		gCx.lineWidth = sx1(3);
 		gCx.beginPath();
-		gCx.moveTo(pz[0].x, pz[0].y);
+		gCx.moveTo(pz[0][0], pz[0][1]);
 		for (var i = 0; i < substeps; ++i) {
-		    gCx.lineTo(pz[i].x, pz[i].y);
+		    gCx.lineTo(pz[i][0], pz[i][1]);
 		}
 		gCx.globalAlpha = 0.3;
 		gCx.stroke();
 
 		gCx.lineWidth = sx1(1);
 		gCx.beginPath();
-		gCx.moveTo(pz[0].x, pz[0].y);
+		gCx.moveTo(pz[0][0], pz[0][1]);
 		for (var i = 0; i < substeps; ++i) {
-		    gCx.lineTo(pz[i].x, pz[i].y);
+		    gCx.lineTo(pz[i][0], pz[i][1]);
 		}
 		gCx.globalAlpha = 1;
 		gCx.stroke();
@@ -158,7 +174,8 @@ function Make2PtLightningAnimation(props) {
 		color: RandomColor(),
 		x0, y0,
 		x1, y1,
-		range, steps
+		range,
+		steps
 	    });
 	},
 	endFn
@@ -172,13 +189,14 @@ function MakeTargetsLightningAnimation(props) {
 	lifespan,
 	drawFn: () => {
 	    targets.forEach(xy => {
+		var alpha = RandomRange(0.2, 0.7);
 		AddLightningPath({
-		    color: RandomColor(),
+		    color: RandomColor(alpha),
 		    x0: paddle.GetMidX(),
 		    y0: paddle.GetMidY(),
 		    x1: xy.x,
 		    y1: xy.y,
-		    range: 20
+		    range: sx1(15),
 		});
 	    });
 	},
@@ -202,7 +220,8 @@ function MakeSplitAnimation(props) {
 		    color: RandomColor(),
 		    x0: p0.x, y0: p0.y,
 		    x1: p1.x, y1: p1.y,
-		    range: 10
+		    range: sx1(5),
+		    steps: 10,
 		});
 		p0 = p1;
 	    });
@@ -257,7 +276,7 @@ function MakeEngorgeAnimation(props) {
 		color: RandomColor(),
                 x0: paddle.GetMidX(), y0: paddle.y,
                 x1: paddle.GetMidX(), y1: paddle.y + paddle.height,
-                range: Math.max(0.5, paddle.width * 2 * t10)
+                range: Math.max(sx1(1), paddle.width * 2 * t10)
 	    });
 	},
 	startFn: (gameState) => {
@@ -315,7 +334,7 @@ function MakeChaosAnimation(props) {
 			y0: Sign(p.vy)==1 ? gYInset : gHeight-gYInset,
 			x1: p.x,
 			y1: p.y,
-			range: 10,
+			range: sx1(3),
 			steps: 10,
 		    });
 		}

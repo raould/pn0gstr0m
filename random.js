@@ -20,8 +20,8 @@ function RandomSign(cutoff) {
     return RandomBool() ? 1 : -1;
 }
 
-function RandomChoice(a, b) {
-    return RandomBool() ? a : b;
+function RandomChoice(a, b, chooseA) {
+    return RandomBool(chooseA) ? a : b;
 }
 
 // closed interval [min, max].

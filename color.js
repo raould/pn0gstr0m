@@ -3,11 +3,12 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+// sorry there are so many different ways of representing things here,
+// though i do partially blame the utterly asinine canvas string based api.
+
 var black = [0x0, 0x0, 0x0];
 var white = [0xFF, 0xFF, 0xFF];
-var backgroundColor = "black"; // match: index.html background color.
-var scanlineColor = "rgba(0,0,0,0.2)";
-var warningColor = "grey";
+
 var greySpec = { regular: [0xA0, 0xA0, 0xA0], strong: [0xA0, 0xA0, 0xA0] };
 var greenSpec = { regular: [0x89, 0xCE, 0x00], strong: [0x00, 0xFF, 0x00] };
 var blueSpec = { regular: [0x05, 0x71, 0xB0], strong: [0x00, 0x00, 0xFF] };
@@ -15,6 +16,10 @@ var redSpec = { regular: [0xB5, 0x19, 0x19], strong: [0xFF, 0x00, 0x00] };
 var cyanSpec = { regular: [0x57, 0xC4, 0xAD], strong: [0x00, 0xFF, 0xFF] };
 var yellowSpec = { regular: [0xED, 0xA2, 0x47], strong: [0xFF, 0xFF, 0x00] };
 var magentaSpec = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF] };
+
+var backgroundColorStr = "black"; // match: index.html background color.
+var scanlineColorStr = "rgba(0,0,0,0.2)";
+var warningColorStr = "grey";
 var crtOutlineColorStr = "rgb(16, 32, 16)";
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
