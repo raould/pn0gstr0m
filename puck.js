@@ -40,7 +40,7 @@ function Puck(props) {
 	// fewer = bigger, more = smaller.
 	var countScale = 1 + T10(gPucks.A.length, kEjectCountThreshold) * 0.4;
 	// slight crt distortion.
-	var crtScale = T10( Math.abs(self.x-gw(0.5)), gw(0.5)) * 0.4 + 1;
+	var crtScale = T10( Math.abs(self.x-gw(0.5)), gw(0.5)) * 0.5 + 1;
 
 	var width = self.width * countScale * crtScale;
 	var height = self.height * countScale * crtScale;
