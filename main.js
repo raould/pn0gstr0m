@@ -374,8 +374,8 @@ function DrawResizing() {
 function DrawTitle(flicker=true) {
     Cxdo(() => {
 	gCx.fillStyle = flicker ?
-	    RandomForColor(cyanSpec, RandomCentered(0.8,0.2)) :
-	    rgb255s(cyanSpec.regular);
+	    RandomForColor(cyanSpec, 0.8) :
+	    rgb255s(cyanDarkSpec.regular);
 	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
 	var msg = "ETERNAL BETA";
 	if (flicker && RandomBool(0.05)) { msg = "ETERNAL BUGS"; }
@@ -442,16 +442,18 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.DrawCRTScanlines = function() {
-	Cxdo(() => {
-	    gCx.fillStyle = scanlineColorStr;
-	    var height = 2;
-	    var skip = 20;
-	    var step = skip/height;
-	    var start = gFrameCount % skip;
-	    for (var y = gHeight-start; y >= 0; y -= step) {
-		gCx.fillRect(0, y, gWidth, height);
-	    }
-	});
+	if (self.state != kRoot && self.state != kSplash) {
+	    Cxdo(() => {
+		gCx.fillStyle = scanlineColorStr;
+		var height = 2;
+		var skip = 20;
+		var step = skip/height;
+		var start = gFrameCount % skip;
+		for (var y = gHeight-start; y >= 0; y -= step) {
+		    gCx.fillRect(0, y, gWidth, height);
+		}
+	    });
+	}
     };
 
     self.RunLoop = function() {
