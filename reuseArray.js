@@ -61,7 +61,7 @@ function ReuseArray( initialCapacity ) {
 	    z = rfn(z, self.array[i]);
 	}
 	return z;
-    }
+    };
 
     self.forEach = function( cb ) {
 	for( var i = 0; i < self.length; ++i ) {

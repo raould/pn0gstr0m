@@ -613,6 +613,13 @@ function DrawBounds( alpha=0.5 ) {
 		pills: [
 		    MakeForcePushProps,
 		    MakeDecimateProps,
+		    MakeEngorgeProps,
+		    MakeSplitProps,
+		    MakeDefendProps,
+		    MakeOptionProps,
+		    MakeNeoProps,
+		    MakeChaosProps,
+		    MakeRadarProps,
 		],
 		playerPaddle: self.playerPaddle,
 		cpuPaddle: self.cpuPaddle,
@@ -801,7 +808,7 @@ function DrawBounds( alpha=0.5 ) {
 		    () => { gCPUScore += kScoreIncrement; }
 		   )();
 	}
-    }
+    };
 
     self.MovePucks = function( dt ) {
 	gPucks.B.clear();
