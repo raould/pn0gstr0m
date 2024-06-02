@@ -1119,7 +1119,7 @@ function DrawBounds( alpha=0.5 ) {
     self.DrawWarning = function() {
 	gCx.fillStyle = warningColorStr;
 	var lineFactor = 1.5;
-	var y0 = gh(0.5);
+	var y0 = gh(0.55);
 	Cxdo(() => {
 	    gWarning.forEach((t, i) => {
 		DrawText(t, "center", gw(0.5), y0 + i*(gSmallestFontSize * lineFactor), gSmallestFontSizePt, false, "monospace");

@@ -34,7 +34,7 @@ var magentaDarkSpec = MakeDark(magentaSpec);
 
 var backgroundColorStr = "black"; // match: index.html background color.
 var scanlineColorStr = "rgba(0,0,0,0.2)";
-var warningColorStr = "grey";
+var warningColorStr = "white";
 var crtOutlineColorStr = "rgb(16, 64, 16)";
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
