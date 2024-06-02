@@ -35,8 +35,9 @@ function Puck(props) {
     };
 
     self.Draw = function( alpha ) {
-	// fewer = bigger, more = smaller.
+	// scal size: more total pucks -> smaller size.
 	var countScale = 1 + T10(gPucks.A.length, kEjectCountThreshold) * 0.4;
+
 	// slight crt distortion of size based on horizontal position.
 	var crtScale = T10( Math.abs(self.x-gw(0.5)), gw(0.5)) * 0.5 + 1;
 	var width = self.width * countScale * crtScale;
@@ -44,11 +45,8 @@ function Puck(props) {
 	var height = self.height * countScale * crtScale;
 	var dh = height - self.height;
 
-	// slight crt distortion of position based on vertical position.
 	var wx = self.x - dw/2;
-	var dy = self.y-gh(0.5);
-	var aoy = T10( Math.abs(dy), gh(0.5)) * 2 + 1;
-	var wy = self.y - dh/2 + Sign(dy) * aoy;
+	var wy = self.y - dh/2;
 
 	// make things coming toward you be slightly easier to see.
 	var avx = ForSide(gPointerSide, -1,1) == Sign(self.vx) ? 1 : 0.8;
@@ -75,7 +73,7 @@ function Puck(props) {
 	/*
 	if (gDebug) {
 	    Cxdo(() => {
-		gCx.fillStyle = "red";
+		gCx.fillStyle = "rgba(255, 0, 0, 0.5)";
 		gCx.fillRect(self.x, self.y, self.width, self.height);
 	    });
 	}

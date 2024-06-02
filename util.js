@@ -4,6 +4,7 @@
  */
 
 var k2Pi = Math.PI*2;
+var kPi2 = Math.PI/2;
 
 function Assert(result, msg) {
     if (!result) {
