@@ -44,3 +44,20 @@ function RandomCentered( center, halfRange, halfDeadZone=0 ) {
     var v = center + s * r;
     return v;
 }
+
+function RandomLatch( chance, latchDuration ) {
+    var latchedTime = undefined;
+    return {
+	MaybeLatch: function() {
+	    if (exists(latchedTime)) {
+		if (gGameTime - latchedTime > latchDuration) {
+		    latchedTime = undefined;
+		}
+	    }
+	    else if (RandomBool(chance)) {
+		latchedTime = gGameTime;
+	    }
+	    return exists(latchedTime);
+	},
+    };
+}

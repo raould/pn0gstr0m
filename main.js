@@ -371,6 +371,7 @@ function DrawResizing() {
     });
 }
 
+var gDrawTitleLatch = RandomLatch( 0.01, 250 );
 function DrawTitle(flicker=true) {
     Cxdo(() => {
 	gCx.fillStyle = flicker ?
@@ -378,8 +379,8 @@ function DrawTitle(flicker=true) {
 	    rgb255s(cyanDarkSpec.regular);
 	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
 	var msg = "ETERNAL BETA";
-	if (flicker && RandomBool(0.05)) { msg = "ETERNAL BUGS"; }
-	DrawText( msg, "right", gw(0.92), gh(0.46), gSmallFontSizePt, flicker );
+	if (flicker && gDrawTitleLatch.MaybeLatch()) { msg = "ETERNAL BUGS"; }
+	DrawText( msg, "right", gw(0.872), gh(0.48), gRegularFontSizePt, flicker );
     });
 }
 
