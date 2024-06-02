@@ -1105,9 +1105,11 @@ function DrawBounds( alpha=0.5 ) {
 	    DrawTitle(false);
 	    self.DrawWarning();
 	    if (getWindowAspect() <= 1) {
+		var rots = ["|", "/", "--", "\\", "|", "/", "--", "\\"];
+		var i = ii(gFrameCount/10) % rots.length;
 		Cxdo(() => {
-		    gCx.fillStyle = rgb255s(cyanSpec.regular);
-		    DrawText("HINT: PLAYS BETTER IN LANDSCAPE MODE", "center", gw(0.5), gh(0.9), gSmallFontSizePt, false);
+		    gCx.fillStyle = rgb255s(yellowSpec.strong);
+		    DrawText(`${rots[i]}  r   TRY LANDSCAPE   r  ${rots[i]}`, "center", gw(0.5), gh(0.9), gRegularFontSizePt, false);
 		});
 	    }
 	}
@@ -1116,7 +1118,7 @@ function DrawBounds( alpha=0.5 ) {
     self.DrawWarning = function() {
 	gCx.fillStyle = warningColorStr;
 	var lineFactor = 1.5;
-	var y0 = gh(0.55);
+	var y0 = gh(0.5);
 	Cxdo(() => {
 	    gWarning.forEach((t, i) => {
 		DrawText(t, "center", gw(0.5), y0 + i*(gSmallestFontSize * lineFactor), gSmallestFontSizePt, false, "monospace");
