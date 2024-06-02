@@ -489,8 +489,8 @@ function MakeNeoProps(maker) {
     };
 }
 
-function MakeDensityProps(maker) {
-    var name = 'density';
+function MakeRadarProps(maker) {
+    var name = 'radar';
     var x = ForSide(maker.side, gw(0.4), gw(0.6));
     return {
 	name,
@@ -523,7 +523,7 @@ function MakeDensityProps(maker) {
 	boomFn: (gameState) => {
 	    PlayPowerupBoom();
 	    maker.powerupLocks[name] = true;
-	    gameState.AddAnimation(MakeDensityAnimation({
+	    gameState.AddAnimation(MakeRadarAnimation({
 		side: maker.side
 	    }));
 	},
