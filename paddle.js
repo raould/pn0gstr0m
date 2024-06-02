@@ -269,12 +269,22 @@ function Paddle(props) {
     //---------------------------------------- player.
 
     self.StepPlayer = function( dt ) {
-	if( gUpPressed || gStickUp ) {
+	self.StepSwitches( dt );
+	self.StepTouch( dt );
+    };
+    
+    self.StepSwitches = function( dt ) {
+    	if( gUpPressed || gStickUp || gDownButtons[StandardMapping.Button.D_PAD_UP]) {
 	    self.MoveUp( dt );
+	    return;
 	}
-	if( gDownPressed || gStickDown ) {
+	if( gDownPressed || gStickDown || gDownButtons[StandardMapping.Button.D_PAD_BOTTOM]) {
 	    self.MoveDown( dt );
+	    return;
 	}
+    };
+
+    self.StepTouch = function( dt ) {
 	if( exists(gMoveTargetY) ) {
 	    var limit = gYInset + gPaddleHeight/2;
 	    gMoveTargetY = Clip(
@@ -288,6 +298,7 @@ function Paddle(props) {
 	    if( gMoveTargetY > self.GetMidY() ) {
 		self.MoveDown( dt );
 	    }
+
 	    // if the player isn't touching and the
 	    // paddle is close enough then don't
 	    // potentially wiggle steppming up & down

@@ -30,14 +30,14 @@
 	    isPlayer: true,
 	    paddle: props.playerPaddle,
 	    side: ForSide(gPointerSide, "left", "right"),
-	    specs: pp,
+	    specs: [...pp, MakeRadarProps],
 	});
 	self.playerPill = undefined;
 	self.cpuPowerups = new Powerups({
 	    isPlayer: false,
 	    paddle: props.cpuPaddle,
 	    side: ForSide(gPointerSide, "right", "left"),
-	    specs: [...pp, MakeDensityProps],
+	    specs: pp,
 	});
 	self.cpuPill = undefined;
     };

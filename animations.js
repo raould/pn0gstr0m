@@ -297,14 +297,14 @@ function MakeEngorgeAnimation(props) {
 // line trace into the future so the graph
 // is literally where you should be w/in the
 // next few seconds accouting for all bounces.
-function MakeDensityAnimation(props) {
+function MakeRadarAnimation(props) {
     var { side, endFn } = props;
     // match: GameState paddle inset position at gh(0.5)
     // although this is hacked up even more for aesthetics.
     var w = gXInset * 0.8;
     var x = ForSide(side, 0, gWidth-w);
     return new Animation({
-	name: "density",
+	name: "radar",
 	lifespan: undefined,
 	drawFn: () => {
 	    Cxdo(() => {

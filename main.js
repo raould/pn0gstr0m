@@ -180,6 +180,7 @@ function anyKeyPressed() {
     var any = downs.length > 0;
     return any;
 }
+var gDownButtons = {};
 
 // these must match ResetInput.
 var gPauseButtonEnabled = false; // really only for GameState.
@@ -222,8 +223,8 @@ var kEventMouseMove = "mouse_move";
 var kEventMouseUp = "mouse_up";
 var kEventStickUp = "stick_up";
 var kEventStickDown = "stick_down";
-var kEventAnyButtonDown = "button_down";
-var kEventAnyButtonUp = "button_up";
+var kEventButtonDown = "button_down";
+var kEventButtonUp = "button_up";
 
 // due to history
 // "touch" also kinda
@@ -1413,10 +1414,53 @@ function GamepadJoystickMove(e) {
 }
 
 function GamepadButtonChange(e) {
+    // dpad buttons up & down move player paddle.
+    if (e.gamepad.gamepad.buttons[StandardMapping.Button.D_PAD_UP].pressed) {
+	gEventQueue.push({
+	    eventType: kEventButtonDown,
+	    updateFn: () => {
+		gDownButtons[StandardMapping.Button.D_PAD_UP] = true;
+	    }
+	});
+	return;
+    } else {
+	gEventQueue.push({
+	    eventType: kEventButtonUp,
+	    updateFn: () => {
+		delete gDownButtons[StandardMapping.Button.D_PAD_UP];
+	    }
+	});
+    }
+    if (e.gamepad.gamepad.buttons[StandardMapping.Button.D_PAD_BOTTOM].pressed) {
+	gEventQueue.push({
+	    eventType: kEventButtonDown,
+	    updateFn: () => {
+		gDownButtons[StandardMapping.Button.D_PAD_BOTTOM] = true;
+	    }
+	});
+	return;
+    } else {
+	gEventQueue.push({
+	    eventType: kEventButtonUp,
+	    updateFn: () => {
+		delete gDownButtons[StandardMapping.Button.D_PAD_BOTTOM];
+	    }
+	});
+    }
+
+    // do nothing for dpad left & right, to avoid confusion.
+    if (e.gamepad.gamepad.buttons[StandardMapping.Button.D_PAD_LEFT].pressed) {
+	return;
+    }
+    if (e.gamepad.gamepad.buttons[StandardMapping.Button.D_PAD_RIGHT].pressed) {
+	return;
+    }
+
+    // all other buttons are really kinda just used for pause.
     // a quick and dirty hack, doesn't track each button individually.
     if (e.gamepad.gamepad.buttons.some(b => b.pressed || b.value > 0)) {
 	gEventQueue.push({
-	    eventType: kEventAnyButtonDown,
+	    eventType: kEventButtonDown,
 	    updateFn: () => {
 		gButtonPressed = true;
 	    },
@@ -1424,7 +1468,7 @@ function GamepadButtonChange(e) {
     }
     else {
 	gEventQueue.push({
-	    eventType: kEventAnyButtonUp,
+	    eventType: kEventButtonUp,
 	    updateFn: () => {
 		gButtonPressed = false;
 	    },
