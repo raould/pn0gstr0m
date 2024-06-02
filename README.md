@@ -1,5 +1,5 @@
 # pn0gstr0m
-* https://raould.github.io/pn0gstr0m/
+* play it now! https://raould.github.io/pn0gstr0m/
 * "it's pong Jim, but not as we know it, Captain." (Klingons on the starboard bow!)
 * all the pn0gs are to be str0mmed.
 * gpl2 license.
