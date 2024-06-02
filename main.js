@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gShowToasts = gDebug;
 
 var kCanvasName = "canvas"; // match: index.html
@@ -571,6 +571,7 @@ function DrawBounds( alpha=0.5 ) {
 		    width: gPaddleWidth, height: gPaddleHeight,
 		    label: cpulabel,
 		    isSplitter: true,
+		    isPillSeeker: true,
 		});
 		ForCount(gDebug ? 20 : 1, () => { 
 		    gPucks.A.push( self.CreateStartingPuck(-1) );
@@ -726,7 +727,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.CreateRandomPuck = function() {
 	var p = new Puck({ x: gw(RandomRange(1/8, 7/8)),
-			   y: gh(RandomRange(2/8, 6/8)),
+			   y: gh(RandomRange(1/8, 7/8)),
 			   vx: RandomRange(gMaxVX/5, gMaxVX/10),
 			   vy: RandomCentered(1, 0.5),
 			   ur: true });

@@ -13,6 +13,7 @@ function Paddle(props) {
        label,
        hp,
        isSplitter,
+       isPillSeeker,
        stepSize,
        }
     */
@@ -51,6 +52,7 @@ function Paddle(props) {
 	self.height = props.height;
 	self.blockvx = self.x >= gw(0.5) ? 1 : -1;
 	self.isSplitter = aorb(props.isSplitter, false);
+	self.isPillSeeker = aorb(props.isPillSeeker, false);
 	self.alive = isU(self.hp) || self.hp > 0;
 	self.engorgedHeight = gPaddleHeight * 2;
 	self.engorgedWidth = gPaddleWidth * 0.8;
@@ -325,13 +327,17 @@ function Paddle(props) {
     };
 
     self.AISeek = function( dt ) {
-	if (!!self.aiPill?.isUrgent) {
+	// heuristics are kind of a nightmare to maintain. :-/ the order here does matter.
+
+	var PS = self.isPillSeeker;
+
+	if (PS && exists(self.aiPill) && self.aiPill.isUrgent) {
 	    self.debugMsg = "PILL_1";
 	    self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, 1.2 );
 	    return;
 	}
 
-	if (self.attackingNearCount == 0 && exists(self.aiPill)) {
+	if (PS && self.attackingNearCount == 0 && exists(self.aiPill)) {
 	    self.debugMsg = "PILL_2";
 	    self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, 1.2 );
 	    return;
@@ -343,7 +349,7 @@ function Paddle(props) {
 	    return;
 	}
 
-	if (exists(self.aiPill)) {
+	if (PS && exists(self.aiPill)) {
 	    self.debugMsg = "PILL_3";
 	    self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, 1.2 );
 	    return;
