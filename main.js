@@ -379,7 +379,7 @@ function DrawTitle(flicker=true) {
 	    rgb255s(cyanDarkSpec.regular);
 	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
 	var msg = "ETERNAL BETA";
-	if (flicker && gDrawTitleLatch.MaybeLatch()) { msg = "ETERNAL BUGS"; }
+	if (flicker && gDrawTitleLatch.MaybeLatch(gGameTime)) { msg = "ETERNAL BUGS"; }
 	DrawText( msg, "right", gw(0.872), gh(0.48), gRegularFontSizePt, flicker );
     });
 }

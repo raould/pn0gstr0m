@@ -48,14 +48,14 @@ function RandomCentered( center, halfRange, halfDeadZone=0 ) {
 function RandomLatch( chance, latchDuration ) {
     var latchedTime = undefined;
     return {
-	MaybeLatch: function() {
+	MaybeLatch: function(now) {
 	    if (exists(latchedTime)) {
-		if (gGameTime - latchedTime > latchDuration) {
+		if (now - latchedTime > latchDuration) {
 		    latchedTime = undefined;
 		}
 	    }
 	    else if (RandomBool(chance)) {
-		latchedTime = gGameTime;
+		latchedTime = now;
 	    }
 	    return exists(latchedTime);
 	},
