@@ -446,9 +446,9 @@ function DrawBounds( alpha=0.5 ) {
 	    Cxdo(() => {
 		gCx.fillStyle = scanlineColorStr;
 		var height = 2;
-		var skip = 20;
-		var step = skip/height;
-		var start = gFrameCount % skip;
+		var skip = 10;
+		var step = ii(skip/height);
+		var start = ii(gFrameCount/4) % skip;
 		for (var y = gHeight-start; y >= 0; y -= step) {
 		    gCx.fillRect(0, y, gWidth, height);
 		}
