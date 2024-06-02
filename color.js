@@ -67,14 +67,13 @@ function RandomColor(alpha) {
 
 function RandomForColor(spec, alpha) {
     if (alpha == undefined) { alpha = 1; }
-    if (RandomBool(0.01)) {
-	// some aesthetic flickers of strong color.
+    if (RandomBool(0.05)) {
 	return rgb255s(spec.strong, alpha);
     }
     else {
-	// slightly varied color.
+	// NTSC.
 	return rgb255s(
-	    spec.regular.map(ch => RandomCentered(ch, 20)),
+	    spec.regular.map(ch => RandomCentered(ch, 16)),
 	    alpha
 	);
     }
