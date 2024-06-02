@@ -103,7 +103,7 @@ kPillLifespan = 1000 * 20;
     self.isApplicable = function( spec, gameState ) {
 	// is the current game state applicable?
 	return spec.testFn(gameState);
-    }
+    };
 
     self.isSkippable = function( spec ) {
 	// don't get stuck on a powerup that might never happen.
