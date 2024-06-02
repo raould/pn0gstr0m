@@ -72,18 +72,24 @@ function MakeGameStartAnimation() {
 	    var y = ybase + t * yrange;
 	    Cxdo(() => {
 		var lastY = y;
-		for (var i = 0; i < ii(c/2); ++i) {
+		for (var i = 0; i < ii(c/2); ++i) { // top bars
 		    var yo = y + i*h;
+		    gCx.beginPath();
+		    gCx.rect(0, yo, gWidth, h*0.8);
 		    gCx.fillStyle = RandomForColor(greenSpec, 1/c*i);
-		    gCx.fillRect(0, yo, gWidth, h*0.8);
+		    gCx.fill();
 		    lastY = yo+h*0.8;
 		}
+		gCx.beginPath(); // shutter effect.
+		gCx.rect(0, lastY, gWidth, gHeight-lastY);
 		gCx.fillStyle = backgroundColorStr;
-		gCx.fillRect(0, lastY, gWidth, gHeight-lastY);
-		for (var i = ii(c/2); i < c; ++i) {
+		gCx.fill();
+		for (var i = ii(c/2); i < c; ++i) { // bottom bars.
 		    var yo = y + i*h;
+		    gCx.beginPath();
+		    gCx.rect(0, yo, gWidth, h*0.8);
 		    gCx.fillStyle = RandomForColor(greenSpec, 1-1/c*i);
-		    gCx.fillRect(0, yo, gWidth, h*0.8);
+		    gCx.fill();
 		}
 	    });
 	}
@@ -315,7 +321,9 @@ function MakeRadarAnimation(props) {
 		    var xoff = xyNudge(p.GetMidY(), p.height, 10, side);
 		    var h = y1 - y0;
 		    if (Sign(p.vx) == ForSide(side, -1,1)) {
-			gCx.fillRect( x+xoff, y0, w, h );
+			gCx.beginPath();
+			gCx.rect( x+xoff, y0, w, h );
+			gCx.fill();
 		    }
 		});
 	    });

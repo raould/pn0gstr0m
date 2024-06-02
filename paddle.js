@@ -179,12 +179,16 @@ function Paddle(props) {
 	    var wx = WX(self.x + (self.width-hpw)/2);
 	    var wy = WY(self.y);
 
+	    gCx.beginPath(); // outline.
+	    var o = sx1(1); var o2 = o*2;
+	    gCx.rect( wx-o, wy-o, hpw+o2, self.height+o2 );
 	    gCx.fillStyle = RandomGreen(0.4 * alpha);
-	    gCx.fillRect( wx-2, wy-2, hpw+4, self.height+4 );
-	    gCx.fillStyle = backgroundColorStr;
-	    gCx.fillRect( wx, wy, hpw, self.height );
+	    gCx.fill();
+
+	    gCx.beginPath(); // insides.
+	    gCx.rect( wx, wy, hpw, self.height );
 	    gCx.fillStyle = RandomGreen(0.8 * alpha);
-	    gCx.fillRect( wx, wy, hpw, self.height );
+	    gCx.fill();
 
 	    if (exists(self.label)) {
 		// label lives longer so newbies can notice it.

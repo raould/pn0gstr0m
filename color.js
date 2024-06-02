@@ -37,7 +37,7 @@ var crtOutlineColorStr = "rgb(16, 64, 16)";
 // match: index.html.
 var backgroundColorStr = "black";
 // match: backgroundColorStr, index.html
-var scanlineColorStr = "rgba(0, 0, 0, 0.1)";
+var scanlineColorStr = "rgba(0, 0, 0, 0.15)";
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 var _tc = Array(4);

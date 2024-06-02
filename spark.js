@@ -23,8 +23,10 @@ function Spark( x0, y0, vx, vy ) {
 
     self.Draw = function( alpha ) {
 	Cxdo(() => {
+	    gCx.beginPath();
+	    gCx.rect( self.x, self.y, self.width, self.height );
 	    gCx.fillStyle = RandomRed( alpha );
-	    gCx.fillRect( self.x, self.y, self.width, self.height );
+	    gCx.fill();
 	});
 	self.frameCount++;
     };
