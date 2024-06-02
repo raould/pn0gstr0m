@@ -184,10 +184,11 @@ function Puck(props) {
 	    // too little means you maybe crash the machine :-)
 	    var dy = self.GetMidY() - paddle.GetMidY();
 	    var mody = gRandom() * 0.055 * Math.abs(dy);
-	    // slightly increasing enlish towards the top and bottom
-	    // to avoid getting stuck there.
-	    var ty = T01(Math.abs(self.x - gh(0.5)), gh(0.5));
-	    var oy = 1 + ty * 0.05;
+
+	    // try to avoid getting boringly stuck at top or bottom.
+	    var ty = Math.pow( T01(Math.abs(self.x - gh(0.5)), gh(0.5)), 3 );
+	    var oy = 1 + ty * 0.15;
+
 	    if( self.GetMidY() < paddle.GetMidY() ) {
 		self.vy -= mody * oy;
 	    }
