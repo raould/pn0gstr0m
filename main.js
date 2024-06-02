@@ -598,6 +598,7 @@ function DrawBounds( alpha=0.5 ) {
 	// not actually using the timeouts or count
 	// since there is only one level at the moment.
 	// bounty: somebody add (and playtest!) more levels.
+	// also needs ui of course as levels end/start.
 	self.levels = [
 	    new Level({
 		maxVX: sxi(14),
