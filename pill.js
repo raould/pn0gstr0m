@@ -33,13 +33,13 @@ function Pill( props ) {
 	self.drawFn = props.drawFn;
 	self.endFn = props.endFn;
 
-	if (self.x >= gw(0.5)) {
-	    self.leftBound = gw(0.5);
-	    self.rightBound = gw(1)-gXInset;
+	if (self.x < gw(0.5)) {
+	    self.leftBound = gw(0);
+	    self.rightBound = gw(0.5);
 	}
 	else {
-	    self.leftBound = gXInset;
-	    self.rightBound = gw(0.5);
+	    self.leftBound = gw(0.5);
+	    self.rightBound = gw(1);
 	}
 	self.topBound = gYInset;
 	self.bottomBound = gHeight-gYInset;
