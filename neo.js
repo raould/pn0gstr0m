@@ -53,10 +53,7 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
 	    for (var i = 0; i < 4; ++i) {
 		var hw = i * sx1(2);
 		var x = self.x - hw;
-		gCx.fillRect(
-		    WX(x), y0,
-		    self.width+2*hw, y1,
-		);
+		gCx.fillRect(WX(x), y0, WX(self.width+2*hw), y1);
 	    }
 	});
 

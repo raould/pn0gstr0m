@@ -253,12 +253,16 @@ function MakeEngorgeProps(maker) {
 		var wx = WX(self.x);
 		var wy = WY(self.y);
 
+		gCx.beginPath();
+		gCx.rect( WX(wx), WY(wy), self.width, self.height );
 		gCx.fillStyle = backgroundColorStr;
-		gCx.fillRect( WX(wx), WY(wy), self.width, self.height );
+		gCx.fill();
 
-		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+		gCx.beginPath();
+		gCx.rect( WX(wx), WY(wy), self.width, self.height );
 		gCx.lineWidth = sx1(2);
-		gCx.strokeRect( WX(wx), WY(wy), self.width, self.height );
+		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+		gCx.stroke();
 
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
@@ -539,6 +543,7 @@ function MakeRadarProps(maker) {
 		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, 3 );
 		gCx.fillStyle = backgroundColorStr;
 		gCx.fill();
+
 		gCx.beginPath();
 		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, 3 );
 		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
@@ -577,6 +582,7 @@ function MakeChaosProps(maker) {
 		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, 3 );
 		gCx.fillStyle = backgroundColorStr;
 		gCx.fill();
+
 		gCx.beginPath();
 		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, 3 );
 		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );

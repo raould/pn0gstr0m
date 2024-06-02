@@ -60,14 +60,18 @@ function Puck(props) {
 	var style = isLost ? lostStyle : regularStyle;
 
 	Cxdo(() => {
-	    gCx.globalAlpha = alpha * avx;
-	    gCx.fillStyle = style;
-	    gCx.fillRect( wx, wy, width, height );
 	    // a thin outline keeps things crisp when there are lots of pucks.
+	    gCx.beginPath();
+	    gCx.rect( wx-1, wy-1, width+2, height+2 );
 	    gCx.lineWidth = sx1(1);
-	    gCx.globalAlpha = 1;
 	    gCx.strokeStyle = "black";
-	    gCx.strokeRect( wx-1, wy-1, width+2, height+2 );
+	    gCx.stroke();
+	    
+	    gCx.beginPath();
+	    gCx.globalAlpha = alpha * avx;
+	    gCx.rect( wx, wy, width, height );
+	    gCx.fillStyle = style;
+	    gCx.fill();
 	});
 
 	/*

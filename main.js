@@ -387,9 +387,11 @@ function DrawTitle(flicker=true) {
 function DrawBounds( alpha=0.5 ) {
     if (!gDebug) { return; }
     Cxdo(() => {
-	gCx.strokeStyle = "red";
+	gCx.beginPath();
+	gCx.rect(gXInset, gYInset, gWidth-gXInset*2, gHeight-gYInset*2);
 	gCx.lineWidth = 1;
-	gCx.strokeRect(gXInset, gYInset, gWidth-gXInset*2, gHeight-gYInset*2);
+	gCx.strokeStyle = "red";
+	gCx.stroke();
     });
     Cxdo(() => {
 	gCx.beginPath();
@@ -444,16 +446,18 @@ function DrawBounds( alpha=0.5 ) {
 
     self.DrawCRTScanlines = function() {
 	if (self.state != kRoot && self.state != kSplash) {
+	    gCx.beginPath();
 	    Cxdo(() => {
-		gCx.fillStyle = scanlineColorStr;
 		var height = 2;
 		var skip = 10;
 		var step = ii(skip/height);
 		var start = ii(gFrameCount/4) % skip;
 		for (var y = gHeight-start; y >= 0; y -= step) {
-		    gCx.fillRect(0, y, gWidth, height);
+		    gCx.rect(0, y, gWidth, height);
 		}
 	    });
+	    gCx.fillStyle = scanlineColorStr;
+	    gCx.fill();
 	}
     };
 
@@ -879,13 +883,15 @@ function DrawBounds( alpha=0.5 ) {
     self.DrawMidLine = function() {
 	if (!self.isAttract) {
 	    Cxdo(() => {
-		gCx.fillStyle = RandomGreen(0.6);
+		gCx.beginPath();
 		var dashStep = (gHeight - 2*gYInset)/(gDashedLineCount*2);
 		var x = gw(0.5) - ii(gDashedLineWidth/2);
 		for( var y = gYInset; y < gHeight-gYInset; y += dashStep*2 ) {
 		    var ox = RandomCentered(0, 1);
-		    gCx.fillRect( x+ox, y, gDashedLineWidth, dashStep );
+		    gCx.rect( x+ox, y, gDashedLineWidth, dashStep );
 		}
+		gCx.fillStyle = RandomGreen(0.6);
+		gCx.fill();
 	    });
 	}
     };
@@ -1014,25 +1020,29 @@ function DrawBounds( alpha=0.5 ) {
 	if (!self.isAttract) { ClearScreen(); }
 	if (!gResizing) {
 	    // painter's z-algorithm here below, keep important things last.
+
 	    self.DrawMidLine();
 	    self.DrawScoreHeader();
-	    // z order pucks rendering overkill nuance. :-)
-	    gPucks.A.forEach(p => {
-		if (Sign(p.vx) == ForSide(gPointerSide, 1,-1)) {
+
+	    gPucks.A.forEach(p => { // pucks going away from player.
+		if (Sign(p.vx) == ForSide(gPointerSide, 1, -1)) {
 		    p.Draw( self.Alpha() );
 		}
 	    });
-	    gPucks.A.forEach(p => {
-		if (Sign(p.vx) == ForSide(gPointerSide, -1,1)) {
+	    gPucks.A.forEach(p => { // pucks attacking the player.
+		if (Sign(p.vx) == ForSide(gPointerSide, -1, 1)) {
 		    p.Draw( self.Alpha() );
 		}
 	    });
-	    gSparks.A.forEach(s => {
-		s.Draw( self.Alpha() );
-	    });
+
 	    self.playerPaddle.Draw( self.Alpha(), self );
 	    self.cpuPaddle.Draw( self.Alpha(),self );
 	    self.level.Draw( self.Alpha() );
+
+	    gSparks.A.forEach(s => {
+		s.Draw( self.Alpha() );
+	    });
+
 	    self.DrawPauseButton();
 	    self.DrawTouchTarget();
 	    self.DrawAnimations(); // late/high z order so the animations can clear the screen if desired.
@@ -1060,8 +1070,10 @@ function DrawBounds( alpha=0.5 ) {
 	});
 
 	Cxdo(() => {
+	    gCx.beginPath();
+	    gCx.rect(gPointerX-5, gPointerY-5, 10, 10);
 	    gCx.fillStyle = RandomColor();
-	    gCx.fillRect(gPointerX-5, gPointerY-5, 10, 10);
+	    gCx.fill();
 	});
 
 	Cxdo(() => {
