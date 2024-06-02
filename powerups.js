@@ -12,6 +12,7 @@
 // (the business about ForSide and paddle references is wugly.)
 /* {
    name,
+   isPlayerOnly,
    width, height,
    lifespan,
    label,
@@ -19,7 +20,7 @@
    isUrgent,
    fontSize,
    testFn: (gameState) => {},
-   skip, // don't get stuck waiting on this one's testFn to pass.
+   canSkip, // don't get stuck waiting on this one's testFn to pass.
    drawFn: (self, alpha) => {},
    boomFn: (gameState) => {},
    endFn: () => {},
@@ -65,23 +66,48 @@ kPillLifespan = 1000 * 20;
     };
 
     self.NextPropsBase = function(gameState) {
+	self.UpdateDeck();
+
+	var newFn = Peek(self.powerupDeck);
+	Assert(exists(newFn), "bad powerup deck entry");
+	var s = newFn(self);
+
+	// the order of these conditionals does matter.
+	if (self.isPlayerOnly(s)) {
+	    s = undefined;
+	}
+	else if (self.isApplicable(s, gameState)) {
+	    // keep s.
+	}
+	else if (self.isSkippable(s)) {
+	    s = undefined;
+	}
+
+	self.powerupDeck.pop();
+	return s;
+    };
+
+    self.UpdateDeck = function() {
+	// used them all, restart deck.
 	if (isU(self.powerupDeck) || self.powerupDeck.length < 1) {
 	    self.powerupDeck = [...self.specs].reverse();
+	    Assert(self.powerupDeck.length > 0, "invalid powerup deck length");
 	}
-	var maybeS = Peek(self.powerupDeck);
-	if (isU(maybeS)) {
-	    return undefined;
-	}
-	var s = maybeS(self);
-	if (s.testFn(gameState)) {
-	    self.powerupDeck.pop();
-	    return s;
-	}
-	else if (!!s.skip) {
-	    self.powerupDeck.pop();
-	    return undefined;
-	}
-	return undefined;
+    };
+
+    self.isPlayerOnly = function( spec ) {
+	// e.g. radar only really makes sense for the player.
+ 	return exists(spec.isPlayerOnly) && spec.isPlayerOnly && !self.isPlayer;
+    };
+
+    self.isApplicable = function( spec, gameState ) {
+	// is the current game state applicable?
+	return spec.testFn(gameState);
+    }
+
+    self.isSkippable = function( spec ) {
+	// don't get stuck on a powerup that might never happen.
+	return aorb(spec.canSkip, false);
     };
 
     self.Init();
@@ -153,7 +179,7 @@ function MakeDecimateProps(maker) {
 	    // looks unfun if there aren't enough pucks to destroy.
 	    return gDebug || gPucks.A.length > 20;
 	},
-	skip: true,
+	canSkip: true,
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
 		var wx = WX(self.x);
@@ -221,7 +247,7 @@ function MakeEngorgeProps(maker) {
 	testFn: (gameState) => {
 	    return !maker.paddle.engorged;
 	},
-	skip: true,
+	canSkip: true,
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
 		var wx = WX(self.x);
@@ -311,7 +337,7 @@ function MakeDefendProps(maker) {
 	testFn: (gameState) => {
 	    return maker.paddle.barriers.A.length == 0 && (gDebug || gPucks.A.length > 25);
 	},
-	skip: true,
+	canSkip: true,
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
 		var wx = WX(self.x);
@@ -373,7 +399,7 @@ function MakeOptionProps(maker) {
 	testFn: (gameState) => {
 	    return maker.paddle.options.A.length == 0 && (gDebug || gPucks.A.length > 20);
 	},
-	skip: true,
+	canSkip: true,
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
 		var wx = WX(self.x);
@@ -436,7 +462,7 @@ function MakeNeoProps(maker) {
 	    // todo: in some playtesting this was being spawned too often, maybe each props needs a spawn weight too?
 	    return (gDebug || gPucks.A.length > kEjectCountThreshold/2) && isU(maker.paddle.neo);
 	},
-	skip: true,
+	canSkip: true,
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
 		var wx = WX(self.x);
@@ -494,6 +520,7 @@ function MakeRadarProps(maker) {
     var x = ForSide(maker.side, gw(0.4), gw(0.6));
     return {
 	name,
+	isPlayerOnly: true,
 	width: sx(18), height: sy(18),
 	lifespan: kPillLifespan,
 	label: "?",
@@ -503,7 +530,7 @@ function MakeRadarProps(maker) {
 	    // there can be only one per maker, and it lasts for ever.
 	    return (gDebug || gPucks.A.length > 20) && !maker.powerupLocks[name];
 	},
-	skip: true,
+	canSkip: true,
 	drawFn: (self, alpha) => {
 	    Cxdo(() => {
 		var wx = WX(self.x);

@@ -13,31 +13,19 @@
 	self.speedupFactor = props.speedupFactor;
 	self.speedupTimeout = props.speedupTimeout;
 	self.puckCount = props.puckCount;
-	self.pills = props.pills;
 	self.alive = true;
-
-	var pp = [];
-	pp.push(MakeForcePushProps);
-	pp.push(MakeDecimateProps);
-	pp.push(MakeEngorgeProps);
-	pp.push(MakeSplitProps);
-	pp.push(MakeDefendProps);
-	pp.push(MakeOptionProps);
-	pp.push(MakeNeoProps);
-	pp.push(MakeChaosProps);
-
 	self.playerPowerups = new Powerups({
 	    isPlayer: true,
 	    paddle: props.playerPaddle,
 	    side: ForSide(gPointerSide, "left", "right"),
-	    specs: [...pp, MakeRadarProps],
+	    specs: props.pills
 	});
 	self.playerPill = undefined;
 	self.cpuPowerups = new Powerups({
 	    isPlayer: false,
 	    paddle: props.cpuPaddle,
 	    side: ForSide(gPointerSide, "right", "left"),
-	    specs: pp,
+	    specs: props.pills
 	});
 	self.cpuPill = undefined;
     };
@@ -76,7 +64,7 @@
 	if (exists(self.cpuPill)) {
 	    self.DrawPill(alpha, self.cpuPill, ForOtherSide(gPointerSide, "left", "right"), RandomGrey(alpha));
 	}
-    }
+    };
 
     self.DrawPill = function( alpha, pill, side, color ) {
 	pill.Draw( alpha );
