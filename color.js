@@ -32,10 +32,12 @@ var yellowDarkSpec = MakeDark(yellowSpec);
 var magentaSpec = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF] };
 var magentaDarkSpec = MakeDark(magentaSpec);
 
-var backgroundColorStr = "black"; // match: index.html background color.
-var scanlineColorStr = "rgba(0,0,0,0.2)";
 var warningColorStr = "white";
 var crtOutlineColorStr = "rgb(16, 64, 16)";
+// match: index.html.
+var backgroundColorStr = "black";
+// match: backgroundColorStr, index.html
+var scanlineColorStr = "rgba(0, 0, 0, 0.1)";
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 var _tc = Array(4);
