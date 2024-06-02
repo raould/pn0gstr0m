@@ -186,8 +186,12 @@ function Puck(props) {
 	    var mody = gRandom() * 0.055 * Math.abs(dy);
 
 	    // try to avoid getting boringly stuck at top or bottom.
-	    var ty = Math.pow( T01(Math.abs(self.x - gh(0.5)), gh(0.5)), 3 );
-	    var oy = 1 + ty * 0.15;
+	    // but don't want to utterly lose 'streaming'.
+	    var oy = 1;
+	    if (RandomBool(0.1)) {
+		var ty = Math.pow( T01(Math.abs(self.x - gh(0.5)), gh(0.5)), 3 );
+		oy = 1 + ty * 0.15;
+	    }
 
 	    if( self.GetMidY() < paddle.GetMidY() ) {
 		self.vy -= mody * oy;
