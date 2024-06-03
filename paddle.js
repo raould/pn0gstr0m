@@ -184,7 +184,7 @@ function Paddle(props) {
 	    self.neo.Draw( alpha, gameState );
 	}
 	if (exists(self.yars)) {
-	    seld.yars.Draw( alpha );
+	    self.yars.Draw( alpha );
 	};
 	Cxdo(() => {
 	    var hpw = isU(self.hp) ?

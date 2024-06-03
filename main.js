@@ -301,7 +301,7 @@ function SwapBuffers(buffers) {
     buffers.B = tmp;
 }
 
-function Cxdo(fn) { // get it?
+function Cxdo(fn) {
     gCx.save();
     fn();
     gCx.restore();

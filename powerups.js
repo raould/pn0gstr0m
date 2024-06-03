@@ -646,6 +646,11 @@ function MakeYarsProps(maker) {
 	},
 	boomFn: (pill, gameState) => {
 	    PlayPowerupBoom();
+	    var w = sx1(20);
+	    maker.paddle.AddYars({
+		x: ForSide(maker.side, gw(0.5)-w*2, gw(0.5)+w),
+		width: w
+	    });
 	},
     };
 }
