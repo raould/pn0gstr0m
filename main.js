@@ -118,7 +118,7 @@ function sy1(y) { return Math.max(1, syi(y)); }
 function gw(x=1) { return ii(x * gWidth); }
 function gh(y=1) { return ii(y * gHeight); }
 function RecalculateConstants() {
-    gDashedLineCount = syi(15);
+    gDashedLineCount = syi(8);
     gDashedLineWidth = sx1(2);
     gXInset = sxi(20);
     gYInset = sxi(20);
@@ -317,11 +317,14 @@ function LineTo( x, y ) {
     gCx.lineTo( O5(x), O5(y) );
 }
 
+// as much as i'd like to draw exactly
+// on pixels, that ends up making wiggles
+// be too wild and ugly.
 function WX( v ) {
-    return v + RandomCentered(0, sx(0.2));
+    return v + sx(RandomBool() ? 0 : (RandomBool() ? 0.2 : -0.2));
 }
 function WY( v ) {
-    return v + RandomCentered(0, sy(0.2));
+    return v + sy(RandomBool() ? 0 : (RandomBool() ? 0.2 : -0.2));
 }
 
 function DrawText( data, align, x, y, size, wiggle, font ) {
@@ -391,7 +394,7 @@ function DrawTitle(flicker=true) {
 	DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
 	var msg = "ETERNAL BETA";
 	if (flicker && gDrawTitleLatch.MaybeLatch(gGameTime)) { msg = "ETERNAL BUGS"; }
-	DrawText( msg, "right", gw(0.872), gh(0.48), gRegularFontSizePt, flicker );
+	DrawText( msg, "right", gw(0.876), gh(0.48), gRegularFontSizePt, flicker );
     });
 }
 
@@ -898,8 +901,8 @@ function DrawBounds( alpha=0.5 ) {
 		gCx.beginPath();
 		var dashStep = (gHeight - 2*gYInset)/(gDashedLineCount*2);
 		var x = gw(0.5) - ii(gDashedLineWidth/2);
-		for( var y = gYInset; y < gHeight-gYInset; y += dashStep*2 ) {
-		    var ox = RandomCentered(0, 1);
+		for( var y = gYInset + dashStep/2; y < gHeight-gYInset; y += dashStep*2 ) {
+		    var ox = RandomCentered(0, 0.5);
 		    gCx.rect( x+ox, y, gDashedLineWidth, dashStep );
 		}
 		gCx.fillStyle = RandomGreen(0.6);
@@ -921,7 +924,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.DrawScoreHeader = function() {
 	Cxdo(() => {
-	    var a = 0.4;
+	    var a = 0.8;
 	    var style = RandomGrey(self.Alpha(a));
 	    ForSide(self.isAttract ? "right" : gPointerSide, 
 		() => {
