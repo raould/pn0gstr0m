@@ -569,6 +569,7 @@ function DrawBounds( alpha=0.5 ) {
 		    width: gPaddleWidth, height: gPaddleHeight,
 		    label: cpulabel,
 		    isSplitter: true,
+		    isPillSeeker: true,
 		});
 		ForCount(gDebug ? 20 : 1, () => { 
 		    gPucks.A.push( self.CreateStartingPuck(1) );
