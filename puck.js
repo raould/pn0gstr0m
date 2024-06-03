@@ -183,14 +183,16 @@ function Puck(props) {
 	    // too much means you never get to 'streaming'.
 	    // too little means you maybe crash the machine :-)
 	    var dy = self.GetMidY() - paddle.GetMidY();
-	    var mody = gRandom() * 0.055 * Math.abs(dy);
+	    var mody = gRandom() * 0.04 * Math.abs(dy);
 
 	    // try to avoid getting boringly stuck at top or bottom.
 	    // but don't want to utterly lose 'streaming'.
 	    var oy = 1;
 	    if (RandomBool(0.1)) {
-		var ty = Math.pow( T01(Math.abs(self.x - gh(0.5)), gh(0.5)), 3 );
-		oy = 1 + ty * 0.15;
+		var t01 = T01(Math.abs(self.x - gh(0.5)), gh(0.5))
+		var ty = Math.pow( t01, 3 );
+		oy = 1 + ty * 0.2;
+		console.log(F(t01), F(ty), F(oy));
 	    }
 
 	    if( self.GetMidY() < paddle.GetMidY() ) {
