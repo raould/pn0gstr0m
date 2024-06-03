@@ -19,7 +19,10 @@
   * sorry the "class" coding style is so randomly ugly.
   * things probably should always get 1 last draw call when lifespan is zero.
 * more bugs:
+  * check the "bug:" comments, safari is killing me?!@#
   * support rotation resizing w/out destroying game in progress.
+  * safari ios/ipados alpha bug on MakeRadarAnimation.
+  * safari crt outline clipping not working, see the touch target!?
 * bounties (spiritual, not cash):
   * see misc bounty comments in code.
   * power meter that goes up/down on hit/missed pucks, for some kind of bonus.

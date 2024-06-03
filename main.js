@@ -952,10 +952,14 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.DrawTouchTarget = function() {
+	// bug: yet another safari ios/ipados bug? the clipping doesn't
+	// actually correctly work and so the butt end of the pointer
+	// shows through a pixel or two, all very strange. so at least
+	// making this pointer color == crt outline color to be less obvi.
 	if (exists(gMoveTargetY) && !self.isAttract) {
 	    var xsize = syi(12);
 	    var ysize = syi(7);
-	    var xoff = xyNudge(gMoveTargetY, ysize, 10, gPointerSide);
+	    var xoff = xyNudge(gMoveTargetY, ysize, 12, gPointerSide);
 	    ForSide(gPointerSide, 
 		() => {
 		    var left = xoff;
@@ -966,7 +970,7 @@ function DrawBounds( alpha=0.5 ) {
 			gCx.moveTo( left, y-ysize );
 			gCx.lineTo( left, y+ysize );
 			gCx.lineTo( right, y );
-			gCx.fillStyle = RandomGreen(0.5);
+			gCx.fillStyle = crtOutlineColorStr;
 			gCx.fill();
 		    });
 		},
@@ -979,7 +983,7 @@ function DrawBounds( alpha=0.5 ) {
 			gCx.moveTo( right, y-ysize );
 			gCx.lineTo( right, y+ysize );
 			gCx.lineTo( left, y );
-			gCx.fillStyle = RandomGreen(0.5);
+			gCx.fillStyle = crtOutlineColorStr;
 			gCx.fill();
 		    });
 		}
