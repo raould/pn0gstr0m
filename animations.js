@@ -301,7 +301,7 @@ function MakeEngorgeAnimation(props) {
     });
 }
 
-// todo: bug: safari ios/ipados renders the alpha here
+// bug: safari ios/ipados renders the alpha here
 // much more transparently than any windows desktop browsers
 // (firefox, webkit) that i tested with. i don't know why
 // this particular thing hits that bug but other parts
