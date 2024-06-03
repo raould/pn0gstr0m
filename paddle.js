@@ -458,7 +458,7 @@ function Paddle(props) {
     };
 
     self.UpdatePillTarget = function(gameState) {
-	self.aiPill = gameState.cpuPill;
+	self.aiPill = gameState.level.cpuPill;
     };
 
     self.Init(props.label);
