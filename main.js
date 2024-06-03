@@ -306,6 +306,17 @@ function Cxdo(fn) { // get it?
     gCx.restore();
 }
 
+// canvas' line drawing api is... weird.
+function O5( v ) {
+    return Math.floor(v) + 0.5;
+}
+function MoveTo( x, y ) {
+    gCx.moveTo( O5(x), O5(y) );
+}
+function LineTo( x, y ) {
+    gCx.lineTo( O5(x), O5(y) );
+}
+
 function WX( v ) {
     return v + RandomCentered(0, sx(0.2));
 }
@@ -1722,6 +1733,8 @@ function Start() {
 
     gCanvas = document.getElementById( kCanvasName );
     gCx = gCanvas.getContext( '2d' );
+    gCx.MoveTo = MoveTo;
+    gCx.LineTo = LineTo;
     DoResize();
     RecalculateConstants();
 
