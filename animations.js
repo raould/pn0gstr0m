@@ -6,21 +6,24 @@
 function GenerateLightningPath(props) {
     // props = { x0, y0, x1, y1, range, steps=5 }
     // i wish i had started off this thing in typescript, you know?
-    var { x0, y0, x1, y1, range, steps=5 } = props;
-    var points = [[O5(x0), O5(y0)]];
-    if (isU(x0), isU(y0), isU(x1), isU(y1)) {
+    // er, ahem, there's some bug where the last leg of lightning is
+    // very short e.g. decimate, so i am reversing start and end
+    // on purpose to compensate because it looks less bad for now.
+    var { x0:xB, y0:yB, x1:xA, y1:yA, range, steps=5 } = props;
+    var points = [[O5(xA), O5(yA)]];
+    if (isU(xA), isU(yA), isU(xB), isU(yB)) {
 	Assert(false, "bad props");
 	return points;
     }
-    if (isU(range)) { range = Math.min(Math.abs((x1-x0)/10), Math.abs((y1-y0)/10)); }
+    if (isU(range)) { range = Math.min(Math.abs((xB-xA)/10), Math.abs((yB-yA)/10)); }
     if (steps <= 0) { steps = 1; }
-    var sx = (x1 - x0)/steps;
-    var sy = (y1 - y0)/steps;
+    var sx = ii((xB - xA)/steps);
+    var sy = ii((yB - yA)/steps);
     for (var t = 1; t <= steps; ++t) {
 	var px = points[t-1][0];
 	var py = points[t-1][1];
-	var x = x0 + (sx*t);
-	var y = y0 + (sy*t);
+	var x = xA + (sx*t);
+	var y = yA + (sy*t);
 	var dx = x-px;
 	var dy = y-py;
 	var n = Math.sqrt(dx*dx+dy*dy);
@@ -199,9 +202,8 @@ function MakeTargetsLightningAnimation(props) {
 	lifespan,
 	drawFn: () => {
 	    targets.forEach(xy => {
-		var alpha = RandomRange(0.2, 0.7);
 		AddLightningPath({
-		    color: RandomColor(alpha),
+		    color: RandomColor(),
 		    x0: paddle.GetMidX(),
 		    y0: paddle.GetMidY(),
 		    x1: xy.x,
