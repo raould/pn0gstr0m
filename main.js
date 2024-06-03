@@ -757,8 +757,8 @@ function DrawBounds( alpha=0.5 ) {
 
     self.CreateRandomPuck = function() {
 	var p = new Puck({ x: gw(RandomRange(1/8, 7/8)),
-			   y: gh(RandomRange(1/8, 7/8)),
-			   vx: RandomRange(gMaxVX/5, gMaxVX/10),
+			   y: gh(RandomRange(0.4, 0.6)),
+			   vx: RandomRange(gMaxVX*0.3, gMaxVX*0.5),
 			   vy: RandomCentered(1, 0.5),
 			   ur: true });
 	return p;
