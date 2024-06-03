@@ -12,7 +12,7 @@
 * play blip if puck collides and doesn't split.
 * powerup pill timeout after say 10 seconds.
 * the ForSide() thing has gotten ever more ugly & confusing.
-* super fugly inconsistencies:
+* super fugly inconsistencies, some but not all of them include:
   * should extract all the left vs. right stuff into a Side class, parent of Paddle etc.
   * clashing styles of events queue vs. immediate changes.
   * gDebug stuff is sort of super hacky all over the place.
@@ -20,8 +20,9 @@
   * things probably should always get 1 last draw call when lifespan is zero.
 * more bugs:
   * support rotation resizing w/out destroying game in progress.
-* bounties:
+* bounties (spiritual, not cash):
   * see misc bounty comments in code.
   * power meter that goes up/down on hit/missed pucks, for some kind of bonus.
     * power meter also goes up with things like decimate powerup.
   * ai no line of sight through barrier == ignore pucks on that row.
+  * fix the crt outline drawing order to not leave those little corner gaps.

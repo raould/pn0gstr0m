@@ -24,6 +24,10 @@ function RandomChoice(a, b, chooseA) {
     return RandomBool(chooseA) ? a : b;
 }
 
+function RandomChoices(choices) {
+    return choices[ii(gRandom() * (choices.length-1))];
+}
+
 // closed interval [min, max].
 function RandomRange( min, max ) {
     if (min > max) {

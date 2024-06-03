@@ -12,8 +12,8 @@ function Spark( x0, y0, vx, vy ) {
 	self.y = y0;
 	self.prevX = self.x;
 	self.prevY = self.y;
-	self.width = gSparkWidth * gRandom()*2;
-	self.height = gSparkHeight * gRandom()*2;
+	self.width = gSparkWidth;
+	self.height = gSparkHeight;
 	self.vx = vx;
 	self.vy = vy;
 	// randomize lifespan a little for visual variety.
