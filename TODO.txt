@@ -20,6 +20,7 @@
   * things probably should always get 1 last draw call when lifespan is zero.
 * more bugs:
   * support rotation resizing w/out destroying game in progress.
+  * radar effect not showing up on my iphone?
 * bounties:
   * see misc bounty comments in code.
   * power meter that goes up/down on hit/missed pucks, for some kind of bonus.

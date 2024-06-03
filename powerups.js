@@ -22,7 +22,7 @@
    testFn: (gameState) => {},
    canSkip, // don't get stuck waiting on this one's testFn to pass.
    drawFn: (self, alpha) => {},
-   boomFn: (gameState) => {},
+   boomFn: (pill, gameState) => {},
    endFn: () => {},
    }
 */
@@ -146,7 +146,7 @@ function MakeForcePushProps(maker) {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
-	boomFn: (gameState) => {
+	boomFn: (pill, gameState) => {
 	    PlayPowerupBoom();
 	    var targetSign = ForSide(maker.side, -1, 1);
 	    gPucks.A.forEach(p => {
@@ -209,7 +209,7 @@ function MakeDecimateProps(maker) {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
-	boomFn: (gameState) => {
+	boomFn: (pill, gameState) => {
 	    // try to destroy at least 1, but leave at least 1 still alive.
 	    // prefer destroying the ones closest to the player.
 	    var count = Math.max(1, Math.floor(gPucks.A.length*0.6)); // technically not "deci"mate, i know.
@@ -267,7 +267,7 @@ function MakeEngorgeProps(maker) {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
-	boomFn: (gameState) => {
+	boomFn: (pill, gameState) => {
 	    PlayPowerupBoom();
 	    gameState.AddAnimation(MakeEngorgeAnimation({
 		lifespan: 1000 * 12,
@@ -310,7 +310,7 @@ function MakeSplitProps(maker) {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
-	boomFn: (gameState) => {
+	boomFn: (pill, gameState) => {
 	    var r = 10/gPucks.A.length;
 	    var targets = gPucks.A.filter((p, i) => {
 		return i < 1 ? true : RandomBool(r);
@@ -362,13 +362,13 @@ function MakeDefendProps(maker) {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
-	boomFn: (gameState) => {
+	boomFn: (pill, gameState) => {
 	    PlayPowerupBoom();
 	    var n = 4; // match: kBarriersArrayInitialSize.
 	    var hp = 30;
 	    var width = sx1(hp/3);
 	    var height = (gHeight-gYInset*2) / n;
-	    var x = gw(ForSide(maker.side, 0.1, 0.9));
+	    var x = ForSide(maker.side, gw(0.1), gw(0.9)-width);
 	    var targets = [];
 	    for (var i = 0; i < n; ++i) {
 		var y = gYInset + i * height;
@@ -424,7 +424,7 @@ function MakeOptionProps(maker) {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
-	boomFn: (gameState) => {
+	boomFn: (pill, gameState) => {
 	    PlayPowerupBoom();
 	    var n = 6; // match: kOptionsArrayInitialSize.
 	    var yy = (gHeight-gYInset*2)/n;
@@ -432,7 +432,7 @@ function MakeOptionProps(maker) {
 	    var height = Math.min(gPaddleHeight/2, yy/2);
 	    var hp = 30;
 	    ForCount(n, (i) => {
-		var x = ForSide(maker.side, gw(0.15), gw(0.85));
+		var x = ForSide(maker.side, gw(0.15), gw(0.85)-width);
 		var xoff = isEven(i) ? 0 : gw(0.02);
 		var y = gYInset+yy*i;
 		var yMin = y;
@@ -507,10 +507,12 @@ function MakeNeoProps(maker) {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
-	boomFn: (gameState) => {
+	boomFn: (pill, gameState) => {
 	    PlayPowerupBoom();
+	    var w = sx1(10);
 	    maker.paddle.AddNeo({
-		x: ForSide(maker.side, gw(0.4), gw(0.6)),
+		x: ForSide(maker.side, gw(0.4), gw(0.6)-w),
+		width: w, height: gh(1),
 		normalX: ForSide(maker.side, 1, -1),
 		lifespan: 1000 * 4,
 		side: maker.side,
@@ -552,7 +554,7 @@ function MakeRadarProps(maker) {
 		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
-	boomFn: (gameState) => {
+	boomFn: (pill, gameState) => {
 	    PlayPowerupBoom();
 	    maker.powerupLocks[name] = true;
 	    gameState.AddAnimation(MakeRadarAnimation({
@@ -592,7 +594,7 @@ function MakeChaosProps(maker) {
 		DrawText( self.label[i], "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
 	    });
 	},
-	boomFn: (gameState) => {
+	boomFn: (pill, gameState) => {
 	    PlayPowerupBoom();
 	    var targets = [];
 	    gPucks.A.forEach((p,i) => {
@@ -604,6 +606,46 @@ function MakeChaosProps(maker) {
 	    gameState.AddAnimation(MakeChaosAnimation({
 		targets
 	    }));
+	},
+    };
+}
+
+function MakeYarsProps(maker) {
+    var name = 'yars';
+    return {
+	name,
+	width: sx(15), height: sy(30),
+	lifespan: kPillLifespan,
+	label: "||",
+	ylb: sy(20),
+	isUrgent: true,
+	fontSize: gSmallFontSizePt,
+	testFn: (gameState) => {
+	    return isU(maker.paddle.yars) && (gDebug || gPucks.A.length > 25);
+	},
+	canSkip: true,
+	drawFn: (self, alpha) => {
+	    Cxdo(() => {
+		var wx = WX(self.x);
+		var wy = WY(self.y);
+		var r = 10;
+
+		gCx.beginPath();
+		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, r );
+		gCx.fillStyle = backgroundColorStr;
+		gCx.fill();
+
+		gCx.beginPath();
+		gCx.roundRect( WX(wx), WY(wy), self.width, self.height, r );
+		gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+		gCx.lineWidth = sx1(2);
+		gCx.stroke();
+
+		DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
+	    });
+	},
+	boomFn: (pill, gameState) => {
+	    PlayPowerupBoom();
 	},
     };
 }

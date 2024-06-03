@@ -121,7 +121,7 @@ function Pill( props ) {
 	paddles.forEach( function(paddle) {
 	    var hit = self.PaddleCollision(paddle);
 	    if( hit ) {
-		self.boomFn(gameState);
+		self.boomFn(self, gameState);
 		nextSelf = undefined;
 	    }
 	} );

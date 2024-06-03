@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gShowToasts = gDebug;
 
 var kCanvasName = "canvas"; // match: index.html
@@ -163,6 +163,7 @@ var kPuckArrayInitialSize = 300;
 var kSparkArrayInitialSize = 200;
 var kBarriersArrayInitialSize = 4;
 var kOptionsArrayInitialSize = 6;
+var kYarsArrayInitialSize = 20;
 var kSpawnPlayerPillFactor = gDebug ? 0.1 : 0.002;
 var kPillSpawnCooldown = 1000 * 10;
 var gPillSpawnCountdown = kPillSpawnCooldown;
@@ -615,15 +616,16 @@ function DrawBounds( alpha=0.5 ) {
 		speedupTimeout: Number.MAX_SAFE_INTEGER,
 		puckCount: Number.MAX_SAFE_INTEGER,
 		pills: [
-		    MakeForcePushProps,
-		    MakeDecimateProps,
-		    MakeEngorgeProps,
-		    MakeSplitProps,
-		    MakeDefendProps,
-		    MakeOptionProps,
-		    MakeNeoProps,
-		    MakeChaosProps,
-		    MakeRadarProps,
+		    // MakeForcePushProps,
+		    // MakeDecimateProps,
+		    // MakeEngorgeProps,
+		    // MakeSplitProps,
+		    // MakeDefendProps,
+		    // MakeOptionProps,
+		    // MakeNeoProps,
+		    // MakeChaosProps,
+		    // MakeRadarProps,
+		    MakeYarsProps,
 		],
 		playerPaddle: self.playerPaddle,
 		cpuPaddle: self.cpuPaddle,

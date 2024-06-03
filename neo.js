@@ -3,16 +3,16 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-function Neo( props /*{x, normalX, lifespan, side}*/ ) {
+function Neo( props /*{x, width, height, normalX, lifespan, side}*/ ) {
     var self = this;
 
     self.Init = function() {
 	self.id = gNextID++;
 	self.x = props.x;
 	self.y = 0;
+	self.width = props.width;
+	self.height = props.height;
 	self.normalX = props.normalX;
-	self.width = sx1(10);
-	self.height = gh(1);
 	self.lifespan0 = props.lifespan;
 	self.lifespan = self.lifespan0;
 	self.alive = self.lifespan > 0;

@@ -22,9 +22,7 @@ function Paddle(props) {
     self.Init = function(label) {
 	self.isPlayer = props.isPlayer;
 	self.side = props.side;
-	// barriers are { x, y, width, height,
-	//   prevX, prevY,
-	//   CollisionTest()
+	// barriers are blockades.
 	self.barriers = {
 	    A: new ReuseArray(kBarriersArrayInitialSize),
 	    B: new ReuseArray(kBarriersArrayInitialSize)
@@ -36,6 +34,8 @@ function Paddle(props) {
 	};
 	// neos are sticky fly traps.
 	self.neo = undefined;
+	// yars are blocky moving defenses.
+	self.yars = undefined;
 
 	self.id = gNextID++;
 	self.hp0 = props.hp;
@@ -84,10 +84,15 @@ function Paddle(props) {
 	self.neo = new Neo(props);
     };
 
+    self.AddYars = function( props ) {
+	self.yars = new Yars(props);
+    };
+
     self.StepPowerups = function( dt, gameState ) {
 	self.StepBarriers( dt );
 	self.StepOptions( dt, gameState );
 	self.StepNeo( dt, gameState );
+	self.StepYars( dt );
     };
 
     self.StepBarriers = function( dt ) {
@@ -111,6 +116,12 @@ function Paddle(props) {
     self.StepNeo = function( dt, gameState ) {
 	if (exists(self.neo)) {
 	    self.neo = self.neo.Step( dt, gameState );
+	}
+    };
+
+    self.StepYars = function( dt, gameState ) {
+	if (exists(self.yars)) {
+	    self.yars = self.yars.Step( dt, gameState );
 	}
     };
 
@@ -172,6 +183,9 @@ function Paddle(props) {
 	if (exists(self.neo)) {
 	    self.neo.Draw( alpha, gameState );
 	}
+	if (exists(self.yars)) {
+	    seld.yars.Draw( alpha );
+	};
 	Cxdo(() => {
 	    var hpw = isU(self.hp) ?
 		self.width :
