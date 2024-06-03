@@ -7,7 +7,7 @@ function GenerateLightningPath(props) {
     // props = { x0, y0, x1, y1, range, steps=5 }
     // i wish i had started off this thing in typescript, you know?
     var { x0, y0, x1, y1, range, steps=5 } = props;
-    var points = [[x0, y0]];
+    var points = [[O5(x0), O5(y0)]];
     if (isU(x0), isU(y0), isU(x1), isU(y1)) {
 	Assert(false, "bad props");
 	return points;
@@ -29,7 +29,7 @@ function GenerateLightningPath(props) {
 	var ny = dx/n;
 	var xo = x + (nx * RandomCentered(0, range, range/2));
 	var yo = y + (ny * RandomCentered(0, range, range/2));
-	points.push([xo, yo]);
+	points.push([O5(xo), O5(yo)]);
     }
     return points;
 }
