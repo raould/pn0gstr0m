@@ -638,7 +638,7 @@ function DrawBounds( alpha=0.5 ) {
 		    MakeOptionProps,
 		    MakeNeoProps,
 		    MakeChaosProps,
-		    MakeRadarProps,
+		    // MakeRadarProps -- todo: disabled due to safar alpha bug, see MakeRadarAnimation.
 		],
 		playerPaddle: self.playerPaddle,
 		cpuPaddle: self.cpuPaddle,

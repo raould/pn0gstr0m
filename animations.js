@@ -301,6 +301,12 @@ function MakeEngorgeAnimation(props) {
     });
 }
 
+// todo: bug: safari ios/ipados renders the alpha here
+// much more transparently than any windows desktop browsers
+// (firefox, webkit) that i tested with. i don't know why
+// this particular thing hits that bug but other parts
+// of the rendering don't obviously encounter it???
+//
 // bounty: somebody should make this actually
 // line trace into the future so the graph
 // is literally where you should be w/in the
