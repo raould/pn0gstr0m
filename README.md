@@ -8,5 +8,5 @@
 * fyi when messing with the code it can be useful to change main.js gDebug = true, then use keys: 'a' to add pucks, 'b' to spawn next powerup, 'q' to quit the game, et. al.
 * the music: https://www.youtube.com/playlist?list=PLxMqvaNKx1cL2yila-UPujI08eNQrDGd9
 
-[<img src="pn0g.PNG"](https://raould.github.io/pn0gstr0m/)
+[<img src="pn0g.PNG">](https://raould.github.io/pn0gstr0m/)
 
