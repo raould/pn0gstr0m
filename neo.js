@@ -83,7 +83,7 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
 
 	if (RandomBool(t)) { // streamers.
 	    var x0 = mx;
-	    var y0 = RandomCentered(gh(0.5), gh(0.2));
+	    var y0 = RandomCentered(gh(0.5), gh(0.3));
 	    var x1 = ForSide(self.side,
 			     RandomRange(self.x + self.width*4, gw(1)-gXInset),
 			     RandomRange(self.x - self.width*3, gXInset));
@@ -91,10 +91,11 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
 	    gameState.AddAnimation(
 		MakeCrawlingLightningAnimation({
 		    lifespan: ii(100 + 250 * t),
-		    x0, y0, x1, y1,
+		    x0, y0,
+		    x1, y1,
 		    range: 5,
 		    steps: 50,
-		    substeps: ii(5 + 5 * t),
+		    substeps: Math.max(3, ii(t*50)+5),
 		    color: "green",
 		})
 	    );
