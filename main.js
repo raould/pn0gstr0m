@@ -924,8 +924,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.DrawScoreHeader = function() {
 	Cxdo(() => {
-	    var a = 0.8;
-	    var style = RandomGrey(self.Alpha(a));
+	    var style = RandomGrey(self.Alpha(0.4));
 	    ForSide(self.isAttract ? "right" : gPointerSide, 
 		() => {
 		    gCx.fillStyle = style;
