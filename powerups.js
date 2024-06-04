@@ -225,7 +225,7 @@ function MakeDecimateProps(maker) {
 		    AddSparks(p.x, p.y, p.vx, p.vy);
 		});
 		gameState.AddAnimation(MakeTargetsLightningAnimation({
-		    lifespan: 250,
+		    lifespan: 200,
 		    targets,
 		    paddle: maker.paddle,
 		}));
