@@ -189,7 +189,7 @@ function Puck(props) {
 	    // but don't want to utterly lose 'streaming'.
 	    var oy = 1;
 	    if (RandomBool(0.1)) {
-		var t01 = T01(Math.abs(self.x - gh(0.5)), gh(0.5))
+		var t01 = T01(Math.abs(self.x - gh(0.5)), gh(0.5));
 		var ty = Math.pow( t01, 3 );
 		oy = 1 + ty * 1;
 		//console.log(F(t01), F(ty), F(oy), F(mody*oy));
