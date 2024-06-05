@@ -166,9 +166,10 @@ var kOptionsArrayInitialSize = 6;
 
 // prevent pills from showing up too fast,
 // also prevent them from showing up too early.
-var kPillSpawnCooldown = 1000 * 1;
+var kPillSpawnCooldown = 1000 * 10;
 // this countdown is a block on both player & cpu ill spawning.
-var gPillSpawnCountdown = 1000 * 3;
+// first wait is longer before the very first pill.
+var gPillSpawnCountdown = 1000 * 25;
 var kSpawnPlayerPillFactor = gDebug ? 0.1 : 0.002;
 
 var gNextID = 0;
@@ -200,6 +201,7 @@ var gButtonPressed = false;
 var gAddPuckPressed = false;
 var gGameOverPressed = false;
 var gSpawnPillPressed = false;
+var gStepPressed = false;
 var gNextMusicPressed = false;
 function ResetInput() { // abomination.
     gPausePressed = false;
@@ -212,6 +214,7 @@ function ResetInput() { // abomination.
     gAddPuckPressed = false;
     gGameOverPressed = false;
     gSpawnPillPressed = false;
+    gStepPressed = false;
     gNextMusicPressed = false;
 }
 var gPointerSide = undefined;
@@ -655,13 +658,20 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.Step = function( dt ) {
+	var stepping = false;
+	if (self.paused && gStepPressed) {
+	    stepping = true;
+	    dt = kTimeStep;
+	    gStepPressed = false;
+	}
+
 	self.level.Step( dt );
 	gMaxVX = self.level.maxVX;
 
 	self.MaybeSpawnPills( dt );
-	self.ProcessInput();
+	self.ProcessAllInput();
 
-	if (!self.paused) {
+	if (!self.paused || stepping) {
 	    self.playerPaddle.Step( dt, self );
 	    self.cpuPaddle.Step( dt, self );
 	    self.StepMoveables( dt );
@@ -714,6 +724,8 @@ function DrawBounds( alpha=0.5 ) {
 		self.unfairPillCount--;
 	    }
 	}
+
+	Assert(Math.abs(self.unfairPillCount) <= kDiffMax, "unfairPillCount");
     };
 
     self.MaybeSpawnPill = function( dt, prev, spawnFactor, maker ) {
@@ -778,7 +790,7 @@ function DrawBounds( alpha=0.5 ) {
 	return p;
     };
 
-    self.ProcessInput = function() {
+    self.ProcessAllInput = function() {
 	if( !self.isAttract ) {
 	    gEventQueue.forEach((event, i) => {
 		event.updateFn();
@@ -1090,37 +1102,27 @@ function DrawBounds( alpha=0.5 ) {
 
     self.DrawDebug = function() {
 	if( ! gDebug ) { return; }
-
 	DrawBounds(0.2);
-
+	self.cpuPaddle.DrawDebug();
 	Cxdo(() => {
 	    gCx.fillStyle = "magenta";
 	    DrawText(`${self.unfairPillCount} ${gPillSpawnCountdown}`, "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
-	});
 
-	Cxdo(() => {
 	    gCx.fillStyle = RandomGrey();
 	    var mvx = gPucks.A.reduce((m,p) => Math.max(m, Math.abs(p.vx)), 0);
 	    DrawText(F(mvx.toString()), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
 	    gCx.fillStyle = "red";
 	    DrawText(F(self.level.maxVX.toString()), "left", gw(0.1), gh(0.1)+gSmallFontSize, gSmallFontSizePt);
-	});
 
-	Cxdo(() => {
 	    gCx.beginPath();
 	    gCx.rect(gPointerX-5, gPointerY-5, 10, 10);
 	    gCx.fillStyle = RandomColor();
 	    gCx.fill();
-	});
 
-	Cxdo(() => {
 	    gCx.fillStyle = RandomBlue(0.5);
 	    DrawText( gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt );
-	});
+	    DrawText( gFrameCount.toString(), "right", gw(0.9), gh(0.9), gSmallFontSizePt );
 
-	self.cpuPaddle.DrawDebug();
-
-	Cxdo(() => {
 	    gCx.fillStyle = RandomForColor(blueSpec, 0.3);
 	    DrawText( "D E B U G", "center", gw(0.5), gh(0.8), gBigFontSizePt );
 	});
@@ -1152,7 +1154,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.Step = function() {
 	var nextState = undefined;
-	nextState = self.ProcessInput();		
+	nextState = self.ProcessAllInput();		
 	return nextState;
     };
 
@@ -1186,7 +1188,7 @@ function DrawBounds( alpha=0.5 ) {
 	});
     };
 
-    self.ProcessInput = function() {
+    self.ProcessAllInput = function() {
 	var nextState = undefined;
 	gEventQueue.forEach((event, i) => {
 	    event.updateFn();
@@ -1223,7 +1225,7 @@ function DrawBounds( alpha=0.5 ) {
     self.Step = function( dt ) {
 	var nextState = undefined;
 	self.attract.Step( dt );
-	nextState = self.ProcessInput();
+	nextState = self.ProcessAllInput();
 	if (exists(nextState)) {
 	    StopAudio();
 	    gUserMutedButtonEnabled = false;
@@ -1231,7 +1233,7 @@ function DrawBounds( alpha=0.5 ) {
 	return nextState;
     };
 
-    self.ProcessInput = function() {
+    self.ProcessAllInput = function() {
 	var nextState = undefined;
 	var hasEvents = gEventQueue.length > 0;
 	if (hasEvents) {
@@ -1239,8 +1241,8 @@ function DrawBounds( alpha=0.5 ) {
 		event.updateFn();
 		// use only the first event that changes the state.
 		if (isU(nextState) &&
-		    event.eventType != kEventTouchMove &&
-		    event.eventType != kEventMouseMove) {
+		    event.type != kEventTouchMove &&
+		    event.type != kEventMouseMove) {
 		    nextState = self.ProcessOneInput();
 		}
 	    });
@@ -1369,11 +1371,11 @@ function DrawBounds( alpha=0.5 ) {
     self.Step = function() {
 	var nextState = undefined;
 	self.gotoMenu = (gGameTime - self.started) > self.timeoutMsg;
-	nextState = self.ProcessInput();
+	nextState = self.ProcessAllInput();
 	return nextState;
     };
 
-    self.ProcessInput = function() {
+    self.ProcessAllInput = function() {
 	var nextState = undefined;
 	var hasEvents = gEventQueue.length > 0;
 	if (hasEvents) {
@@ -1442,7 +1444,7 @@ function DrawBounds( alpha=0.5 ) {
 function GamepadJoystickMove(e) {
     if (Math.abs(e.verticalValue) <= kJoystickDeadZone) {
 	gEventQueue.push({
-	    eventType: kEventStickUp,
+	    type: kEventStickUp,
 	    updateFn: () => {
 		gStickUp = false;
 		gStickDown = false;
@@ -1452,7 +1454,7 @@ function GamepadJoystickMove(e) {
     }
     if (e.verticalValue < -kJoystickDeadZone) {
 	gEventQueue.push({
-	    eventType: kEventStickUp,
+	    type: kEventStickUp,
 	    updateFn: () => {
 		gStickUp = true;
 		gStickDown = false;
@@ -1462,7 +1464,7 @@ function GamepadJoystickMove(e) {
     }
     if (e.verticalValue > kJoystickDeadZone) {
 	gEventQueue.push({
-	    eventType: kEventStickDown,
+	    type: kEventStickDown,
 	    updateFn: () => {
 		gStickUp = false;
 		gStickDown = true;
@@ -1476,7 +1478,7 @@ function GamepadButtonChange(e) {
     // dpad buttons up & down move player paddle.
     if (e.gamepad.gamepad.buttons[StandardMapping.Button.D_PAD_UP].pressed) {
 	gEventQueue.push({
-	    eventType: kEventButtonDown,
+	    type: kEventButtonDown,
 	    updateFn: () => {
 		gDownButtons[StandardMapping.Button.D_PAD_UP] = true;
 	    }
@@ -1484,7 +1486,7 @@ function GamepadButtonChange(e) {
 	return;
     } else {
 	gEventQueue.push({
-	    eventType: kEventButtonUp,
+	    type: kEventButtonUp,
 	    updateFn: () => {
 		delete gDownButtons[StandardMapping.Button.D_PAD_UP];
 	    }
@@ -1492,7 +1494,7 @@ function GamepadButtonChange(e) {
     }
     if (e.gamepad.gamepad.buttons[StandardMapping.Button.D_PAD_BOTTOM].pressed) {
 	gEventQueue.push({
-	    eventType: kEventButtonDown,
+	    type: kEventButtonDown,
 	    updateFn: () => {
 		gDownButtons[StandardMapping.Button.D_PAD_BOTTOM] = true;
 	    }
@@ -1500,7 +1502,7 @@ function GamepadButtonChange(e) {
 	return;
     } else {
 	gEventQueue.push({
-	    eventType: kEventButtonUp,
+	    type: kEventButtonUp,
 	    updateFn: () => {
 		delete gDownButtons[StandardMapping.Button.D_PAD_BOTTOM];
 	    }
@@ -1519,7 +1521,7 @@ function GamepadButtonChange(e) {
     // a quick and dirty hack, doesn't track each button individually.
     if (e.gamepad.gamepad.buttons.some(b => b.pressed || b.value > 0)) {
 	gEventQueue.push({
-	    eventType: kEventButtonDown,
+	    type: kEventButtonDown,
 	    updateFn: () => {
 		gButtonPressed = true;
 	    },
@@ -1527,7 +1529,7 @@ function GamepadButtonChange(e) {
     }
     else {
 	gEventQueue.push({
-	    eventType: kEventButtonUp,
+	    type: kEventButtonUp,
 	    updateFn: () => {
 		gButtonPressed = false;
 	    },
@@ -1564,9 +1566,9 @@ function PointerProcess(t, updateFn) {
     updateFn(tx, ty);
 }
 
-function SetPointerTarget(tx, ty, eventType) {
+function SetPointerTarget(tx, ty, type) {
     gEventQueue.push({
-	eventType,
+	type,
 	updateFn: () => {
 	    gPointerX = tx;
 	    gPointerY = ty;
@@ -1606,7 +1608,7 @@ function TouchEnd(e) {
     var startTime = gPointerTimestamps.start;
     var endTime = gGameTime;
     gEventQueue.push({
-	eventType: kEventTouchEnd,
+	type: kEventTouchEnd,
 	updateFn: () => {
 	    gMoveTargetStepY = 0;
 	    gPointerTimestamps.end = endTime;
@@ -1644,7 +1646,7 @@ function MouseUp(e) {
     var startTime = gPointerTimestamps.start;
     var endTime = gGameTime;
     gEventQueue.push({
-	eventType: kEventMouseUp,
+	type: kEventMouseUp,
 	updateFn: () => {
 	    gMoveTargetStepY = 0;
 	    gPointerTimestamps.end = endTime;
@@ -1810,7 +1812,7 @@ function InitEvents() {
 	if( e.keyCode == 38 || e.keyCode == 87 ) { // arrow up, w
 	    e.preventDefault();
 	    gEventQueue.push({
-		eventType: kEventKeyDown,
+		type: kEventKeyDown,
 		updateFn: () => {
 		    gUpPressed = true;
 		    gMoveTargetY = undefined;
@@ -1826,7 +1828,7 @@ function InitEvents() {
 	if( e.keyCode == 40 || e.keyCode == 83 ) { // arrow down, s
 	    e.preventDefault();
 	    gEventQueue.push({
-		eventType: kEventKeyDown,
+		type: kEventKeyDown,
 		updateFn: () => {
 		    gDownPressed = true;
 		    gMoveTargetY = undefined;
@@ -1841,7 +1843,7 @@ function InitEvents() {
 	}
 	if( e.keyCode == 80 || e.keyCode == 19 ) { // 'p', 'pause'
 	    gEventQueue.push({
-		eventType: kEventKeyDown,
+		type: kEventKeyDown,
 		updateFn: () => {
 		    gPausePressed = true;
 		    gDownKeys[e.keyCode] = true;
@@ -1850,7 +1852,7 @@ function InitEvents() {
 	}
 	if( e.keyCode == 32 ) { // ' '
 	    gEventQueue.push({
-		eventType: kEventKeyDown,
+		type: kEventKeyDown,
 		updateFn: () => {
 		    gDownKeys[e.keyCode] = true;
 		}
@@ -1858,7 +1860,7 @@ function InitEvents() {
 	}
 	if( e.keyCode == 65 ) { // 'a'
 	    gEventQueue.push({
-		eventType: kEventKeyDown,
+		type: kEventKeyDown,
 		updateFn: () => {
 		    if (gDebug) { gAddPuckPressed = true; }
 		}
@@ -1866,7 +1868,7 @@ function InitEvents() {
 	}
 	if( e.keyCode == 81 ) { // 'q'
 	    gEventQueue.push({
-		eventType: kEventKeyDown,
+		type: kEventKeyDown,
 		updateFn: () => {
 		    if (gDebug) { gGameOverPressed = true; }
 		}
@@ -1874,15 +1876,23 @@ function InitEvents() {
 	}
 	if( e.keyCode == 66 ) { // 'b'
 	    gEventQueue.push({
-		eventType: kEventKeyDown,
+		type: kEventKeyDown,
 		updateFn: () => {
 		    if (gDebug) { gSpawnPillPressed = true; }
 		}
 	    });
 	}
+	if( e.keyCode == 49 ) { // '1'
+	    gEventQueue.push({
+		type: kEventKeyDown,
+		updateFn: () => {
+		    if (gDebug) { gStepPressed = true; }
+		}
+	    });
+	}
 	if( e.keyCode == 69 ) { // 'e'
 	    gEventQueue.push({
-		eventType: kEventKeyDown,
+		type: kEventKeyDown,
 		updateFn: () => {
 		    if (gDebug) { gNextMusicPressed = true; }
 		}
@@ -1890,7 +1900,7 @@ function InitEvents() {
 	}
 	if (e.keyCode == 46) { // delete.
 	    gEventQueue.push({
-		eventType: kEventKeyDown,
+		type: kEventKeyDown,
 		updateFn: () => {
 		    gClearHighScorePressed = true;
 		}
@@ -1902,7 +1912,7 @@ function InitEvents() {
 	if( e.keyCode == 38 || e.keyCode == 87 ) { // arrow up, w
 	    e.preventDefault();
 	    gEventQueue.push({
-		eventType: kEventKeyUp,
+		type: kEventKeyUp,
 		updateFn: () => {
 		    gUpPressed = false;
 		    delete gDownKeys[e.keyCode];
@@ -1912,7 +1922,7 @@ function InitEvents() {
 	if( e.keyCode == 40 || e.keyCode == 83 ) { // arrow down, s
 	    e.preventDefault();
 	    gEventQueue.push({
-		eventType: kEventKeyUp,
+		type: kEventKeyUp,
 		updateFn: () => {
 		    gDownPressed = false;
 		    delete gDownKeys[e.keyCode];
@@ -1921,7 +1931,7 @@ function InitEvents() {
 	}
 	if( e.keyCode == 80 || e.keyCode == 19 ) { // 'p', 'pause'
 	    gEventQueue.push({
-		eventType: kEventKeyUp,
+		type: kEventKeyUp,
 		updateFn: () => {
 		    gPausePressed = false;
 		    delete gDownKeys[e.keyCode];
@@ -1930,7 +1940,7 @@ function InitEvents() {
 	}
 	if( e.keyCode == 32 ) { // ' '
 	    gEventQueue.push({
-		eventType: kEventKeyUp,
+		type: kEventKeyUp,
 		updateFn: () => {
 		    delete gDownKeys[e.keyCode];
 		}
@@ -1938,7 +1948,7 @@ function InitEvents() {
 	}
 	if( e.keyCode == 65 ) { // 'a'
 	    gEventQueue.push({
-		eventType: kEventKeyUp,
+		type: kEventKeyUp,
 		updateFn: () => {
 		    gAddPuckPressed = false;
 		}
@@ -1946,7 +1956,7 @@ function InitEvents() {
 	}
 	if( e.keyCode == 81 ) { // 'q'
 	    gEventQueue.push({
-		eventType: kEventKeyUp,
+		type: kEventKeyUp,
 		updateFn: () => {
 		    gGameOverPressed = false;
 		}
@@ -1954,22 +1964,30 @@ function InitEvents() {
 	}
 	if( e.keyCode == 66 ) { // 'b'
 	    gEventQueue.push({
-		eventType: kEventKeyUp,
+		type: kEventKeyUp,
 		updateFn: () => {
 		    gSpawnPillPressed = false;
 		}
 	    });
 	}
+	if( e.keyCode == 49 ) { // '1'
+	    gEventQueue.push({
+		type: kEventKeyUp,
+		updateFn: () => {
+		    gStepPressed = false;
+		}
+	    });
+	}
 	if( e.keyCode == 69 ) { // 'e'
 	    gEventQueue.push({
-		eventType: kEventKeyUp,
+		type: kEventKeyUp,
 		updateFn: () => {
 		}
 	    });
 	}
 	if (e.keyCode == 46) { // delete.
 	    gEventQueue.push({
-		eventType: kEventKeyUp,
+		type: kEventKeyUp,
 		updateFn: () => {
 		}
 	    });
