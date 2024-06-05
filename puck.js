@@ -191,8 +191,8 @@ function Puck(props) {
 	    if (RandomBool(0.1)) {
 		var t01 = T01(Math.abs(self.x - gh(0.5)), gh(0.5))
 		var ty = Math.pow( t01, 3 );
-		oy = 1 + ty * 0.2;
-		console.log(F(t01), F(ty), F(oy));
+		oy = 1 + ty * 1;
+		//console.log(F(t01), F(ty), F(oy), F(mody*oy));
 	    }
 
 	    if( self.GetMidY() < paddle.GetMidY() ) {

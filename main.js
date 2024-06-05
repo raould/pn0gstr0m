@@ -602,10 +602,10 @@ function DrawBounds( alpha=0.5 ) {
 	    }
 	)();
 
-	// todo: get powerups.
-
 	// make sure the cpu doesn't get one first, that looks too mean.
-	self.didSpawnPlayerPill = false;
+	// also make sure neither side gets too many pills before the other.
+	self.isCpuPillAllowed = false;
+	self.unfairPillCount = 0;
 
 	if (!self.isAttract) {
 	    self.AddAnimation(MakeGameStartAnimation());
@@ -670,7 +670,7 @@ function DrawBounds( alpha=0.5 ) {
 	}
 
 	if (self.paused && gSpawnPillPressed) {
-	    // todo: move all pill code to the Level.
+	    // todo: move more of the pill code to the Level.
 	    self.level.playerPill = self.level.playerPowerups.MakeRandomPill(self);
 	    self.level.cpuPill = self.level.cpuPowerups.MakeRandomPill(self);
 	    gSpawnPillPressed = false;
@@ -684,20 +684,28 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.MaybeSpawnPills = function( dt ) {
-	if (isU(self.level.playerPill)) {
+	var kDiffMax = 2;
+	if (isU(self.level.playerPill) &&
+	    self.unfairPillCount < kDiffMax) {
 	    self.level.playerPill = self.MaybeSpawnPill(
 		dt, self.level.playerPill, kSpawnPlayerPillFactor, self.level.playerPowerups
 	    );
 	    if (exists(self.level.playerPill)) {
 		gPillSpawnCountdown = kPillSpawnCooldown;
+		self.unfairPillCount++;
+		self.isCpuPillAllowed = true;
 	    }
-	    self.didSpawnPlayerPill |= exists(self.level.playerPill);
 	}
 
-	if (self.didSpawnPlayerPill && isU(self.level.cpuPill)) {
+	if (isU(self.level.cpuPill) &&
+	    self.isCpuPillAllowed &&
+	    self.unfairPillCount > -kDiffMax) {
 	    self.level.cpuPill = self.MaybeSpawnPill(
 		dt, self.level.cpuPill, kSpawnPlayerPillFactor*0.7, self.level.cpuPowerups
 	    );
+	    if (exists(self.level.cpuPill)) {
+		self.unfairPillCount--;
+	    }
 	}
     };
 
@@ -757,7 +765,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.CreateRandomPuck = function() {
 	var p = new Puck({ x: gw(RandomRange(1/8, 7/8)),
-			   y: gh(RandomRange(0.4, 0.6)),
+			   y: gh(RandomRange(1/8, 7/8)),
 			   vx: RandomRange(gMaxVX*0.3, gMaxVX*0.5),
 			   vy: RandomCentered(1, 0.5),
 			   ur: true });
