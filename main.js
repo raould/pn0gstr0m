@@ -163,9 +163,13 @@ var kPuckArrayInitialSize = 300;
 var kSparkArrayInitialSize = 200;
 var kBarriersArrayInitialSize = 4;
 var kOptionsArrayInitialSize = 6;
+
+// prevent pills from showing up too fast,
+// also prevent them from showing up too early.
+var kPillSpawnCooldown = 1000 * 1;
+// this countdown is a block on both player & cpu ill spawning.
+var gPillSpawnCountdown = 1000 * 3;
 var kSpawnPlayerPillFactor = gDebug ? 0.1 : 0.002;
-var kPillSpawnCooldown = 1000 * 10;
-var gPillSpawnCountdown = kPillSpawnCooldown;
 
 var gNextID = 0;
 
@@ -684,7 +688,10 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     self.MaybeSpawnPills = function( dt ) {
+	gPillSpawnCountdown = Math.max(0, gPillSpawnCountdown-dt);
+
 	var kDiffMax = 2;
+
 	if (isU(self.level.playerPill) &&
 	    self.unfairPillCount < kDiffMax) {
 	    self.level.playerPill = self.MaybeSpawnPill(
@@ -712,9 +719,8 @@ function DrawBounds( alpha=0.5 ) {
     self.MaybeSpawnPill = function( dt, prev, spawnFactor, maker ) {
 	var can_paused = !self.paused;
 	var can_attract = !self.isAttract;
-	if (can_paused && can_attract) {
-	    gPillSpawnCountdown = Math.max(0, gPillSpawnCountdown-dt);
-	    var can_timer = gPillSpawnCountdown <= 0;
+	var can_timer = gPillSpawnCountdown <= 0;
+	if (can_paused && can_attract && can_timer) {
 	    var can_factor = RandomBool(gDebug ? 0.1 : spawnFactor);
 	    var can_empty = isU(prev);
 	    var can = can_timer && can_factor && can_empty;
@@ -1088,6 +1094,11 @@ function DrawBounds( alpha=0.5 ) {
 	DrawBounds(0.2);
 
 	Cxdo(() => {
+	    gCx.fillStyle = "magenta";
+	    DrawText(`${self.unfairPillCount} ${gPillSpawnCountdown}`, "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
+	});
+
+	Cxdo(() => {
 	    gCx.fillStyle = RandomGrey();
 	    var mvx = gPucks.A.reduce((m,p) => Math.max(m, Math.abs(p.vx)), 0);
 	    DrawText(F(mvx.toString()), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
@@ -1107,7 +1118,7 @@ function DrawBounds( alpha=0.5 ) {
 	    DrawText( gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt );
 	});
 
-	self.cpuPaddle.DebugDraw();
+	self.cpuPaddle.DrawDebug();
 
 	Cxdo(() => {
 	    gCx.fillStyle = RandomForColor(blueSpec, 0.3);

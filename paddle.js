@@ -212,7 +212,7 @@ function Paddle(props) {
 	});
     };
 
-    self.DebugDraw = function() {
+    self.DrawDebug = function() {
 	if (gDebug) {
 	    Cxdo(() => {
 		if (exists(self.debugMsg)) {
