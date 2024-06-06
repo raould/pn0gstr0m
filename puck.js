@@ -258,21 +258,40 @@ function Puck(props) {
 
     self.WallsCollision = function() {
 	if (self.alive && !self.isLocked) {
-	    var did = false;
-	    if( self.y < gYInset ) {
-		did = true;
-		self.y = gYInset;
-	    }
-	    if( self.y+self.height > gHeight - gYInset ) {
-		did = true;
-		self.y = gHeight - gYInset - self.height;
-	    }
-	    if (did) {
-		self.vy *= -1;
-		PlayBlip();
-	    }
+	    self.WallsBounce();
+	    self.WallsRepel();
+	}
+    }
+
+    self.WallsBounce = function() {
+	var did = false;
+	if( self.y < gYInset ) {
+	    did = true;
+	    self.y = gYInset;
+	}
+	if( self.y+self.height > gHeight - gYInset ) {
+	    did = true;
+	    self.y = gHeight - gYInset - self.height;
+	}
+	if (did) {
+	    self.vy *= -1;
+	    PlayBlip();
 	}
     };
+
+    self.WallsRepel = function() {
+	var zone = gh(0.1);
+	if (Math.abs(self.vx) > gMaxVX * 0.1) {
+	    if (self.y - gYInset < zone && self.vy < 0) {
+		console.log("repel+");
+		self.vy -= 0.005;
+	    }
+	    if (gh(1) - gYInset - self.y < zone && self.vy > 0) {
+		console.log("repel-");
+		self.vy += 0.005;
+	    }
+	}
+    }
 
     self.Init();
 }
