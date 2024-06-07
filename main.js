@@ -129,7 +129,7 @@ function RecalculateConstants() {
     gPauseCenterX = gw(0.54);
     gPauseCenterY = gh(0.1);
     gPauseRadius = sxi(10);
-    gUserMutedCenterX = gw(0.9);
+    gUserMutedCenterX = gw(0.87);
     gUserMutedCenterY = gh(0.85);
     gUserMutedWidth = sxi(40);
     gUserMutedHeight = syi(30);
@@ -1319,7 +1319,7 @@ function DrawBounds( alpha=0.5 ) {
 		gCx.fillStyle = rgb255s(greySpec.strong, 0.5);
 		DrawText(msg.toUpperCase(),
 			 "right",
-			 gw(0.95),
+			 gw(0.91),
 			 gh(0.95),
 			 gSmallestFontSizePt,
 			 false);
