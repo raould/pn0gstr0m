@@ -100,7 +100,7 @@ function Puck(props) {
     self.SplitPuck = function(forced=false) {
 	var np = undefined;
 	var count = gPucks.A.length;
-	dosplit = forced || (count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && RandomBool(1.05-Clip01(Math.abs(self.vx/gMaxVX)))));
+	var dosplit = forced || (count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && RandomBool(1.05-Clip01(Math.abs(self.vx/gMaxVX)))));
 
 	// sometimes force ejection to avoid too many pucks.
 	// if there are already too many pucks to allow for a split-spawned-puck,
@@ -283,11 +283,9 @@ function Puck(props) {
 	var zone = gh(0.1);
 	if (Math.abs(self.vx) > gMaxVX * 0.1) {
 	    if (self.y - gYInset < zone && self.vy < 0) {
-		console.log("repel+");
 		self.vy -= 0.005;
 	    }
 	    if (gh(1) - gYInset - self.y < zone && self.vy > 0) {
-		console.log("repel-");
 		self.vy += 0.005;
 	    }
 	}

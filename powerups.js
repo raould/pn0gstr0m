@@ -28,7 +28,7 @@
 */
 
 // needs to be longish so the cpu has any chance of getting it.
-kPillLifespan = 1000 * 20;
+var kPillLifespan = 1000 * 20;
 
 /*class*/ function Powerups( props ) {
 
