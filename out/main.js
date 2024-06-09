@@ -193,11 +193,14 @@ var kOptionsArrayInitialSize = 6;
 
 // prevent pills from showing up too fast,
 // also prevent them from showing up too early.
-var kPillSpawnCooldown = 1000 * 10;
+var kPillSpawnCooldown = 1000 * (gDebug ? 3 : 10);
 // this countdown is a block on both player & cpu ill spawning.
 // first wait is longer before the very first pill.
-var gPillSpawnCountdown = 1000 * 25;
-var kSpawnPlayerPillFactor = gDebug ? 0.1 : 0.002;
+// also see the 'must' check later on.
+var gPillSpawnCountdown = 1000 * (gDebug ? 3 : 25);
+var kSpawnPlayerPillFactor = gDebug ? 0.01 : 0.002;
+
+// actually useful sometimes when debugging.
 var gNextID = 0;
 
 // gosh what if we had an actual button api?
@@ -705,7 +708,7 @@ function GameState() {
     return nextState;
   };
   self.MaybeSpawnPills = function (dt) {
-    gPillSpawnCountdown = Math.max(0, gPillSpawnCountdown - dt);
+    gPillSpawnCountdown = gPillSpawnCountdown - dt;
     var kDiffMax = 2;
     if (isU(self.level.playerPill) && self.unfairPillCount < kDiffMax) {
       self.level.playerPill = self.MaybeSpawnPill(dt, self.level.playerPill, kSpawnPlayerPillFactor, self.level.playerPowerups);
@@ -728,10 +731,11 @@ function GameState() {
     var can_attract = !self.isAttract;
     var can_timer = gPillSpawnCountdown <= 0;
     if (can_paused && can_attract && can_timer) {
+      var must = gPillSpawnCountdown < kPillSpawnCooldown * 2;
       var can_factor = RandomBool(gDebug ? 0.1 : spawnFactor);
       var can_empty = isU(prev);
-      var can = can_timer && can_factor && can_empty;
-      if (can) {
+      var can = can_factor && can_empty;
+      if (must || can) {
         return maker.MakeRandomPill(self);
       }
     }
