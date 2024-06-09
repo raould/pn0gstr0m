@@ -37,7 +37,7 @@ function GenerateLightningPath(props) {
 function AddLightningPath(props) {
     // props = { color, x0, y0, x1, y1, range, steps=5 }
     var { color, x0, y0, x1, y1 } = props;
-    points = GenerateLightningPath(props);
+    var points = GenerateLightningPath(props);
     Cxdo(() => {
 	gCx.strokeStyle = color;
 
