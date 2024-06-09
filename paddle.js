@@ -20,6 +20,8 @@ function Paddle(props) {
     var self = this;
 
     self.Init = function(label) {
+	self.id = gNextID++;
+
 	self.isPlayer = props.isPlayer;
 	self.side = props.side;
 	// barriers are { x, y, width, height,
@@ -37,7 +39,6 @@ function Paddle(props) {
 	// neos are sticky fly traps.
 	self.neo = undefined;
 
-	self.id = gNextID++;
 	self.hp0 = props.hp;
 	self.hp = props.hp;
 	self.x0 = props.x;
