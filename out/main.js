@@ -156,7 +156,7 @@ function RecalculateConstants() {
   gPuckHeight = gPuckWidth = gh(0.012);
   gPauseCenterX = gw(0.54);
   gPauseCenterY = gh(0.1);
-  gPauseRadius = sxi(10);
+  gPauseRadius = sxi(12);
   gSparkWidth = sxi(2);
   gSparkHeight = syi(2);
   gBigFontSize = NearestEven(gw(0.088));
@@ -783,7 +783,7 @@ function TitleState() {
     return new MenuBehavior(_objectSpread({
       isHidden: false,
       OnClose: function OnClose() {
-        return ResetP1Side();
+        self.theMenu = self.MakeMenu();
       }
     }, MakeMainMenuButtons()));
   };
@@ -1062,8 +1062,8 @@ function GameState() {
       isHidden: true,
       OnClose: function OnClose() {
         self.paused = false;
-        gP1Target.ClearY();
-        gP2Target.ClearY();
+        gP1Target.Reset(true);
+        gP2Target.Reset(true);
       }
     }, MakeGameMenuButtons({
       OnQuit: function OnQuit() {
