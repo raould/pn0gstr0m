@@ -15,20 +15,20 @@ function Level(props) {
     self.speedupTimeout = props.speedupTimeout;
     self.puckCount = props.puckCount;
     self.alive = true;
-    self.playerPowerups = new Powerups({
-      isPlayer: true,
-      paddle: props.playerPaddle,
-      side: ForSide(gPointerSide, "left", "right"),
+    self.p1Powerups = new Powerups({
+      isPlayer: props.isP1Player,
+      paddle: props.paddleP1,
+      side: ForSide(gP1Side, "left", "right"),
       specs: props.pills
     });
-    self.playerPill = undefined;
-    self.cpuPowerups = new Powerups({
-      isPlayer: false,
-      paddle: props.cpuPaddle,
-      side: ForSide(gPointerSide, "right", "left"),
+    self.p1Pill = undefined;
+    self.p2Powerups = new Powerups({
+      isPlayer: props.isP2Player,
+      paddle: props.paddleP2,
+      side: ForSide(gP1Side, "right", "left"),
       specs: props.pills
     });
-    self.cpuPill = undefined;
+    self.p2Pill = undefined;
   };
   self.OnPuckLost = function () {
     self.puckCount = Math.max(0, self.puckCount - 1);
@@ -41,7 +41,10 @@ function Level(props) {
     }
   };
   self.Draw = function (alpha) {
-    if (self.puckCount < 100) {
+    // some (most) levels in the future are expected
+    // to end after the puckCount drops to zero.
+    // todo: find some attractive way to indicate that to the user.
+    if (gDebug && self.puckCount < 100) {
       Cxdo(function () {
         gCx.fillStyle = gCx.strokeStyle = "magenta";
         DrawText(self.puckCount.toString(), "center", WX(gw(0.5)), WY(gPucksTextY), gSmallFontSizePt);
@@ -50,11 +53,11 @@ function Level(props) {
     self.DrawPills(alpha);
   };
   self.DrawPills = function (alpha) {
-    if (exists(self.playerPill)) {
-      self.DrawPill(alpha, self.playerPill, gPointerSide, RandomMagenta(alpha));
+    if (exists(self.p1Pill)) {
+      self.DrawPill(alpha, self.p1Pill, gP1Side, RandomMagenta(alpha));
     }
-    if (exists(self.cpuPill)) {
-      self.DrawPill(alpha, self.cpuPill, ForOtherSide(gPointerSide, "left", "right"), RandomGrey(alpha));
+    if (exists(self.p2Pill)) {
+      self.DrawPill(alpha, self.p2Pill, OtherSide(gP1Side), RandomGrey(alpha));
     }
   };
   self.DrawPill = function (alpha, pill, side, color) {

@@ -12,8 +12,8 @@ var white = [0xFF, 0xFF, 0xFF];
 
 function MakeDark(spec) {
     return {
-	strong: spec.regular,
-	regular: spec.regular.map(c => Math.ceil(c/2)),
+        strong: spec.regular,
+        regular: spec.regular.map(c => Math.ceil(c/2)),
     };
 }
 
@@ -41,7 +41,7 @@ var scanlineColorStr = "rgba(0, 0, 0, 0.15)";
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 var _tc = Array(4);
-function rgb255s(array, alpha) {
+function rgba255s(array, alpha) {
     // detect any old style code that called this function.
     Assert(Array.isArray(array), "expected array as first parameter");
     _tc[0] = array[0];
@@ -49,7 +49,7 @@ function rgb255s(array, alpha) {
     _tc[2] = array[2];
     _tc[3] = alpha ?? 1;
     if (array.length == 4) {
-	_tc[3] = array[3];
+        _tc[3] = array[3];
     }
     var joined = _tc.map((ch,i) => ((i < 3) ? Clip255(ch) : ch)).join(",");
     var str = ((array.length == 4 || exists(alpha)) ? "rgba(" : "rgb(") + joined + ")";
@@ -57,27 +57,27 @@ function rgb255s(array, alpha) {
 }
 
 function RandomColor(alpha) {
-    return rgb255s(
-	[
-	    RandomRange(0, 255),
-	    RandomRange(0, 255),
-	    RandomRange(0, 255),
-	    alpha ?? 1
-	]
+    return rgba255s(
+        [
+            RandomRange(0, 255),
+            RandomRange(0, 255),
+            RandomRange(0, 255),
+            alpha ?? 1
+        ]
     );
 }
 
 function RandomForColor(spec, alpha) {
     if (alpha == undefined) { alpha = 1; }
     if (RandomBool(0.05)) {
-	return rgb255s(spec.strong, alpha);
+        return rgba255s(spec.strong, alpha);
     }
     else {
-	// NTSC.
-	return rgb255s(
-	    spec.regular.map(ch => RandomCentered(ch, 16)),
-	    alpha
-	);
+        // NTSC.
+        return rgba255s(
+            spec.regular.map(ch => RandomCentered(ch, 16)),
+            alpha
+        );
     }
 }
 
@@ -88,19 +88,20 @@ function RandomForColor(spec, alpha) {
 function RandomForColorFadeIn(color, alpha) {
     if (alpha == undefined) { alpha = 1; }
     if (gMonochrome) {
-	// i.e. attract mode.
-	return rgb255s(greenSpec.strong, alpha);
+        // i.e. attract mode.
+        return rgba255s(greenSpec.strong, alpha);
     }
     else if (gRandom() > GameTime01(kGreenFadeInMsec)) {
-	// gradully go from green to color at game start.
-	return rgb255s(greenSpec.strong, alpha);
+        // gradully go from green to color at game start.
+        return rgba255s(greenSpec.strong, alpha);
     }
     else {
-	alpha = Math.min(
-	    alpha,
-	    Clip01(GameTime01(kAlphaFadeInMsec))
-	);
-	return RandomForColor(color, alpha);
+        // even more fading in, to go along with MakeGameStartAnimation.
+        alpha = Math.min(
+            alpha,
+            Clip01(GameTime01(kAlphaFadeInMsec))
+        );
+        return RandomForColor(color, alpha);
     }
 }
 

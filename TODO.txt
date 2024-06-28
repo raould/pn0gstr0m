@@ -1,31 +1,60 @@
-* all the todo:s.
-* deperately need to refactor so many globals away.
-* globals horrible also because of no good input/event model.
-* perf is worse in firefox vs. chrome/edge.
-* actually profile but it just says "gc" so who knows what as root cause... need placement-new object pooling?
-* test gamepads.
+TODO:
+* animate the menu.
+* my other metal band name really is The Wrong Abstractions.
+* this has quickly become an empirical big ball of mud. :-(
+* all the todo's noted in code comments.
+* deperately need to refactor so many globals away (re: events, below).
+* what the heck is the difference of Step() vs. Draw() vs. Process*().
+  * especially since they seem different for buttons vs. *States.
+* also nice how Process*Input don't all have the same signature.
+* (aside: debugging dx is just industrially wide horrible if you ask me.)
+* confusing how i have activate key & gamepad, but esc key vs. option gamepad button.
+* needing clearFn() for events hints i should push the keys through eventqueue only, never globals.
+* be backwards compatible with "2 keys held down at once"?
+* uh, how about handling non-en-us keyboard layouts? ha ha :-(.
+* perf is worse in firefox vs. chrome/edge?
+* actually profiled, but it just says "gc" so who knows what as root cause... need placement-new object pooling?
 * handle device pixel ratio.
 * orientation hell, including effing manifest.json?
-* wish i could hide the mouse cursor.
-* add wavy scalines?
+  * support rotation resizing w/out destroying game in progress.
+* wish i could hide the mouse cursor when not in use.
 * move A,B,SwapBuffers into reusableArray.
-* play blip if puck collides and doesn't split.
-* powerup pill timeout after say 10 seconds.
-* the ForSide() thing has gotten ever more ugly & confusing.
+* play blip if puck collides and doesn't split? too noisy?
+* the ForSide()/P1/P2 thing has gotten ever more ugly & confusing.
+* i feel like isUrgent isn't weighted high enough by ai cf. engorge.
+* maybe add english based on paddle y velocity.
 * super fugly inconsistencies, some but not all of them include:
   * should extract all the left vs. right stuff into a Side class, parent of Paddle etc.
-  * clashing styles of events queue vs. immediate changes.
-  * gDebug stuff is sort of super hacky all over the place.
   * sorry the "class" coding style is so randomly ugly.
-  * things probably should always get 1 last draw call when lifespan is zero.
-* more bugs:
+  * things probably should always get 1 last draw call when lifespan is zero?
+* compatibility / browser bugs:
   * check the "bug:" comments, safari is killing me?!@#
-  * support rotation resizing w/out destroying game in progress.
   * safari ios/ipados alpha bug on MakeRadarAnimation.
   * safari crt outline clipping not working, see the touch target!?
+  * msft edge 92.0.902.67 was crashing saying gCx.roundRect doesn't exist!?
+    * suddenly the machine's edge updated itself to 125.0.2535.92 fixing it.
+    * are there easy to use polyfills for "new" canvas calls!?!@#?@!?!?!
 * bounties (spiritual, not cash):
   * see misc bounty comments in code.
+  * ie. actually implementing levels.
   * power meter that goes up/down on hit/missed pucks, for some kind of bonus.
     * power meter also goes up with things like decimate powerup.
-  * ai no line of sight through barrier == ignore pucks on that row.
+  * if ai has no line of sight through barrier, ignore pucks on that row.
   * fix the crt outline drawing order to not leave those little corner gaps.
+  * a pause menu command to swap sides (proably only in single player mode).
+
+----------------------------------------
+
+i frankly kinda hate javascript at times like these, perf is entirely too unclear and arbitrary across all js engines:
+
+* at lest in v8 apparently don't use delete on {}'s, set the value to undefined or false, because performance.
+  * is deleting required to avoid memory leaking? i feel like logically it should be.
+* is {...nocmds} better than {} and setting entries to true/false? no idea, no way to know.
+
+----------------------------------------
+
+in progress:
+
+* do i need clearFn() for gamepad buttons and joystick? or what else instead?
+* check that the gamepad buttons & sticks non/repeat is sane/right.
+* really test all the possible inputs!

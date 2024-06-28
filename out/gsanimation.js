@@ -7,7 +7,7 @@
 
 // note: Animations are hardcoded to only work in GameState.
 
-function Animation(props) {
+function GSAnimation(props) {
   var self = this;
   self.Init = function () {
     self.id = gNextID++;

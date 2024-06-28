@@ -45,10 +45,25 @@ function Puck(props) {
     var wx = self.x - dw / 2;
     var wy = self.y - dh / 2;
 
-    // make things coming toward you be slightly easier to see.
-    var avx = ForSide(gPointerSide, -1, 1) == Sign(self.vx) ? 1 : 0.8;
+    // make things coming at you be slightly easier to see.
+    var avxbase = 0.7;
+    var avxt = 1 - avxbase;
+    var avx = avxbase;
+    var mid = gw(0.5);
+    var range = gw(0.5) - gXInset;
+    var t = 0;
+    var vt = 0;
+    if (Sign(self.vx) < 0 && wx < mid) {
+      vt = wx - gXInset;
+      t = easeOutExpo(T10(vt, range));
+      avx += t * avxt;
+    } else if (Sign(self.vx) > 0 && wx >= mid) {
+      vt = wx - gXInset - mid;
+      t = easeOutExpo(T01(vt, range));
+      avx += t * avxt;
+    }
 
-    // young pucks (mainly splits) render another color briefly.
+    // young pucks (from paddle splits or powerups) render another color briefly.
     var dt = GameTime01(1000, self.startTime);
     var regularStyle = !self.ur && gRandom() > dt ? self.splitColor : RandomCyan();
     var lostStyle = RandomYellow(0.7);
@@ -66,16 +81,16 @@ function Puck(props) {
       gCx.rect(wx, wy, width, height);
       gCx.fillStyle = style;
       gCx.fill();
-    });
 
-    /*
-    if (gDebug) {
-        Cxdo(() => {
-    	gCx.fillStyle = "rgba(255, 0, 0, 0.5)";
-    	gCx.fillRect(self.x, self.y, self.width, self.height);
-        });
-    }
-    */
+      // if (gDebug) {
+      //     gCx.globalAlpha = 1;
+      //     gCx.fillStyle = "yellow";
+      //     DrawText(`${F(range)}`, "center", wx, wy-sy(65), "14pt", false, "courier");
+      //     DrawText(`${F(vt)}`, "center", wx, wy-sy(50), "14pt", false, "courier");
+      //     DrawText(`${F(t)}`, "center", wx, wy-sy(35), "14pt", false, "courier");
+      //     DrawText(`${self.vx<0?"-":"+"} ${F(avx)}`, "center", wx, wy-sy(20), "14pt", false, "courier");
+      // }
+    });
   };
   self.Step = function (dt) {
     if (self.alive && !self.isLocked) {
@@ -110,6 +125,7 @@ function Puck(props) {
       if (doeject) {
         self.vy *= 1.1;
       }
+      PlayBlip();
     } else {
       // i'm sure this set of heuristics is clearly genius.
       var slowCountFactor = Math.pow(countFactor, 1.5);
@@ -225,7 +241,7 @@ function Puck(props) {
   self.OptionsCollision = function (options) {
     if (self.alive && !self.isLocked && exists(options)) {
       options.forEach(function (option) {
-        var hit = option.CollisionTest(self, ForSide(gPointerSide, -1, 1));
+        var hit = option.CollisionTest(self, ForSide(gP1Side, -1, 1));
         if (hit) {
           PlayBlip();
           self.BounceCollidableX(option);

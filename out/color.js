@@ -63,7 +63,7 @@ var scanlineColorStr = "rgba(0, 0, 0, 0.15)";
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 var _tc = Array(4);
-function rgb255s(array, alpha) {
+function rgba255s(array, alpha) {
   // detect any old style code that called this function.
   Assert(Array.isArray(array), "expected array as first parameter");
   _tc[0] = array[0];
@@ -80,17 +80,17 @@ function rgb255s(array, alpha) {
   return str;
 }
 function RandomColor(alpha) {
-  return rgb255s([RandomRange(0, 255), RandomRange(0, 255), RandomRange(0, 255), alpha != null ? alpha : 1]);
+  return rgba255s([RandomRange(0, 255), RandomRange(0, 255), RandomRange(0, 255), alpha != null ? alpha : 1]);
 }
 function RandomForColor(spec, alpha) {
   if (alpha == undefined) {
     alpha = 1;
   }
   if (RandomBool(0.05)) {
-    return rgb255s(spec.strong, alpha);
+    return rgba255s(spec.strong, alpha);
   } else {
     // NTSC.
-    return rgb255s(spec.regular.map(function (ch) {
+    return rgba255s(spec.regular.map(function (ch) {
       return RandomCentered(ch, 16);
     }), alpha);
   }
@@ -106,11 +106,12 @@ function RandomForColorFadeIn(color, alpha) {
   }
   if (gMonochrome) {
     // i.e. attract mode.
-    return rgb255s(greenSpec.strong, alpha);
+    return rgba255s(greenSpec.strong, alpha);
   } else if (gRandom() > GameTime01(kGreenFadeInMsec)) {
     // gradully go from green to color at game start.
-    return rgb255s(greenSpec.strong, alpha);
+    return rgba255s(greenSpec.strong, alpha);
   } else {
+    // even more fading in, to go along with MakeGameStartAnimation.
     alpha = Math.min(alpha, Clip01(GameTime01(kAlphaFadeInMsec)));
     return RandomForColor(color, alpha);
   }
