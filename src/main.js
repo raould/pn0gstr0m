@@ -341,7 +341,7 @@ function cancelPointing() {
     gP2Target.Cancel();
 }
 
-var gSinglePlayer = false;
+var gSinglePlayer = true;
 var kScoreIncrement = 1;
 var gP1Score = 0;
 var gP2Score = 0;
