@@ -372,10 +372,11 @@ function MakeGameMenuButtons({ OnQuit }) {
                 // touching outside the menu closes it.
                 if (!hit) {
                     self.besc.Click();
+                    hit = true;
                 }
             }
             // esc.
-            if (self.besc.isOpen || !self.isHidden) {
+            if (!hit && (self.besc.isOpen || !self.isHidden)) {
                 hit = self.besc.ProcessTarget(target);
                 if (hit) {
                     self.besc.Click();

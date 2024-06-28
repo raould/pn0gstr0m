@@ -565,14 +565,23 @@ function DrawTitle() {
     DrawText(msg, "right", gw(0.876), gh(0.48), gReducedFontSizePt, flicker);
   });
 }
+function DrawWarning() {
+  gCx.fillStyle = warningColorStr;
+  var lineFactor = sy1(15);
+  var y0 = gh(1) - gYInset - gWarning.length * lineFactor * 1.4;
+  Cxdo(function () {
+    gWarning.forEach(function (t, i) {
+      DrawText(t, "center", gw(0.5), y0 + i * lineFactor, gSmallestFontSizePt, false, "monospace");
+    });
+  });
+}
 function DrawLandscape() {
-  var flicker = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
   if (getWindowAspect() <= 1) {
     var rots = ["|", "/", "-", "\\", "|", "/", "-", "\\"];
     var i = ii(gFrameCount / 10) % rots.length;
     Cxdo(function () {
       gCx.fillStyle = rgba255s(yellowSpec.strong);
-      DrawText("".concat(rots[i]).concat(rots[i]).concat(rots[i], "  r TRY LANDSCAPE r  ").concat(rots[i]).concat(rots[i]).concat(rots[i]), "center", gw(0.5), gh(0.9), gRegularFontSizePt, flicker);
+      DrawText("".concat(rots[i]).concat(rots[i]).concat(rots[i], "  r TRY LANDSCAPE r  ").concat(rots[i]).concat(rots[i]).concat(rots[i]), "center", gw(0.5), gh(0.90), gReducedFontSizePt, false);
     });
   }
 }
@@ -748,19 +757,10 @@ function WarningState() {
       DrawResizing();
     } else {
       DrawTitle(false);
-      self.DrawWarning();
+      DrawWarning();
+      DrawLandscape();
       DrawBounds();
     }
-  };
-  self.DrawWarning = function () {
-    gCx.fillStyle = warningColorStr;
-    var lineFactor = sy1(15);
-    var y0 = gh(1) - gYInset - gWarning.length * lineFactor;
-    Cxdo(function () {
-      gWarning.forEach(function (t, i) {
-        DrawText(t, "center", gw(0.5), y0 + i * lineFactor, gSmallestFontSizePt, false, "monospace");
-      });
-    });
   };
   self.Init();
 }
@@ -793,7 +793,7 @@ function TitleState() {
   self.Step = function (dt) {
     var nextState = undefined;
     self.attract.Step(dt);
-    self.theMenu.Step(); // fyi this doesn't process menu input, actually.
+    self.theMenu.Step(); // note: this doesn't process menu input, actually.
     nextState = self.ProcessAllInput();
     if (exists(nextState)) {
       clearTimeout(self.musicTimer);
