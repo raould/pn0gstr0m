@@ -105,8 +105,8 @@ function Button(props) {
       var cx = self.x + self.width * 0.5;
       var lx = self.x + self.width * 0.1;
       var rx = self.x + self.width * 0.9;
-      // todo: come up with a perfect heursitic for this for all button, text, and screen sizes.
-      var ty = self.y + self.height * 0.75;
+      // bounty: come up with a perfect heursitic for this for all button, text, and screen sizes.
+      var ty = self.y + self.height * 0.74;
       var c = self.is_checkbox && self.is_checked ? "c" : self.is_checkbox ? " " : undefined;
       if (exists(c)) {
         // checkboxes are always left aligned so they don't look too ugly.
