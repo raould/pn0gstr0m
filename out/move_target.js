@@ -88,7 +88,7 @@ function MoveTarget(props) {
     return is;
   };
   self.isDown = function () {
-    var is = self.isEnabled() && isU(self.timestamp.end);
+    var is = self.isEnabled() && isU(self.timestamp.end) && exists(self.pointerId);
     return is;
   };
   self.ClearY = function () {

@@ -357,22 +357,29 @@ function MakeGameMenuButtons({ OnQuit }) {
 
     self.ProcessTarget = function(target) {
         var hit = false;
-        // menu.
-        if (self.besc.isOpen) {
-            var found = Object.entries(self.navigation).find(
-                e => e[1].button.ProcessTarget(target)
-            );
-            if (exists(found)) {
-                if (found != self.besc) { self.Focus(found[0]); }
-                found[1].button.Click();
+        if (target.isDown()) {
+            // menu.
+            if (self.besc.isOpen) {
+                var found = Object.entries(self.navigation).find(
+                    e => e[1].button.ProcessTarget(target)
+                );
+                if (exists(found)) {
+                    if (found != self.besc) { self.Focus(found[0]); }
+                    found[1].button.Click();
+                }
+                hit = exists(found);
+
+                // touching outside the menu closes it.
+                if (!hit) {
+                    self.besc.Click();
+                }
             }
-            hit = exists(found);
-        }
-        // esc.
-        if (self.besc.isOpen || !self.isHidden) {
-            hit = self.besc.ProcessTarget(target);
-            if (hit) {
-                self.besc.Click();
+            // esc.
+            if (self.besc.isOpen || !self.isHidden) {
+                hit = self.besc.ProcessTarget(target);
+                if (hit) {
+                    self.besc.Click();
+                }
             }
         }
         return hit;
