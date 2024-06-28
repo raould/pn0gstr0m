@@ -125,7 +125,7 @@ function RecalculateConstants() {
     gPuckHeight = gPuckWidth = gh(0.012);
     gPauseCenterX = gw(0.54);
     gPauseCenterY = gh(0.1);
-    gPauseRadius = sxi(10);
+    gPauseRadius = sxi(12);
     gSparkWidth = sxi(2);
     gSparkHeight = syi(2);
     gBigFontSize = NearestEven(gw(0.088));
@@ -738,7 +738,9 @@ function DrawBounds( alpha=0.5 ) {
     self.MakeMenu = function() {
         return new MenuBehavior({
             isHidden: false,
-            OnClose: () => ResetP1Side(),
+            OnClose: () => {
+                self.theMenu = self.MakeMenu();
+            },
             ...MakeMainMenuButtons(),
         });
     };
@@ -1033,8 +1035,8 @@ function DrawBounds( alpha=0.5 ) {
             isHidden: true,
             OnClose: () => {
                 self.paused = false;
-                gP1Target.ClearY();
-                gP2Target.ClearY();
+                gP1Target.Reset(true);
+                gP2Target.Reset(true);
             },
             ...MakeGameMenuButtons({
                 OnQuit: () => {

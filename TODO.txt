@@ -10,6 +10,8 @@ TODO:
 * (aside: debugging dx is just industrially wide horrible if you ask me.)
 * confusing how i have activate key & gamepad, but esc key vs. option gamepad button.
 * needing clearFn() for events hints i should push the keys through eventqueue only, never globals.
+* (esc) shouldn't disappear after staring via touch.
+* cannot tap (esc) if the rhs pointer is already down? also check how it works in 1 vs. 2 player.
 * be backwards compatible with "2 keys held down at once"?
 * uh, how about handling non-en-us keyboard layouts? ha ha :-(.
 * perf is worse in firefox vs. chrome/edge?

@@ -169,7 +169,7 @@ function MakeMainMenuButtons() {
     playerRadios.AddButton(bp1);
     playerRadios.AddButton(bp2);
     return {
-        focusId: "bp1",
+        focusId: gSinglePlayer ? "bp1" : "bp2",
         navigation: {
             bp1: {
                 button: bp1,
