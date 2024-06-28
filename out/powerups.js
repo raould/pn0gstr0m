@@ -123,7 +123,7 @@ function MakeForcePushProps(maker) {
     height: sy(18),
     lifespan: kPillLifespan,
     label: label,
-    ylb: sy(17),
+    ylb: sy(16),
     fontSize: gReducedFontSizePt,
     testFn: function testFn(gameState) {
       return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
@@ -134,11 +134,11 @@ function MakeForcePushProps(maker) {
         var wy = WY(self.y);
         var r = 20;
         gCx.beginPath();
-        gCx.roundRect(WX(wx), WY(wy), self.width, self.height, r);
+        gCx.RoundRect(wx, wy, self.width, self.height, r);
         gCx.fillStyle = backgroundColorStr;
         gCx.fill();
         gCx.beginPath();
-        gCx.roundRect(WX(wx), WY(wy), self.width, self.height, r);
+        gCx.RoundRect(wx, wy, self.width, self.height, r);
         gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
         gCx.lineWidth = sx1(2);
         gCx.stroke();
@@ -243,7 +243,7 @@ function MakeEngorgeProps(maker) {
     height: sy(22),
     lifespan: kPillLifespan,
     label: "+",
-    ylb: sy(32),
+    ylb: sy(30),
     isUrgent: true,
     fontSize: gBigFontSizePt,
     testFn: function testFn(gameState) {
@@ -255,11 +255,11 @@ function MakeEngorgeProps(maker) {
         var wx = WX(self.x);
         var wy = WY(self.y);
         gCx.beginPath();
-        gCx.rect(WX(wx), WY(wy), self.width, self.height);
+        gCx.rect(wx, wy, self.width, self.height);
         gCx.fillStyle = backgroundColorStr;
         gCx.fill();
         gCx.beginPath();
-        gCx.rect(WX(wx), WY(wy), self.width, self.height);
+        gCx.rect(wx, wy, self.width, self.height);
         gCx.lineWidth = sx1(2);
         gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
         gCx.stroke();
@@ -296,11 +296,11 @@ function MakeSplitProps(maker) {
         var mx = wx + ii(self.width / 2);
         var my = wy + ii(self.height / 2);
         gCx.beginPath();
-        gCx.roundRect(wx, wy, self.width, self.height, 20);
+        gCx.RoundRect(wx, wy, self.width, self.height, 20);
         gCx.fillStyle = backgroundColorStr;
         gCx.fill();
         gCx.beginPath();
-        gCx.roundRect(wx, wy, self.width, self.height, 20);
+        gCx.RoundRect(wx, wy, self.width, self.height, 20);
         gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
         gCx.lineWidth = sx1(2);
         gCx.stroke();
@@ -345,11 +345,11 @@ function MakeDefendProps(maker) {
         var wy = WY(self.y);
         var r = 2;
         gCx.beginPath();
-        gCx.roundRect(WX(wx), WY(wy), self.width, self.height, r);
+        gCx.RoundRect(wx, wy, self.width, self.height, r);
         gCx.fillStyle = backgroundColorStr;
         gCx.fill();
         gCx.beginPath();
-        gCx.roundRect(WX(wx), WY(wy), self.width, self.height, r);
+        gCx.RoundRect(wx, wy, self.width, self.height, r);
         gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
         gCx.lineWidth = sx1(2);
         gCx.stroke();
@@ -409,11 +409,11 @@ function MakeOptionProps(maker) {
         var wy = WY(self.y);
         var r = 6;
         gCx.beginPath();
-        gCx.roundRect(WX(wx), WY(wy), self.width, self.height, r);
+        gCx.RoundRect(wx, wy, self.width, self.height, r);
         gCx.fillStyle = backgroundColorStr;
         gCx.fill();
         gCx.beginPath();
-        gCx.roundRect(WX(wx), WY(wy), self.width, self.height, r);
+        gCx.RoundRect(wx, wy, self.width, self.height, r);
         gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
         gCx.lineWidth = sx1(2);
         gCx.stroke();
@@ -535,11 +535,11 @@ function MakeRadarProps(maker) {
         var wx = WX(self.x);
         var wy = WY(self.y);
         gCx.beginPath();
-        gCx.roundRect(WX(wx), WY(wy), self.width, self.height, 3);
+        gCx.RoundRect(wx, wy, self.width, self.height, 3);
         gCx.fillStyle = backgroundColorStr;
         gCx.fill();
         gCx.beginPath();
-        gCx.roundRect(WX(wx), WY(wy), self.width, self.height, 3);
+        gCx.RoundRect(wx, wy, self.width, self.height, 3);
         gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
         gCx.lineWidth = sx1(2);
         gCx.stroke();
@@ -573,11 +573,11 @@ function MakeChaosProps(maker) {
         var wx = WX(self.x);
         var wy = WY(self.y);
         gCx.beginPath();
-        gCx.roundRect(WX(wx), WY(wy), self.width, self.height, 3);
+        gCx.RoundRect(wx, wy, self.width, self.height, 3);
         gCx.fillStyle = backgroundColorStr;
         gCx.fill();
         gCx.beginPath();
-        gCx.roundRect(WX(wx), WY(wy), self.width, self.height, 3);
+        gCx.RoundRect(wx, wy, self.width, self.height, 3);
         gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
         gCx.lineWidth = sx1(2);
         gCx.stroke();

@@ -82,7 +82,7 @@ function AddLightningPath(props) {
 }
 function MakeGameStartAnimation() {
   var lifespan = kAlphaFadeInMsec;
-  return new Animation({
+  return new GSAnimation({
     name: "gamestart",
     lifespan: lifespan,
     drawFn: function drawFn(anim) {
@@ -105,7 +105,7 @@ function MakeGameStartAnimation() {
         }
         gCx.beginPath(); // shutter effect.
         gCx.rect(0, lastY, gWidth, gHeight - lastY);
-        gCx.fillStyle = backgroundColorStr;
+        gCx.fillStyle = "rgb(0, 0, 16)";
         gCx.fill();
         for (var i = ii(c / 2); i < c; ++i) {
           // bottom bars.
@@ -122,7 +122,7 @@ function MakeGameStartAnimation() {
 function MakePoofAnimation(x, y, radius) {
   var lifespan = 1000 * 1;
   var r = radius;
-  return new Animation({
+  return new GSAnimation({
     name: "poof",
     lifespan: lifespan,
     animFn: function animFn(anim, dt, gameState) {
@@ -163,7 +163,7 @@ function MakeCrawlingLightningAnimation(props) {
   var points = GenerateLightningPath(props);
   var pz = Array(substeps).fill(points[0]);
   substeps = Math.min(substeps, pz.length);
-  return new Animation({
+  return new GSAnimation({
     name: "crawllightning",
     lifespan: lifespan,
     animFn: function animFn(anim, dt, gameState) {
@@ -207,7 +207,7 @@ function Make2PtLightningAnimation(props) {
     range = props.range,
     steps = props.steps,
     endFn = props.endFn;
-  return new Animation({
+  return new GSAnimation({
     name: "2ptlightning",
     lifespan: lifespan,
     drawFn: function drawFn() {
@@ -229,7 +229,7 @@ function MakeTargetsLightningAnimation(props) {
     targets = props.targets,
     paddle = props.paddle,
     endFn = props.endFn;
-  return new Animation({
+  return new GSAnimation({
     name: "targetslightning",
     lifespan: lifespan,
     drawFn: function drawFn() {
@@ -263,7 +263,7 @@ function MakeSplitAnimation(props) {
   ForSide(side, function () {
     return targets.reverse;
   }, function () {})();
-  return new Animation({
+  return new GSAnimation({
     name: "split",
     lifespan: lifespan,
     drawFn: function drawFn() {
@@ -297,7 +297,7 @@ function MakeWaveAnimation(props) {
   var a0 = ForSide(side, -Math.PI * 1 / 2, Math.PI * 1 / 2);
   var a1 = a0 + Math.PI;
   var t = 0;
-  return new Animation({
+  return new GSAnimation({
     name: "wave",
     lifespan: lifespan,
     animFn: function animFn(anim, dt, gameState) {
@@ -323,7 +323,7 @@ function MakeEngorgeAnimation(props) {
     _endFn = props.endFn;
   var ph0 = paddle.height;
   var t10 = 1;
-  return new Animation({
+  return new GSAnimation({
     name: "engorge",
     lifespan: lifespan,
     animFn: function animFn(anim, dt, gameState) {
@@ -368,7 +368,7 @@ function MakeRadarAnimation(props) {
   // although this is hacked up even more for aesthetics.
   var w = gXInset * 0.8;
   var x = ForSide(side, 0, gWidth - w);
-  return new Animation({
+  return new GSAnimation({
     name: "radar",
     lifespan: undefined,
     drawFn: function drawFn() {
@@ -396,7 +396,7 @@ function MakeChaosAnimation(props) {
   var oldvys = targets.map(function (p) {
     return p.vy;
   });
-  return new Animation({
+  return new GSAnimation({
     name: "chaos",
     lifespan: 300,
     drawFn: function drawFn() {

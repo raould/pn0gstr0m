@@ -28,8 +28,8 @@ function Barrier(props /*x, y, height, width, hp, side*/) {
       // front-side wedge cuts.
       var edge = sx1(5);
       // max() prevent getting too thin for wedge shape.
-      var h01 = Clip01(self.hp / self.hp0);
-      var hpw = Math.max(edge, ii(self.width * h01) + edge);
+      var hp01 = Clip01(self.hp / self.hp0);
+      var hpw = Math.max(edge, ii(self.width * hp01) + edge);
       var r = WX(ForSide(self.side, self.x + hpw, self.x + self.width));
       var l = WX(ForSide(self.side, self.x, r - hpw));
       var t = WY(self.y + sy1(1));
@@ -53,7 +53,8 @@ function Barrier(props /*x, y, height, width, hp, side*/) {
         gCx.lineTo(r, b);
         gCx.closePath();
       })();
-      gCx.fillStyle = RandomForColor(h01 > 0.2 ? blueSpec : yellowSpec, alpha * 0.5);
+      // match: paddle inflection point.
+      gCx.fillStyle = RandomForColor(hp01 > 0.2 ? blueSpec : yellowSpec, alpha * 0.5);
       gCx.fill();
     });
   };

@@ -1,11 +1,17 @@
 "use strict";
 
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 /* Copyright (C) 2011 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
@@ -56,12 +62,12 @@ function getWindowAspect() {
 var kDrawAIPuckTarget = true;
 
 // i.e. attract mode.
-var gMonochrome;
+var gMonochrome = false;
 
 // "fade" from all-green to specified colors. see: GameTime01 and color.js
 var kGreenFadeInMsec = gDebug ? 1000 : 7000;
 // "fade" in from 0 alpha to specified alphas. see: MakeGameStartAnimation.
-var kAlphaFadeInMsec = 1000;
+var kAlphaFadeInMsec = 700;
 var kHighScoreKey = 'pn0g_high';
 var gHighScore;
 
@@ -89,11 +95,6 @@ var gPuckWidth;
 var gPauseCenterX;
 var gPauseCenterY;
 var gPauseRadius;
-// this is the lower of 2 mute buttons.
-var gUserMutedCenterX;
-var gUserMutedCenterY;
-var gUserMutedWidth;
-var gUserMutedHeight;
 var gSparkWidth;
 var gSparkHeight;
 var gBigFontSize;
@@ -156,10 +157,6 @@ function RecalculateConstants() {
   gPauseCenterX = gw(0.54);
   gPauseCenterY = gh(0.1);
   gPauseRadius = sxi(10);
-  gUserMutedCenterX = gw(0.87);
-  gUserMutedCenterY = gh(0.85);
-  gUserMutedWidth = sxi(40);
-  gUserMutedHeight = syi(30);
   gSparkWidth = sxi(2);
   gSparkHeight = syi(2);
   gBigFontSize = NearestEven(gw(0.088));
@@ -194,120 +191,241 @@ var kOptionsArrayInitialSize = 6;
 // prevent pills from showing up too fast,
 // also prevent them from showing up too early.
 var kPillSpawnCooldown = 1000 * (gDebug ? 3 : 10);
-// this countdown is a block on both player & cpu ill spawning.
-// first wait is longer before the very first pill.
-// also see the 'must' check later on.
-var gPillSpawnCountdown = 1000 * (gDebug ? 3 : 25);
 var kSpawnPlayerPillFactor = gDebug ? 0.01 : 0.002;
 
 // actually useful sometimes when debugging.
 var gNextID = 0;
-
-// gosh what if we had an actual button api?
-
-// fyi pausing is a feature only of GameState, no other states.
-var gDownKeys = {};
-function clearKeysPressed() {
-  gDownKeys = {};
+var nokeys = {
+  up: false,
+  down: false
+};
+function noKeysState() {
+  return _objectSpread({}, nokeys);
 }
-// ok ok "any" is a misnomer in that it is only the valid game keys!
-function anyKeyPressed() {
-  var downs = Object.keys(gDownKeys);
-  var any = downs.length > 0;
-  return any;
+var gP1Keys = new WrapState({
+  resetFn: noKeysState
+});
+var gP2Keys = new WrapState({
+  resetFn: noKeysState
+});
+var gPNoneKeys = new WrapState({
+  resetFn: noKeysState
+});
+function isUpOrDownKeyPressed() {
+  return gP1Keys.$.up || gP1Keys.$.down || gP2Keys.$.up || gP2Keys.$.down;
 }
-var gDownButtons = {};
+function LeftKeys() {
+  return ForSide(gP1Side, gP1Keys, gP2Keys);
+}
+function RightKeys() {
+  return ForOtherSide(gP1Side, gP1Keys, gP2Keys);
+}
+var nostick = {
+  up: false,
+  down: false,
+  dz: kJoystickDeadZone
+};
+function noStickState() {
+  return _objectSpread({}, nostick);
+}
+var gGamepad1Sticks = new WrapState({
+  resetFn: noStickState
+});
+var gGamepad2Sticks = new WrapState({
+  resetFn: noStickState
+});
+var nobuttons = {
+  up: false,
+  down: false,
+  menu: false,
+  activate: false
+};
+function noButtonsState() {
+  return _objectSpread({}, nobuttons);
+}
+var gGamepad1Buttons = new WrapState({
+  resetFn: noButtonsState
+});
+var gGamepad2Buttons = new WrapState({
+  resetFn: noButtonsState
+});
+function isGamepad1Up() {
+  return !!gGamepad1Buttons.$.up || !!gGamepad1Sticks.$.up;
+}
+function isGamepad1Down() {
+  return !!gGamepad1Buttons.$.down || !!gGamepad1Sticks.$.down;
+}
+function isGamepad2Up() {
+  return !!gGamepad2Buttons.$.up || !!gGamepad2Sticks.$.up;
+}
+function isGamepad2Down() {
+  return !!gGamepad2Buttons.$.down || !!gGamepad2Sticks.$.down;
+}
+function isGamepadActivatePressed() {
+  var is = !!gGamepad1Buttons.$.activate || !!gGamepad2Buttons.$.activate;
+  return is;
+}
+function isAnyUpOrDownPressed() {
+  return isUpOrDownKeyPressed() || isGamepad1Up() || isGamepad1Down() || isGamepad2Up() || isGamepad2Down();
+}
+;
+function isAnyActivatePressed(cmds) {
+  return cmds.activate || isGamepadActivatePressed();
+}
+function clearAnyActivatePressed() {
+  gGamepad1Buttons.$.activate = false;
+  gGamepad2Buttons.$.activate = false;
+}
+function isGamepadMenuPressed() {
+  var is = !!gGamepad1Buttons.$.menu || !!gGamepad2Buttons.$.menu;
+  return is;
+}
+function isAnyMenuPressed(cmds) {
+  return cmds.menu || isGamepadMenuPressed();
+}
+function clearAnyMenuPressed() {
+  gGamepad1Buttons.$.menu = false;
+  gGamepad2Buttons.$.menu = false;
+}
 
-// these must match ResetInput.
-var gPauseButtonEnabled = false; // really only for GameState.
-var gPausePressed = false;
-var gClearHighScorePressed = false;
-var gUserMutedButtonEnabled = false;
-var gUserMutedPressed = false;
-var gUpPressed = false;
-var gDownPressed = false;
-var gStickUp = false;
-var gStickDown = false;
-var gButtonPressed = false;
-var gAddPuckPressed = false;
-var gGameOverPressed = false;
-var gSpawnPillPressed = false;
-var gStepPressed = false;
-var gNextMusicPressed = false;
+// note: these are mainly (only) for keyboard input,
+// aren't specific to p1 vs. p2 or left vs. right.
+/* note: this is a list of what is supported, at runtime i just use {}.
+var nocmds = {
+    menu: false,
+    pause: false,
+    activate: false,
+    addPuck: false,
+    gameOver: false,
+    spawnPill: false,
+    clearHighScore: false,
+    step: false,
+    nextMusic: false,
+    singlePlayer: false,
+    doublePlayer: false,
+}
+*/
+
+// todo: eventually, i think
+// we don't actually always want to reset
+// the inputs (keys, buttons, sticks, pointers)
+// so that players can move in a direction as soon as the game
+// starts, and we aren't polling on every frame.
 function ResetInput() {
-  // abomination.
-  gPausePressed = false;
-  gUserMutedPressed = false;
-  gUpPressed = false;
-  gDownPressed = false;
-  gStickUp = false;
-  gStickDown = false;
-  gMoveTargetY = undefined;
-  gAddPuckPressed = false;
-  gGameOverPressed = false;
-  gSpawnPillPressed = false;
-  gStepPressed = false;
-  gNextMusicPressed = false;
+  // todo: code smell.
+  gEventQueue = [];
+  // any remaining events were just forgotten,
+  // so we must clean up state e.g. key-up
+  // by resetting states, but see the todo above.
+  gP1Keys.Reset();
+  gP2Keys.Reset();
+  gGamepad1Sticks.Reset();
+  gGamepad2Sticks.Reset();
+  gGamepad1Buttons.Reset();
+  gGamepad2Buttons.Reset();
+
+  // not full resets, keep the 'side' information.
+  gP1Target.Reset(false);
+  gP2Target.Reset(false);
 }
-var gPointerSide = undefined;
+var gP1Side;
+var gP2Side;
+function ResetP1Side() {
+  gP1Side = undefined;
+  gP2Side = undefined;
+  exists(gP1Target) && gP1Target.Reset();
+  exists(gP2Target) && gP2Target.Reset();
+}
+ResetP1Side();
+function SetP1Side(side) {
+  if (gP1Side == undefined) {
+    // todo: seems risky that 'side' exists in so many places.
+    gP1Side = side;
+    gP2Side = OtherSide(side);
+    gP1Target.SetSide(gP1Side, gSinglePlayer, gw(0.5));
+    if (!gSinglePlayer) {
+      gP2Target.SetSide(gP2Side, gSinglePlayer, gw(0.5));
+    }
+  }
+}
 var gEventQueue = [];
 var kEventKeyDown = "key_down";
 var kEventKeyUp = "key_up";
-var kEventTouchStart = "touch_start";
-var kEventTouchMove = "touch_move";
-var kEventTouchEnd = "touch_end";
-var kEventMouseDown = "mouse_down";
-var kEventMouseMove = "mouse_move";
-var kEventMouseUp = "mouse_up";
-var kEventStickUp = "stick_up";
-var kEventStickDown = "stick_down";
-var kEventButtonDown = "button_down";
-var kEventButtonUp = "button_up";
+var kEventPointerDown = "pointer_down";
+var kEventPointerMove = "pointer_move";
+var kEventPointerUp = "pointer_up";
+var kEventGamepadButtonPressed = "gamepad_button_pressed";
+var kEventGamepadButtonReleased = "gamepad_button_released";
+var kEventGamepadJoystickMove = "gamepad_joystick_move";
 
-// due to history
-// "touch" also kinda
-// subsumes mouse pointer.
-var gPointerTapTimeout = 350;
-var gPointerTimestamps = {
-  start: undefined,
-  end: undefined
-};
-var gPointerX = -1;
-var gPointerY = -1;
-var gPointerScaleX = 1;
-var gPointerScaleY = 1;
-var gMoveTargetY = undefined;
-var gMoveTargetStepY = 0;
-function isPointerEnabled() {
-  var is = exists(gPointerTimestamps.start);
+/*
+ must track down/up per pointer id
+ otherwise we'll be confused?
+ how to decide which player a pointer event controls?
+
+ * single player: all for player.
+
+ * two player: based on which half the pointer was down.
+
+ but in both cases, what do we do about multiple competing
+ pointers, events? i guess we only allow one at a time.
+ so we have to keep track of the pointerId.
+
+ in single player mode, both left and right control the player paddle.
+*/
+
+var kMousePointerId = "__mouse";
+var gP1Target = new MoveTarget({
+  name: "p1"
+});
+var gP2Target = new MoveTarget({
+  name: "p2"
+});
+function ForPointerId(pid) {
+  if (exists(pid)) {
+    if (pid == gP1Target.pointerId) {
+      return gP1Target;
+    }
+    if (pid == gP2Target.pointerId) {
+      return gP2Target;
+    }
+  }
+  return undefined;
+}
+function isAnyPointerEnabled() {
+  var is = gP1Target.isEnabled() || gP2Target.isEnabled();
   return is;
 }
-function isPointerDown() {
-  var is = isPointerEnabled() && isU(gPointerTimestamps.end);
+function isAnyPointerDown() {
+  var is = gP1Target.isDown() || gP2Target.isDown();
   return is;
 }
-function cancelTouch() {
-  gPointerTimestamps.end = gGameTime;
+function cancelPointing() {
+  gP1Target.Cancel();
+  gP2Target.Cancel();
 }
+var gSinglePlayer = false;
 var kScoreIncrement = 1;
-var gPlayerScore = 0;
-var gCPUScore = 0;
+var gP1Score = 0;
+var gP2Score = 0;
 
 // todo: move all these into GameState.
-// todo: use typescript.
+// todo: use typescript. (or haxe.)
 var gPucks; // { A:[], B:[] }
 var gSparks; // { A:[], B:[] }
 
 var kRoot = -1;
-var kSplash = 0; // audio permission via user interaction effing eff.
-var kMenu = 1;
-var kGame = 2;
-var kGameOver = 3;
-var kDebug = 4;
+var kWarning = 0; // audio permission via user interaction effing eff.
+var kTitle = 1;
+var kGetReady = 2;
+var kGame = 3;
+var kGameOver = 4;
+var kDebug = 5;
 var gCanvas;
 var gCx;
 var gToasts = [];
-var gGamepad = undefined;
+var gGamepad1 = undefined;
+var gGamepad2 = undefined;
 var kJoystickDeadZone = 0.5;
 var gRandom = MakeRandom(0xDEADBEEF);
 
@@ -325,13 +443,16 @@ function GameTime01(period) {
 // (all) this really needs to go into GameState???
 function ForSide(src, left, right) {
   // due to history, undefined means right.
-  if (src == "left") {
+  if (src === "left") {
     return left;
   }
   return right;
 }
 function ForOtherSide(src, left, right) {
   return ForSide(src, right, left);
+}
+function OtherSide(side) {
+  return side === "left" ? "right" : "left";
 }
 function SwapBuffers(buffers) {
   var tmp = buffers.A;
@@ -354,6 +475,17 @@ function MoveTo(x, y) {
 }
 function LineTo(x, y) {
   gCx.lineTo(O5(x), O5(y));
+}
+function RoundRect(x, y, w, h, r) {
+  // e.g. does not exist in msft edge 92.0.902.67.
+  if (exists(gCx.roundRect)) {
+    gCx.roundRect(x, y, w, h, r);
+  } else {
+    gCx.rect(x, y, w, h);
+  }
+}
+function RectXYWH(xywh) {
+  gCx.rect(xywh.x, xywh.y, xywh.width, xywh.height);
 }
 
 // as much as i'd like to draw exactly
@@ -424,14 +556,25 @@ var gDrawTitleLatch = RandomLatch(0.01, 250);
 function DrawTitle() {
   var flicker = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
   Cxdo(function () {
-    gCx.fillStyle = flicker ? RandomForColor(cyanSpec, 0.8) : rgb255s(cyanDarkSpec.regular);
+    gCx.fillStyle = flicker ? RandomForColor(cyanSpec, 0.8) : rgba255s(cyanDarkSpec.regular);
     DrawText("P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker);
     var msg = "ETERNAL BETA";
     if (flicker && gDrawTitleLatch.MaybeLatch(gGameTime)) {
       msg = "ETERNAL BUGS";
     }
-    DrawText(msg, "right", gw(0.876), gh(0.48), gRegularFontSizePt, flicker);
+    DrawText(msg, "right", gw(0.876), gh(0.48), gReducedFontSizePt, flicker);
   });
+}
+function DrawLandscape() {
+  var flicker = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+  if (getWindowAspect() <= 1) {
+    var rots = ["|", "/", "-", "\\", "|", "/", "-", "\\"];
+    var i = ii(gFrameCount / 10) % rots.length;
+    Cxdo(function () {
+      gCx.fillStyle = rgba255s(yellowSpec.strong);
+      DrawText("".concat(rots[i]).concat(rots[i]).concat(rots[i], "  r TRY LANDSCAPE r  ").concat(rots[i]).concat(rots[i]).concat(rots[i]), "center", gw(0.5), gh(0.9), gRegularFontSizePt, flicker);
+    });
+  }
 }
 function DrawBounds() {
   var alpha = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0.5;
@@ -451,7 +594,7 @@ function DrawBounds() {
     gCx.lineTo(WX(gWidth), WY(gHeight));
     gCx.moveTo(WX(gWidth), WY(0));
     gCx.lineTo(WX(0), WY(gHeight));
-    gCx.strokeStyle = rgb255s(white, alpha / 2);
+    gCx.strokeStyle = rgba255s(white, alpha / 2);
     gCx.lineWidth = 10;
     gCx.stroke();
     gCx.strokeRect(5, 5, gWidth - 10, gHeight - 10);
@@ -462,14 +605,14 @@ function DrawBounds() {
     gCx.lineTo(WX(gCanvas.width), WY(gCanvas.height));
     gCx.moveTo(WX(gCanvas.width), WY(0));
     gCx.lineTo(WX(0), WY(gCanvas.height));
-    gCx.strokeStyle = rgb255s(magentaSpec.regular, alpha);
+    gCx.strokeStyle = rgba255s(magentaSpec.regular, alpha);
     gCx.lineWidth = 2;
     gCx.stroke();
     gCx.strokeRect(5, 5, gWidth - 10, gHeight - 10);
   });
 }
 
-//........................................
+// ----------------------------------------
 
 /*class*/
 function Lifecycle(handlerMap) {
@@ -478,36 +621,12 @@ function Lifecycle(handlerMap) {
     self.handlerMap = handlerMap;
     self.state = kRoot;
     self.handler = handlerMap[self.state]();
-    self.paused = false;
     self.stop = false;
     self.transitioned = false;
     self.lastTime = Date.now();
   };
   self.Quit = function () {
     self.stop = true;
-  };
-  self.Pause = function (pause) {
-    var _self$handler;
-    self.paused = pause;
-    if (exists((_self$handler = self.handler) == null ? void 0 : _self$handler.Pause)) {
-      self.handler.Pause(pause);
-    }
-  };
-  self.DrawCRTScanlines = function () {
-    if (self.state != kRoot && self.state != kSplash) {
-      gCx.beginPath();
-      Cxdo(function () {
-        var height = 2;
-        var skip = 10;
-        var step = ii(skip / height);
-        var start = ii(gFrameCount / 4) % skip;
-        for (var y = gHeight - start; y >= 0; y -= step) {
-          gCx.rect(0, y, gWidth, height);
-        }
-      });
-      gCx.fillStyle = scanlineColorStr;
-      gCx.fill();
-    }
   };
   self.RunLoop = function () {
     if (self.stop) {
@@ -523,12 +642,14 @@ function Lifecycle(handlerMap) {
     if (clockDiff >= kMaybeWasPausedInTheDangedDebuggerMsec) {
       self.lastTime = now;
     } else {
+      Gamepads.poll();
       self.lastTime = now;
       gGameTime += clockDiff;
       var dt = gGameTime - gLastFrameTime;
       if (dt < kTimeStep) {
         tt = kTimeStep - dt;
       } else {
+        var _self$handler$GetIsPa, _self$handler;
         Assert(exists(self.handler), "RunLoop");
         if (self.transitioned) {
           self.handler = self.handlerMap[self.state]();
@@ -537,13 +658,14 @@ function Lifecycle(handlerMap) {
 
         // even when paused, must Step to handle input.
         // also call Draw to keep the screen in sync.
-        var next = self.handler.Step(self.paused ? 0 : dt);
+        var paused = aorb((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false);
+        var next = self.handler.Step(paused ? 0 : dt);
         self.handler.Draw();
         if (exists(next) && next !== self.state) {
           console.log("transitioned from ".concat(self.state, " to ").concat(next));
           self.transitioned = true;
           self.state = next;
-          cancelTouch();
+          cancelPointing();
         }
         gLastFrameTime = gGameTime;
         ++gFrameCount;
@@ -556,6 +678,259 @@ function Lifecycle(handlerMap) {
     }
     setTimeout(self.RunLoop, Math.max(1, tt));
   };
+  self.DrawCRTScanlines = function () {
+    if (self.state != kRoot && self.state != kWarning) {
+      gCx.beginPath();
+      Cxdo(function () {
+        var height = 2;
+        var skip = 10;
+        var step = ii(skip / height);
+        var start = ii(gFrameCount / 4) % skip;
+        for (var y = gHeight - start; y >= 0; y -= step) {
+          gCx.rect(0, y, gWidth, height);
+        }
+      });
+      gCx.fillStyle = scanlineColorStr;
+      gCx.fill();
+    }
+  };
+  self.Init();
+}
+
+/*class*/
+function RootState(nextState) {
+  var self = this;
+  self.Init = function () {
+    self.nextState = nextState;
+  };
+  self.Step = function () {
+    return self.nextState;
+  };
+  self.Draw = function () {};
+  self.Init();
+}
+
+/*class*/
+function WarningState() {
+  var self = this;
+  self.Init = function () {
+    ResetInput();
+    LoadAudio();
+    self.done = false;
+  };
+  self.Step = function () {
+    return self.ProcessAllInput();
+  };
+  self.ProcessAllInput = function () {
+    var nextState = undefined;
+    gEventQueue.forEach(function (event, i) {
+      var cmds = {};
+      event.updateFn(cmds);
+      if (isU(nextState)) {
+        nextState = self.ProcessOneInput(cmds);
+      }
+    });
+    gEventQueue = [];
+    return nextState;
+  };
+  self.ProcessOneInput = function (cmds) {
+    var ud = isAnyUpOrDownPressed();
+    var ap = isAnyActivatePressed(cmds);
+    var apd = isAnyPointerDown();
+    if (ud || ap || apd) {
+      self.done = true;
+    }
+    return self.done ? kTitle : undefined;
+  };
+  self.Draw = function () {
+    ClearScreen();
+    if (gResizing) {
+      DrawResizing();
+    } else {
+      DrawTitle(false);
+      self.DrawWarning();
+      DrawBounds();
+    }
+  };
+  self.DrawWarning = function () {
+    gCx.fillStyle = warningColorStr;
+    var lineFactor = sy1(15);
+    var y0 = gh(1) - gYInset - gWarning.length * lineFactor;
+    Cxdo(function () {
+      gWarning.forEach(function (t, i) {
+        DrawText(t, "center", gw(0.5), y0 + i * lineFactor, gSmallestFontSizePt, false, "monospace");
+      });
+    });
+  };
+  self.Init();
+}
+
+/*class*/
+function TitleState() {
+  var self = this;
+  self.Init = function () {
+    ResetInput();
+    ResetP1Side();
+    self.attract = new GameState(true);
+    self.timeout = gDebug ? 1 : 1000 * 1.5;
+    self.started = gGameTime;
+    self.done = false;
+    // at one point i guess it felt nicer to not start music immediately?
+    self.musicTimer = setTimeout(BeginMusic, 1000);
+    self.theMenu = self.MakeMenu();
+  };
+  self.MakeMenu = function () {
+    return new MenuBehavior(_objectSpread({
+      isHidden: false,
+      OnClose: function OnClose() {
+        return ResetP1Side();
+      }
+    }, MakeMainMenuButtons()));
+  };
+  self.isLoading = function () {
+    return gGameTime - self.started <= self.timeout;
+  };
+  self.Step = function (dt) {
+    var nextState = undefined;
+    self.attract.Step(dt);
+    self.theMenu.Step(); // fyi this doesn't process menu input, actually.
+    nextState = self.ProcessAllInput();
+    if (exists(nextState)) {
+      clearTimeout(self.musicTimer);
+      StopAudio(true);
+    }
+    return nextState;
+  };
+  self.ProcessAllInput = function () {
+    var nextState = undefined;
+    var hasEvents = gEventQueue.length > 0;
+    if (hasEvents) {
+      gEventQueue.forEach(function (event, i) {
+        var cmds = {};
+        event.updateFn(cmds);
+        if (isU(nextState)) {
+          nextState = self.ProcessOneInput(cmds);
+        }
+      });
+      gEventQueue = [];
+    }
+    return nextState;
+  };
+  self.ProcessOneInput = function (cmds) {
+    if (cmds.singlePlayer) {
+      gSinglePlayer = true;
+      return undefined;
+    }
+    if (cmds.doublePlayer) {
+      gSinglePlayer = false;
+      return undefined;
+    }
+    if (cmds.nextMusic) {
+      BeginMusic();
+      return undefined;
+    }
+    if (self.theMenu.ProcessOneInput(cmds)) {
+      return undefined;
+    }
+    if (isAnyMenuPressed(cmds)) {
+      self.theMenu.besc.Click();
+      clearAnyMenuPressed(); // todo: code smell.
+      return undefined;
+    }
+    if (!self.isLoading() && !self.theMenu.besc.isOpen && (isAnyUpOrDownPressed() || isAnyActivatePressed(cmds) || isAnyPointerDown())) {
+      self.done = true;
+    }
+    var nextState;
+    if (self.done) {
+      // if it was all done via gamepad there's no "side" set yet.
+      if (!gSinglePlayer && isU(gP1Side)) {
+        SetP1Side("right");
+      }
+      nextState = gSinglePlayer ? kGame : kGetReady;
+    }
+    return nextState;
+  };
+
+  // match: GetReadyState.Draw() et. al.
+  self.DrawHighScore = function () {
+    if (exists(gHighScore)) {
+      Cxdo(function () {
+        gCx.fillStyle = RandomMagenta(0.4);
+        DrawText("HI: " + gHighScore, "right", gw(0.8), gh(0.12), gSmallFontSizePt);
+      });
+    }
+  };
+  self.Draw = function (advance) {
+    ClearScreen();
+    if (gResizing) {
+      self.started = gGameTime;
+      DrawResizing();
+    } else {
+      Cxdo(function () {
+        self.attract.Draw();
+        self.DrawHighScore();
+        DrawTitle();
+        gCx.fillStyle = RandomGreen();
+        var msg = "CONTROLS: TAP / W S / uv / GAMEPAD / MOUSE";
+        if (self.isLoading()) {
+          var msg = "LOADING...";
+        }
+        DrawText(msg, "center", gw(0.5), gh(0.6), gSmallFontSizePt);
+      });
+      self.theMenu.Draw();
+      self.DrawMusicName();
+    }
+  };
+  self.DrawMusicName = function () {
+    if (!gMusicMuted) {
+      var msg = "fetching music";
+      if (exists(gMusicID)) {
+        var name = gAudio.id2name[gMusicID];
+        var meta = gAudio.name2meta[name];
+        if (exists(meta == null ? void 0 : meta.basename) && !!(meta != null && meta.loaded)) {
+          var msg = meta.basename;
+        }
+      }
+      Cxdo(function () {
+        gCx.fillStyle = rgba255s(greySpec.strong, 0.5);
+        DrawText(msg.toUpperCase(), "center", gw(0.5), gh(0.94), gSmallestFontSizePt, false);
+      });
+    }
+  };
+  self.Init();
+}
+
+/*class*/
+function GetReadyState() {
+  var self = this;
+  self.Init = function () {
+    ResetInput();
+    gStateMuted = false;
+    self.timeout = 1000 * (gDebug ? 1 : 3) - 1;
+    self.lastSec = Math.floor((self.timeout + 1) / 1000);
+    PlayBlip();
+  };
+  self.Step = function (dt) {
+    self.timeout -= dt;
+    var sec = Math.floor(self.timeout / 1000);
+    if (sec < self.lastSec) {
+      PlayBlip();
+      self.lastSec = sec;
+    }
+    return self.timeout > 0 ? undefined : kGame;
+  };
+  self.Draw = function () {
+    ClearScreen();
+    var t = Math.ceil(self.timeout / 1000);
+    Cxdo(function () {
+      gCx.fillStyle = RandomGreen();
+      DrawText("GET READY! ".concat(t), "center", gw(0.5), gh(0.5), gBigFontSizePt);
+      // match: GameState.DrawScoreHeader() et. al.
+      gCx.fillStyle = RandomGreen(0.3);
+      DrawText(ForSide(gP1Side, "P1", "P2"), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
+      DrawText(ForSide(gP1Side, "P2", "P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
+    });
+  };
   self.Init();
 }
 
@@ -565,18 +940,24 @@ function GameState() {
   var self = this;
   self.Init = function () {
     self.isAttract = isAttract;
+    gStateMuted = self.isAttract;
 
-    // this reset business is kind of a mess...
+    // todo: code smell, this 'reset' business is kind of a big confused mess. :-(
     RecalculateConstants();
     ResetGlobalStorage();
     ResetInput();
-    gPlayerScore = 0;
-    gCPUScore = 0;
-    gStateMuted = gMonochrome = self.isAttract;
-    gPauseButtonEnabled = false;
+    gP1Score = 0;
+    gP2Score = 0;
+    gMonochrome = self.isAttract; // todo: make local.
     gStartTime = gGameTime;
+    self.pauseButtonEnabled = false;
     self.paused = false;
     self.animations = {};
+    self.quit = false;
+    self.stepping = false;
+    if (!self.isAttract) {
+      self.theMenu = self.MakeMenu();
+    }
 
     // warning: this setup is easily confusing wrt left vs. right.
     var lp = {
@@ -588,9 +969,19 @@ function GameState() {
       y: gh(0.5)
     };
     var p1label = self.isAttract ? undefined : "P1";
-    var cpulabel = self.isAttract ? undefined : "GPT";
-    ForSide(gPointerSide, function () {
-      self.playerPaddle = new Paddle({
+    var p2label = self.isAttract ? undefined : gSinglePlayer ? "GPT" : "P2";
+    gPucks.A.push(self.CreateStartingPuck());
+    if (gDebug && !self.isAttract) {
+      ForCount(10, function () {
+        gPucks.A.push(self.CreateRandomPuck());
+      });
+    }
+    // I think the ensuing code indicates the Paddle should perhaps
+    // at least be split up into human & ai variants. :-\ so confused.
+    ForSide(gP1Side, function () {
+      // p1 is always a human player.
+      // p2 is either cpu or human.
+      self.paddleP1 = new Paddle({
         isPlayer: !self.isAttract,
         side: "left",
         x: lp.x,
@@ -598,24 +989,29 @@ function GameState() {
         width: gPaddleWidth,
         height: gPaddleHeight,
         label: p1label,
-        isSplitter: true
+        isSplitter: true,
+        keyStates: gSinglePlayer ? [gP1Keys, gP2Keys] : [gP1Keys],
+        buttonState: gGamepad1Buttons,
+        stickState: gGamepad1Sticks,
+        target: gP1Target
       });
-      self.cpuPaddle = new Paddle({
-        isPlayer: false,
+      self.paddleP2 = new Paddle({
+        isPlayer: !self.isAttract && !gSinglePlayer,
         side: "right",
         x: rp.x,
         y: rp.y,
         width: gPaddleWidth,
         height: gPaddleHeight,
-        label: cpulabel,
+        label: p2label,
         isSplitter: true,
-        isPillSeeker: true
-      });
-      ForCount(gDebug ? 20 : 1, function () {
-        gPucks.A.push(self.CreateStartingPuck(1));
+        isPillSeeker: true,
+        keyStates: gSinglePlayer ? [gPNoneKeys] : [gP2Keys],
+        buttonState: gGamepad2Buttons,
+        stickState: gGamepad2Sticks,
+        target: gP2Target
       });
     }, function () {
-      self.playerPaddle = new Paddle({
+      self.paddleP1 = new Paddle({
         isPlayer: !self.isAttract,
         side: "right",
         x: rp.x,
@@ -623,104 +1019,129 @@ function GameState() {
         width: gPaddleWidth,
         height: gPaddleHeight,
         label: p1label,
-        isSplitter: true
+        isSplitter: true,
+        keyStates: gSinglePlayer ? [gP1Keys, gP2Keys] : [gP1Keys],
+        buttonState: gGamepad1Buttons,
+        stickState: gGamepad1Sticks,
+        target: gP1Target
       });
-      self.cpuPaddle = new Paddle({
-        isPlayer: false,
+      self.paddleP2 = new Paddle({
+        isPlayer: !self.isAttract && !gSinglePlayer,
         side: "left",
         x: lp.x,
         y: lp.y,
         width: gPaddleWidth,
         height: gPaddleHeight,
-        label: cpulabel,
+        label: p2label,
         isSplitter: true,
-        isPillSeeker: true
-      });
-      ForCount(gDebug ? 20 : 1, function () {
-        gPucks.A.push(self.CreateStartingPuck(-1));
+        isPillSeeker: true,
+        keyStates: gSinglePlayer ? [gPNoneKeys] : [gP2Keys],
+        buttonState: gGamepad2Buttons,
+        stickState: gGamepad2Sticks,
+        target: gP2Target
       });
     })();
 
+    // this countdown is a block on both player & cpu ill spawning.
+    // first wait is longer before the very first pill.
+    // also see the 'must' check later on.
+    self.pillSpawnCountdown = 1000 * (gDebug ? 3 : 25);
     // make sure the cpu doesn't get one first, that looks too mean.
     // also make sure neither side gets too many pills before the other.
-    self.isCpuPillAllowed = false;
+    self.isCpuPillAllowed = !gSinglePlayer;
     self.unfairPillCount = 0;
     if (!self.isAttract) {
       self.AddAnimation(MakeGameStartAnimation());
+      PlayStart();
     }
     self.MakeLevels();
-    self.level = self.levels[0]; // todo: progression.
-
-    PlayStart();
+    self.level = self.levels[0](); // todo: progression.
+  };
+  self.MakeMenu = function () {
+    return new MenuBehavior(_objectSpread({
+      isHidden: true,
+      OnClose: function OnClose() {
+        self.paused = false;
+        gP1Target.ClearY();
+        gP2Target.ClearY();
+      }
+    }, MakeGameMenuButtons({
+      OnQuit: function OnQuit() {
+        self.quit = true;
+      }
+    })));
   };
   self.MakeLevels = function () {
-    // just a proof of ocncept under the covers,
-    // not actually using the timeouts or count
-    // since there is only one level at the moment.
-    // bounty: somebody add (and playtest!) more levels.
-    // also needs ui of course as levels end/start.
-    self.levels = [new Level({
-      maxVX: sxi(14),
-      speedupFactor: 0.01,
-      speedupTimeout: Number.MAX_SAFE_INTEGER,
-      puckCount: Number.MAX_SAFE_INTEGER,
-      pills: [MakeForcePushProps, MakeDecimateProps, MakeEngorgeProps, MakeSplitProps, MakeDefendProps, MakeOptionProps, MakeNeoProps, MakeChaosProps
-      // MakeRadarProps -- todo: disabled due to safar alpha bug, see MakeRadarAnimation.
-      ],
-      playerPaddle: self.playerPaddle,
-      cpuPaddle: self.cpuPaddle
-    })];
+    // just a proof of concept, we only have 1 level,
+    // so not actually using the timeouts or count.
+    // bounty: somebody add (and playtest!) more levels,
+    // and add nice ui for it all.
+    self.levels = [
+    // todo: make an actual separate attract level, too,
+    // instead of it being an "self.isAttract" hack everywhere.
+    function () {
+      return new Level({
+        maxVX: sxi(14),
+        speedupFactor: 0.01,
+        speedupTimeout: Number.MAX_SAFE_INTEGER,
+        puckCount: Number.MAX_SAFE_INTEGER,
+        isP1Player: !self.isAttract,
+        isP2Player: !self.isAttract && !gSinglePlayer,
+        pills: [MakeForcePushProps, MakeDecimateProps, MakeEngorgeProps, MakeSplitProps, MakeDefendProps, MakeOptionProps, MakeNeoProps, MakeChaosProps
+        // MakeRadarProps -- todo: disabled due to safar alpha bug, see MakeRadarAnimation.
+        ],
+        paddleP1: self.paddleP1,
+        paddleP2: self.paddleP2
+      });
+    }];
   };
-  self.Pause = function (pause) {
-    self.paused = pause;
+  self.Pause = function () {
+    self.paused = true;
   };
   self.Step = function (dt) {
-    var stepping = false;
-    if (self.paused && gStepPressed) {
-      stepping = true;
-      dt = kTimeStep;
-      gStepPressed = false;
+    var _self$theMenu;
+    if (self.quit) {
+      // you do not get to set the high score.
+      // todo: goto kGameOver but don't save score.
+      // unfortunately that likely requies yet another global flag
+      // the way thing work at the moment.
+      return kTitle;
     }
+    if (self.stepping) {
+      dt = kTimeStep;
+    }
+    (_self$theMenu = self.theMenu) == null || _self$theMenu.Step(); // fyi this doesn't process menu inputs, that is below.
     self.level.Step(dt);
     gMaxVX = self.level.maxVX;
     self.MaybeSpawnPills(dt);
     self.ProcessAllInput();
-    if (!self.paused || stepping) {
-      self.playerPaddle.Step(dt, self);
-      self.cpuPaddle.Step(dt, self);
+    if (!self.paused || self.stepping) {
+      self.paddleP1.Step(dt, self);
+      self.paddleP2.Step(dt, self);
       self.StepMoveables(dt);
       self.StepAnimations(dt);
     }
-    if (self.paused && gGameOverPressed) {
-      gGameOverPressed = false;
-      return kGameOver;
-    }
-    if (self.paused && gSpawnPillPressed) {
-      // todo: move more of the pill code to the Level.
-      self.level.playerPill = self.level.playerPowerups.MakeRandomPill(self);
-      self.level.cpuPill = self.level.cpuPowerups.MakeRandomPill(self);
-      gSpawnPillPressed = false;
-    }
     var nextState = self.CheckNoPucks();
     if (exists(nextState)) {
-      gPauseButtonEnabled = false;
+      self.pauseButtonEnabled = false;
     }
+    self.stepping = false;
     return nextState;
   };
   self.MaybeSpawnPills = function (dt) {
-    gPillSpawnCountdown = gPillSpawnCountdown - dt;
+    self.pillSpawnCountdown -= dt;
     var kDiffMax = 2;
-    if (isU(self.level.playerPill) && self.unfairPillCount < kDiffMax) {
-      self.level.playerPill = self.MaybeSpawnPill(dt, self.level.playerPill, kSpawnPlayerPillFactor, self.level.playerPowerups);
-      if (exists(self.level.playerPill)) {
-        gPillSpawnCountdown = kPillSpawnCooldown;
+    if (isU(self.level.p1Pill) && self.unfairPillCount < kDiffMax) {
+      self.level.p1Pill = self.MaybeSpawnPill(dt, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups);
+      if (exists(self.level.p1Pill)) {
+        self.pillSpawnCountdown = kPillSpawnCooldown;
         self.unfairPillCount++;
         self.isCpuPillAllowed = true;
       }
     }
-    if (isU(self.level.cpuPill) && self.isCpuPillAllowed && self.unfairPillCount > -kDiffMax) {
-      self.level.cpuPill = self.MaybeSpawnPill(dt, self.level.cpuPill, kSpawnPlayerPillFactor * 0.7, self.level.cpuPowerups);
-      if (exists(self.level.cpuPill)) {
+    if (isU(self.level.p2Pill) && self.isCpuPillAllowed && self.unfairPillCount > -kDiffMax) {
+      self.level.p2Pill = self.MaybeSpawnPill(dt, self.level.p2Pill, kSpawnPlayerPillFactor * 0.7, self.level.p2Powerups);
+      if (exists(self.level.p2Pill)) {
         self.unfairPillCount--;
       }
     }
@@ -729,9 +1150,9 @@ function GameState() {
   self.MaybeSpawnPill = function (dt, prev, spawnFactor, maker) {
     var can_paused = !self.paused;
     var can_attract = !self.isAttract;
-    var can_timer = gPillSpawnCountdown <= 0;
+    var can_timer = self.pillSpawnCountdown <= 0;
     if (can_paused && can_attract && can_timer) {
-      var must = gPillSpawnCountdown < kPillSpawnCooldown * 2;
+      var must = self.pillSpawnCountdown < kPillSpawnCooldown * 2;
       var can_factor = RandomBool(gDebug ? 0.1 : spawnFactor);
       var can_empty = isU(prev);
       var can = can_factor && can_empty;
@@ -747,7 +1168,7 @@ function GameState() {
       return empty ? kGameOver : undefined;
     } else {
       if (empty) {
-        gPucks.A.push(self.CreateStartingPuck(RandomSign()));
+        gPucks.A.push(self.CreateStartingPuck());
       }
       return undefined;
     }
@@ -764,9 +1185,13 @@ function GameState() {
       }
     });
   };
-  self.CreateStartingPuck = function (sign) {
+  self.CreateStartingPuck = function () {
+    // i am crying into my drink.
+    // single player: puck goes towards gpu.
+    // two player: puck goes toward p2.
+    var sign = ForSide(gP1Side, 1, -1);
     var p = new Puck({
-      x: gw(RandomRange(0.45, 0.48)),
+      x: gw(ForSide(gP1Side, 0.3, 0.7)),
       y: self.isAttract ? gh(RandomRange(0.4, 0.6)) : gh(0.3),
       vx: sign * gMaxVX / 5,
       vy: self.isAttract ? RandomCentered(0, 2, 1) : 0.3,
@@ -785,40 +1210,72 @@ function GameState() {
     return p;
   };
   self.ProcessAllInput = function () {
+    // todo: figure out right way to deal with not/clearing inputs.
     if (!self.isAttract) {
       gEventQueue.forEach(function (event, i) {
-        event.updateFn();
-        self.ProcessOneInput();
+        var cmds = {};
+        event.updateFn(cmds);
+        self.ProcessOneInput(cmds);
       });
       gEventQueue = [];
     }
   };
-  self.ProcessOneInput = function () {
-    if (gClearHighScorePressed) {
+  self.ProcessOneInput = function (cmds) {
+    var _self$theMenu2;
+    // note: oddly enough, the paddles handle their own input.
+
+    if (cmds.step) {
+      if (self.paused) {
+        self.stepping = true;
+      }
+    }
+    if (cmds.gameOver) {
+      if (self.paused) {
+        self.quit = true;
+      }
+    }
+    if (cmds.spawnPill) {
+      if (self.paused) {
+        // todo: move more of the pill code to the Level.
+        self.level.p1Pill = self.level.p1Powerups.MakeRandomPill(self);
+        self.level.p2Pill = self.level.p2Powerups.MakeRandomPill(self);
+      }
+    }
+    if (cmds.clearHighScore) {
       if (self.paused) {
         gHighScore = undefined;
         localStorage.removeItem(kHighScoreKey);
       }
-      gClearHighScorePressed = false;
     }
-    if (gButtonPressed) {
-      gPausePressed = true;
+    if (cmds.addPuck) {
+      if (self.paused) {
+        ForCount(10, function () {
+          gPucks.A.push(self.CreateRandomPuck());
+        });
+      }
     }
-    if (gPauseButtonEnabled && isPointerDown()) {
-      gPausePressed = Distance2(gPointerX, gPointerY, gPauseCenterX, gPauseCenterY) < Pow2(gPauseRadius * 2);
-    }
-    if (gPausePressed) {
-      gLifecycle.Pause(!self.paused); // i apologize.
-      gPausePressed = false;
-    }
-    if (self.paused && gAddPuckPressed) {
-      ForCount(10, function () {
-        gPucks.A.push(self.CreateRandomPuck());
-      });
-      gAddPuckPressed = false;
-    }
-    if (self.paused) {
+
+    // everything below is about pause state and menu showing oh boy.
+    if ((_self$theMenu2 = self.theMenu) != null && _self$theMenu2.ProcessOneInput(cmds)) {
       return;
+    }
+    var pbp = false;
+    if (self.pauseButtonEnabled && isAnyPointerDown()) {
+      var pxyr = {
+        x: gPauseCenterX,
+        y: gPauseCenterY,
+        r: gPauseRadius * 1.5
+      };
+      // match: DrawPauseButton();
+      var p1p = isPointInCircle(gP1Target.position, pxyr);
+      var p2p = isPointInCircle(gP2Target.position, pxyr);
+      pbp = p1p || p2p;
+    }
+    if (isAnyMenuPressed(cmds) || cmds.pause || pbp) {
+      var _self$theMenu3;
+      self.paused = !self.paused;
+      (_self$theMenu3 = self.theMenu) == null || _self$theMenu3.besc.Click(); // sure hope this stays in sync.
+      clearAnyMenuPressed(); // todo: code smell.
     }
   };
   self.AddAnimation = function (a) {
@@ -833,16 +1290,16 @@ function GameState() {
     self.level.OnPuckLost();
     var wasLeft = p.x < gw(0.5);
     if (wasLeft) {
-      ForSide(gPointerSide, function () {
-        gCPUScore += kScoreIncrement;
+      ForSide(gP1Side, function () {
+        gP2Score += kScoreIncrement;
       }, function () {
-        gPlayerScore += kScoreIncrement;
+        gP1Score += kScoreIncrement;
       })();
     } else {
-      ForSide(gPointerSide, function () {
-        gPlayerScore += kScoreIncrement;
+      ForSide(gP1Side, function () {
+        gP1Score += kScoreIncrement;
       }, function () {
-        gCPUScore += kScoreIncrement;
+        gP2Score += kScoreIncrement;
       })();
     }
   };
@@ -854,22 +1311,24 @@ function GameState() {
         self.UpdateScore(p);
       }
       if (p.alive) {
+        var _splits$length;
         // options, barriers, neos do not split pucks,
         // only the main player & cpu paddles.
-        var splits = p.AllPaddlesCollision([self.playerPaddle, self.cpuPaddle]);
+        var splits = p.AllPaddlesCollision([self.paddleP1, self.paddleP2]);
+        Assert(((_splits$length = splits == null ? void 0 : splits.length) != null ? _splits$length : 0) <= 1, splits == null ? void 0 : splits.length);
         p.WallsCollision();
-        p.BarriersCollision(self.playerPaddle.barriers.A);
-        p.BarriersCollision(self.cpuPaddle.barriers.A);
-        p.OptionsCollision(self.playerPaddle.options.A);
-        p.OptionsCollision(self.cpuPaddle.options.A);
-        p.NeoCollision(self.playerPaddle.neo);
-        p.NeoCollision(self.cpuPaddle.neo);
+        p.BarriersCollision(self.paddleP1.barriers.A);
+        p.BarriersCollision(self.paddleP2.barriers.A);
+        p.OptionsCollision(self.paddleP1.options.A);
+        p.OptionsCollision(self.paddleP2.options.A);
+        p.NeoCollision(self.paddleP1.neo);
+        p.NeoCollision(self.paddleP2.neo);
         gPucks.B.push(p);
         if (!self.isAttract) {
           gPucks.B.pushAll(splits);
         }
-        self.playerPaddle.OnPuck(p, i);
-        self.cpuPaddle.OnPuck(p, i);
+        self.paddleP1.OnPuck(p, i);
+        self.paddleP2.OnPuck(p, i);
       }
     });
     SwapBuffers(gPucks);
@@ -887,26 +1346,26 @@ function GameState() {
     self.MoveCPUPill(dt);
   };
   self.MovePlayerPill = function (dt) {
-    if (exists(self.level.playerPill)) {
-      self.level.playerPill = self.level.playerPill.Step(dt, self);
+    if (exists(self.level.p1Pill)) {
+      self.level.p1Pill = self.level.p1Pill.Step(dt, self);
     }
-    if (exists(self.level.playerPill)) {
-      self.level.playerPill = self.level.playerPill.AllPaddlesCollision(self, [self.playerPaddle]);
+    if (exists(self.level.p1Pill)) {
+      self.level.p1Pill = self.level.p1Pill.AllPaddlesCollision(self, [self.paddleP1]);
     }
   };
   self.MoveCPUPill = function (dt) {
-    if (exists(self.level.cpuPill)) {
-      self.level.cpuPill = self.level.cpuPill.Step(dt, self);
+    if (exists(self.level.p2Pill)) {
+      self.level.p2Pill = self.level.p2Pill.Step(dt, self);
     }
-    if (exists(self.level.cpuPill)) {
-      self.level.cpuPill = self.level.cpuPill.AllPaddlesCollision(self, [self.cpuPaddle]);
+    if (exists(self.level.p2Pill)) {
+      self.level.p2Pill = self.level.p2Pill.AllPaddlesCollision(self, [self.paddleP2]);
     }
   };
   self.Alpha = function (alpha) {
     if (alpha == undefined) {
       alpha = 1;
     }
-    return alpha * (self.isAttract ? 0.3 : 1);
+    return alpha * (self.isAttract ? 0.2 : 1);
   };
   self.DrawMidLine = function () {
     if (!self.isAttract) {
@@ -933,17 +1392,20 @@ function GameState() {
       });
     }
   };
+
+  // match: GetReady.Draw() et. al.
   self.DrawScoreHeader = function () {
     Cxdo(function () {
-      var style = RandomGrey(self.Alpha(0.3));
-      ForSide(self.isAttract ? "right" : gPointerSide, function () {
+      var style = RandomMagenta(self.Alpha(0.4));
+      var p2 = gSinglePlayer ? "GPT: " : "P2: ";
+      ForSide(self.isAttract ? "right" : gP1Side, function () {
         gCx.fillStyle = style;
         if (exists(gHighScore)) {
           DrawText("HI: " + gHighScore, "left", gw(0.2), gh(0.12), gSmallFontSizePt);
         }
         if (!self.isAttract) {
-          DrawText("GPT: " + gCPUScore, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
-          DrawText("P1: " + gPlayerScore, "left", gw(0.2), gh(0.22), gRegularFontSizePt);
+          DrawText(p2 + gP2Score, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
+          DrawText("P1: " + gP1Score, "left", gw(0.2), gh(0.22), gRegularFontSizePt);
         }
       }, function () {
         gCx.fillStyle = style;
@@ -951,25 +1413,28 @@ function GameState() {
           DrawText("HI: " + gHighScore, "right", gw(0.8), gh(0.12), gSmallFontSizePt);
         }
         if (!self.isAttract) {
-          DrawText("GPT: " + gCPUScore, "left", gw(0.2), gh(0.22), gRegularFontSizePt);
-          DrawText("P1: " + gPlayerScore, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
+          DrawText(p2 + gP2Score, "left", gw(0.2), gh(0.22), gRegularFontSizePt);
+          DrawText("P1: " + gP1Score, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
         }
       })();
     });
   };
-  self.DrawTouchTarget = function () {
+  self.DrawMoveTarget = function (target) {
+    var _target$position;
     // bug: yet another safari ios/ipados bug? the clipping doesn't
     // actually correctly work and so the butt end of the pointer
     // shows through a pixel or two, all very strange. so at least
     // making this pointer color == crt outline color to be less obvi.
-    if (exists(gMoveTargetY) && !self.isAttract) {
+    var side = target.side;
+    var moveTargetY = (_target$position = target.position) == null ? void 0 : _target$position.y;
+    if (exists(side) && exists(moveTargetY) && !self.isAttract) {
       var xsize = syi(12);
       var ysize = syi(7);
-      var xoff = xyNudge(gMoveTargetY, ysize, 12, gPointerSide);
-      ForSide(gPointerSide, function () {
+      var xoff = xyNudge(moveTargetY, ysize, 12, gP1Side);
+      ForSide(side, function () {
         var left = xoff;
         var right = left + xsize;
-        var y = WY(gMoveTargetY);
+        var y = WY(moveTargetY);
         Cxdo(function () {
           gCx.beginPath();
           gCx.moveTo(left, y - ysize);
@@ -981,7 +1446,7 @@ function GameState() {
       }, function () {
         var right = gw() + xoff;
         var left = right - xsize;
-        var y = WY(gMoveTargetY);
+        var y = WY(moveTargetY);
         Cxdo(function () {
           gCx.beginPath();
           gCx.moveTo(right, y - ysize);
@@ -994,36 +1459,23 @@ function GameState() {
     }
   };
   self.DrawPauseButton = function () {
-    if (!self.isAttract && isPointerEnabled()) {
-      gPauseButtonEnabled = true;
-      var cx = WX(gPauseCenterX);
-      var cy = WY(gPauseCenterY);
-      if (!self.paused) {
-        Cxdo(function () {
-          gCx.beginPath();
-          gCx.arc(cx, cy, gPauseRadius, 0, k2Pi, true);
-          var o = gPauseRadius * 0.3;
-          gCx.moveTo(cx - o, cy - o * 2);
-          gCx.lineTo(cx - o, cy + o * 2);
-          gCx.moveTo(cx + o, cy - o * 2);
-          gCx.lineTo(cx + o, cy + o * 2);
-          gCx.lineWidth = 2;
-          gCx.strokeStyle = RandomGreen(0.25);
-          gCx.stroke();
-        });
-      } else {
-        Cxdo(function () {
-          gCx.beginPath();
-          gCx.arc(cx, cy, gPauseRadius, 0, k2Pi, true);
-          var o = gPauseRadius * 0.4;
-          gCx.moveTo(cx - o, cy - o);
-          gCx.lineTo(cx + o, cy);
-          gCx.lineTo(cx - o, cy + o);
-          gCx.lineTo(cx - o, cy - o);
-          gCx.strokeStyle = RandomGreenSolid();
-          gCx.stroke();
-        });
-      }
+    if (!self.isAttract && isAnyPointerEnabled()) {
+      self.pauseButtonEnabled = true;
+      var cx = gPauseCenterX;
+      var cy = gPauseCenterY;
+      Cxdo(function () {
+        gCx.fillStyle = gCx.strokeStyle = RandomGreen(0.4);
+        DrawText("ESC", "center", cx, cy + gSmallestFontSize * 0.4, gSmallestFontSizePt);
+        gCx.beginPath();
+        gCx.arc(cx, cy, gPauseRadius, 0, k2Pi, true);
+        gCx.lineWidth = sx1(1.5);
+        gCx.stroke();
+        if (gDebug) {
+          gCx.fillStyle = "red";
+          // match: ProcessOneInput();
+          gCx.strokeRect(cx - gPauseRadius * 1.5, cy - gPauseRadius * 1.5, gPauseRadius * 3, gPauseRadius * 3);
+        }
+      });
     }
   };
   self.DrawAnimations = function () {
@@ -1036,36 +1488,37 @@ function GameState() {
       ClearScreen();
     }
     if (!gResizing) {
+      var _self$theMenu4;
       // painter's z-algorithm here below, keep important things last.
 
       self.DrawMidLine();
       self.DrawScoreHeader();
       gPucks.A.forEach(function (p) {
         // pucks going away from player.
-        if (Sign(p.vx) == ForSide(gPointerSide, 1, -1)) {
+        if (Sign(p.vx) == ForSide(gP1Side, 1, -1)) {
           p.Draw(self.Alpha());
         }
       });
       gPucks.A.forEach(function (p) {
         // pucks attacking the player.
-        if (Sign(p.vx) == ForSide(gPointerSide, -1, 1)) {
+        if (Sign(p.vx) == ForSide(gP1Side, -1, 1)) {
           p.Draw(self.Alpha());
         }
       });
-      self.playerPaddle.Draw(self.Alpha(), self);
-      self.cpuPaddle.Draw(self.Alpha(), self);
+      self.paddleP1.Draw(self.Alpha(), self);
+      self.paddleP2.Draw(self.Alpha(), self);
       self.level.Draw(self.Alpha());
       gSparks.A.forEach(function (s) {
         s.Draw(self.Alpha());
       });
-      self.DrawPauseButton();
-      self.DrawTouchTarget();
+      self.DrawMoveTarget(gP1Target);
+      if (!gSinglePlayer) {
+        self.DrawMoveTarget(gP2Target);
+      }
       self.DrawAnimations(); // late/high z order so the animations can clear the screen if desired.
       self.DrawCRTOutline();
-      if (self.paused) {
-        gCx.fillStyle = "darkblue";
-        DrawText("P A U S E D", "center", WX(gw(0.5)), WY(gh(0.55)), gBigFontSizePt);
-      }
+      (_self$theMenu4 = self.theMenu) == null || _self$theMenu4.Draw();
+      self.DrawPauseButton();
     }
     self.DrawDebug();
   };
@@ -1074,10 +1527,12 @@ function GameState() {
       return;
     }
     DrawBounds(0.2);
-    self.cpuPaddle.DrawDebug();
+    self.paddleP2.DrawDebug();
+    gP1Target.DrawDebug();
+    gP2Target.DrawDebug();
     Cxdo(function () {
       gCx.fillStyle = "magenta";
-      DrawText("".concat(self.unfairPillCount, " ").concat(gPillSpawnCountdown), "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
+      DrawText("".concat(self.unfairPillCount, " ").concat(self.pillSpawnCountdown), "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
       gCx.fillStyle = RandomGrey();
       var mvx = gPucks.A.reduce(function (m, p) {
         return Math.max(m, Math.abs(p.vx));
@@ -1085,10 +1540,6 @@ function GameState() {
       DrawText(F(mvx.toString()), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
       gCx.fillStyle = "red";
       DrawText(F(self.level.maxVX.toString()), "left", gw(0.1), gh(0.1) + gSmallFontSize, gSmallFontSizePt);
-      gCx.beginPath();
-      gCx.rect(gPointerX - 5, gPointerY - 5, 10, 10);
-      gCx.fillStyle = RandomColor();
-      gCx.fill();
       gCx.fillStyle = RandomBlue(0.5);
       DrawText(gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt);
       DrawText(gFrameCount.toString(), "right", gw(0.9), gh(0.9), gSmallFontSizePt);
@@ -1100,216 +1551,23 @@ function GameState() {
 }
 
 /*class*/
-function RootState(nextState) {
-  var self = this;
-  self.Init = function () {
-    self.nextState = nextState;
-  };
-  self.Step = function () {
-    return self.nextState;
-  };
-  self.Draw = function () {};
-  self.Init();
-}
-
-/*class*/
-function SplashState() {
-  var self = this;
-  self.Init = function () {
-    ResetInput();
-    LoadAudio();
-  };
-  self.Step = function () {
-    var nextState = undefined;
-    nextState = self.ProcessAllInput();
-    return nextState;
-  };
-  self.Draw = function () {
-    ClearScreen();
-    if (gResizing) {
-      DrawResizing();
-    } else {
-      DrawTitle(false);
-      self.DrawWarning();
-      if (getWindowAspect() <= 1) {
-        var rots = ["|", "/", "--", "\\", "|", "/", "--", "\\"];
-        var i = ii(gFrameCount / 10) % rots.length;
-        Cxdo(function () {
-          gCx.fillStyle = rgb255s(yellowSpec.strong);
-          DrawText("".concat(rots[i], "  r   TRY LANDSCAPE   r  ").concat(rots[i]), "center", gw(0.5), gh(0.9), gRegularFontSizePt, false);
-        });
-      }
-    }
-  };
-  self.DrawWarning = function () {
-    gCx.fillStyle = warningColorStr;
-    var lineFactor = 1.5;
-    var y0 = gh(0.55);
-    Cxdo(function () {
-      gWarning.forEach(function (t, i) {
-        DrawText(t, "center", gw(0.5), y0 + i * (gSmallestFontSize * lineFactor), gSmallestFontSizePt, false, "monospace");
-      });
-    });
-  };
-  self.ProcessAllInput = function () {
-    var nextState = undefined;
-    gEventQueue.forEach(function (event, i) {
-      event.updateFn();
-      if (isU(nextState)) {
-        nextState = self.ProcessOneInput();
-      }
-    });
-    gEventQueue = [];
-    return nextState;
-  };
-  self.ProcessOneInput = function () {
-    if (anyKeyPressed() || gStickUp || gStickDown || gButtonPressed || isPointerDown()) {
-      return kMenu;
-    }
-    return undefined;
-  };
-  self.Init();
-}
-
-/*class*/
-function MenuState() {
-  var self = this;
-  self.Init = function () {
-    ResetInput();
-    gUserMutedButtonEnabled = true;
-    self.attract = new GameState(true);
-    self.timeout = gDebug ? 1 : 1000 * 1.5;
-    self.started = gGameTime;
-    BeginMusic();
-  };
-  self.Step = function (dt) {
-    var nextState = undefined;
-    self.attract.Step(dt);
-    nextState = self.ProcessAllInput();
-    if (exists(nextState)) {
-      StopAudio();
-      gUserMutedButtonEnabled = false;
-    }
-    return nextState;
-  };
-  self.ProcessAllInput = function () {
-    var nextState = undefined;
-    var hasEvents = gEventQueue.length > 0;
-    if (hasEvents) {
-      gEventQueue.forEach(function (event, i) {
-        event.updateFn();
-        // use only the first event that changes the state.
-        if (isU(nextState) && event.type != kEventTouchMove && event.type != kEventMouseMove) {
-          nextState = self.ProcessOneInput();
-        }
-      });
-      gEventQueue = [];
-    }
-    return nextState;
-  };
-  self.ProcessOneInput = function () {
-    var nextState = undefined;
-    if (gUserMutedButtonEnabled && isPointerDown() && Math.abs(gUserMutedCenterX - gPointerX) < gUserMutedWidth * 0.8 && Math.abs(gUserMutedCenterY - gPointerY) < gUserMutedHeight * 0.8) {
-      gUserMutedPressed = true;
-    }
-    if (gUserMutedPressed) {
-      gUserMuted = !gUserMuted;
-      gUserMuted ? StopAudio() : BeginMusic();
-      gUserMutedPressed = false;
-    } else if (gNextMusicPressed) {
-      BeginMusic();
-    } else if (gGameTime - self.started > self.timeout && (
-    // not allowing non-controlling keys to start the game,
-    // on the other hand i think users would find it odd
-    // not to ble able to press a controller button to start.
-    gUpPressed || gDownPressed || gStickUp || gStickDown || gButtonPressed || isPointerDown())) {
-      nextState = kGame;
-    }
-    return nextState;
-  };
-  self.Draw = function (advance) {
-    ClearScreen();
-    if (gResizing) {
-      self.started = gGameTime;
-      DrawResizing();
-    } else {
-      Cxdo(function () {
-        self.attract.Draw();
-        DrawTitle();
-        self.DrawAudio();
-        gCx.fillStyle = RandomGreen();
-        var msg = "CONTROLS: TAP / W S / ARROWS / GAMEPAD";
-        if (gGameTime - self.started <= self.timeout) {
-          var msg = "LOADING...";
-          // the "start game" tap decides left vs. right for P1.
-          gPointerSide = undefined;
-        }
-        DrawText(msg, "center", gw(0.5), gh(0.5) + 80, gSmallFontSizePt);
-      });
-    }
-  };
-  self.DrawAudio = function () {
-    self.DrawMusicName();
-    self.DrawMuteMusicButton();
-  };
-  self.DrawMusicName = function () {
-    if (!gUserMuted) {
-      var msg = "fetching music";
-      if (exists(gMusicID)) {
-        var name = gAudio.id2name[gMusicID];
-        var meta = gAudio.name2meta[name];
-        if (exists(meta == null ? void 0 : meta.basename) && !!(meta != null && meta.loaded)) {
-          var msg = "norcalledmvsic ".concat(meta.basename);
-        }
-      }
-      Cxdo(function () {
-        gCx.fillStyle = rgb255s(greySpec.strong, 0.5);
-        DrawText(msg.toUpperCase(), "right", gw(0.91), gh(0.95), gSmallestFontSizePt, false);
-      });
-    }
-  };
-  self.DrawMuteMusicButton = function () {
-    // todo: this is just about the absolute worst kid of button ux.
-    var cx = gUserMutedCenterX;
-    var cy = gUserMutedCenterY;
-    var ox = gUserMutedWidth / 2;
-    var oy = gUserMutedHeight / 2;
-    var label = gUserMuted ? "m" : "m";
-    Cxdo(function () {
-      gCx.beginPath();
-      gCx.roundRect(cx - ox, cy - oy, gUserMutedWidth, gUserMutedHeight, 10);
-      gCx.fillStyle = backgroundColorStr;
-      gCx.fill();
-      gCx.roundRect(cx - ox, cy - oy, gUserMutedWidth, gUserMutedHeight, 10);
-      if (gUserMuted) {
-        gCx.moveTo(cx - ox + 2, cy - oy + 2);
-        gCx.lineTo(cx + ox - 2, cy + oy - 2);
-      }
-      gCx.fillStyle = gCx.strokeStyle = RandomGreen(0.3);
-      gCx.lineWidth = sx1(2);
-      gCx.stroke();
-      DrawText(label, "center", cx, cy + gUserMutedHeight * 0.32, gRegularFontSizePt);
-    });
-  };
-  self.Init();
-}
-
-/*class*/
 function GameOverState() {
   var self = this;
   self.Init = function () {
     ResetInput();
-    self.timeoutMsg = 1000 * 2;
+    self.timeoutMsg = 1000 * (gDebug ? 0 : 2);
     self.timeoutEnd = 1000 * 10;
     self.started = gGameTime;
-    self.finalScore = gPlayerScore - gCPUScore;
+    self.finalScore = gSinglePlayer ? gP1Score - gP2Score : Math.max(gP1Score, gP2Score);
+    self.previousHighScore = gHighScore;
+    gHighScore = Math.max(self.finalScore, aorb(gHighScore, self.finalScore));
+    console.log("gSinglePlayer", gSinglePlayer, gP1Score, gP2Score, "finalScore", self.finalScore, "previousHighScore", self.previousHighScore, "gHighScore", gHighScore);
+    localStorage.setItem(kHighScoreKey, gHighScore);
     PlayGameOver();
-    // fugly i know.
-    gPointerSide = undefined;
   };
   self.Step = function () {
     var nextState = undefined;
-    self.gotoMenu = gGameTime - self.started > self.timeoutMsg;
+    self.goOn = gGameTime - self.started > self.timeoutMsg;
     nextState = self.ProcessAllInput();
     return nextState;
   };
@@ -1318,41 +1576,70 @@ function GameOverState() {
     var hasEvents = gEventQueue.length > 0;
     if (hasEvents) {
       gEventQueue.forEach(function (event, i) {
-        event.updateFn();
-        nextState = self.ProcessOneInput();
+        var cmds = {};
+        event.updateFn(cmds);
+        if (isU(nextState)) {
+          nextState = self.ProcessOneInput(cmds);
+        }
       });
       gEventQueue = [];
     }
-    if (exists(nextState)) {
-      gHighScore = Math.max(self.finalScore, aorb(gHighScore, self.finalScore));
-      localStorage.setItem(kHighScoreKey, gHighScore);
-    }
     return nextState;
   };
-  self.ProcessOneInput = function () {
+  self.ProcessOneInput = function (cmds) {
     var nextState = undefined;
-    if (self.gotoMenu && (anyKeyPressed() || gStickUp || gStickDown || gButtonPressed || isPointerDown())) {
-      nextState = kMenu;
+    // note: whatever the non-undefined nextState is, it must ResetP1Side() and gP{1,2}Pointer.Reset().
+    if (self.goOn && (isAnyUpOrDownPressed() || isAnyActivatePressed(cmds) || isAnyPointerDown())) {
+      nextState = kTitle;
     } else if (isU(nextState) && gGameTime - self.started > self.timeoutMsg + self.timeoutEnd) {
-      nextState = kMenu;
+      nextState = kTitle;
     }
     return nextState;
   };
   self.Draw = function () {
+    gSinglePlayer ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
+  };
+  self.DrawSinglePlayer = function () {
     ClearScreen();
     var x = gw(0.5);
     var y = gh(0.5) - 20;
     var nextState = undefined;
     Cxdo(function () {
       gCx.fillStyle = RandomMagentaSolid();
-      if (isU(gHighScore) || self.finalScore > gHighScore) {
+      if (isU(self.previousHighScore) || self.finalScore > self.previousHighScore) {
         DrawText("NEW HIGH SCORE!", "center", x, y - 80, gRegularFontSizePt);
       }
-      var msg = "FINAL SCORE: ".concat(gPlayerScore, " - ").concat(gCPUScore, " = ").concat(self.finalScore);
+      var msg = "FINAL SCORE: ".concat(gP1Score, " - ").concat(gP2Score, " = ").concat(self.finalScore);
       DrawText(msg, "center", x, y, gRegularFontSizePt);
-      if (self.gotoMenu) {
+      if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
-        DrawText("GO TO MENU", "center", x, y + 120, gReducedFontSizePt);
+        DrawText("RETURN", "center", x, y + 120, gReducedFontSizePt);
+      }
+    });
+    return nextState;
+  };
+  self.DrawTwoPlayer = function () {
+    ClearScreen();
+    var nextState = undefined;
+    Cxdo(function () {
+      // todo: new high score message like single player.
+
+      // match: GameState.DrawScoreHeader() et. al.
+      gCx.fillStyle = RandomGreen(0.8);
+      DrawText("P1: ".concat(gP1Score), ForSide(gP1Side, "left", "right"), ForSide(gP1Side, gw(0.2), gw(0.8)), gh(0.22), gRegularFontSizePt);
+      DrawText("P2: ".concat(gP2Score), ForSide(gP2Side, "left", "right"), ForSide(gP2Side, gw(0.2), gw(0.8)), gh(0.22), gRegularFontSizePt);
+      gCx.fillStyle = RandomMagenta();
+      var msg = "A TIE!";
+      if (gP1Score > gP2Score) {
+        msg = "PLAYER 1 WINS!";
+      }
+      if (gP2Score > gP1Score) {
+        msg = "PLAYER 2 WINS!";
+      }
+      DrawText(msg, "center", gw(0.5), gh(0.5), gBigFontSizePt);
+      if (self.goOn) {
+        gCx.fillStyle = RandomYellow();
+        DrawText("RETURN", "center", gw(0.5), gh(0.8), gReducedFontSizePt);
       }
     });
     return nextState;
@@ -1371,203 +1658,304 @@ function DebugState() {
   self.Init();
 }
 
-//........................................
+// ----------------------------------------
 
-function GamepadJoystickMove(e) {
-  if (Math.abs(e.verticalValue) <= kJoystickDeadZone) {
+function Gamepad1StickMove(e) {
+  JoystickMove(gGamepad1, e, gGamepad1Sticks, gP1Target);
+}
+function Gamepad2StickMove(e) {
+  JoystickMove(gGamepad2, e, gGamepad2Sticks, gP2Target);
+}
+function JoystickMove(gamepad, e, state, pointer) {
+  var v = e.verticalValue;
+  if (Math.abs(v) < state.$.dz) {
     gEventQueue.push({
-      type: kEventStickUp,
+      event_type: kEventGamepadJoystickMove,
       updateFn: function updateFn() {
-        gStickUp = false;
-        gStickDown = false;
-        gMoveTargetY = undefined;
+        state.Reset();
+        state.Update({
+          dz: kJoystickDeadZone
+        });
+        pointer.ClearY();
       }
     });
-  }
-  if (e.verticalValue < -kJoystickDeadZone) {
+  } else if (v < 0 && !state.$.up) {
     gEventQueue.push({
-      type: kEventStickUp,
+      event_type: kEventGamepadJoystickMove,
       updateFn: function updateFn() {
-        gStickUp = true;
-        gStickDown = false;
-        gMoveTargetY = undefined;
+        state.Set({
+          up: true,
+          down: false,
+          dz: kJoystickDeadZone / 2
+        });
+        pointer.ClearY();
       }
     });
-  }
-  if (e.verticalValue > kJoystickDeadZone) {
+  } else if (v > 0 && !state.$.down) {
     gEventQueue.push({
-      type: kEventStickDown,
+      event_type: kEventGamepadJoystickMove,
       updateFn: function updateFn() {
-        gStickUp = false;
-        gStickDown = true;
-        gMoveTargetY = undefined;
+        state.Set({
+          up: false,
+          down: true,
+          dz: kJoystickDeadZone / 2
+        });
+        pointer.ClearY();
       }
     });
   }
 }
-function GamepadButtonChange(e) {
-  // dpad buttons up & down move player paddle.
-  if (e.gamepad.gamepad.buttons[StandardMapping.Button.D_PAD_UP].pressed) {
+function isButtonPressed(gamepad, bid) {
+  return gamepad.buttons[bid].pressed;
+}
+function Gamepad1ButtonChange(e) {
+  GamepadButtonChange(e.gamepad.gamepad, gGamepad1Buttons);
+}
+function Gamepad2ButtonChange(e) {
+  GamepadButtonChange(e.gamepad.gamepad, gGamepad2Buttons);
+}
+function GamepadButtonChange(gamepad, state) {
+  // dpad buttons up & down move player paddle and menu focus.
+  if (isButtonPressed(gamepad, StandardMapping.Button.D_PAD_UP)) {
     gEventQueue.push({
-      type: kEventButtonDown,
+      type: kEventGamepadButtonPressed,
       updateFn: function updateFn() {
-        gDownButtons[StandardMapping.Button.D_PAD_UP] = true;
+        state.Update({
+          up: true
+        });
       }
     });
     return;
   } else {
+    // this flooding is sad but otherwise we have a race condtition.
     gEventQueue.push({
-      type: kEventButtonUp,
+      type: kEventGamepadButtonReleased,
       updateFn: function updateFn() {
-        delete gDownButtons[StandardMapping.Button.D_PAD_UP];
+        state.Update({
+          up: false
+        });
       }
     });
   }
-  if (e.gamepad.gamepad.buttons[StandardMapping.Button.D_PAD_BOTTOM].pressed) {
+  if (isButtonPressed(gamepad, StandardMapping.Button.D_PAD_BOTTOM)) {
     gEventQueue.push({
-      type: kEventButtonDown,
+      type: kEventGamepadButtonPressed,
       updateFn: function updateFn() {
-        gDownButtons[StandardMapping.Button.D_PAD_BOTTOM] = true;
+        state.Update({
+          down: true
+        });
       }
     });
     return;
   } else {
+    // this flooding is sad but otherwise we have a race condtition.
     gEventQueue.push({
-      type: kEventButtonUp,
+      type: kEventGamepadButtonReleased,
       updateFn: function updateFn() {
-        delete gDownButtons[StandardMapping.Button.D_PAD_BOTTOM];
+        state.Update({
+          down: false
+        });
       }
     });
   }
 
-  // do nothing for dpad left & right, to avoid confusion.
-  if (e.gamepad.gamepad.buttons[StandardMapping.Button.D_PAD_LEFT].pressed) {
+  // do nothing for dpad left & right.
+  if (isButtonPressed(gamepad, StandardMapping.Button.D_PAD_LEFT)) {
     return;
   }
-  if (e.gamepad.gamepad.buttons[StandardMapping.Button.D_PAD_RIGHT].pressed) {
+  if (isButtonPressed(gamepad, StandardMapping.Button.D_PAD_RIGHT)) {
     return;
   }
 
-  // all other buttons are really kinda just used for pause.
-  // a quick and dirty hack, doesn't track each button individually.
-  if (e.gamepad.gamepad.buttons.some(function (b) {
-    return b.pressed || b.value > 0;
-  })) {
+  // buttons 8, 9, 16 are "center cluster" per
+  // https://www.w3.org/TR/gamepad/#remapping
+  // which are to be "menu".
+  if (isButtonPressed(gamepad, 8) || isButtonPressed(gamepad, 9) || isButtonPressed(gamepad, 16)) {
     gEventQueue.push({
-      type: kEventButtonDown,
+      type: kEventGamepadButtonPressed,
       updateFn: function updateFn() {
-        gButtonPressed = true;
+        state.Update({
+          menu: true
+        });
       }
     });
+    return;
   } else {
+    // this flooding is sad but otherwise we have a race condtition.
     gEventQueue.push({
-      type: kEventButtonUp,
+      type: kEventGamepadButtonReleased,
       updateFn: function updateFn() {
-        gButtonPressed = false;
+        state.Update({
+          menu: false
+        });
+      }
+    });
+  }
+
+  // buttons 0, 1, 2, 3 are the "right cluster"
+  // which are to be "activate".
+  if (isButtonPressed(gamepad, 0) || isButtonPressed(gamepad, 1) || isButtonPressed(gamepad, 2) || isButtonPressed(gamepad, 3)) {
+    gEventQueue.push({
+      type: kEventGamepadButtonPressed,
+      updateFn: function updateFn() {
+        state.Update({
+          activate: true
+        });
+      }
+    });
+    return;
+  } else {
+    // this flooding is sad but otherwise we have a race condtition.
+    gEventQueue.push({
+      type: kEventGamepadButtonReleased,
+      updateFn: function updateFn() {
+        state.Update({
+          activate: false
+        });
       }
     });
   }
 }
 function RegisterGamepad(e) {
-  RemoveGamepad(e);
-  e.gamepad.addEventListener("joystickmove", GamepadJoystickMove, StandardMapping.Axis.JOYSTICK_LEFT);
-  e.gamepad.addEventListener("joystickmove", GamepadJoystickMove, StandardMapping.Axis.JOYSTICK_RIGHT);
-  e.gamepad.addEventListener("buttonvaluechange", GamepadButtonChange);
-  gGamepad = e.gamepad.gamepad;
-}
-function RemoveGamepad() {
-  if (exists(gGamepad)) {
-    gGamepad.removeEventListener("buttonvaluechange", GamepadButtonChange);
-    gGamepad.removeEventListener("joystickmove", StandardMapping.Axis.JOYSTICK_RIGHT);
-    gGamepad.removeEventListener("joystickmove", StandardMapping.Axis.JOYSTICK_LEFT);
-    gGamepad = undefined;
+  if (gGamepad1 == undefined) {
+    gGamepad1 = e.gamepad.gamepad;
+    e.gamepad.addEventListener('joystickmove', Gamepad1StickMove, StandardMapping.Axis.JOYSTICK_LEFT);
+    e.gamepad.addEventListener('joystickmove', Gamepad1StickMove, StandardMapping.Axis.JOYSTICK_RIGHT);
+    e.gamepad.addEventListener('buttonpress', Gamepad1ButtonChange);
+    e.gamepad.addEventListener('buttonrelease', Gamepad1ButtonChange);
+  } else if (gGamepad2 == undefined) {
+    gGamepad2 = e.gamepad.gamepad;
+    e.gamepad.addEventListener('joystickmove', Gamepad2StickMove, StandardMapping.Axis.JOYSTICK_LEFT);
+    e.gamepad.addEventListener('joystickmove', Gamepad2StickMove, StandardMapping.Axis.JOYSTICK_RIGHT);
+    e.gamepad.addEventListener('buttonpress', Gamepad2ButtonChange);
+    e.gamepad.addEventListener('buttonrelease', Gamepad2ButtonChange);
   }
 }
-function PointerProcess(t, updateFn) {
+function RemoveGamepad(e) {
+  if (e.gamepad.gamepad == gGamepad1) {
+    e.gamepad.removeEventListener('buttonvaluechange', Gamepad1ButtonChange);
+    e.gamepad.removeEventListener('joystickmove', Gamepad1StickMove, StandardMapping.Axis.JOYSTICK_RIGHT);
+    e.gamepad.removeEventListener('joystickmove', Gamepad1StickMove, StandardMapping.Axis.JOYSTICK_LEFT);
+    gGamepad1 = undefined;
+  } else if (e.gamepad.gamepad == gGamepad2) {
+    e.gamepad.removeEventListener('buttonvaluechange', Gamepad2ButtonChange);
+    e.gamepad.removeEventListener('joystickmove', Gamepad2StickMove, StandardMapping.Axis.JOYSTICK_RIGHT);
+    e.gamepad.removeEventListener('joystickmove', Gamepad2StickMove, StandardMapping.Axis.JOYSTICK_LEFT);
+    gGamepad2 = undefined;
+  }
+}
+
+// ----------------------------------------
+
+function PointerProcess(e, updateFn) {
   var cvrect = gCanvas.getBoundingClientRect();
   var cvx = cvrect.x + window.scrollX;
   var cvy = cvrect.y + window.scrollY;
   // "regular" non-game-transformed screen pixel coordinates.
   // todo: handle window.devicePixelRatio.
-  var tx = t.clientX - cvx;
-  var ty = t.clientY - cvy;
+  var x = e.clientX - cvx;
+  var y = e.clientY - cvy;
   Assert(exists(updateFn), "PointerProcess");
-  updateFn(tx, ty);
+  updateFn(x, y);
 }
-function SetPointerTarget(tx, ty, type) {
-  gEventQueue.push({
-    type: type,
-    updateFn: function updateFn() {
-      gPointerX = tx;
-      gPointerY = ty;
-      gMoveTargetY = ty;
-    }
+function MouseDown(e) {
+  e.preventDefault();
+  if (e.button === 0) {
+    PointerProcess(e, function (x, y) {
+      SetP1Side(x < gw(0.5) ? "left" : "right");
+      gEventQueue.push({
+        type: kEventPointerDown,
+        updateFn: function updateFn() {
+          gP1Target.OnDown(kMousePointerId, x, y);
+          gP2Target.OnDown(kMousePointerId, x, y);
+        }
+      });
+    });
+  }
+}
+function MouseMove(e) {
+  e.preventDefault();
+  PointerProcess(e, function (x, y) {
+    gEventQueue.push({
+      type: kEventPointerMove,
+      updateFn: function updateFn() {
+        gP1Target.OnMove(kMousePointerId, x, y);
+        gP2Target.OnMove(kMousePointerId, x, y);
+      }
+    });
   });
+}
+function MouseUp(e) {
+  e.preventDefault();
+  if (e.button === 0) {
+    PointerProcess(e, function (x, y) {
+      gEventQueue.push({
+        type: kEventPointerUp,
+        updateFn: function updateFn() {
+          gP1Target.OnUp(kMousePointerId);
+          gP2Target.OnUp(kMousePointerId);
+        }
+      });
+    });
+  }
 }
 function TouchStart(e) {
   e.preventDefault();
-  PointerProcess(e.touches[0], function (tx, ty) {
-    if (isU(gPointerSide)) {
-      gPointerSide = tx < gw(0.5) ? "left" : "right";
-    }
-    SetPointerTarget(tx, ty, kEventTouchStart);
-    gPointerTimestamps = {
-      start: gGameTime,
-      end: undefined
-    };
-  });
+  var _loop = function _loop() {
+    var t = e.touches[i];
+    var pid = t.identifier;
+    PointerProcess(t, function (x, y) {
+      SetP1Side(x < gw(0.5) ? "left" : "right");
+      gEventQueue.push({
+        type: kEventPointerDown,
+        updateFn: function updateFn() {
+          gP1Target.OnDown(pid, x, y);
+          gP2Target.OnDown(pid, x, y);
+        }
+      });
+    });
+  };
+  for (var i = 0; i < e.touches.length; ++i) {
+    _loop();
+  }
 }
 function TouchMove(e) {
   e.preventDefault();
-  if (isU(gPointerTimestamps.end)) {
-    PointerProcess(e.touches[0], function (tx, ty) {
-      SetPointerTarget(tx, ty, kEventTouchMove);
+  var _loop2 = function _loop2() {
+    var t = e.touches[i];
+    var pid = t.identifier;
+    PointerProcess(t, function (x, y) {
+      gEventQueue.push({
+        type: kEventPointerMove,
+        updateFn: function updateFn() {
+          gP1Target.OnMove(pid, x, y);
+          gP2Target.OnMove(pid, x, y);
+        }
+      });
     });
+  };
+  for (var i = 0; i < e.touches.length; ++i) {
+    _loop2();
   }
 }
 function TouchEnd(e) {
   e.preventDefault();
-  var startTime = gPointerTimestamps.start;
-  var endTime = gGameTime;
-  gEventQueue.push({
-    type: kEventTouchEnd,
-    updateFn: function updateFn() {
-      gMoveTargetStepY = 0;
-      gPointerTimestamps.end = endTime;
-    }
-  });
-}
-function MouseDown(e) {
-  e.preventDefault();
-  PointerProcess(e, function (tx, ty) {
-    if (isU(gPointerSide)) {
-      gPointerSide = tx < gw(0.5) ? "left" : "right";
-    }
-    SetPointerTarget(tx, ty, kEventMouseDown);
-    gPointerTimestamps = {
-      start: gGameTime,
-      end: undefined
-    };
-  });
-}
-function MouseMove(e) {
-  if (isU(gPointerTimestamps.end)) {
-    PointerProcess(e, function (tx, ty) {
-      SetPointerTarget(tx, ty, kEventMouseMove);
+  var _loop3 = function _loop3() {
+    var t = e.changedTouches[i];
+    var pid = t.identifier;
+    PointerProcess(e, function (x, y) {
+      gEventQueue.push({
+        type: kEventPointerUp,
+        updateFn: function updateFn() {
+          gP1Target.OnUp(pid);
+          gP2Target.OnUp(pid);
+        }
+      });
     });
+  };
+  for (var i = 0; i < e.changedTouches.length; ++i) {
+    _loop3();
   }
-}
-function MouseUp(e) {
-  e.preventDefault();
-  var startTime = gPointerTimestamps.start;
-  var endTime = gGameTime;
-  gEventQueue.push({
-    type: kEventMouseUp,
-    updateFn: function updateFn() {
-      gMoveTargetStepY = 0;
-      gPointerTimestamps.end = endTime;
-    }
-  });
 }
 function ResetGlobalStorage() {
   gPucks = {
@@ -1592,7 +1980,9 @@ var kMatchedAreaRequirement = 10;
 function OnResize() {
   if (exists(gLifecycle)) {
     if (gLifecycle.state == kGame) {
-      gLifecycle.Pause(true);
+      if (exists(gLifecycle.handler)) {
+        gLifecycle.handler.Pause();
+      }
     } else if (!gResizing) {
       gResizing = true;
       gLastArea = 0;
@@ -1659,20 +2049,23 @@ function Start() {
   gCx = gCanvas.getContext('2d');
   gCx.MoveTo = MoveTo;
   gCx.LineTo = LineTo;
+  gCx.RoundRect = RoundRect;
+  gCx.RectXYWH = RectXYWH;
   DoResize();
   RecalculateConstants();
   ResetClipping();
   var handlerMap = {};
-  // ugh the splash is just so we can get
-  // user input so we can actually play sounds.
   handlerMap[kRoot] = function () {
-    return new RootState(kSplash);
+    return new RootState(kWarning);
   };
-  handlerMap[kSplash] = function () {
-    return new SplashState();
+  handlerMap[kWarning] = function () {
+    return new WarningState();
   };
-  handlerMap[kMenu] = function () {
-    return new MenuState();
+  handlerMap[kTitle] = function () {
+    return new TitleState();
+  };
+  handlerMap[kGetReady] = function () {
+    return new GetReadyState();
   };
   handlerMap[kGame] = function () {
     return new GameState();
@@ -1693,23 +2086,29 @@ var initEventsRun = false;
 function InitEvents() {
   Assert(!initEventsRun, "initEventsRun");
   initEventsRun = true;
-  Gamepads.start();
   Gamepads.addEventListener('connect', RegisterGamepad);
   Gamepads.addEventListener('disconnect', RemoveGamepad);
-  window.addEventListener('touchstart', TouchStart);
-  window.addEventListener('touchmove', TouchMove);
-  window.addEventListener('touchend', TouchEnd);
+
+  // fyi: the generic Pointer api has empirically very broken ux in many browsers if you ask me.
   window.addEventListener('mousedown', MouseDown);
   window.addEventListener('mousemove', MouseMove);
   window.addEventListener('mouseup', MouseUp);
-  // trying to stop swipe/scrolling by fingers.
-  document.addEventListener('touchstart', function (e) {
+  window.addEventListener('touchstart', TouchStart);
+  window.addEventListener('touchmove', TouchMove);
+  window.addEventListener('touchend', TouchEnd);
+  window.addEventListener('touchcancel', TouchEnd);
+
+  // trying to stop accidental gameplay-breaking swipe/scrolling by fingers. :-\
+  document.addEventListener('pointerstart', function (e) {
     e.preventDefault();
   });
-  document.addEventListener('touchmove', function (e) {
+  document.addEventListener('pointermove', function (e) {
     e.preventDefault();
   });
-  document.addEventListener('touchend', function (e) {
+  document.addEventListener('pointerend', function (e) {
+    e.preventDefault();
+  });
+  document.addEventListener('pointercancel', function (e) {
     e.preventDefault();
   });
   window.addEventListener('keydown', function (e) {
@@ -1717,39 +2116,84 @@ function InitEvents() {
       return;
     }
 
-    // keyCodes do not respect e.g. QWERTZ vs. QWERTY, they assume QWEbbRTY.
+    // my bad. keyCodes do not respect e.g. QWERTZ vs. QWERTY, they assume QWERTY.
     // that sort of works for WASD pattern, but maybe not for all debug commands.
-    if (e.keyCode == 38 || e.keyCode == 87) {
-      // arrow up, w
+
+    // assumes w/s is on the left hand side of keyboard,
+    // arrow up/down are on the right hand side.
+
+    if (e.keyCode == 13 || e.keyCode == 32) {
+      // enter, ' '
       e.preventDefault();
       gEventQueue.push({
         type: kEventKeyDown,
-        updateFn: function updateFn() {
-          gUpPressed = true;
-          gMoveTargetY = undefined;
-          gDownKeys[e.keyCode] = true;
-          // assuming w/s on left hand side of keyboard,
-          // arrow up/down on right hand side.
-          if (isU(gPointerSide)) {
-            gPointerSide = e.keyCode == 38 ? "right" : "left";
-          }
+        updateFn: function updateFn(cmds) {
+          cmds.activate = true;
         }
       });
     }
-    if (e.keyCode == 40 || e.keyCode == 83) {
-      // arrow down, s
+    if (e.keyCode == 87) {
+      // 'w'
       e.preventDefault();
       gEventQueue.push({
         type: kEventKeyDown,
         updateFn: function updateFn() {
-          gDownPressed = true;
-          gMoveTargetY = undefined;
-          gDownKeys[e.keyCode] = true;
-          // assuming w/s on left hand side of keyboard,
-          // arrow up/down on right hand side.
-          if (isU(gPointerSide)) {
-            gPointerSide = e.keyCode == 40 ? "right" : "left";
-          }
+          gP1Target.ClearY();
+          SetP1Side("left");
+          LeftKeys().Update({
+            up: true
+          });
+        }
+      });
+    }
+    if (e.keyCode == 83) {
+      // s
+      e.preventDefault();
+      gEventQueue.push({
+        type: kEventKeyDown,
+        updateFn: function updateFn() {
+          gP1Target.ClearY();
+          SetP1Side("left");
+          LeftKeys().Update({
+            down: true
+          });
+        }
+      });
+    }
+    if (e.keyCode == 38) {
+      // arrow up
+      e.preventDefault();
+      gEventQueue.push({
+        type: kEventKeyDown,
+        updateFn: function updateFn() {
+          gP2Target.ClearY();
+          SetP1Side("right");
+          RightKeys().Update({
+            up: true
+          });
+        }
+      });
+    }
+    if (e.keyCode == 40) {
+      // arrow down
+      e.preventDefault();
+      gEventQueue.push({
+        type: kEventKeyDown,
+        updateFn: function updateFn() {
+          gP2Target.ClearY();
+          SetP1Side("right");
+          RightKeys().Update({
+            down: true
+          });
+        }
+      });
+    }
+    if (e.keyCode == 27) {
+      // esc
+      gEventQueue.push({
+        type: kEventKeyDown,
+        updateFn: function updateFn(cmds) {
+          cmds.menu = true;
         }
       });
     }
@@ -1757,28 +2201,47 @@ function InitEvents() {
       // 'p', 'pause'
       gEventQueue.push({
         type: kEventKeyDown,
-        updateFn: function updateFn() {
-          gPausePressed = true;
-          gDownKeys[e.keyCode] = true;
+        updateFn: function updateFn(cmds) {
+          cmds.pause = true;
         }
       });
     }
-    if (e.keyCode == 32) {
-      // ' '
+    if (e.keyCode == 49) {
+      // '1'
       gEventQueue.push({
         type: kEventKeyDown,
-        updateFn: function updateFn() {
-          gDownKeys[e.keyCode] = true;
+        updateFn: function updateFn(cmds) {
+          cmds.singlePlayer = true;
         }
       });
     }
-    if (e.keyCode == 65) {
-      // 'a'
+    if (e.keyCode == 50) {
+      // '2'
       gEventQueue.push({
         type: kEventKeyDown,
-        updateFn: function updateFn() {
+        updateFn: function updateFn(cmds) {
+          cmds.doublePlayer = true;
+        }
+      });
+    }
+    if (e.keyCode == 187 || e.keyCode == 61) {
+      // '+' and '=', vs. firefox (?!)
+      gEventQueue.push({
+        type: kEventKeyDown,
+        updateFn: function updateFn(cmds) {
           if (gDebug) {
-            gAddPuckPressed = true;
+            cmds.addPuck = true;
+          }
+        }
+      });
+    }
+    if (e.keyCode == 78) {
+      // 'n'
+      gEventQueue.push({
+        type: kEventKeyDown,
+        updateFn: function updateFn(cmds) {
+          if (gDebug) {
+            cmds.step = true;
           }
         }
       });
@@ -1787,9 +2250,9 @@ function InitEvents() {
       // 'q'
       gEventQueue.push({
         type: kEventKeyDown,
-        updateFn: function updateFn() {
+        updateFn: function updateFn(cmds) {
           if (gDebug) {
-            gGameOverPressed = true;
+            cmds.gameOver = true;
           }
         }
       });
@@ -1798,20 +2261,9 @@ function InitEvents() {
       // 'b'
       gEventQueue.push({
         type: kEventKeyDown,
-        updateFn: function updateFn() {
+        updateFn: function updateFn(cmds) {
           if (gDebug) {
-            gSpawnPillPressed = true;
-          }
-        }
-      });
-    }
-    if (e.keyCode == 49) {
-      // '1'
-      gEventQueue.push({
-        type: kEventKeyDown,
-        updateFn: function updateFn() {
-          if (gDebug) {
-            gStepPressed = true;
+            cmds.spawnPill = true;
           }
         }
       });
@@ -1820,71 +2272,125 @@ function InitEvents() {
       // 'e'
       gEventQueue.push({
         type: kEventKeyDown,
-        updateFn: function updateFn() {
+        updateFn: function updateFn(cmds) {
           if (gDebug) {
-            gNextMusicPressed = true;
+            cmds.nextMusic = true;
           }
         }
       });
     }
     if (e.keyCode == 46) {
-      // delete.
+      // delete
       gEventQueue.push({
         type: kEventKeyDown,
-        updateFn: function updateFn() {
-          gClearHighScorePressed = true;
+        updateFn: function updateFn(cmds) {
+          cmds.clearHighScore = true;
         }
       });
     }
   });
+
+  // todo: fix which things should/not support continuous pressing
+  // ie everything should clear the keydown as soon as the keyup is
+  // consumed, the only exception being the game state for up/down.
   window.addEventListener('keyup', function (e) {
-    if (e.keyCode == 38 || e.keyCode == 87) {
-      // arrow up, w
+    if (e.keyCode == 13 || e.keyCode == 32) {
+      // enter, ' '
+      e.preventDefault();
+      gEventQueue.push({
+        type: kEventKeyUp,
+        updateFn: function updateFn(cmds) {
+          cmds.activate = false;
+        }
+      });
+    }
+    if (e.keyCode == 87) {
+      // 'w'
       e.preventDefault();
       gEventQueue.push({
         type: kEventKeyUp,
         updateFn: function updateFn() {
-          gUpPressed = false;
-          delete gDownKeys[e.keyCode];
+          LeftKeys().Update({
+            up: false
+          });
         }
       });
     }
-    if (e.keyCode == 40 || e.keyCode == 83) {
-      // arrow down, s
+    if (e.keyCode == 83) {
+      // 's'
       e.preventDefault();
       gEventQueue.push({
         type: kEventKeyUp,
         updateFn: function updateFn() {
-          gDownPressed = false;
-          delete gDownKeys[e.keyCode];
+          LeftKeys().Update({
+            down: false
+          });
         }
       });
     }
+    if (e.keyCode == 38) {
+      // arrow up
+      e.preventDefault();
+      gEventQueue.push({
+        type: kEventKeyUp,
+        updateFn: function updateFn() {
+          RightKeys().Update({
+            up: false
+          });
+        }
+      });
+    }
+    if (e.keyCode == 40) {
+      // arrow down
+      e.preventDefault();
+      gEventQueue.push({
+        type: kEventKeyUp,
+        updateFn: function updateFn() {
+          RightKeys().Update({
+            down: false
+          });
+        }
+      });
+    }
+    if (e.keyCode == 27) {
+      // esc
+      gEventQueue.push({
+        type: kEventKeyUp,
+        updateFn: function updateFn(cmds) {
+          cmds.menu = false;
+        }
+      });
+    }
+
+    // pause only works in game state, and there it == menu key.
     if (e.keyCode == 80 || e.keyCode == 19) {
       // 'p', 'pause'
       gEventQueue.push({
         type: kEventKeyUp,
-        updateFn: function updateFn() {
-          gPausePressed = false;
-          delete gDownKeys[e.keyCode];
+        updateFn: function updateFn(cmds) {
+          cmds.pause = false;
         }
       });
     }
-    if (e.keyCode == 32) {
-      // ' '
+    if (e.keyCode == 187) {
+      // '+' and '='
       gEventQueue.push({
         type: kEventKeyUp,
-        updateFn: function updateFn() {
-          delete gDownKeys[e.keyCode];
+        updateFn: function updateFn(cmds) {
+          if (gDebug) {
+            cmds.addPuck = false;
+          }
         }
       });
     }
-    if (e.keyCode == 65) {
-      // 'a'
+    if (e.keyCode == 78) {
+      // 'n'
       gEventQueue.push({
         type: kEventKeyUp,
-        updateFn: function updateFn() {
-          gAddPuckPressed = false;
+        updateFn: function updateFn(cmds) {
+          if (gDebug) {
+            cmds.step = false;
+          }
         }
       });
     }
@@ -1892,8 +2398,10 @@ function InitEvents() {
       // 'q'
       gEventQueue.push({
         type: kEventKeyUp,
-        updateFn: function updateFn() {
-          gGameOverPressed = false;
+        updateFn: function updateFn(cmds) {
+          if (gDebug) {
+            cmds.gameOver = false;
+          }
         }
       });
     }
@@ -1901,17 +2409,10 @@ function InitEvents() {
       // 'b'
       gEventQueue.push({
         type: kEventKeyUp,
-        updateFn: function updateFn() {
-          gSpawnPillPressed = false;
-        }
-      });
-    }
-    if (e.keyCode == 49) {
-      // '1'
-      gEventQueue.push({
-        type: kEventKeyUp,
-        updateFn: function updateFn() {
-          gStepPressed = false;
+        updateFn: function updateFn(cmds) {
+          if (gDebug) {
+            cmds.spawnPill = false;
+          }
         }
       });
     }
@@ -1919,14 +2420,22 @@ function InitEvents() {
       // 'e'
       gEventQueue.push({
         type: kEventKeyUp,
-        updateFn: function updateFn() {}
+        updateFn: function updateFn(cmds) {
+          if (gDebug) {
+            cmds.nextMusic = false;
+          }
+        }
       });
     }
     if (e.keyCode == 46) {
-      // delete.
+      // delete
       gEventQueue.push({
         type: kEventKeyUp,
-        updateFn: function updateFn() {}
+        updateFn: function updateFn(cmds) {
+          if (gDebug) {
+            cmds.clearHighScore = false;
+          }
+        }
       });
     }
   });

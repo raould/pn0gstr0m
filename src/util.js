@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -8,8 +8,8 @@ var kPi2 = Math.PI/2;
 
 function Assert(result, msg) {
     if (!result) {
-	console.error("ASSERTION FAILED", msg);
-	debugger;
+        console.error("ASSERTION FAILED", msg);
+        debugger;
     }
 }
 
@@ -33,14 +33,14 @@ function SafeDiv(num, denom) {
 
 function Peek(a) {
     if (Array.isArray(a) && a.length > 0) {
-	return a[a.length-1];
+        return a[a.length-1];
     }
     return undefined;
 }
 
 function ForCount(count, fn) {
     for (var i = 0; i < count; ++i) {
-	fn(i);
+        fn(i);
     }
 }
 
@@ -73,7 +73,7 @@ function Sign(value) {
 
 function AvoidZero(value, radius) {
     if (Math.abs(value) < radius) {
-	return radius * Sign(value);
+        return radius * Sign(value);
     }
     return value;
 }
@@ -103,7 +103,7 @@ function F(n) {
 
 function Clip(n, min, max) {
     if (min > max) {
-	var tmp = min; min = max; max = tmp;
+        var tmp = min; min = max; max = tmp;
     }
     return Math.min(max, Math.max(min, n));
 }
@@ -138,11 +138,11 @@ function T01(v, max) {
 function T01nl(v, max) {
     max = max == 0 ? 1 : max;
     return Clip01(
-	// aesthetically non linear hah.
-	Math.pow(
-	    v/max,
-	    3
-	)
+        // aesthetically non linear hah.
+        Math.pow(
+            v/max,
+            3
+        )
     );
 }
 
@@ -152,4 +152,15 @@ function xyNudge(y, ysize, scale, side) {
     var factor = Clip01(Math.abs(mid - ypos)/mid);
     var xoff = (scale * factor) * ForSide(side, 1, -1);
     return xoff;
+}
+
+function update(o, s) {
+    for (var [k,v] of Object.entries(s)) {
+        o[k] = v;
+    }
+}
+
+function easeOutExpo(n) {
+    n = Clip01(n);
+    return n >= 1 ? 1 : 1 - Math.pow(2, -10 * n);
 }

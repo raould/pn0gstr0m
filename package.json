@@ -5,7 +5,7 @@
   "main": "main.js",
   "author": "",
   "license": "GPL-2.0-only",
-  "scripts": { "h9": "babel ./*.js --out-dir ./out" },
+  "scripts": { "h9": "babel ./src/*.js --out-dir ./out" },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.24.7",
     "eslint": "^9.1.1"

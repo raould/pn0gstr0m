@@ -5,10 +5,10 @@
 
 function MakeRandom(a) {
     return function() {
-	a |= 0; a = a + 0x9e3779b9 | 0;
-	var t = a ^ a >>> 16; t = Math.imul(t, 0x21f0aaad);
+        a |= 0; a = a + 0x9e3779b9 | 0;
+        var t = a ^ a >>> 16; t = Math.imul(t, 0x21f0aaad);
         t = t ^ t >>> 15; t = Math.imul(t, 0x735a2d97);
-	return ((t = t ^ t >>> 15) >>> 0) / 4294967296;
+        return ((t = t ^ t >>> 15) >>> 0) / 4294967296;
     };
 }
 
@@ -31,7 +31,7 @@ function RandomChoices(choices) {
 // closed interval [min, max].
 function RandomRange( min, max ) {
     if (min > max) {
-	Swap(min, max);
+        Swap(min, max);
     }
     var r = min + gRandom()*(max-min);
     return r;
@@ -52,16 +52,16 @@ function RandomCentered( center, halfRange, halfDeadZone=0 ) {
 function RandomLatch( chance, latchDuration ) {
     var latchedTime = undefined;
     return {
-	MaybeLatch: function(now) {
-	    if (exists(latchedTime)) {
-		if (now - latchedTime > latchDuration) {
-		    latchedTime = undefined;
-		}
-	    }
-	    else if (RandomBool(chance)) {
-		latchedTime = now;
-	    }
-	    return exists(latchedTime);
-	},
+        MaybeLatch: function(now) {
+            if (exists(latchedTime)) {
+                if (now - latchedTime > latchDuration) {
+                    latchedTime = undefined;
+                }
+            }
+            else if (RandomBool(chance)) {
+                latchedTime = now;
+            }
+            return exists(latchedTime);
+        },
     };
 }

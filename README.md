@@ -6,7 +6,7 @@
 * gpl2 license.
 * don't come here looking for exemplary code!
 * this is a [Desafortunados Games production](https://duckduckgo.com/?q=desafortunados+games&t=ffip&ia=web).
-* fyi when messing with the code it can be useful to change main.js gDebug = true, then use keys: 'a' to add pucks, 'b' to spawn next powerup, 'q' to quit the game, et. al.
+* fyi when messing with the code it can be useful to change main.js gDebug = true, then use keys: '+' to add pucks, 'b' to spawn next powerup, 'q' to quit the game, et. al.
 * [the music (so-called)](https://www.youtube.com/playlist?list=PLxMqvaNKx1cL2yila-UPujI08eNQrDGd9)
 
 [<img src="pn0g.PNG">](https://raould.github.io/pn0gstr0m/)

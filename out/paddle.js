@@ -17,6 +17,9 @@ function Paddle(props) {
      isSplitter,
      isPillSeeker,
      stepSize,
+     keyState,
+     stickState,
+     buttonState,
      }
   */
   var self = this;
@@ -63,6 +66,11 @@ function Paddle(props) {
     self.label = props.label;
     self.engorged = false;
     self.stepSize = aorb(props.stepSize, gPaddleStepSize);
+    self.keyStates = props.keyStates;
+    // todo: fold button & stick states together into a gamepadState wrapper.
+    self.buttonState = props.buttonState;
+    self.stickState = props.stickState;
+    self.target = props.target;
     self.normalX = ForSide(self.side, 1, -1);
     self.scanIndex = 0;
     self.scanCount = 10;
@@ -147,6 +155,7 @@ function Paddle(props) {
     return (self.y - self.prevY) / kTimeStep;
   };
   self.Draw = function (alpha, gameState) {
+    var hp01 = exists(self.hp) ? self.hp / self.hp0 : 1;
     self.barriers.A.forEach(function (b) {
       b.Draw(alpha);
     });
@@ -157,7 +166,7 @@ function Paddle(props) {
       self.neo.Draw(alpha, gameState);
     }
     Cxdo(function () {
-      var hpw = isU(self.hp) ? self.width : Math.max(sx1(2), ii(self.width * self.hp / self.hp0));
+      var hpw = isU(self.hp) ? self.width : Math.max(sx1(2), ii(self.width * hp01));
       var wx = WX(self.x + (self.width - hpw) / 2);
       var wy = WY(self.y);
       gCx.beginPath(); // outline.
@@ -168,7 +177,8 @@ function Paddle(props) {
       gCx.fill();
       gCx.beginPath(); // insides.
       gCx.rect(wx, wy, hpw, self.height);
-      gCx.fillStyle = RandomGreen(0.8 * alpha);
+      // match: barrier inflection point.
+      gCx.fillStyle = RandomForColorFadeIn(hp01 > 0.2 ? greenSpec : yellowSpec, alpha);
       gCx.fill();
       if (exists(self.label)) {
         // label lives longer so newbies can notice it.
@@ -240,40 +250,42 @@ function Paddle(props) {
   //---------------------------------------- player.
 
   self.StepPlayer = function (dt) {
-    self.StepSwitches(dt);
-    self.StepTouch(dt);
+    self.StepInput(dt);
+    self.StepTarget(dt);
   };
-  self.StepSwitches = function (dt) {
-    if (gUpPressed || gStickUp || gDownButtons[StandardMapping.Button.D_PAD_UP]) {
+  self.StepInput = function (dt) {
+    if (self.keyStates.some(function (ks) {
+      return ks.$.up;
+    }) || exists(self.stickState) && self.stickState.$.up || exists(self.buttonState) && self.buttonState.$.up) {
       self.MoveUp(dt);
       return;
     }
-    if (gDownPressed || gStickDown || gDownButtons[StandardMapping.Button.D_PAD_BOTTOM]) {
+    if (self.keyStates.some(function (ks) {
+      return ks.$.down;
+    }) || exists(self.stickState) && self.stickState.$.down || exists(self.buttonState) && self.buttonState.$.down) {
       self.MoveDown(dt);
       return;
     }
   };
-  self.StepTouch = function (dt) {
-    if (exists(gMoveTargetY)) {
+  self.StepTarget = function (dt) {
+    var targety = self.target.position.y;
+    if (exists(targety)) {
       var limit = gYInset + gPaddleHeight / 2;
-      gMoveTargetY = Clip(gMoveTargetY + gMoveTargetStepY, limit, gHeight - limit);
-      if (gMoveTargetY < self.GetMidY()) {
+      targety = Clip(targety, limit, gHeight - limit);
+      if (targety < self.GetMidY()) {
         self.MoveUp(dt);
       }
-      if (gMoveTargetY > self.GetMidY()) {
+      if (targety > self.GetMidY()) {
         self.MoveDown(dt);
       }
 
-      // if the player isn't touching and the
-      // paddle is close enough then don't
-      // potentially wiggle steppming up & down
-      // around gMoveTargetY.
-      if (!isPointerDown()) {
-        if (Math.abs(self.GetMidY() - gMoveTargetY) < gPaddleStepSize) {
-          gMoveTargetY = undefined;
+      // clear the target if not needed.
+      if (!self.target.isDown()) {
+        if (Math.abs(self.GetMidY() - targety) < gPaddleStepSize) {
+          self.target.ClearY();
         }
         if (self.isAtLimit) {
-          gMoveTargetY = undefined;
+          self.target.ClearY();
         }
       }
     }
@@ -365,6 +377,9 @@ function Paddle(props) {
     var best = self.aiPuck;
     var istart = Math.min(self.scanIndex, gPucks.A.length - 1);
     var iend = Math.min(self.scanIndex + self.scanCount, gPucks.A.length);
+    if (istart < 0) {
+      return;
+    }
     for (var i = istart; i < iend; ++i) {
       // todo: handle when best isLocked.
       var p = gPucks.A.read(i);

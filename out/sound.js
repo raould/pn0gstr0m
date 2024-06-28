@@ -25,8 +25,15 @@ var gAudio = {
 };
 var gMusicID;
 var kMusicStorageKey = "pn0g_music";
+
+/* muting implementation is... tricky? i am 
+ * using gStateMuted to prevent the attract
+ * mode from playing game blip and explosion sfx,
+ * but we still want the music to play.
+ */
 var gStateMuted = true;
-var gUserMuted = false;
+var gMusicMuted = false;
+var gSfxMuted = false;
 function RegisterMusic(name, basename, props) {
   RegisterSound(name, basename, props, true);
 }
@@ -36,7 +43,7 @@ function RegisterSfx(name, basename, props) {
 function RegisterSound(name, basename, props, isMusic) {
   if (isU(gAudio.name2meta[name])) {
     var files = ["ogg", "aac", "mp3"].map(function (e) {
-      return "sound/".concat(basename, ".").concat(e);
+      return "sounds/".concat(basename, ".").concat(e);
     });
     var howl = new Howl(_objectSpread(_objectSpread({}, props), {}, {
       src: files,
@@ -68,8 +75,9 @@ function RegisterSound(name, basename, props, isMusic) {
   }
 }
 function LoadNextSound() {
+  // cute for debugging.
   // var report = gAudio.names.map((n) => {
-  // 	return gAudio.name2meta[n].loaded ? "1" : "0";
+  //  return gAudio.name2meta[n].loaded ? "1" : "0";
   // }).join('');
   // console.log(report);
 
@@ -84,13 +92,14 @@ function OnSfxStop(name) {
   var meta = gAudio.name2meta[name];
   if (meta != undefined) {
     delete meta.id;
+    // if a piece of music just ended, kick off the next one.
     !!meta.isMusic && BeginMusic();
   }
 }
 var kMusicSfxCount = 24;
 function BeginMusic() {
-  StopAudio();
-  if (!gUserMuted) {
+  StopAudio(true);
+  if (!gMusicMuted) {
     // max list of music numbers in order (javascript sucks?).
     var unplayedAll = Array(kMusicSfxCount).fill().map(function (_, i) {
       return i + 1;
@@ -111,57 +120,71 @@ function BeginMusic() {
       unplayedStr = localStorage.getItem(kMusicStorageKey);
       unplayed = JSON.parse(unplayedStr);
     }
-    Assert(unplayed != null, "BeginMusic");
+    Assert(unplayed != null, "BeginMusic: null");
+    Assert(unplayed.length > 0, "BeginMusic: 0");
     // not random, always play musicN in order since we 'load' them in order.
     var num = unplayed.shift();
-    // save the smaller remaining items list.
+    // save the now-smaller remaining-items list.
     localStorage.setItem(kMusicStorageKey, JSON.stringify(unplayed));
     var name = "music".concat(num);
-    gMusicID = PlaySound(name, true);
+    gMusicID = PlayMusic(name);
   }
 }
 function StopAudio() {
+  var onlyMusic = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
   Object.values(gAudio.name2meta).forEach(function (meta) {
     if (meta != undefined) {
-      meta.howl.stop();
-      delete gAudio.id2name[meta.id];
-      delete meta.id;
+      if (!onlyMusic || meta.isMusic) {
+        meta.howl.stop();
+        delete gAudio.id2name[meta.id];
+        delete meta.id;
+      }
     }
   });
   gMusicID = undefined;
 }
-function PlaySound(name) {
-  var ignoreMuted = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-  var sid;
-  if (ignoreMuted || !gStateMuted && !gUserMuted) {
-    var meta = gAudio.name2meta[name];
-    Assert(meta != undefined, "PlaySound ".concat(name));
-    if (meta != undefined) {
-      var howl = meta.howl;
-      // currently only allowing one name-instance at a time.
-      if (howl != undefined) {
-        var id = meta.id;
-        if (id != undefined) {
-          howl.stop();
-        }
-        meta.id = sid = howl.play();
-        meta.last = Date.now();
-        gAudio.id2name[sid] = name;
-      }
-    }
+function PlayMusic(name) {
+  if (!gMusicMuted) {
+    return PlaySound(name);
   }
-  return sid;
+  return undefined;
 }
-function PlaySoundDebounced(name) {
+function PlaySfx(name) {
+  var ignoreMuted = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  if (!gSfxMuted || ignoreMuted) {
+    return PlaySound(name);
+  }
+  return undefined;
+}
+function PlaySfxDebounced(name) {
   var sid;
-  if (!gStateMuted && !gUserMuted) {
+  if (!gStateMuted && !gSfxMuted) {
     var meta = gAudio.name2meta[name];
-    Assert(meta != undefined, name, "PlaySoundDebounced ".concat(name));
+    Assert(meta != undefined, name, "PlaySfxDebounced ".concat(name));
     if (meta != undefined) {
       var last = meta.last || 0;
       if (Date.now() - last > RandomCentered(25, 10) /*msec*/) {
         sid = PlaySound(name);
       }
+    }
+  }
+  return sid;
+}
+function PlaySound(name) {
+  var sid = undefined;
+  var meta = gAudio.name2meta[name];
+  Assert(meta != undefined, "PlaySound ".concat(name));
+  if (meta != undefined) {
+    var howl = meta.howl;
+    // currently only allowing one name-instance at a time.
+    if (howl != undefined) {
+      var id = meta.id;
+      if (id != undefined) {
+        howl.stop();
+      }
+      meta.id = sid = howl.play();
+      meta.last = Date.now();
+      gAudio.id2name[sid] = name;
     }
   }
   return sid;
@@ -177,14 +200,14 @@ function MakePlayFn(count, basename, playfn) {
     return playfn(name);
   };
 }
-var PlayStart = MakePlayFn(1, "start", PlaySound);
-var PlayGameOver = MakePlayFn(1, "gameover", PlaySound);
+var PlayStart = MakePlayFn(1, "start", PlaySfx);
+var PlayGameOver = MakePlayFn(1, "gameover", PlaySfx);
 var kExplosionSfxCount = 3;
-var PlayExplosion = MakePlayFn(kExplosionSfxCount, "explosion", PlaySoundDebounced);
+var PlayExplosion = MakePlayFn(kExplosionSfxCount, "explosion", PlaySfxDebounced);
 var kBlipSfxCount = 3;
-var PlayBlip = MakePlayFn(kBlipSfxCount, "blip", PlaySoundDebounced);
+var PlayBlip = MakePlayFn(kBlipSfxCount, "blip", PlaySfxDebounced);
 var kPowerupSfxCount = 1;
-var PlayPowerupBoom = MakePlayFn(kPowerupSfxCount, "powerupboom", PlaySoundDebounced);
+var PlayPowerupBoom = MakePlayFn(kPowerupSfxCount, "powerupboom", PlaySfxDebounced);
 function LoadAudio() {
   // these will load in order 1 by 1 via onload().
   RegisterSfx("explosion1", "explosionA", {
@@ -205,7 +228,7 @@ function LoadAudio() {
   RegisterSfx("blip3", "blipSelectC", {
     volume: 0.3
   });
-  RegisterSfx("start1", "powerUp");
+  RegisterSfx("start1", "start");
   RegisterSfx("powerupboom1", "powerUp");
   RegisterSfx("gameover1", "gameover");
   RegisterMusic("music1", "nervouslynx");
