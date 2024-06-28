@@ -82,7 +82,9 @@ var gPointerTapTimeout = 350;
     };
 
     self.isDown = function() {
-        var is = self.isEnabled() && isU(self.timestamp.end);
+        var is = self.isEnabled() &&
+            isU(self.timestamp.end) &&
+            exists(self.pointerId);
         return is;
     };
 
