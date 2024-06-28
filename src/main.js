@@ -508,13 +508,24 @@ function DrawTitle(flicker=true) {
     });
 }
 
-function DrawLandscape(flicker=true) {
+function DrawWarning() {
+    gCx.fillStyle = warningColorStr;
+    var lineFactor = sy1(15);
+    var y0 = gh(1) - gYInset - gWarning.length * lineFactor * 1.4;
+    Cxdo(() => {
+        gWarning.forEach((t, i) => {
+            DrawText(t, "center", gw(0.5), y0 + i*lineFactor, gSmallestFontSizePt, false, "monospace");
+        });
+    });
+}
+
+function DrawLandscape() {
     if (getWindowAspect() <= 1) {
         var rots = ["|", "/", "-", "\\", "|", "/", "-", "\\"];
         var i = ii(gFrameCount/10) % rots.length;
         Cxdo(() => {
             gCx.fillStyle = rgba255s(yellowSpec.strong);
-            DrawText(`${rots[i]}${rots[i]}${rots[i]}  r TRY LANDSCAPE r  ${rots[i]}${rots[i]}${rots[i]}`, "center", gw(0.5), gh(0.9), gRegularFontSizePt, flicker);
+            DrawText(`${rots[i]}${rots[i]}${rots[i]}  r TRY LANDSCAPE r  ${rots[i]}${rots[i]}${rots[i]}`, "center", gw(0.5), gh(0.90), gReducedFontSizePt, false);
         });
     }
 }
@@ -701,20 +712,10 @@ function DrawBounds( alpha=0.5 ) {
         }
         else {
             DrawTitle(false);
-            self.DrawWarning();
+            DrawWarning();
+            DrawLandscape();
             DrawBounds();
         }
-    };
-
-    self.DrawWarning = function() {
-        gCx.fillStyle = warningColorStr;
-        var lineFactor = sy1(15);
-        var y0 = gh(1) - gYInset - gWarning.length * lineFactor;
-        Cxdo(() => {
-            gWarning.forEach((t, i) => {
-                DrawText(t, "center", gw(0.5), y0 + i*lineFactor, gSmallestFontSizePt, false, "monospace");
-            });
-        });
     };
 
     self.Init();
@@ -752,7 +753,7 @@ function DrawBounds( alpha=0.5 ) {
     self.Step = function( dt ) {
         var nextState = undefined;
         self.attract.Step( dt );
-        self.theMenu.Step(); // fyi this doesn't process menu input, actually.
+        self.theMenu.Step(); // note: this doesn't process menu input, actually.
         nextState = self.ProcessAllInput();
         if (exists(nextState)) {
             clearTimeout(self.musicTimer);
