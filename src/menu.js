@@ -103,6 +103,7 @@ function MakePlayerButtons({constants:k, playerRadios}) {
             }
         }),
         
+        /*
         bp2: new Button({
             x: k.bl, y: k.by0 + k.bs,
             width: k.bw, height: k.bh,
@@ -120,6 +121,7 @@ function MakePlayerButtons({constants:k, playerRadios}) {
                 playerRadios.OnSelect(bself);
             }
         }),
+        */
     };
 }
 
@@ -160,29 +162,32 @@ function MakeMuteButtons({constants:k}) {
 function MakeMainMenuButtons() {
     var constants = new MenuConstants();
     var playerRadios = new Radios();
-    var {bp1, bp2} = MakePlayerButtons({
+    var {bp1, /*bp2*/} = MakePlayerButtons({
         constants, playerRadios
     });
     var {bmusic, bsfx} = MakeMuteButtons({
         constants
     });
     playerRadios.AddButton(bp1);
-    playerRadios.AddButton(bp2);
+    //playerRadios.AddButton(bp2);
     return {
-        focusId: gSinglePlayer ? "bp1" : "bp2",
+        //focusId: gSinglePlayer ? "bp1" : "bp2",
+        focusId: "bp1",
         navigation: {
             bp1: {
                 button: bp1,
-                down: "bp2",
+                down: "bsfx",
             },
+            /*
             bp2: {
                 button: bp2,
                 up: "bp1",
                 down: "bsfx",
             },
+            */
             bsfx: {
                 button: bsfx,
-                up: "bp2",
+                up: "bp1",
                 down: "bmusic",
             },
             bmusic: {

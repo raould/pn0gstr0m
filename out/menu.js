@@ -112,26 +112,27 @@ function MakePlayerButtons(_ref2) {
         gSinglePlayer = true;
         playerRadios.OnSelect(bself);
       }
-    }),
-    bp2: new Button({
-      x: k.bl,
-      y: k.by0 + k.bs,
-      width: k.bw,
-      height: k.bh,
-      title: "2 PLAYERS",
-      margin: k.margin,
-      font_size: k.font_size,
-      is_checkbox: true,
-      step_fn: function step_fn(bself) {
-        var was_checked = bself.is_checked;
-        bself.is_checked = !gSinglePlayer;
-        bself.wants_focus = bself.is_checked && !was_checked;
-      },
-      click_fn: function click_fn(bself) {
-        gSinglePlayer = false;
-        playerRadios.OnSelect(bself);
-      }
     })
+
+    /*
+    bp2: new Button({
+        x: k.bl, y: k.by0 + k.bs,
+        width: k.bw, height: k.bh,
+        title: "2 PLAYERS",
+        margin: k.margin,
+        font_size: k.font_size,
+        is_checkbox: true,
+        step_fn: (bself) => {
+            var was_checked = bself.is_checked;
+            bself.is_checked = !gSinglePlayer;
+            bself.wants_focus = bself.is_checked && !was_checked;
+        },
+        click_fn: (bself) => {
+            gSinglePlayer = false;
+            playerRadios.OnSelect(bself);
+        }
+    }),
+    */
   };
 }
 function MakeMuteButtons(_ref3) {
@@ -179,30 +180,32 @@ function MakeMainMenuButtons() {
       constants: constants,
       playerRadios: playerRadios
     }),
-    bp1 = _MakePlayerButtons.bp1,
-    bp2 = _MakePlayerButtons.bp2;
+    bp1 = _MakePlayerButtons.bp1;
   var _MakeMuteButtons = MakeMuteButtons({
       constants: constants
     }),
     bmusic = _MakeMuteButtons.bmusic,
     bsfx = _MakeMuteButtons.bsfx;
   playerRadios.AddButton(bp1);
-  playerRadios.AddButton(bp2);
+  //playerRadios.AddButton(bp2);
   return {
-    focusId: gSinglePlayer ? "bp1" : "bp2",
+    //focusId: gSinglePlayer ? "bp1" : "bp2",
+    focusId: "bp1",
     navigation: {
       bp1: {
         button: bp1,
-        down: "bp2"
-      },
-      bp2: {
-        button: bp2,
-        up: "bp1",
         down: "bsfx"
       },
+      /*
+      bp2: {
+          button: bp2,
+          up: "bp1",
+          down: "bsfx",
+      },
+      */
       bsfx: {
         button: bsfx,
-        up: "bp2",
+        up: "bp1",
         down: "bmusic"
       },
       bmusic: {
