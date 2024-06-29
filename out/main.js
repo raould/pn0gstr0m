@@ -328,16 +328,16 @@ function ResetInput() {
   gGamepad1Buttons.Reset();
   gGamepad2Buttons.Reset();
   // not full resets, keep the 'side' information.
-  gP1Target.Reset(false);
-  gP2Target.Reset(false);
+  gP1Target.ClearPointer();
+  gP2Target.ClearPointer();
 }
 var gP1Side;
 var gP2Side;
 function ResetP1Side() {
   gP1Side = undefined;
   gP2Side = undefined;
-  exists(gP1Target) && gP1Target.Reset(true);
-  exists(gP2Target) && gP2Target.Reset(true);
+  exists(gP1Target) && gP1Target.ClearSide();
+  exists(gP2Target) && gP2Target.ClearSide();
 }
 ResetP1Side();
 function SetP1Side(side) {
@@ -404,8 +404,8 @@ function isAnyPointerDown() {
   return is;
 }
 function cancelPointing() {
-  gP1Target.Cancel();
-  gP2Target.Cancel();
+  gP1Target.ClearPointer();
+  gP2Target.ClearPointer();
 }
 
 // todo: move all these into GameState.
@@ -1267,6 +1267,12 @@ function GameState() {
       // match: DrawPauseButton();
       var p1p = isPointInCircle(gP1Target.position, pxyr);
       var p2p = isPointInCircle(gP2Target.position, pxyr);
+      if (p1p) {
+        gP1Target.ClearPointer();
+      }
+      if (p2p) {
+        gP2Target.ClearPointer();
+      }
       pbp = p1p || p2p;
     }
     if (isAnyMenuPressed(cmds) || cmds.pause || pbp) {

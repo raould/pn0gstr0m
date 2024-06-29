@@ -67,9 +67,13 @@
     };
 
     self.ProcessTarget = function(target) {
-        return target.isDown() ?
+        const hit = target.isDown() ?
             isPointInRect(target.position, self.rect, self.margin) :
-            false;
+              false;
+        if (hit) {
+            target.ClearPointer();
+        }
+        return hit;
     };
 
     self.Focus = function() {

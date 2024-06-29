@@ -13,6 +13,7 @@ TODO:
 * (esc) shouldn't disappear after staring via touch.
 * cannot tap (esc) if the rhs pointer is already down? also check how it works in 1 vs. 2 player.
 * be backwards compatible with "2 keys held down at once"?
+* ClearPointer() when clicking outside open menu to close it feels ugly.
 * uh, how about handling non-en-us keyboard layouts? ha ha :-(.
 * perf is worse in firefox vs. chrome/edge?
 * actually profiled, but it just says "gc" so who knows what as root cause... need placement-new object pooling?

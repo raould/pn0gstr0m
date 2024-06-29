@@ -11,17 +11,23 @@ var gPointerTapTimeout = 350;
 
     self.Init = function() {
         self.name = props.name;
-        self.Reset();
+        self.ClearSide();
     };
 
-    self.Reset = function(clear_side=false) {
+    self.ClearPointer = function() {
         self.pointerId = undefined;
         self.position = { x: undefined, y: undefined };
-        self.timestamp = { start: undefined, end: undefined };
-        if (clear_side) {
-            self.side = undefined;
-            self.isGlobal = undefined;
-        }
+        self.timestamp = { start: self.timestamp?.start, end: undefined };
+    };
+
+    self.ClearSide = function() {
+        self.ClearPointer();
+        self.side = undefined;
+        self.isGlobal = undefined;
+    };
+
+    self.ClearY = function() {
+        self.position.y = undefined;
     };
 
     self.SetSide = function(side, isSinglePlayer, midX) {
@@ -86,15 +92,6 @@ var gPointerTapTimeout = 350;
             isU(self.timestamp.end) &&
             exists(self.pointerId);
         return is;
-    };
-
-    self.ClearY = function() {
-        self.position.y = undefined;
-    };
-
-    self.Cancel = function() {
-        var start = self.timestamp.start;
-        self.timestamp = { start, end: gGameTime };
     };
 
     self.DrawDebug = function() {
