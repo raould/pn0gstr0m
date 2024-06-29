@@ -15,7 +15,8 @@ function MoveTarget(props) {
     self.name = props.name;
     self.Reset();
   };
-  self.Reset = function (clear_side) {
+  self.Reset = function () {
+    var clear_side = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
     self.pointerId = undefined;
     self.position = {
       x: undefined,

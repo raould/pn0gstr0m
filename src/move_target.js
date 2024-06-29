@@ -14,7 +14,7 @@ var gPointerTapTimeout = 350;
         self.Reset();
     };
 
-    self.Reset = function(clear_side) {
+    self.Reset = function(clear_side=false) {
         self.pointerId = undefined;
         self.position = { x: undefined, y: undefined };
         self.timestamp = { start: undefined, end: undefined };

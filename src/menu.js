@@ -103,7 +103,6 @@ function MakePlayerButtons({constants:k, playerRadios}) {
             }
         }),
         
-        /*
         bp2: new Button({
             x: k.bl, y: k.by0 + k.bs,
             width: k.bw, height: k.bh,
@@ -121,7 +120,6 @@ function MakePlayerButtons({constants:k, playerRadios}) {
                 playerRadios.OnSelect(bself);
             }
         }),
-        */
     };
 }
 
@@ -162,29 +160,26 @@ function MakeMuteButtons({constants:k}) {
 function MakeMainMenuButtons() {
     var constants = new MenuConstants();
     var playerRadios = new Radios();
-    var {bp1, /*bp2*/} = MakePlayerButtons({
+    var {bp1, bp2} = MakePlayerButtons({
         constants, playerRadios
     });
     var {bmusic, bsfx} = MakeMuteButtons({
         constants
     });
     playerRadios.AddButton(bp1);
-    //playerRadios.AddButton(bp2);
+    playerRadios.AddButton(bp2);
     return {
-        //focusId: gSinglePlayer ? "bp1" : "bp2",
-        focusId: "bp1",
+        focusId: gSinglePlayer ? "bp1" : "bp2",
         navigation: {
             bp1: {
                 button: bp1,
                 down: "bsfx",
             },
-            /*
             bp2: {
                 button: bp2,
                 up: "bp1",
                 down: "bsfx",
             },
-            */
             bsfx: {
                 button: bsfx,
                 up: "bp1",
@@ -240,28 +235,11 @@ function MakeGameMenuButtons({ OnQuit }) {
 
     self.Init = function() {
         self.isHidden = isHidden;
-        self.besc = MakeEscButton({ OnClose: () => {
-            self.OnClose();
-            OnClose();
-        }});
+        self.besc = MakeEscButton({ OnClose });
         self.navigation = navigation;
         self.focusId = focusId;
         var fb = self.navigation[self.focusId]?.button;
         if (exists(fb)) { fb.has_focus = true; }
-    };
-
-    self.OnClose = function() {
-        // reset everything!
-        // don't you wish we were pure-functional / flux instead?
-        // i sure kinda do.
-        self.focusId = focusId;
-        Object.entries(self.navigation).forEach(
-            e => {
-                e[0] == self.focusId ?
-                    e[1].button.Focus() :
-                    e[1].button.Defocus();
-            }
-        )
     };
 
     self.Step = function() {

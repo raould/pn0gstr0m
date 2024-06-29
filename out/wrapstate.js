@@ -17,8 +17,11 @@ function WrapState(props) {
   self.Init = function () {
     self.debug = aorb(props.debug, false);
     self.Reset();
-    if (self.debug) {
-      console.log("-Init");
+    self.dlog("-Init");
+  };
+  self.dlog = function () {
+    if (!!self.debug) {
+      console.log.apply(null, arguments);
     }
   };
 
@@ -28,27 +31,19 @@ function WrapState(props) {
   };
   self.Reset = function () {
     self.$ = props.resetFn();
-    if (self.debug) {
-      console.log("Reset", self.$);
-    }
+    self.dlog("Reset", self.$);
   };
   self.Set = function (state) {
     self.$ = _objectSpread({}, state);
-    if (self.debug) {
-      console.log("Set", self.$);
-    }
+    self.dlog("Set", self.$);
   };
   self.Update = function (state) {
     self.$ = _objectSpread(_objectSpread({}, self.$), state);
-    if (self.debug) {
-      console.log("Update", state, self.$);
-    }
+    self.dlog("Update", state, self.$);
   };
   self.Delete = function (key) {
     delete self.$[key];
-    if (self.debug) {
-      console.log("Delete", key, self.$);
-    }
+    self.dlog("Delete", key, self.$);
   };
   self.Init();
 }
