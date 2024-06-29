@@ -381,6 +381,7 @@ function MenuBehavior(_ref6) {
         // touching outside the menu closes it.
         if (!hit) {
           self.besc.Click();
+          target.ClearPointer();
           hit = true;
         }
       }

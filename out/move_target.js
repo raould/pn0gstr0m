@@ -13,23 +13,27 @@ function MoveTarget(props) {
   var self = this;
   self.Init = function () {
     self.name = props.name;
-    self.Reset();
+    self.ClearSide();
   };
-  self.Reset = function () {
-    var clear_side = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  self.ClearPointer = function () {
+    var _self$timestamp;
     self.pointerId = undefined;
     self.position = {
       x: undefined,
       y: undefined
     };
     self.timestamp = {
-      start: undefined,
+      start: (_self$timestamp = self.timestamp) == null ? void 0 : _self$timestamp.start,
       end: undefined
     };
-    if (clear_side) {
-      self.side = undefined;
-      self.isGlobal = undefined;
-    }
+  };
+  self.ClearSide = function () {
+    self.ClearPointer();
+    self.side = undefined;
+    self.isGlobal = undefined;
+  };
+  self.ClearY = function () {
+    self.position.y = undefined;
   };
   self.SetSide = function (side, isSinglePlayer, midX) {
     self.side = side;
@@ -91,16 +95,6 @@ function MoveTarget(props) {
   self.isDown = function () {
     var is = self.isEnabled() && isU(self.timestamp.end) && exists(self.pointerId);
     return is;
-  };
-  self.ClearY = function () {
-    self.position.y = undefined;
-  };
-  self.Cancel = function () {
-    var start = self.timestamp.start;
-    self.timestamp = {
-      start: start,
-      end: gGameTime
-    };
   };
   self.DrawDebug = function () {
     var _self$position, _self$position2;

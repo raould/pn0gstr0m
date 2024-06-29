@@ -355,6 +355,7 @@ function MakeGameMenuButtons({ OnQuit }) {
                 // touching outside the menu closes it.
                 if (!hit) {
                     self.besc.Click();
+                    target.ClearPointer();
                     hit = true;
                 }
             }

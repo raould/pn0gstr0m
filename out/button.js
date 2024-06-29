@@ -71,7 +71,11 @@ function Button(props) {
     self.click_fn(self);
   };
   self.ProcessTarget = function (target) {
-    return target.isDown() ? isPointInRect(target.position, self.rect, self.margin) : false;
+    var hit = target.isDown() ? isPointInRect(target.position, self.rect, self.margin) : false;
+    if (hit) {
+      target.ClearPointer();
+    }
+    return hit;
   };
   self.Focus = function () {
     self.has_focus = true;
