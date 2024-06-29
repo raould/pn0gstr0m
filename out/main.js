@@ -842,8 +842,8 @@ function TitleState() {
     }
     var nextState;
     if (self.done) {
-      // if it was all done via gamepad there's no "side" set yet.
-      if (!gSinglePlayer && isU(gP1Side)) {
+      // if it was all only gamepad inputs, there's no "side" set.
+      if (isU(gP1Side)) {
         SetP1Side("right");
       }
       nextState = gSinglePlayer ? kGame : kGetReady;
