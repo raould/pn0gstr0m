@@ -193,7 +193,7 @@ function MakeMainMenuButtons() {
     navigation: {
       bp1: {
         button: bp1,
-        down: "bsfx"
+        down: "bp2"
       },
       bp2: {
         button: bp2,
@@ -202,7 +202,7 @@ function MakeMainMenuButtons() {
       },
       bsfx: {
         button: bsfx,
-        up: "bp1",
+        up: "bp2",
         down: "bmusic"
       },
       bmusic: {
