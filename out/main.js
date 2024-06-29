@@ -35,6 +35,10 @@ var gDebug = false;
 var gShowToasts = gDebug;
 var kCanvasName = "canvas"; // match: index.html
 var gLifecycle;
+var gSinglePlayer = true;
+var kScoreIncrement = 1;
+var gP1Score = 0;
+var gP2Score = 0;
 
 // the game was designed based on this default aspect & resolution kindasorta.
 var kAspectRatio = 16 / 9;
@@ -306,13 +310,13 @@ var nocmds = {
 }
 */
 
-// todo: eventually, i think
-// we don't actually always want to reset
-// the inputs (keys, buttons, sticks, pointers)
-// so that players can move in a direction as soon as the game
-// starts, and we aren't polling on every frame.
 function ResetInput() {
   // todo: code smell.
+  // todo: eventually, i think
+  // we don't actually always want to reset
+  // the inputs (keys, buttons, sticks, pointers)
+  // so that players can move in a direction as soon as the game
+  // starts; we aren't polling on every frame.
   gEventQueue = [];
   // any remaining events were just forgotten,
   // so we must clean up state e.g. key-up
@@ -323,7 +327,6 @@ function ResetInput() {
   gGamepad2Sticks.Reset();
   gGamepad1Buttons.Reset();
   gGamepad2Buttons.Reset();
-
   // not full resets, keep the 'side' information.
   gP1Target.Reset(false);
   gP2Target.Reset(false);
@@ -333,8 +336,8 @@ var gP2Side;
 function ResetP1Side() {
   gP1Side = undefined;
   gP2Side = undefined;
-  exists(gP1Target) && gP1Target.Reset();
-  exists(gP2Target) && gP2Target.Reset();
+  exists(gP1Target) && gP1Target.Reset(true);
+  exists(gP2Target) && gP2Target.Reset(true);
 }
 ResetP1Side();
 function SetP1Side(side) {
@@ -404,10 +407,6 @@ function cancelPointing() {
   gP1Target.Cancel();
   gP2Target.Cancel();
 }
-var gSinglePlayer = true;
-var kScoreIncrement = 1;
-var gP1Score = 0;
-var gP2Score = 0;
 
 // todo: move all these into GameState.
 // todo: use typescript. (or haxe.)
@@ -783,6 +782,7 @@ function TitleState() {
     return new MenuBehavior(_objectSpread({
       isHidden: false,
       OnClose: function OnClose() {
+        ResetP1Side();
         self.theMenu = self.MakeMenu();
       }
     }, MakeMainMenuButtons()));
@@ -1062,8 +1062,6 @@ function GameState() {
       isHidden: true,
       OnClose: function OnClose() {
         self.paused = false;
-        gP1Target.Reset(true);
-        gP2Target.Reset(true);
       }
     }, MakeGameMenuButtons({
       OnQuit: function OnQuit() {
@@ -1561,7 +1559,6 @@ function GameOverState() {
     self.finalScore = gSinglePlayer ? gP1Score - gP2Score : Math.max(gP1Score, gP2Score);
     self.previousHighScore = gHighScore;
     gHighScore = Math.max(self.finalScore, aorb(gHighScore, self.finalScore));
-    console.log("gSinglePlayer", gSinglePlayer, gP1Score, gP2Score, "finalScore", self.finalScore, "previousHighScore", self.previousHighScore, "gHighScore", gHighScore);
     localStorage.setItem(kHighScoreKey, gHighScore);
     PlayGameOver();
   };
