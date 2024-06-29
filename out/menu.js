@@ -112,27 +112,26 @@ function MakePlayerButtons(_ref2) {
         gSinglePlayer = true;
         playerRadios.OnSelect(bself);
       }
-    })
-
-    /*
-    bp2: new Button({
-        x: k.bl, y: k.by0 + k.bs,
-        width: k.bw, height: k.bh,
-        title: "2 PLAYERS",
-        margin: k.margin,
-        font_size: k.font_size,
-        is_checkbox: true,
-        step_fn: (bself) => {
-            var was_checked = bself.is_checked;
-            bself.is_checked = !gSinglePlayer;
-            bself.wants_focus = bself.is_checked && !was_checked;
-        },
-        click_fn: (bself) => {
-            gSinglePlayer = false;
-            playerRadios.OnSelect(bself);
-        }
     }),
-    */
+    bp2: new Button({
+      x: k.bl,
+      y: k.by0 + k.bs,
+      width: k.bw,
+      height: k.bh,
+      title: "2 PLAYERS",
+      margin: k.margin,
+      font_size: k.font_size,
+      is_checkbox: true,
+      step_fn: function step_fn(bself) {
+        var was_checked = bself.is_checked;
+        bself.is_checked = !gSinglePlayer;
+        bself.wants_focus = bself.is_checked && !was_checked;
+      },
+      click_fn: function click_fn(bself) {
+        gSinglePlayer = false;
+        playerRadios.OnSelect(bself);
+      }
+    })
   };
 }
 function MakeMuteButtons(_ref3) {
@@ -180,29 +179,27 @@ function MakeMainMenuButtons() {
       constants: constants,
       playerRadios: playerRadios
     }),
-    bp1 = _MakePlayerButtons.bp1;
+    bp1 = _MakePlayerButtons.bp1,
+    bp2 = _MakePlayerButtons.bp2;
   var _MakeMuteButtons = MakeMuteButtons({
       constants: constants
     }),
     bmusic = _MakeMuteButtons.bmusic,
     bsfx = _MakeMuteButtons.bsfx;
   playerRadios.AddButton(bp1);
-  //playerRadios.AddButton(bp2);
+  playerRadios.AddButton(bp2);
   return {
-    //focusId: gSinglePlayer ? "bp1" : "bp2",
-    focusId: "bp1",
+    focusId: gSinglePlayer ? "bp1" : "bp2",
     navigation: {
       bp1: {
         button: bp1,
         down: "bsfx"
       },
-      /*
       bp2: {
-          button: bp2,
-          up: "bp1",
-          down: "bsfx",
+        button: bp2,
+        up: "bp1",
+        down: "bsfx"
       },
-      */
       bsfx: {
         button: bsfx,
         up: "bp1",
@@ -264,7 +261,7 @@ function MakeGameMenuButtons(_ref5) {
 /*class*/
 function MenuBehavior(_ref6) {
   var isHidden = _ref6.isHidden,
-    _OnClose = _ref6.OnClose,
+    OnClose = _ref6.OnClose,
     navigation = _ref6.navigation,
     focusId = _ref6.focusId;
   var self = this;
@@ -272,10 +269,7 @@ function MenuBehavior(_ref6) {
     var _self$navigation$self;
     self.isHidden = isHidden;
     self.besc = MakeEscButton({
-      OnClose: function OnClose() {
-        self.OnClose();
-        _OnClose();
-      }
+      OnClose: OnClose
     });
     self.navigation = navigation;
     self.focusId = focusId;
@@ -283,15 +277,6 @@ function MenuBehavior(_ref6) {
     if (exists(fb)) {
       fb.has_focus = true;
     }
-  };
-  self.OnClose = function () {
-    // reset everything!
-    // don't you wish we were pure-functional / flux instead?
-    // i sure kinda do.
-    self.focusId = focusId;
-    Object.entries(self.navigation).forEach(function (e) {
-      e[0] == self.focusId ? e[1].button.Focus() : e[1].button.Defocus();
-    });
   };
   self.Step = function () {
     if (self.besc.isOpen) {
