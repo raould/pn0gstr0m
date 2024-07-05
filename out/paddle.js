@@ -46,16 +46,16 @@ function Paddle(props) {
     self.x0 = props.x;
     self.x = props.x;
     self.y = props.y;
-    self.yMin = aorb(props.yMin, gYInset);
-    self.yMax = aorb(props.yMax, gHeight - gYInset);
+    self.yMin = aub(props.yMin, gYInset);
+    self.yMax = aub(props.yMax, gHeight - gYInset);
     self.isAtLimit = false;
     self.prevX = self.x;
     self.prevY = self.y;
     self.width = props.width;
     self.height = props.height;
     self.blockvx = self.x >= gw(0.5) ? 1 : -1;
-    self.isSplitter = aorb(props.isSplitter, false);
-    self.isPillSeeker = aorb(props.isPillSeeker, false);
+    self.isSplitter = aub(props.isSplitter, false);
+    self.isPillSeeker = aub(props.isPillSeeker, false);
     self.alive = isU(self.hp) || self.hp > 0;
     self.engorgedHeight = gPaddleHeight * 2;
     self.engorgedWidth = gPaddleWidth * 0.8;
@@ -65,7 +65,7 @@ function Paddle(props) {
     self.aiCountdownToUpdate = kAIPeriod;
     self.label = props.label;
     self.engorged = false;
-    self.stepSize = aorb(props.stepSize, gPaddleStepSize);
+    self.stepSize = aub(props.stepSize, gPaddleStepSize);
     self.keyStates = props.keyStates;
     // todo: fold button & stick states together into a gamepadState wrapper.
     self.buttonState = props.buttonState;
@@ -188,7 +188,7 @@ function Paddle(props) {
           self.label = undefined;
         } else {
           var ly = self.y - 20;
-          var bright = gRandom() > gt01;
+          var bright = gR.RandomFloat() > gt01;
           // alpha flicker progressing toward fully faded then gone.
           var bm = bright ? 1 : 0.5;
           // a hack: also use alpha to "clip" the label before it renders out of crt bounds.

@@ -1,12 +1,12 @@
 "use strict";
 
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
 function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
@@ -41,6 +41,20 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
    }
 */
 
+/* misc ideas:
+   see the future
+   option
+   slowmo
+   suction-blow
+   magnasave
+   bigger bar
+   smaller bar
+   swap sides
+   autoplay
+   cute animal catching
+   bombs
+*/
+
 // needs to be longish so the cpu has any chance of getting it.
 var kPillLifespan = 1000 * 20;
 
@@ -63,13 +77,13 @@ function Powerups(props) {
     if (exists(propsBase)) {
       // fyi allow pills to have different lifespans, tho currently they are all the same.
       Assert(exists(propsBase.lifespan), "lifespan");
-      var y = RandomChoice(gh(0.1), gh(0.9) - propsBase.height);
+      var y = gR.RandomChoice(gh(0.1), gh(0.9) - propsBase.height);
       var props = _objectSpread(_objectSpread({}, propsBase), {}, {
         name: propsBase.name,
         x: ForSide(self.side, gw(0.35), gw(0.65)),
         y: y,
         vx: ForSide(self.side, -1, 1) * sx(3),
-        vy: RandomCentered(0, 2, 0.5)
+        vy: gR.RandomCentered(0, 2, 0.5)
       });
       return new Pill(props);
     }
@@ -78,8 +92,12 @@ function Powerups(props) {
   self.NextPropsBase = function (gameState) {
     self.UpdateDeck();
     var newFn = Peek(self.powerupDeck);
-    Assert(exists(newFn), "bad powerup deck entry");
+    if (isU(newFn)) {
+      return undefined;
+    }
+    Assert(typeof newFn == "function", "newFn()? ".concat(self.powerupDeck, " ").concat(_typeof(newFn)));
     var s = newFn(self);
+    Assert(exists(s), "newFn?");
 
     // the order of these conditionals does matter.
     if (self.isPlayerOnly(s)) {
@@ -94,7 +112,7 @@ function Powerups(props) {
   };
   self.UpdateDeck = function () {
     // used them all, restart deck.
-    if (isU(self.powerupDeck) || self.powerupDeck.length < 1) {
+    if (self.powerupDeck.length <= 0 && self.specs.length > 0) {
       self.powerupDeck = _toConsumableArray(self.specs).reverse();
       Assert(self.powerupDeck.length > 0, "invalid powerup deck length");
     }
@@ -109,7 +127,7 @@ function Powerups(props) {
   };
   self.isSkippable = function (spec) {
     // don't get stuck on a powerup that might never happen.
-    return aorb(spec.canSkip, false);
+    return aub(spec.canSkip, false);
   };
   self.Init();
 }
@@ -224,7 +242,12 @@ function MakeDecimateProps(maker) {
         Assert(targets.length < gPucks.A.length);
         targets.forEach(function (p) {
           p.alive = false;
-          AddSparks(p.x, p.y, p.vx, p.vy);
+          AddSparks({
+            x: p.x,
+            y: p.y,
+            vx: p.vx,
+            vy: p.vy
+          });
         });
         gameState.AddAnimation(MakeTargetsLightningAnimation({
           lifespan: 200,
@@ -310,10 +333,12 @@ function MakeSplitProps(maker) {
     boomFn: function boomFn(gameState) {
       var r = 10 / gPucks.A.length;
       var targets = gPucks.A.filter(function (p, i) {
-        return i < 1 ? true : RandomBool(r);
+        return i < 1 ? true : gR.RandomBool(r);
       });
       targets.forEach(function (p) {
-        gPucks.A.push(p.SplitPuck(true));
+        gPucks.A.push(p.SplitPuck({
+          forced: true
+        }));
       });
       gameState.AddAnimation(MakeSplitAnimation({
         lifespan: 250,
@@ -590,7 +615,7 @@ function MakeChaosProps(maker) {
       var targets = [];
       gPucks.A.forEach(function (p, i) {
         if (isMultiple(i, 3)) {
-          p.vy *= -RandomCentered(4, 2);
+          p.vy *= -gR.RandomCentered(4, 2);
           targets.push(p);
         }
       });

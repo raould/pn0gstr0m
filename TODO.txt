@@ -26,6 +26,7 @@ TODO:
 * the ForSide()/P1/P2 thing has gotten ever more ugly & confusing.
 * i feel like isUrgent isn't weighted high enough by ai cf. engorge.
 * maybe add english based on paddle y velocity.
+* i know "!!" et. al. are dangerous but i can't stop using them sometimes.
 * super fugly inconsistencies, some but not all of them include:
   * should extract all the left vs. right stuff into a Side class, parent of Paddle etc.
   * sorry the "class" coding style is so randomly ugly.
@@ -61,3 +62,7 @@ in progress:
 * do i need clearFn() for gamepad buttons and joystick? or what else instead?
 * check that the gamepad buttons & sticks non/repeat is sane/right.
 * really test all the possible inputs!
+* level splash showing powerups.
+* hm, original pucks must also speed up at the end of the level.
+* ugh, really need Level to own Paddle, Pucks, etc. for last puck(s) changes.
+* playtest all the speedup/timeout/english factors, sheesh.

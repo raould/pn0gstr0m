@@ -54,7 +54,7 @@ var gPointerTapTimeout = 350;
             }
         }
         return hit;
-    }
+    };
 
     self.OnDown = function(pid, x, y) {
         var hit = self.Hit(x, y);

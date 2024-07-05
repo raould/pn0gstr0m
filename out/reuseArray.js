@@ -63,4 +63,9 @@ function ReuseArray(initialCapacity) {
       cb(self.array[i], i, self.array);
     }
   };
+  self.revEach = function (cb) {
+    for (var i = self.length - 1; i >= 0; --i) {
+      cb(self.array[i], i, self.array);
+    }
+  };
 }

@@ -17,12 +17,12 @@ function Puck(props) {
         self.width = gPuckWidth;
         self.height = gPuckHeight;
         // tweak max vx to avoid everything being too visually lock-step.
-        self.vx = Sign(props.vx) * Math.min(RandomCentered(gMaxVX, 1), Math.abs(props.vx));
+        self.vx = Sign(props.vx) * Math.min(gR.RandomCentered(gMaxVX, 1), Math.abs(props.vx));
         self.vy = AvoidZero(props.vy, 0.1);
         self.alive = true;
         self.startTime = gGameTime;
-        self.splitColor = aorb(props.forced, false) ? "yellow" : "white";
-        self.ur = aorb(props.ur, true);
+        self.splitColor = aub(props.forced, false) ? "yellow" : "white";
+        self.ur = aub(props.ur, true);
         self.isLocked = false;
     };
 
@@ -70,7 +70,7 @@ function Puck(props) {
         // young pucks (from paddle splits or powerups) render another color briefly.
         var dt = GameTime01(1000, self.startTime);
 
-        var regularStyle = (!self.ur && gRandom() > dt) ? self.splitColor : RandomCyan();
+        var regularStyle = (!self.ur && gR.RandomFloat() > dt) ? self.splitColor : RandomCyan();
         var lostStyle = RandomYellow(0.7);
         var isLost = (self.x+self.width < gXInset || self.x > gw(1)-gXInset);
         var style = isLost ? lostStyle : regularStyle;
@@ -113,21 +113,21 @@ function Puck(props) {
         }
     };
 
-    self.SplitPuck = function(forced=false) {
-        var np = undefined;
-        var count = gPucks.A.length;
-        var dosplit = forced || (count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && RandomBool(1.05-Clip01(Math.abs(self.vx/gMaxVX)))));
+    self.SplitPuck = function({forced=false, isSuddenDeath=false}) {
+        let np = undefined;
+        const count = gPucks.A.length;
+        const dosplit = forced || (count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && gR.RandomBool(1.05-Clip01(Math.abs(self.vx/gMaxVX)))));
 
         // sometimes force ejection to avoid too many pucks.
         // if there are already too many pucks to allow for a split-spawned-puck,
         // then we also want to sometimes eject the existing 'self' puck
         // to avoid ending up with just a linear stream of pucks.
-        var r = gRandom();
-        var countFactor = Clip01(count/kEjectSpeedCountThreshold);
-        var ejectCountFactor = Math.pow(countFactor, 3);
-        var doejectCount = (count > kEjectCountThreshold) && (r < 0.1);
-        var doejectSpeed = (self.vx > gMaxVX*0.9) && (r < ejectCountFactor);
-        var doeject = doejectCount || doejectSpeed;
+        const r = gR.RandomFloat();
+        const countFactor = Clip01(count/kEjectSpeedCountThreshold);
+        const ejectCountFactor = Math.pow(countFactor, 3);
+        const doejectCount = (count > kEjectCountThreshold) && (r < 0.1);
+        const doejectSpeed = (self.vx > gMaxVX*0.9) && (r < ejectCountFactor);
+        const doeject = doejectCount || doejectSpeed;
 
         if (!forced && !dosplit) { // i cry here.
             if (doeject) {
@@ -137,10 +137,12 @@ function Puck(props) {
         }
         else {
             // i'm sure this set of heuristics is clearly genius.
-            var slowCountFactor = Math.pow(countFactor, 1.5);
-            var slow = !doejectSpeed && (self.vx > gMaxVX*0.7) && (gRandom() < slowCountFactor);
-            var nvx = self.vx * (slow ? RandomRange(0.8, 0.9) : RandomRange(1.01, 1.1));
-            var nvy = self.vy;
+            // but i no longer have any idea what/why they do what they do.
+            const slowCountFactor = Math.pow(countFactor, 1.5);
+            // keep a few of the fast ones around?
+            const slow = !doejectSpeed && (self.vx > gMaxVX*0.7) && (gR.RandomFloat() < slowCountFactor);
+            const nvx = self.vx * (slow ? gR.RandomRange(0.8, 0.9) : gR.RandomRange(1.01, 1.1));
+            let nvy = self.vy;
             nvy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
             np = new Puck({ x: self.x, y: self.y, vx: nvx, vy: nvy, ur: false, forced });
             PlayExplosion();
@@ -148,8 +150,13 @@ function Puck(props) {
             // fyi because SplitPuck is called during MovePucks,
             // we return the new puck to go onto the B list, whereas
             // MoveSparks happens after so it goes onto the A list.
-            AddSparks(self.x, self.y, self.vx, self.vy);
+            AddSparks({x:self.x, y:self.y, vx:self.vx, vy:self.vy});
         }
+
+        // speed up all pucks over time to force the level to end some day.
+        const nvx = self.vx * (isSuddenDeath ? 1.1 : 1.01);
+        console.log("puck vx updated", F(self.vx), "->", F(nvx));
+        self.vx = nvx;
 
         return np;
     };
@@ -189,7 +196,7 @@ function Puck(props) {
         self.vx *= -1;
     };
 
-    self.PaddleCollision = function( paddle ) {
+    self.PaddleCollision = function( paddle, englishFactor, isSuddenDeath ) {
         var newPuck = undefined;
         var hit = paddle.CollisionTest( self );
         if ( hit ) {
@@ -199,13 +206,14 @@ function Puck(props) {
             // smallest bit of vertical english.
             // too much means you never get to 'streaming'.
             // too little means you maybe crash the machine :-)
+            // note that englishFactor increases as level ends.
             var dy = self.GetMidY() - paddle.GetMidY();
-            var mody = gRandom() * 0.04 * Math.abs(dy);
+            var mody = gR.RandomFloat() * 0.02 * Math.abs(dy) * englishFactor;
 
             // try to avoid getting boringly stuck at top or bottom.
             // but don't want to utterly lose 'streaming'.
             var oy = 1;
-            if (RandomBool(0.1)) {
+            if (gR.RandomBool(0.1)) {
                 var t01 = T01(Math.abs(self.x - gh(0.5)), gh(0.5));
                 var ty = Math.pow( t01, 3 );
                 oy = 1 + ty * 1;
@@ -220,17 +228,17 @@ function Puck(props) {
             }
 
             if (paddle.isSplitter) {
-                newPuck = self.SplitPuck();
+                newPuck = self.SplitPuck({isSuddenDeath});
             }
         }
         return newPuck;
     };
 
-    self.AllPaddlesCollision = function(paddles) {
+    self.AllPaddlesCollision = function(paddles, englishFactor, isSuddenDeath) {
         var spawned = [];
         if (self.alive && !self.isLocked) {
             paddles.forEach( paddle => {
-                var np = self.PaddleCollision(paddle);
+                var np = self.PaddleCollision(paddle, englishFactor, isSuddenDeath);
                 if( exists(np) ) {
                     spawned.push( np );
                 }

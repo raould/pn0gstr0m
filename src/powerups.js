@@ -27,6 +27,20 @@
    }
 */
 
+/* misc ideas:
+   see the future
+   option
+   slowmo
+   suction-blow
+   magnasave
+   bigger bar
+   smaller bar
+   swap sides
+   autoplay
+   cute animal catching
+   bombs
+*/
+
 // needs to be longish so the cpu has any chance of getting it.
 var kPillLifespan = 1000 * 20;
 
@@ -51,14 +65,14 @@ var kPillLifespan = 1000 * 20;
         if (exists(propsBase)) {
             // fyi allow pills to have different lifespans, tho currently they are all the same.
             Assert(exists(propsBase.lifespan), "lifespan");
-            var y = RandomChoice(gh(0.1), gh(0.9)-propsBase.height);
+            var y = gR.RandomChoice(gh(0.1), gh(0.9)-propsBase.height);
             var props = {
                 ...propsBase,
                 name: propsBase.name,
                 x: ForSide(self.side, gw(0.35), gw(0.65)),
                 y,
                 vx: ForSide(self.side, -1,1) * sx(3),
-                vy: RandomCentered(0, 2, 0.5),
+                vy: gR.RandomCentered(0, 2, 0.5),
             };
             return new Pill(props);
         }
@@ -69,8 +83,13 @@ var kPillLifespan = 1000 * 20;
         self.UpdateDeck();
 
         var newFn = Peek(self.powerupDeck);
-        Assert(exists(newFn), "bad powerup deck entry");
+        if (isU(newFn)) {
+            return undefined;
+        }
+
+        Assert(typeof newFn == "function", `newFn()? ${self.powerupDeck} ${typeof newFn}`);
         var s = newFn(self);
+        Assert(exists(s), "newFn?");
 
         // the order of these conditionals does matter.
         if (self.isPlayerOnly(s)) {
@@ -89,7 +108,7 @@ var kPillLifespan = 1000 * 20;
 
     self.UpdateDeck = function() {
         // used them all, restart deck.
-        if (isU(self.powerupDeck) || self.powerupDeck.length < 1) {
+        if (self.powerupDeck.length <= 0 && self.specs.length > 0) {
             self.powerupDeck = [...self.specs].reverse();
             Assert(self.powerupDeck.length > 0, "invalid powerup deck length");
         }
@@ -107,7 +126,7 @@ var kPillLifespan = 1000 * 20;
 
     self.isSkippable = function( spec ) {
         // don't get stuck on a powerup that might never happen.
-        return aorb(spec.canSkip, false);
+        return aub(spec.canSkip, false);
     };
 
     self.Init();
@@ -222,7 +241,7 @@ function MakeDecimateProps(maker) {
                 Assert(targets.length < gPucks.A.length);
                 targets.forEach(p => {
                     p.alive = false;
-                    AddSparks(p.x, p.y, p.vx, p.vy);
+                    AddSparks({x:p.x, y:p.y, vx:p.vx, vy:p.vy});
                 });
                 gameState.AddAnimation(MakeTargetsLightningAnimation({
                     lifespan: 200,
@@ -313,10 +332,10 @@ function MakeSplitProps(maker) {
         boomFn: (gameState) => {
             var r = 10/gPucks.A.length;
             var targets = gPucks.A.filter((p, i) => {
-                return i < 1 ? true : RandomBool(r);
+                return i < 1 ? true : gR.RandomBool(r);
             });
             targets.forEach(p => {
-                gPucks.A.push(p.SplitPuck(true));
+                gPucks.A.push(p.SplitPuck({forced: true}));
             });
             gameState.AddAnimation(MakeSplitAnimation({
                 lifespan: 250,
@@ -597,7 +616,7 @@ function MakeChaosProps(maker) {
             var targets = [];
             gPucks.A.forEach((p,i) => {
                 if (isMultiple(i, 3)) {
-                    p.vy *= -RandomCentered(4, 2);
+                    p.vy *= -gR.RandomCentered(4, 2);
                     targets.push(p);
                 }
             });

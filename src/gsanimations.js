@@ -27,8 +27,8 @@ function GenerateLightningPath(props) {
         if (n == 0) { n = 1; }
         var nx = -dy/n;
         var ny = dx/n;
-        var xo = x + (nx * RandomCentered(0, range, range/2));
-        var yo = y + (ny * RandomCentered(0, range, range/2));
+        var xo = x + (nx * gR.RandomCentered(0, range, range/2));
+        var yo = y + (ny * gR.RandomCentered(0, range, range/2));
         points.push([O5(xo), O5(yo)]);
     }
     return points;
@@ -59,7 +59,7 @@ function AddLightningPath(props) {
 }
 
 function MakeGameStartAnimation() {
-    var lifespan = kAlphaFadeInMsec;
+    var lifespan = kAlphaFadeInMsec; // match: DrawMessage().
     return new GSAnimation({
         name: "gamestart",
         lifespan,
@@ -112,18 +112,18 @@ function MakePoofAnimation(x, y, radius) {
                 gCx.lineWidth = sx1(1);
                 gCx.beginPath();
                 gCx.arc( WX(x), WY(y),
-                         r * RandomRange(1,1.05),
+                         r * gR.RandomRange(1,1.05),
                          0, k2Pi );
                 gCx.stroke();
                 gCx.beginPath();
                 gCx.arc( WX(x), WY(y),
-                         r/2 * RandomRange(1,1.05),
+                         r/2 * gR.RandomRange(1,1.05),
                          0, k2Pi );
                 gCx.stroke();
                 gCx.beginPath();
                 gCx.lineWidth = sx1(2);
                 gCx.arc( WX(x), WY(y),
-                         r/4 * RandomRange(1,1.05),
+                         r/4 * gR.RandomRange(1,1.05),
                          0, k2Pi );
                 gCx.stroke();
             });
@@ -201,7 +201,7 @@ function MakeTargetsLightningAnimation(props) {
         drawFn: () => {
             targets.forEach(xy => {
                 AddLightningPath({
-                    color: RandomBool(0.1) ? RandomMagenta() : RandomBlue(),
+                    color: gR.RandomBool(0.1) ? RandomMagenta() : RandomBlue(),
                     // er, ahem, there's some bug where the last leg of lightning is
                     // very short e.g. decimate, so i am reversing start and end
                     // on purpose to compensate because it looks less bad for now.
@@ -351,7 +351,7 @@ function MakeChaosAnimation(props) {
             targets.forEach((p, i) => {
                 if (p.alive) {
                     AddLightningPath({
-                        color: RandomForColor(RandomBool(0.5) ? magentaSpec : yellowSpec),
+                        color: RandomForColor(gR.RandomBool(0.5) ? magentaSpec : yellowSpec),
                         x0: p.x,
                         y0: Sign(oldvys[i])==1 ? gYInset : gHeight-gYInset,
                         x1: p.x,

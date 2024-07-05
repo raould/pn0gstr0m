@@ -21,11 +21,21 @@ function exists(u) {
     return u != undefined;
 }
 
-function aorb(a, b) {
+function aub(a, b) {
     return a != undefined ? a : b;
 }
 
 function noOp() {}
+
+const gLogOnDeltaMap = {};
+function logOnDelta(key, v, delta) {
+    const ov = gLogOnDeltaMap[key];
+    const update = isU(ov) || Math.abs(v-ov) >= delta;
+    if (update) {
+        console.log(key, v);
+        gLogOnDeltaMap[key] = v;
+    }
+}
 
 function SafeDiv(num, denom) {
     return num / (denom != 0 ? denom : 1);
@@ -110,6 +120,10 @@ function Clip(n, min, max) {
 
 function MinSigned(n, max) {
     var fm = Math.min(Math.abs(n), Math.abs(max));
+    return Sign(n) * fm;
+}
+function MaxSigned(n, max) {
+    var fm = Math.max(Math.abs(n), Math.abs(max));
     return Sign(n) * fm;
 }
 

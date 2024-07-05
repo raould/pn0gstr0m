@@ -5,52 +5,88 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+var kEnglishStep = 0.002;
+
 /*class*/
 function Level(props) {
   var self = this;
   self.Init = function () {
+    self.index = props.index;
+
+    // note: some of these are allowed to be undefined,
+    // ie for attract mode level. although it is sort of ugly
+    // and dangerous that way, vs. an explicit isAttract bool?
+    // coding is hard please let me just go online shopping.
     self.maxVX0 = props.maxVX;
     self.maxVX = self.maxVX0;
-    self.speedupFactor = props.speedupFactor;
     self.speedupTimeout = props.speedupTimeout;
+    self.speedupFactor = props.speedupFactor;
+    self.englishFactor = 1;
     self.puckCount = props.puckCount;
-    self.alive = true;
+    self.spawning = exists(self.puckCount);
+    self.pills = props.pills;
     self.p1Powerups = new Powerups({
       isPlayer: props.isP1Player,
       paddle: props.paddleP1,
       side: ForSide(gP1Side, "left", "right"),
-      specs: props.pills
+      specs: self.pills
     });
     self.p1Pill = undefined;
     self.p2Powerups = new Powerups({
       isPlayer: props.isP2Player,
       paddle: props.paddleP2,
       side: ForSide(gP1Side, "right", "left"),
-      specs: props.pills
+      specs: self.pills
     });
     self.p2Pill = undefined;
   };
-  self.OnPuckLost = function () {
-    self.puckCount = Math.max(0, self.puckCount - 1);
-    self.alive = self.puckCount > 0;
+  self.OnPuckSplit = function (count) {
+    if (self.spawning && count > 0) {
+      Assert(exists(self.puckCount));
+      self.puckCount = Math.max(0, self.puckCount - count);
+      self.spawning = self.puckCount > 0;
+      console.log(self.puckCount, self.spawning);
+
+      // speed up toward the (inevitable?) end!
+      if (!self.spawning) {
+        self.speedupTimeout = 0;
+      }
+    }
   };
   self.Step = function (dt) {
-    self.speedupTimeout -= dt;
-    if (self.speedupTimeout <= 0) {
-      self.maxVX += self.speedupFactor * dt / kTimeStep;
+    if (exists(self.speedupTimeout)) {
+      Assert(exists(self.speedupFactor));
+      Assert(exists(self.englishFactor));
+      self.speedupTimeout = Math.max(0, self.speedupTimeout - dt);
+      if (self.speedupTimeout <= 0) {
+        self.maxVX = MinSigned(self.maxVX + self.speedupFactor * dt / kTimeStep, kMaxVX);
+        self.englishFactor += dt / kTimeStep * kEnglishStep;
+        logOnDelta("maxVX", F(self.maxVX), 1);
+        logOnDelta("englishFactor", F(self.englishFactor), 0.1);
+      }
     }
   };
-  self.Draw = function (alpha) {
-    // some (most) levels in the future are expected
-    // to end after the puckCount drops to zero.
-    // todo: find some attractive way to indicate that to the user.
-    if (gDebug && self.puckCount < 100) {
+  self.IsSuddenDeath = function () {
+    return exists(self.puckCount) && self.puckCount <= 0;
+  };
+  self.Draw = function (_ref) {
+    var alpha = _ref.alpha,
+      isScreenshot = _ref.isScreenshot;
+    self.DrawPills(alpha);
+
+    // todo: not actually sure how best to represent this to players in the ui. :-\
+    if (self.IsSuddenDeath() && !isScreenshot) {
       Cxdo(function () {
-        gCx.fillStyle = gCx.strokeStyle = "magenta";
-        DrawText(self.puckCount.toString(), "center", WX(gw(0.5)), WY(gPucksTextY), gSmallFontSizePt);
+        gCx.fillStyle = backgroundColorStr;
+        var cx = gw(0.5);
+        var cy = gh(0.9);
+        var ox = sx(65);
+        var oy = sy(13);
+        gCx.fillRect(cx - ox, cy - oy * 1.45, ox * 2, oy * 2);
+        gCx.fillStyle = RandomGreen(0.8);
+        DrawText("NO NEW PUCKS", "center", cx, cy, gReducedFontSizePt);
       });
     }
-    self.DrawPills(alpha);
   };
   self.DrawPills = function (alpha) {
     if (exists(self.p1Pill)) {

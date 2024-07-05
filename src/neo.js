@@ -34,9 +34,9 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
             );
             self.locked.forEach(p => {
                 p.isLocked = false;
-                p.vx = Math.abs(p.vx) * self.normalX * RandomRange(1,1.5);
+                p.vx = Math.abs(p.vx) * self.normalX * gR.RandomRange(1,1.5);
                 // funny how sparks are global but animations aren't because history.
-                AddSparks(p.x, p.y, p.vx, p.vy);
+                AddSparks({x:p.x, y:p.y, vx:p.vx, vy:p.vy});
             });
         }
         self.lifespan = Math.max(0, self.lifespan-dt);
@@ -81,12 +81,12 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
             steps: 20
         });
 
-        if (RandomBool(t)) { // streamers.
+        if (gR.RandomBool(t)) { // streamers.
             var x0 = mx;
-            var y0 = RandomCentered(gh(0.5), gh(0.3));
+            var y0 = gR.RandomCentered(gh(0.5), gh(0.3));
             var x1 = ForSide(self.side,
-                             RandomRange(self.x + self.width*4, gw(1)-gXInset),
-                             RandomRange(self.x - self.width*3, gXInset));
+                             gR.RandomRange(self.x + self.width*4, gw(1)-gXInset),
+                             gR.RandomRange(self.x - self.width*3, gXInset));
             var y1 = y0 < gh(0.5) ? gYInset : gh(1)-gYInset;
             gameState.AddAnimation(
                 MakeCrawlingLightningAnimation({

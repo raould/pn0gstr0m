@@ -17,7 +17,7 @@ function Spark( x0, y0, vx, vy ) {
         self.vx = vx;
         self.vy = vy;
         // randomize lifespan a little for visual variety.
-        self.frameCount = RandomRange(0, 5);
+        self.frameCount = gR.RandomRange(0, 5);
         self.alive = true;
     };
 

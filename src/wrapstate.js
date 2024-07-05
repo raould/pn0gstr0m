@@ -7,7 +7,7 @@
     var self = this;
 
     self.Init = function() {
-        self.debug = aorb(props.debug, false);
+        self.debug = aub(props.debug, false);
         self.Reset();
         self.dlog("-Init");
     };

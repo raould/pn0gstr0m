@@ -15,7 +15,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 function WrapState(props) {
   var self = this;
   self.Init = function () {
-    self.debug = aorb(props.debug, false);
+    self.debug = aub(props.debug, false);
     self.Reset();
     self.dlog("-Init");
   };

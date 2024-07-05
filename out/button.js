@@ -11,7 +11,7 @@
 function Radios(props) {
   var self = this;
   self.Init = function () {
-    this.buttons = aorb(props == null ? void 0 : props.buttons, []);
+    this.buttons = aub(props == null ? void 0 : props.buttons, []);
   };
   self.AddButton = function (button) {
     this.buttons.push(button);
@@ -38,8 +38,8 @@ function Button(props) {
     self.y = props.y;
     self.width = props.width;
     self.height = props.height;
-    self.radii = aorb(props.radii, sx1(10));
-    self.margin = aorb(props.margin, {
+    self.radii = aub(props.radii, sx1(10));
+    self.margin = aub(props.margin, {
       x: 0,
       y: 0
     });
@@ -50,18 +50,18 @@ function Button(props) {
       height: self.height
     };
     self.title = props.title;
-    self.align = aorb(props.align, "center"); // but does not affect checkboxes! :-\
+    self.align = aub(props.align, "center"); // but does not affect checkboxes! :-\
     self.color = props.color;
     self.font_size = props.font_size;
-    self.click_fn = aorb(props.click_fn,
+    self.click_fn = aub(props.click_fn,
     // not really an error, but maybe helpful when debugging?
     function () {
       console.log("no click_fn registered on '".concat(self.title, "'"));
     });
-    self.step_fn = aorb(props.step_fn, function () {});
+    self.step_fn = aub(props.step_fn, function () {});
     self.is_checkbox = props.is_checkbox;
-    self.is_checked = aorb(props.is_checked, false);
-    self.has_focus = aorb(props.has_focus, false);
+    self.is_checked = aub(props.is_checked, false);
+    self.has_focus = aub(props.has_focus, false);
     self.wants_focus = false;
   };
   self.Step = function () {
@@ -127,7 +127,7 @@ function Button(props) {
         DrawText(self.title, self.align, x, ty, self.font_size, false);
       }
       if (gDebug) {
-        gCx.strokeStyle = "red";
+        gCx.strokeStyle = "rgba(255,0,0,0.5)";
         gCx.strokeRect(self.x, self.y, self.width, self.height);
         gCx.strokeRect(self.x - self.margin.x, self.y - self.margin.y, self.width + self.margin.x * 2, self.height + self.margin.y * 2);
       }
