@@ -1473,9 +1473,9 @@ function GameState(props) {
   };
 
   // match: GetReady.Draw() et. al.
-  self.DrawScoreHeader = function () {
+  self.DrawScoreHeader = function (isEndScreenshot) {
     Cxdo(function () {
-      var style = RandomMagenta(self.Alpha(0.4));
+      var style = RandomMagenta(self.Alpha(isEndScreenshot ? 1 : 0.4));
       var p2 = gSinglePlayer ? "GPT: " : "P2: ";
       ForSide(self.isAttract ? "right" : gP1Side, function () {
         gCx.fillStyle = style;
@@ -1583,11 +1583,12 @@ function GameState(props) {
     if (!gResizing) {
       // painter's z order algorithm here below, keep important things last.
 
+      var isEndScreenshot = !!(props != null && props.isEndScreenshot);
       self.DrawMidLine();
-      self.DrawScoreHeader();
+      self.DrawScoreHeader(isEndScreenshot);
       self.level.Draw({
         alpha: self.Alpha(),
-        isEndScreenshot: !!(props != null && props.isEndScreenshot)
+        isEndScreenshot: isEndScreenshot
       });
 
       // match: pucks revEach so splits show up on top, z order.
@@ -1697,15 +1698,9 @@ function LevelWonState() {
   self.DrawSinglePlayer = function () {
     Cxdo(function () {
       ClearScreen();
-      gCx.globalAlpha = 0.5;
       gCx.drawImage(gCanvas2, 0, 0);
-      gCx.globalAlpha = 1;
       gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
       DrawText("LEVEL ".concat(self.levelIndex, " WON!"), "center", gw(0.5), gh(0.5), gBigFontSizePt);
-      var leftMsg = ForSide(gP1Side, "P1: ".concat(gP1Score), "P2: ".concat(gP2Score));
-      var rightMsg = ForOtherSide(gP1Side, "P1: ".concat(gP1Score), "P2: ".concat(gP2Score));
-      DrawText(leftMsg, "left", gw(0.2), gh(0.6), gSmallFontSizePt);
-      DrawText(rightMsg, "right", gw(0.8), gh(0.6), gSmallFontSizePt);
       if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
         DrawText("CONTINUE", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
@@ -1778,9 +1773,7 @@ function GameOverState() {
   self.Draw = function () {
     Cxdo(function () {
       ClearScreen();
-      gCx.globalAlpha = 0.8;
       gCx.drawImage(gCanvas2, 0, 0);
-      gCx.globalAlpha = 1;
       gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
       DrawText("GAME OVER", "center", gw(0.5), gh(0.5), gBigFontSizePt);
       if (self.goOn) {

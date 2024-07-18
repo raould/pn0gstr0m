@@ -85,7 +85,7 @@ function Puck(props) {
 
             if (gDebug) {
                 gCx.beginPath();
-                var oy = self.vx > 0 ? 0 : self.height;
+                var oy = self.vx > 0 ? -1 : self.height+1;
                 gCx.strokeStyle = self.vx > 0 ? "magenta" : "pink";
                 gCx.moveTo(self.prevX+self.width/2, self.prevY+oy);
                 gCx.lineTo(self.midX, self.y+oy);

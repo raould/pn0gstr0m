@@ -1464,9 +1464,9 @@ function DrawBounds( alpha=0.5 ) {
     };
 
     // match: GetReady.Draw() et. al.
-    self.DrawScoreHeader = function() {
+    self.DrawScoreHeader = function( isEndScreenshot ) {
         Cxdo(() => {
-            var style = RandomMagenta(self.Alpha(0.4));
+            var style = RandomMagenta(self.Alpha(isEndScreenshot ? 1 : 0.4));
             var p2 = (gSinglePlayer ? "GPT: " : "P2: ");
             ForSide(self.isAttract ? "right" : gP1Side, 
                 () => {
@@ -1586,9 +1586,11 @@ function DrawBounds( alpha=0.5 ) {
         if (!gResizing) {
             // painter's z order algorithm here below, keep important things last.
 
+            let isEndScreenshot = !!props?.isEndScreenshot;
+
             self.DrawMidLine();
-            self.DrawScoreHeader();
-            self.level.Draw({ alpha: self.Alpha(), isEndScreenshot: !!props?.isEndScreenshot });
+            self.DrawScoreHeader( isEndScreenshot );
+            self.level.Draw({ alpha: self.Alpha(), isEndScreenshot });
 
             // match: pucks revEach so splits show up on top, z order.
             // pucks going away from (single) player.
@@ -1706,9 +1708,7 @@ function DrawBounds( alpha=0.5 ) {
     self.DrawSinglePlayer = function() {
         Cxdo(() => {
             ClearScreen();
-            gCx.globalAlpha = 0.5;
             gCx.drawImage(gCanvas2, 0, 0);
-            gCx.globalAlpha = 1;
             gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
             DrawText(
                 `LEVEL ${self.levelIndex} WON!`,
@@ -1716,27 +1716,6 @@ function DrawBounds( alpha=0.5 ) {
                 gw(0.5),
                 gh(0.5),
                 gBigFontSizePt,
-            );
-
-            const leftMsg = ForSide(gP1Side,
-                                    `P1: ${gP1Score}`,
-                                    `P2: ${gP2Score}`
-                                   );
-            const rightMsg = ForOtherSide(gP1Side,
-                                          `P1: ${gP1Score}`,
-                                          `P2: ${gP2Score}`
-                                         );
-            DrawText(
-                leftMsg,
-                "left",
-                gw(0.2), gh(0.6),
-                gSmallFontSizePt
-            );
-            DrawText(
-                rightMsg,
-                "right",
-                gw(0.8), gh(0.6),
-                gSmallFontSizePt
             );
 
             if (self.goOn) {
@@ -1850,9 +1829,7 @@ function DrawBounds( alpha=0.5 ) {
     self.Draw = function() {
         Cxdo(() => {
             ClearScreen();
-            gCx.globalAlpha = 0.8;
             gCx.drawImage(gCanvas2, 0, 0);
-            gCx.globalAlpha = 1;
             gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
             DrawText(
                 "GAME OVER",
