@@ -16,22 +16,16 @@ function Puck(props) {
         self.prevY = self.y;
         self.width = gPuckWidth;
         self.height = gPuckHeight;
+        self.midX = self.x + self.width/2;
+        self.midY = self.y + self.height/2;
         // tweak max vx to avoid everything being too visually lock-step.
-        self.vx = Sign(props.vx) * Math.min(gR.RandomCentered(gMaxVX, 1), Math.abs(props.vx));
+        self.vx = sx1(28); //Sign(props.vx) * Math.min(gR.RandomCentered(gMaxVX, 1), Math.abs(props.vx));
         self.vy = AvoidZero(props.vy, 0.1);
         self.alive = true;
         self.startTime = gGameTime;
         self.splitColor = aub(props.forced, false) ? "yellow" : "white";
         self.ur = aub(props.ur, true);
         self.isLocked = false;
-    };
-
-    self.GetMidX = function() {
-        return self.x + self.width/2;
-    };
-
-    self.GetMidY = function() {
-        return self.y + self.height/2;
     };
 
     self.Draw = function( alpha ) {
@@ -89,14 +83,15 @@ function Puck(props) {
             gCx.fillStyle = style;
             gCx.fill();
 
-            // if (gDebug) {
-            //     gCx.globalAlpha = 1;
-            //     gCx.fillStyle = "yellow";
-            //     DrawText(`${F(range)}`, "center", wx, wy-sy(65), "14pt", false, "courier");
-            //     DrawText(`${F(vt)}`, "center", wx, wy-sy(50), "14pt", false, "courier");
-            //     DrawText(`${F(t)}`, "center", wx, wy-sy(35), "14pt", false, "courier");
-            //     DrawText(`${self.vx<0?"-":"+"} ${F(avx)}`, "center", wx, wy-sy(20), "14pt", false, "courier");
-            // }
+            if (gDebug) {
+                gCx.beginPath();
+                var oy = self.vx > 0 ? 0 : self.height;
+                gCx.strokeStyle = self.vx > 0 ? "magenta" : "pink";
+
+                gCx.moveTo(self.prevX+self.width/2, self.prevY+oy);
+                gCx.lineTo(self.midX, self.y+oy);
+                gCx.stroke();
+            }
         });
     };
 
@@ -110,6 +105,8 @@ function Puck(props) {
             var xout = self.x < 0 || self.x+self.width >= gWidth;
             var yout = self.y < 0 || self.y+self.height >= gHeight;
             self.alive = !(xout || yout);
+            self.midX = self.x + self.width/2;
+            self.midY = self.y + self.height/2;
         }
     };
 
@@ -198,8 +195,10 @@ function Puck(props) {
 
     self.PaddleCollision = function( paddle, englishFactor, isSuddenDeath ) {
         var newPuck = undefined;
-        var hit = paddle.CollisionTest( self );
+        var hit = self.CollisionTest( paddle, paddle.blockvx );
         if ( hit ) {
+            paddle.OnPuckHit();
+            
             // todo: bounce Y.
             self.BounceCollidableX( paddle );
 
@@ -207,7 +206,7 @@ function Puck(props) {
             // too much means you never get to 'streaming'.
             // too little means you maybe crash the machine :-)
             // note that englishFactor increases as level ends.
-            var dy = self.GetMidY() - paddle.GetMidY();
+            var dy = self.midY - paddle.GetMidY();
             var mody = gR.RandomFloat() * 0.02 * Math.abs(dy) * englishFactor;
 
             // try to avoid getting boringly stuck at top or bottom.
@@ -220,10 +219,10 @@ function Puck(props) {
                 //console.log(F(t01), F(ty), F(oy), F(mody*oy));
             }
 
-            if( self.GetMidY() < paddle.GetMidY() ) {
+            if( self.midY < paddle.GetMidY() ) {
                 self.vy -= mody * oy;
             }
-            else if( self.GetMidY() > paddle.GetMidY() ) {
+            else if( self.midY > paddle.GetMidY() ) {
                 self.vy += mody * oy;
             }
 

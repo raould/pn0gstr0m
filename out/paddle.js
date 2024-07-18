@@ -114,13 +114,11 @@ function Paddle(props) {
       self.neo = self.neo.Step(dt, gameState);
     }
   };
-  self.CollisionTest = function (puck) {
-    var hit = puck.CollisionTest(self, self.blockvx);
-    if (hit && exists(self.hp)) {
+  self.OnPuckHit = function () {
+    if (exists(self.hp)) {
       self.hp--;
       self.alive = self.hp > 0;
     }
-    return hit;
   };
   self.BeginEngorged = function () {
     self.width = self.engorgedWidth;
@@ -210,7 +208,7 @@ function Paddle(props) {
         if (exists(self.aiPuck)) {
           gCx.strokeStyle = "red";
           gCx.beginPath();
-          gCx.arc(self.aiPuck.GetMidX(), self.aiPuck.GetMidY(), self.aiPuck.width * 1.5, 0, k2Pi, true);
+          gCx.arc(self.aiPuck.midX, self.aiPuck.midY, self.aiPuck.width * 1.5, 0, k2Pi, true);
           gCx.stroke();
         }
       });
@@ -330,7 +328,7 @@ function Paddle(props) {
     }
     if (exists(self.aiPuck) && self.isPuckAttacking(self.aiPuck)) {
       self.debugMsg = "PUCK";
-      self.AISeekTargetMidY(dt, self.aiPuck.GetMidY(), 1);
+      self.AISeekTargetMidY(dt, self.aiPuck.midY, 1);
       return;
     }
     if (PS && exists(self.aiPill)) {
