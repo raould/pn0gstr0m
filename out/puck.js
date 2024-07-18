@@ -19,8 +19,8 @@ function Puck(props) {
     self.height = gPuckHeight;
     self.midX = self.x + self.width / 2;
     self.midY = self.y + self.height / 2;
-    // tweak max vx to avoid everything being too visually lock-step.
-    self.vx = sx1(28); //Sign(props.vx) * Math.min(gR.RandomCentered(gMaxVX, 1), Math.abs(props.vx));
+    // tweak max vx a tad to avoid everything being too visually lock-step.
+    self.vx = Sign(props.vx) * Math.min(gR.RandomCentered(gMaxVX, 1), Math.abs(props.vx));
     self.vy = AvoidZero(props.vy, 0.1);
     self.alive = true;
     self.startTime = gGameTime;

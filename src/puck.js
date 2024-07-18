@@ -18,8 +18,8 @@ function Puck(props) {
         self.height = gPuckHeight;
         self.midX = self.x + self.width/2;
         self.midY = self.y + self.height/2;
-        // tweak max vx to avoid everything being too visually lock-step.
-        self.vx = sx1(28); //Sign(props.vx) * Math.min(gR.RandomCentered(gMaxVX, 1), Math.abs(props.vx));
+        // tweak max vx a tad to avoid everything being too visually lock-step.
+        self.vx = Sign(props.vx) * Math.min(gR.RandomCentered(gMaxVX, 1), Math.abs(props.vx));
         self.vy = AvoidZero(props.vy, 0.1);
         self.alive = true;
         self.startTime = gGameTime;
@@ -87,7 +87,6 @@ function Puck(props) {
                 gCx.beginPath();
                 var oy = self.vx > 0 ? 0 : self.height;
                 gCx.strokeStyle = self.vx > 0 ? "magenta" : "pink";
-
                 gCx.moveTo(self.prevX+self.width/2, self.prevY+oy);
                 gCx.lineTo(self.midX, self.y+oy);
                 gCx.stroke();

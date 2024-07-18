@@ -120,7 +120,8 @@ var gSmallFontSizePt;
 var gSmallestFontSizePt;
 var gMinVX;
 var gMaxVX;
-var kMaxVX = sxi(28);
+// don't let the pucks step too fast vs. frame rate.
+var kMaxVX = sxi(18);
 var gPillTextY;
 var gPucksTextY;
 function ii(v) {
