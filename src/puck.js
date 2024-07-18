@@ -19,7 +19,7 @@ function Puck(props) {
         self.midX = self.x + self.width/2;
         self.midY = self.y + self.height/2;
         // tweak max vx a tad to avoid everything being too visually lock-step.
-        self.vx = Sign(props.vx) * Math.min(gR.RandomCentered(gMaxVX, 1), Math.abs(props.vx));
+        self.vx = kMaxVX;//Sign(props.vx) * Math.min(gR.RandomCentered(gMaxVX, 1), Math.abs(props.vx));
         self.vy = AvoidZero(props.vy, 0.1);
         self.alive = true;
         self.startTime = gGameTime;
@@ -42,10 +42,9 @@ function Puck(props) {
         var wx = self.x - dw/2;
         var wy = self.y - dh/2;
 
-        // make things coming at you be slightly easier to see.
-        var avxbase = 0.7;
-        var avxt = 1-avxbase;
-        var avx = avxbase;
+        // fade things that aren't close and coming toward you.
+        var avx = 0.8;
+        var avxt = 1-avx;
         var mid = gw(0.5);
         var range = gw(0.5) - gXInset;
         var t = 0;
