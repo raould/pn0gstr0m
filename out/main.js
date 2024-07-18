@@ -12,10 +12,10 @@ function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t =
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-/* Copyright (C) 2011 raould@gmail.com License: GPLv2 / GNU General
- * Public License, version 2
- * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
- */
+M; /* Copyright (C) 2011 raould@gmail.com License: GPLv2 / GNU General
+   * Public License, version 2
+   * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+   */
 
 // Welcome to The Land of Global Varibles, And Inconsistent Naming.
 //
@@ -481,11 +481,11 @@ function Cxdo(fn) {
   fn();
   gCx.restore();
 }
-function SaveScreenshot(state) {
+function SaveEndScreenshot(state) {
   Cxdo(function () {
     Assert(exists(state.Draw));
     state.Draw({
-      isScreenshot: true
+      isEndScreenshot: true
     });
     gCx2.clearRect(0, 0, gWidth, gHeight);
     gCx2.drawImage(gCanvas, 0, 0);
@@ -1219,7 +1219,7 @@ function GameState(props) {
     } else {
       var nextState = self.CheckLevelOver();
       if (exists(nextState)) {
-        SaveScreenshot(self);
+        SaveEndScreenshot(self);
       }
       return nextState;
     }
@@ -1587,7 +1587,7 @@ function GameState(props) {
       self.DrawScoreHeader();
       self.level.Draw({
         alpha: self.Alpha(),
-        isScreenshot: !!(props != null && props.isScreenshot)
+        isEndScreenshot: !!(props != null && props.isEndScreenshot)
       });
 
       // match: pucks revEach so splits show up on top, z order.
@@ -1615,7 +1615,7 @@ function GameState(props) {
       self.DrawLevelTitle();
       self.DrawAnimations(); // late/high z order so the animations can clear the screen if desired.
       self.DrawCRTOutline();
-      if (!(props != null && props.isScreenshot)) {
+      if (!(props != null && props.isEndScreenshot)) {
         var _self$theMenu6;
         (_self$theMenu6 = self.theMenu) == null || _self$theMenu6.Draw();
         self.DrawPauseButton();
@@ -1778,11 +1778,11 @@ function GameOverState() {
   self.Draw = function () {
     Cxdo(function () {
       ClearScreen();
-      gCx.globalAlpha = 0.5;
+      gCx.globalAlpha = 0.8;
       gCx.drawImage(gCanvas2, 0, 0);
       gCx.globalAlpha = 1;
       gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
-      DrawText("G A M E   O V E R", "center", gw(0.5), gh(0.5), gBigFontSizePt);
+      DrawText("GAME OVER", "center", gw(0.5), gh(0.5), gBigFontSizePt);
       if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
         DrawText("CONTINUE", "center", gw(0.5), gh(0.7), gRegularFontSizePt);

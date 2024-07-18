@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 raould@gmail.com License: GPLv2 / GNU General
+M/* Copyright (C) 2011 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -418,10 +418,10 @@ function Cxdo(fn) { // get it?
     gCx.restore();
 }
 
-function SaveScreenshot(state) {
+function SaveEndScreenshot(state) {
     Cxdo(() => {
         Assert(exists(state.Draw));
-        state.Draw({ isScreenshot: true });
+        state.Draw({ isEndScreenshot: true });
         gCx2.clearRect(0, 0, gWidth, gHeight);
         gCx2.drawImage(gCanvas, 0, 0);
     });
@@ -1198,7 +1198,7 @@ function DrawBounds( alpha=0.5 ) {
         else {
             var nextState = self.CheckLevelOver();
             if (exists(nextState)) {
-                SaveScreenshot(self);
+                SaveEndScreenshot(self);
             }
             return nextState;
         }
@@ -1588,7 +1588,7 @@ function DrawBounds( alpha=0.5 ) {
 
             self.DrawMidLine();
             self.DrawScoreHeader();
-            self.level.Draw({ alpha: self.Alpha(), isScreenshot: !!props?.isScreenshot });
+            self.level.Draw({ alpha: self.Alpha(), isEndScreenshot: !!props?.isEndScreenshot });
 
             // match: pucks revEach so splits show up on top, z order.
             // pucks going away from (single) player.
@@ -1619,7 +1619,7 @@ function DrawBounds( alpha=0.5 ) {
             self.DrawLevelTitle();
             self.DrawAnimations(); // late/high z order so the animations can clear the screen if desired.
             self.DrawCRTOutline();
-            if (!props?.isScreenshot) {
+            if (!props?.isEndScreenshot) {
                 self.theMenu?.Draw();
                 self.DrawPauseButton();
             }
@@ -1850,12 +1850,12 @@ function DrawBounds( alpha=0.5 ) {
     self.Draw = function() {
         Cxdo(() => {
             ClearScreen();
-            gCx.globalAlpha = 0.5;
+            gCx.globalAlpha = 0.8;
             gCx.drawImage(gCanvas2, 0, 0);
             gCx.globalAlpha = 1;
             gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
             DrawText(
-                "G A M E   O V E R",
+                "GAME OVER",
                 "center",
                 gw(0.5),
                 gh(0.5),

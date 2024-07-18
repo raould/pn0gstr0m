@@ -71,11 +71,26 @@ function Level(props) {
   };
   self.Draw = function (_ref) {
     var alpha = _ref.alpha,
-      isScreenshot = _ref.isScreenshot;
-    self.DrawPills(alpha);
-
+      isEndScreenshot = _ref.isEndScreenshot;
+    if (!isEndScreenshot) {
+      self.DrawPills(alpha);
+      self.DrawNoMorePucks();
+      // todo: you'd maybe kind of expect lots of
+      // other things like paddles and pucks to be
+      // drawn by the level too, huh? ...
+    }
+  };
+  self.DrawPills = function (alpha) {
+    if (exists(self.p1Pill)) {
+      self.DrawPill(alpha, self.p1Pill, gP1Side, RandomMagenta(alpha));
+    }
+    if (exists(self.p2Pill)) {
+      self.DrawPill(alpha, self.p2Pill, OtherSide(gP1Side), RandomGrey(alpha));
+    }
+  };
+  self.DrawNoMorePucks = function () {
     // todo: not actually sure how best to represent this to players in the ui. :-\
-    if (self.IsSuddenDeath() && !isScreenshot) {
+    if (self.IsSuddenDeath()) {
       Cxdo(function () {
         gCx.fillStyle = backgroundColorStr;
         var cx = gw(0.5);
@@ -86,14 +101,6 @@ function Level(props) {
         gCx.fillStyle = RandomGreen(0.8);
         DrawText("NO NEW PUCKS", "center", cx, cy, gReducedFontSizePt);
       });
-    }
-  };
-  self.DrawPills = function (alpha) {
-    if (exists(self.p1Pill)) {
-      self.DrawPill(alpha, self.p1Pill, gP1Side, RandomMagenta(alpha));
-    }
-    if (exists(self.p2Pill)) {
-      self.DrawPill(alpha, self.p2Pill, OtherSide(gP1Side), RandomGrey(alpha));
     }
   };
   self.DrawPill = function (alpha, pill, side, color) {

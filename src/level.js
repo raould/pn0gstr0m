@@ -79,11 +79,28 @@ const kEnglishStep = 0.002;
         return exists(self.puckCount) && self.puckCount <= 0;
     };
 
-    self.Draw = function({ alpha, isScreenshot }) {
-        self.DrawPills( alpha );
+    self.Draw = function({ alpha, isEndScreenshot }) {
+        if (!isEndScreenshot) {
+            self.DrawPills( alpha );
+            self.DrawNoMorePucks();
+            // todo: you'd maybe kind of expect lots of
+            // other things like paddles and pucks to be
+            // drawn by the level too, huh? ...
+        }
+    };
 
+    self.DrawPills = function( alpha ) {
+        if (exists(self.p1Pill)) {
+            self.DrawPill(alpha, self.p1Pill, gP1Side, RandomMagenta(alpha));
+        }
+        if (exists(self.p2Pill)) {
+            self.DrawPill(alpha, self.p2Pill, OtherSide(gP1Side), RandomGrey(alpha));
+        }
+    };
+
+    self.DrawNoMorePucks = function() {
         // todo: not actually sure how best to represent this to players in the ui. :-\
-        if (self.IsSuddenDeath() && !isScreenshot) {
+        if (self.IsSuddenDeath()) {
             Cxdo(() => {
                 gCx.fillStyle = backgroundColorStr;
                 var cx = gw(0.5);
@@ -97,15 +114,6 @@ const kEnglishStep = 0.002;
                          cx, cy,
                          gReducedFontSizePt);
             });
-        }
-    };
-
-    self.DrawPills = function( alpha ) {
-        if (exists(self.p1Pill)) {
-            self.DrawPill(alpha, self.p1Pill, gP1Side, RandomMagenta(alpha));
-        }
-        if (exists(self.p2Pill)) {
-            self.DrawPill(alpha, self.p2Pill, OtherSide(gP1Side), RandomGrey(alpha));
         }
     };
 
