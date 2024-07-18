@@ -58,12 +58,8 @@ function Barrier(props /*x, y, height, width, hp, side*/) {
       gCx.fill();
     });
   };
-  self.CollisionTest = function (puck) {
-    var hit = puck.CollisionTest(self, ForSide(self.side, -1, 1));
-    if (hit) {
-      self.hp--;
-    }
-    return hit;
+  self.OnPuckHit = function () {
+    self.hp--;
   };
   self.Init();
 }

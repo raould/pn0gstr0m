@@ -217,7 +217,6 @@ function Puck(props) {
         var t01 = T01(Math.abs(self.x - gh(0.5)), gh(0.5));
         var ty = Math.pow(t01, 3);
         oy = 1 + ty * 1;
-        //console.log(F(t01), F(ty), F(oy), F(mody*oy));
       }
       if (self.midY < paddle.GetMidY()) {
         self.vy -= mody * oy;
@@ -247,8 +246,9 @@ function Puck(props) {
   self.BarriersCollision = function (barriers) {
     if (self.alive && !self.isLocked && exists(barriers)) {
       barriers.forEach(function (barrier) {
-        var hit = barrier.CollisionTest(self);
+        var hit = self.CollisionTest(barrier, ForSide(barrier.side, -1, 1));
         if (hit) {
+          barrier.OnPuckHit();
           PlayBlip();
           self.BounceCollidableX(barrier);
         }
@@ -258,8 +258,9 @@ function Puck(props) {
   self.OptionsCollision = function (options) {
     if (self.alive && !self.isLocked && exists(options)) {
       options.forEach(function (option) {
-        var hit = option.CollisionTest(self, ForSide(gP1Side, -1, 1));
+        var hit = self.CollisionTest(option, ForSide(gP1Side, -1, 1));
         if (hit) {
+          option.OnPuckHit();
           PlayBlip();
           self.BounceCollidableX(option);
         }
@@ -268,8 +269,9 @@ function Puck(props) {
   };
   self.NeoCollision = function (neo) {
     if (self.alive && !self.isLocked && exists(neo)) {
-      var hit = neo.CollisionTest(self);
+      var hit = puck.CollisionTest(neo);
       if (hit) {
+        neo.OnPuckHit();
         PlayBlip();
         self.isLocked = true;
       }

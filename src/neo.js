@@ -102,12 +102,8 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
         }
     };
 
-    self.CollisionTest = function( puck ) {
-        var hit = puck.CollisionTest( self );
-        if (hit) {
-            self.locked.push( puck );
-        }
-        return hit;
+    self.OnPuckHit = function() {
+        self.locked.push( puck );
     };
 
     self.Init();
