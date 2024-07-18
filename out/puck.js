@@ -23,9 +23,8 @@ function Puck(props) {
     self.vx = kMaxVX; //Sign(props.vx) * Math.min(gR.RandomCentered(gMaxVX, 1), Math.abs(props.vx));
     self.vy = AvoidZero(props.vy, 0.1);
     self.alive = true;
-    self.startTime = gGameTime;
+    self.startTime = !!props.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
     self.splitColor = aub(props.forced, false) ? "yellow" : "white";
-    self.ur = aub(props.ur, true);
     self.isLocked = false;
   };
   self.Draw = function (alpha) {
@@ -60,7 +59,7 @@ function Puck(props) {
 
     // young pucks (from paddle splits or powerups) render another color briefly.
     var dt = GameTime01(1000, self.startTime);
-    var regularStyle = !self.ur && gR.RandomFloat() > dt ? self.splitColor : RandomCyan();
+    var regularStyle = gR.RandomFloat() > dt ? self.splitColor : RandomCyan();
     var lostStyle = RandomYellow(0.7);
     var isLost = self.x + self.width < gXInset || self.x > gw(1) - gXInset;
     var style = isLost ? lostStyle : regularStyle;
@@ -76,6 +75,12 @@ function Puck(props) {
       gCx.rect(wx, wy, width, height);
       gCx.fillStyle = style;
       gCx.fill();
+      if (self.ur) {
+        // todo: do not commit, just for debugging right now.
+        gCx.strokeStyle = "red";
+        gCx.strokeWidth = 4;
+        gCx.strokeRect(self.x - 4, self.y - 4, self.width + 8, self.height + 8);
+      }
       if (gDebug) {
         gCx.beginPath();
         var oy = self.vx > 0 ? -1 : self.height + 1;
@@ -98,6 +103,7 @@ function Puck(props) {
       self.alive = !(xout || yout);
       self.midX = self.x + self.width / 2;
       self.midY = self.y + self.height / 2;
+      // note: no clipping or adjusting done here.
     }
   };
   self.SplitPuck = function (_ref) {
@@ -179,7 +185,9 @@ function Puck(props) {
         // check if we seemed to have passed over xywh.
         // not going to require prevx from xywh so just use x
         // on the assumption they don't move at all, or not too fast anyway.
-        var dxOverlaps = Sign(self.prevX - xywh.x) != Sign(self.x - xywh.x);
+        var preSign = Sign(self.prevX - xywh.x);
+        var postSign = Sign(self.x - xywh.x);
+        var dxOverlaps = preSign != postSign;
         return yOverlaps && (xOverlaps || dxOverlaps);
       }
     }
@@ -193,35 +201,36 @@ function Puck(props) {
     }
     self.vx *= -1;
   };
+  self.ApplyEnglish = function (paddle, englishFactor) {
+    // smallest bit of vertical english.
+    // too much means you never get to 'streaming'.
+    // too little means you maybe crash the machine :-)
+    // note that englishFactor increases as level ends.
+    var dy = self.midY - paddle.GetMidY();
+    var mody = gR.RandomFloat() * 0.02 * Math.abs(dy) * englishFactor;
+
+    // try to avoid getting boringly stuck at top or bottom.
+    // but don't want to utterly lose 'streaming'.
+    var oy = 1;
+    if (gR.RandomBool(0.1)) {
+      var t01 = T01(Math.abs(self.x - gh(0.5)), gh(0.5));
+      var ty = Math.pow(t01, 3);
+      oy = 1 + ty * 1;
+    }
+    if (self.midY < paddle.GetMidY()) {
+      self.vy -= mody * oy;
+    } else if (self.midY > paddle.GetMidY()) {
+      self.vy += mody * oy;
+    }
+  };
   self.PaddleCollision = function (paddle, englishFactor, isSuddenDeath) {
     var newPuck = undefined;
     var hit = self.CollisionTest(paddle, paddle.blockvx);
     if (hit) {
       paddle.OnPuckHit();
-
-      // todo: bounce Y.
-      self.BounceCollidableX(paddle);
-
-      // smallest bit of vertical english.
-      // too much means you never get to 'streaming'.
-      // too little means you maybe crash the machine :-)
-      // note that englishFactor increases as level ends.
-      var dy = self.midY - paddle.GetMidY();
-      var mody = gR.RandomFloat() * 0.02 * Math.abs(dy) * englishFactor;
-
-      // try to avoid getting boringly stuck at top or bottom.
-      // but don't want to utterly lose 'streaming'.
-      var oy = 1;
-      if (gR.RandomBool(0.1)) {
-        var t01 = T01(Math.abs(self.x - gh(0.5)), gh(0.5));
-        var ty = Math.pow(t01, 3);
-        oy = 1 + ty * 1;
-      }
-      if (self.midY < paddle.GetMidY()) {
-        self.vy -= mody * oy;
-      } else if (self.midY > paddle.GetMidY()) {
-        self.vy += mody * oy;
-      }
+      self.BounceCollidableX(paddle); // todo: bounceY too?
+      self.ApplyEnglish(paddle, englishFactor);
+      // explicitly not calling PlayBlip(), gets too noisy.
       if (paddle.isSplitter) {
         newPuck = self.SplitPuck({
           isSuddenDeath: isSuddenDeath
@@ -272,6 +281,7 @@ function Puck(props) {
       if (hit) {
         neo.OnPuckHit();
         PlayBlip();
+        // no bounce, get stuck instead.
         self.isLocked = true;
       }
     }
