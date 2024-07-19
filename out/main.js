@@ -118,11 +118,10 @@ var gRegularFontSizePt;
 var gReducedFontSizePt;
 var gSmallFontSizePt;
 var gSmallestFontSizePt;
-
-// don't let the pucks step too fast vs. frame rate.
-var kMaxVX = sxi(20);
 var gPillTextY;
-var gPucksTextY;
+
+// try to avoid huge puck jumps per frame.
+var kMaxVX = sxi(19);
 function ii(v) {
   return Math.floor(0.5 + v);
 }
@@ -182,7 +181,6 @@ function RecalculateConstants() {
   gSmallFontSizePt = gSmallFontSize + "pt";
   gSmallestFontSizePt = gSmallestFontSize + "pt";
   gPillTextY = gh(0.9);
-  gPucksTextY = gh(0.85);
 }
 
 // anything here below that ends up depending on
