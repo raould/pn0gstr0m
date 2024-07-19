@@ -147,9 +147,9 @@ function Puck(props) {
             AddSparks({x:self.x, y:self.y, vx:self.vx, vy:self.vy});
         }
 
-        // speed up all pucks over time to force the level to end some day.
+        // try to hurry up when the level has no more pucks.
         const nvx = MinSigned(
-            self.vx * (isSuddenDeath ? 1.1 : 1.01),
+            self.vx * (isSuddenDeath ? 1.1 : 1),
             maxVX
         );
         console.log("puck vx updated", F(maxVX), F(self.vx), "->", F(nvx));

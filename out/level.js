@@ -5,7 +5,7 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-var kEnglishStep = 0.002;
+var kEnglishStep = 0.003;
 
 /*class*/
 function Level(props) {

@@ -196,8 +196,8 @@ var kBarriersArrayInitialSize = 4;
 var kOptionsArrayInitialSize = 6;
 
 // prevent pills from showing up too often, or too early.
-var kPillSpawnCooldown = 1000 * (gDebug ? 3 : 20);
-var kSpawnPlayerPillFactor = gDebug ? 0.01 : 0.002;
+var kPillSpawnCooldown = 1000 * 20;
+var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
 var gNextID = 0;
@@ -1175,7 +1175,7 @@ function GameState(props) {
     self.pillP2SpawnCountdown -= dt;
     var kDiffMax = 2;
     if (isU(self.level.p1Pill) && self.pillP1SpawnCountdown <= 0 && self.unfairPillCount < kDiffMax) {
-      self.level.p1Pill = self.MaybeSpawnPill(dt, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups);
+      self.level.p1Pill = self.MaybeSpawnPill(self.pillP1SpawnCooldown < kPillSpawnCooldown * 2, dt, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups);
       if (exists(self.level.p1Pill)) {
         self.pillP1SpawnCountdown = kPillSpawnCooldown;
         self.unfairPillCount++;
@@ -1192,7 +1192,9 @@ function GameState(props) {
       }
     }
     if (isU(self.level.p2Pill) && self.pillP2SpawnCountdown <= 0 && self.isCpuPillAllowed && self.unfairPillCount > -kDiffMax) {
-      self.level.p2Pill = self.MaybeSpawnPill(dt, self.level.p2Pill, kSpawnPlayerPillFactor * 0.7, self.level.p2Powerups);
+      // bias powerup creation toward the single player.
+      var factor = kSpawnPlayerPillFactor * (gSinglePlayer ? 0.7 : 1);
+      self.level.p2Pill = self.MaybeSpawnPill(self.pillP2SpawnCooldown < kPillSpawnCooldown * 2, dt, self.level.p2Pill, factor, self.level.p2Powerups);
       if (exists(self.level.p2Pill)) {
         self.pillP2SpawnCountdown = kPillSpawnCooldown;
         self.unfairPillCount--;
@@ -1209,17 +1211,13 @@ function GameState(props) {
     }
     Assert(Math.abs(self.unfairPillCount) <= kDiffMax, "unfairPillCount");
   };
-  self.MaybeSpawnPill = function (dt, prev, spawnFactor, maker) {
+  self.MaybeSpawnPill = function (must, dt, prev, spawnFactor, maker) {
     var can_paused = !self.paused;
     var can_attract = !self.isAttract;
-    if (can_paused && can_attract) {
-      var must = self.pillSpawnCountdown < kPillSpawnCooldown * 2;
-      var can_factor = gR.RandomBool(gDebug ? 0.1 : spawnFactor);
-      var can_empty = isU(prev);
-      var can = can_factor && can_empty;
-      if (must || can) {
-        return maker.MakeRandomPill(self);
-      }
+    var can_factor = gR.RandomBool(spawnFactor);
+    var can_empty = isU(prev);
+    if (must || can_paused && can_attract && can_factor && can_empty) {
+      return maker.MakeRandomPill(self);
     }
     return undefined;
   };
@@ -1638,14 +1636,14 @@ function GameState(props) {
     gP2Target.DrawDebug();
     Cxdo(function () {
       gCx.fillStyle = "magenta";
-      DrawText("".concat(self.unfairPillCount, " ").concat(self.pillSpawnCountdown), "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
+      DrawText("".concat(self.unfairPillCount, " ").concat(self.pillP1SpawnCountdown, " ").concat(self.pillP2SpawnCountdown), "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
       gCx.fillStyle = RandomGrey();
       var mvx = gPucks.A.reduce(function (m, p) {
         return Math.max(m, Math.abs(p.vx));
       }, 0);
       DrawText(F(mvx.toString()), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
       gCx.fillStyle = "red";
-      DrawText(F(self.level.maxVX.toString()), "left", gw(0.1), gh(0.1) + gSmallFontSize, gSmallFontSizePt);
+      DrawText(F(self.maxVX.toString()), "left", gw(0.1), gh(0.1) + gSmallFontSize, gSmallFontSizePt);
       gCx.fillStyle = RandomBlue(0.5);
       DrawText(gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt);
       DrawText(gFrameCount.toString(), "right", gw(0.9), gh(0.9), gSmallFontSizePt);
