@@ -132,7 +132,7 @@ const kEnglishStep = 0.002;
     };
 
     self.DrawNotice = function() {
-        if (self.index > 1) {
+        if (self.index > 1) { // only show on level 2 and higher.
             const max = kAlphaFadeInMsec * 5; // match: MakeGameStartAnimation().
             const dt = gGameTime - self.startTime;
             if (dt < max) {

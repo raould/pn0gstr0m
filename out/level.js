@@ -118,6 +118,7 @@ function Level(props) {
   };
   self.DrawNotice = function () {
     if (self.index > 1) {
+      // only show on level 2 and higher.
       var max = kAlphaFadeInMsec * 5; // match: MakeGameStartAnimation().
       var dt = gGameTime - self.startTime;
       if (dt < max) {
