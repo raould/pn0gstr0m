@@ -173,7 +173,7 @@ function MakeForcePushProps(maker) {
                     p.vx *= -1;
                 }
                 else {
-                    p.vx = MinSigned(p.vx*1.4, gMaxVX);
+                    p.vx = MinSigned(p.vx*1.4, gameState.maxVX);
                 }
             });
             gameState.AddAnimation(MakeWaveAnimation({

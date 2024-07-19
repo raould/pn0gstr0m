@@ -4,7 +4,7 @@
  */
 
 function Puck(props) {
-    /* props = { x, y, vx, vy, ur=true, forced=false } */
+    /* props = { x, y, vx, vy, ur=true, forced=false, maxVX } */
 
     var self = this;
 
@@ -19,7 +19,7 @@ function Puck(props) {
         self.midX = self.x + self.width/2;
         self.midY = self.y + self.height/2;
         // tweak max vx a tad to avoid everything being too visually lock-step.
-        self.vx = kMaxVX;//Sign(props.vx) * Math.min(gR.RandomCentered(gMaxVX, 1), Math.abs(props.vx));
+        self.vx = Sign(props.vx) * Math.min(gR.RandomCentered(props.maxVX, 1), Math.abs(props.vx));
         self.vy = AvoidZero(props.vy, 0.1);
         self.alive = true;
         self.startTime = !!props.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
@@ -80,12 +80,6 @@ function Puck(props) {
             gCx.fillStyle = style;
             gCx.fill();
 
-            if (self.ur) { // todo: do not commit, just for debugging right now.
-                gCx.strokeStyle = "red";
-                gCx.strokeWidth = 4;
-                gCx.strokeRect(self.x-4, self.y-4, self.width+8, self.height+8);
-            }
-
             if (gDebug) {
                 gCx.beginPath();
                 var oy = self.vx > 0 ? -1 : self.height+1;
@@ -113,10 +107,10 @@ function Puck(props) {
         }
     };
 
-    self.SplitPuck = function({forced=false, isSuddenDeath=false}) {
+    self.SplitPuck = function({ forced=false, isSuddenDeath=false, maxVX }) {
         let np = undefined;
         const count = gPucks.A.length;
-        const dosplit = forced || (count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && gR.RandomBool(1.05-Clip01(Math.abs(self.vx/gMaxVX)))));
+        const dosplit = forced || (count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && gR.RandomBool(1.05-Clip01(Math.abs(self.vx/maxVX)))));
 
         // sometimes force ejection to avoid too many pucks.
         // if there are already too many pucks to allow for a split-spawned-puck,
@@ -126,7 +120,7 @@ function Puck(props) {
         const countFactor = Clip01(count/kEjectSpeedCountThreshold);
         const ejectCountFactor = Math.pow(countFactor, 3);
         const doejectCount = (count > kEjectCountThreshold) && (r < 0.1);
-        const doejectSpeed = (self.vx > gMaxVX*0.9) && (r < ejectCountFactor);
+        const doejectSpeed = (self.vx > maxVX*0.9) && (r < ejectCountFactor);
         const doeject = doejectCount || doejectSpeed;
 
         if (!forced && !dosplit) { // i cry here.
@@ -140,11 +134,11 @@ function Puck(props) {
             // but i no longer have any idea what/why they do what they do.
             const slowCountFactor = Math.pow(countFactor, 1.5);
             // keep a few of the fast ones around?
-            const slow = !doejectSpeed && (self.vx > gMaxVX*0.7) && (gR.RandomFloat() < slowCountFactor);
+            const slow = !doejectSpeed && (self.vx > maxVX*0.7) && (gR.RandomFloat() < slowCountFactor);
             const nvx = self.vx * (slow ? gR.RandomRange(0.8, 0.9) : gR.RandomRange(1.01, 1.1));
             let nvy = self.vy;
             nvy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
-            np = new Puck({ x: self.x, y: self.y, vx: nvx, vy: nvy, ur: false, forced });
+            np = new Puck({ x: self.x, y: self.y, vx: nvx, vy: nvy, ur: false, forced, maxVX });
             PlayExplosion();
 
             // fyi because SplitPuck is called during MovePucks,
@@ -224,7 +218,7 @@ function Puck(props) {
         }
     };
 
-    self.PaddleCollision = function( paddle, englishFactor, isSuddenDeath ) {
+    self.PaddleCollision = function( paddle, englishFactor, isSuddenDeath, maxVX ) {
         var newPuck = undefined;
         var hit = self.CollisionTest( paddle, paddle.blockvx );
         if ( hit ) {
@@ -233,17 +227,17 @@ function Puck(props) {
             self.ApplyEnglish( paddle, englishFactor );
             // explicitly not calling PlayBlip(), gets too noisy.
             if (paddle.isSplitter) {
-                newPuck = self.SplitPuck({ isSuddenDeath });
+                newPuck = self.SplitPuck({ isSuddenDeath, maxVX });
             }
         }
         return newPuck;
     };
 
-    self.AllPaddlesCollision = function(paddles, englishFactor, isSuddenDeath) {
+    self.AllPaddlesCollision = function(paddles, englishFactor, isSuddenDeath, maxVX ) {
         var spawned = [];
         if (self.alive && !self.isLocked) {
             paddles.forEach( paddle => {
-                var np = self.PaddleCollision(paddle, englishFactor, isSuddenDeath);
+                var np = self.PaddleCollision(paddle, englishFactor, isSuddenDeath, maxVX);
                 if( exists(np) ) {
                     spawned.push( np );
                 }
@@ -290,10 +284,10 @@ function Puck(props) {
         }
     };
 
-    self.WallsCollision = function() {
+    self.WallsCollision = function( maxVX ) {
         if (self.alive && !self.isLocked) {
             self.WallsBounce();
-            self.WallsRepel();
+            self.WallsRepel( maxVX );
         }
     };
 
@@ -313,9 +307,12 @@ function Puck(props) {
         }
     };
 
-    self.WallsRepel = function() {
+    self.WallsRepel = function( msxVX ) {
         var zone = gh(0.1);
-        if (Math.abs(self.vx) > gMaxVX * 0.1) {
+        // if the puck is not moving slowly, repel vertically away from walls
+        // in order to try to prevent the user from just leaving their paddle
+        // at the wall indefinitely and not moving yet not losing pucks.
+        if (Math.abs(self.vx) > maxVX * 0.5) {
             if (self.y - gYInset < zone && self.vy < 0) {
                 self.vy -= 0.005;
             }

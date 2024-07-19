@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gShowToasts = gDebug;
 
 var kCanvasName = "canvas"; // match: index.html
@@ -106,10 +106,12 @@ var gRegularFontSizePt;
 var gReducedFontSizePt;
 var gSmallFontSizePt;
 var gSmallestFontSizePt;
+
+// don't let the pucks be unplayably slow.
 var gMinVX;
-var gMaxVX;
 // don't let the pucks step too fast vs. frame rate.
-var kMaxVX = sxi(10);
+var kMaxVX = sxi(20);
+
 var gPillTextY;
 var gPucksTextY;
 function ii(v) { return Math.floor(0.5 + v); }
@@ -150,8 +152,7 @@ function RecalculateConstants() {
     gReducedFontSizePt = gReducedFontSize + "pt";
     gSmallFontSizePt = gSmallFontSize + "pt";
     gSmallestFontSizePt = gSmallestFontSize + "pt";
-    gMinVX = Math.max(0.5, sxi(1));
-    gMaxVX = sxi(14);
+    gMinVX = sxi(5);
     gPillTextY = gh(0.9);
     gPucksTextY = gh(0.85);
 }
@@ -962,6 +963,7 @@ function DrawBounds( alpha=0.5 ) {
         self.animations = {};
         self.quit = false;
         self.stepping = false;
+        self.maxVX = sxi(10); // level will update this.
 
         if (!self.isAttract) {
             self.theMenu = self.MakeMenu();
@@ -973,11 +975,11 @@ function DrawBounds( alpha=0.5 ) {
         var p1label = self.isAttract ? undefined : "P1";
         var p2label = self.isAttract ? undefined : (gSinglePlayer ? "GPT" : "P2");
         gPucks.A.push( self.CreateStartingPuck() );
-        if (gDebug && !self.isAttract) {
-            ForCount(10, () => {
-                gPucks.A.push( self.CreateRandomPuck() );
-            });
-        }
+        // if (gDebug && !self.isAttract) {
+        //     ForCount(10, () => {
+        //         gPucks.A.push( self.CreateRandomPuck() );
+        //     });
+        // }
         // I think the ensuing code indicates the Paddle should perhaps
         // at least be split up into human & ai variants. :-\ so confused.
         ForSide(gP1Side, 
@@ -1098,7 +1100,8 @@ function DrawBounds( alpha=0.5 ) {
     self.Step = function( dt ) {
         self.theMenu?.Step(); // fyi this doesn't process menu inputs, that is below.
         self.level.Step( dt );
-        gMaxVX = self.level.maxVX;
+        self.maxVX = self.level.maxVX; // todo: code smell global.
+        logOnDelta("maxVX", self.maxVX, 1);
         self.MaybeSpawnPills( dt );
 
         self.ProcessAllInput();
@@ -1246,10 +1249,11 @@ function DrawBounds( alpha=0.5 ) {
                            y: (self.isAttract ?
                                gh(gR.RandomRange(0.4, 0.6)) :
                                gh(0.3)),
-                           vx: sign * gMaxVX/5,
+                           vx: sign * self.maxVX/5,
                            vy: (self.isAttract ?
                                 gR.RandomCentered(0, 2, 1) :
                                 0.3),
+                           maxVX: self.maxVX,
                            ur: true });
         return p;
     };
@@ -1257,8 +1261,9 @@ function DrawBounds( alpha=0.5 ) {
     self.CreateRandomPuck = function() {
         var p = new Puck({ x: gw(gR.RandomRange(1/8, 7/8)),
                            y: gh(gR.RandomRange(1/8, 7/8)),
-                           vx: gR.RandomRange(gMaxVX*0.3, gMaxVX*0.5),
+                           vx: gR.RandomRange(self.maxVX*0.3, self.maxVX*0.5),
                            vy: gR.RandomCentered(1, 0.5),
+                           maxVX: self.maxVX,
                            ur: true });
         return p;
     };
@@ -1374,7 +1379,8 @@ function DrawBounds( alpha=0.5 ) {
                 var splits = p.AllPaddlesCollision(
                     [ self.paddleP1, self.paddleP2 ],
                     self.level.englishFactor,
-                    self.level.IsSuddenDeath
+                    self.level.IsSuddenDeath,
+                    self.maxVX
                 );
                 if (self.level.spawning) {
                     Assert((splits?.length ?? 0) <= 1, splits?.length);
@@ -1384,7 +1390,7 @@ function DrawBounds( alpha=0.5 ) {
                         gPucks.B.pushAll(splits);
                     }
                 }
-                p.WallsCollision();
+                p.WallsCollision( self.maxVX );
                 p.BarriersCollision(self.paddleP1.barriers.A);
                 p.BarriersCollision(self.paddleP2.barriers.A);
                 p.OptionsCollision(self.paddleP1.options.A);

@@ -63,7 +63,7 @@ const kEnglishStep = 0.002;
             Assert(exists(self.speedupFactor));
             Assert(exists(self.englishFactor));
             self.speedupTimeout = Math.max(0, self.speedupTimeout-dt);
-            if (self.speedupTimeout <= 0) {
+            if (self.speedupTimeout === 0) {
                 self.maxVX = MinSigned(
                     self.maxVX + self.speedupFactor * dt / kTimeStep,
                     kMaxVX

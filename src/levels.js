@@ -62,7 +62,7 @@ function MakeLevel(gameState, level) {
 function MakePuckCount(level) {
     Assert(level > 0, "level is 1-based");
     // note: this is just a big swag.
-    return 500 + (level-1) * 300;
+    return 10;//500 + (level-1) * 300;
 }
 
 function MakePills(level) {

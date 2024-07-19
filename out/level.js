@@ -58,7 +58,7 @@ function Level(props) {
       Assert(exists(self.speedupFactor));
       Assert(exists(self.englishFactor));
       self.speedupTimeout = Math.max(0, self.speedupTimeout - dt);
-      if (self.speedupTimeout <= 0) {
+      if (self.speedupTimeout === 0) {
         self.maxVX = MinSigned(self.maxVX + self.speedupFactor * dt / kTimeStep, kMaxVX);
         self.englishFactor += dt / kTimeStep * kEnglishStep;
         logOnDelta("maxVX", F(self.maxVX), 1);
