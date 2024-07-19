@@ -119,8 +119,6 @@ var gReducedFontSizePt;
 var gSmallFontSizePt;
 var gSmallestFontSizePt;
 
-// don't let the pucks be unplayably slow.
-var gMinVX;
 // don't let the pucks step too fast vs. frame rate.
 var kMaxVX = sxi(20);
 var gPillTextY;
@@ -183,7 +181,6 @@ function RecalculateConstants() {
   gReducedFontSizePt = gReducedFontSize + "pt";
   gSmallFontSizePt = gSmallFontSize + "pt";
   gSmallestFontSizePt = gSmallestFontSize + "pt";
-  gMinVX = sxi(5);
   gPillTextY = gh(0.9);
   gPucksTextY = gh(0.85);
 }
@@ -974,6 +971,8 @@ function GetReadyState() {
 function GameState(props) {
   var self = this;
   self.Init = function () {
+    // the order of everything here matters (everything is fragile).
+
     // todo: i wish i knew a good way to pull this out, it
     // is making the code in this class kind of a headache.
     // also i don't like if(!self.isAttract) style due to "!"
@@ -994,8 +993,6 @@ function GameState(props) {
     self.animations = {};
     self.quit = false;
     self.stepping = false;
-    self.maxVX = sxi(10); // level will update this.
-
     if (!self.isAttract) {
       self.theMenu = self.MakeMenu();
     }
@@ -1011,14 +1008,6 @@ function GameState(props) {
     };
     var p1label = self.isAttract ? undefined : "P1";
     var p2label = self.isAttract ? undefined : gSinglePlayer ? "GPT" : "P2";
-    gPucks.A.push(self.CreateStartingPuck());
-    // if (gDebug && !self.isAttract) {
-    //     ForCount(10, () => {
-    //         gPucks.A.push( self.CreateRandomPuck() );
-    //     });
-    // }
-    // I think the ensuing code indicates the Paddle should perhaps
-    // at least be split up into human & ai variants. :-\ so confused.
     ForSide(gP1Side, function () {
       // p1 is always a human player.
       // p2 is either cpu or human.
@@ -1082,6 +1071,15 @@ function GameState(props) {
         target: gP2Target
       });
     })();
+    self.MakeLevel();
+    gPucks.A.push(self.CreateStartingPuck());
+    // if (gDebug && !self.isAttract) {
+    //     ForCount(10, () => {
+    //         gPucks.A.push( self.CreateRandomPuck() );
+    //     });
+    // }
+    // I think the ensuing code indicates the Paddle should perhaps
+    // at least be split up into human & ai variants. :-\ so confused.
 
     // this countdown is a block on both player & cpu ill spawning.
     // first wait is longer before the very first pill.
@@ -1096,7 +1094,6 @@ function GameState(props) {
       self.AddAnimation(MakeGameStartAnimation());
       PlayStart();
     }
-    self.MakeLevel();
   };
   self.MakeMenu = function () {
     return new MenuBehavior(_objectSpread({
@@ -1111,11 +1108,15 @@ function GameState(props) {
     })));
   };
   self.MakeLevel = function () {
+    Assert(exists(self.paddleP1));
+    Assert(exists(self.paddleP2));
     if (self.isAttract) {
-      self.level = MakeAttract(self);
+      self.level = MakeAttract(self.paddleP1, self.paddleP2);
     } else {
-      self.level = MakeLevel(self, gLevelIndex);
+      self.level = MakeLevel(gLevelIndex, self.paddleP1, self.paddleP2);
     }
+    self.maxVX = self.level.maxVX;
+    logOnDelta("maxVX", self.maxVX, 1);
   };
   self.Pause = function () {
     // match: ProcessOneInput().
@@ -1258,6 +1259,8 @@ function GameState(props) {
     });
   };
   self.CreateStartingPuck = function () {
+    Assert(exists(self.maxVX) && self.maxVX > 0);
+
     // i am crying into my drink.
     // single player: puck goes towards gpu.
     // two player: puck goes toward p2.
@@ -1265,7 +1268,7 @@ function GameState(props) {
     var p = new Puck({
       x: gw(ForSide(gP1Side, 0.3, 0.7)),
       y: self.isAttract ? gh(gR.RandomRange(0.4, 0.6)) : gh(0.3),
-      vx: sign * self.maxVX / 5,
+      vx: sign * self.maxVX / 3,
       vy: self.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
       maxVX: self.maxVX,
       ur: true

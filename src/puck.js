@@ -307,7 +307,7 @@ function Puck(props) {
         }
     };
 
-    self.WallsRepel = function( msxVX ) {
+    self.WallsRepel = function( maxVX ) {
         var zone = gh(0.1);
         // if the puck is not moving slowly, repel vertically away from walls
         // in order to try to prevent the user from just leaving their paddle

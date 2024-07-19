@@ -1,4 +1,4 @@
-TODO:
+
 * animate the menu.
 * my other metal band name really is The Wrong Abstractions.
 * this has quickly become an empirical big ball of mud. :-(
@@ -27,6 +27,7 @@ TODO:
 * i feel like isUrgent isn't weighted high enough by ai cf. engorge.
 * maybe add english based on paddle y velocity.
 * i know "!!" et. al. are dangerous but i can't stop using them sometimes.
+* very bad code smell wrt maxVX and order of how it gets set and used.
 * super fugly inconsistencies, some but not all of them include:
   * should extract all the left vs. right stuff into a Side class, parent of Paddle etc.
   * sorry the "class" coding style is so randomly ugly.

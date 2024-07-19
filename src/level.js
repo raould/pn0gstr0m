@@ -16,8 +16,8 @@ const kEnglishStep = 0.002;
         // ie for attract mode level. although it is sort of ugly
         // and dangerous that way, vs. an explicit isAttract bool?
         // coding is hard please let me just go online shopping.
-        self.maxVX0 = props.maxVX;
-        self.maxVX = self.maxVX0;
+
+        self.maxVX = props.maxVX;
 
         self.speedupTimeout = props.speedupTimeout;
         self.speedupFactor = props.speedupFactor;

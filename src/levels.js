@@ -27,7 +27,7 @@ const gPillMakers = [
     MakeChaosProps,
 ];
 
-function MakeAttract(gameState) {
+function MakeAttract(paddleP1, paddleP2) {
     return new Level({
         index: -1,
         maxVX: sxi(14),
@@ -37,44 +37,44 @@ function MakeAttract(gameState) {
         isP1Player: false,
         isP2Player: false,
         pills: [],
-        paddleP1: gameState.paddleP1,
-        paddleP2: gameState.paddleP2,
+        paddleP1: paddleP1,
+        paddleP2: paddleP2,
     });
 }
 
 // level is one-based.
-function MakeLevel(gameState, level) {
-    Assert(level > 0, "level is 1-based");
+function MakeLevel(index, paddleP1, paddleP2) {
+    Assert(index > 0, "index is 1-based");
     return new Level({
-        index: level,
-        maxVX: sxi(14),
+        index,
+        maxVX: Math.min(kMaxVX/2, sxi(12 + index*2)),
         speedupTimeout: 1000 * 60 * 1,
         speedupFactor: 0.01,
-        puckCount: MakePuckCount(level),
-        isP1Player: !gameState.isAttract,
-        isP2Player: !gameState.isAttract && !gSinglePlayer,
-        pills: MakePills(level),
-        paddleP1: gameState.paddleP1,
-        paddleP2: gameState.paddleP2,
+        puckCount: MakePuckCount(index),
+        isP1Player: true,
+        isP2Player: !gSinglePlayer,
+        pills: MakePills(index),
+        paddleP1: paddleP1,
+        paddleP2: paddleP2,
     });
 }
 
-function MakePuckCount(level) {
-    Assert(level > 0, "level is 1-based");
+function MakePuckCount(index) {
+    Assert(index > 0, "index is 1-based");
     // note: this is just a big swag.
-    return 10;//500 + (level-1) * 300;
+    return 10;//500 + (index-1) * 300;
 }
 
-function MakePills(level) {
-    const lv0 = level - 1;
+function MakePills(index) {
+    const lv0 = index - 1;
     let pills = [];
 
-    // levels are 1-based, and level 1 has no powerups.
-    if (level > 1) {
+    // the very first level has no powerups.
+    if (lv0 > 0) {
         // the first n levels get 2 pills in order.
         if (lv0*2 < gPillMakers.length-2) {
             pills = gPillMakers.slice(lv0*2, lv0*2 + 2);
-            console.log("MakePills", level, pills);
+            console.log("MakePills", index, pills);
             Assert(pills.length == 2);
         }
         // after those first n levels, the pills are random.
@@ -97,6 +97,6 @@ function MakePills(level) {
         }
         Assert(pills.length > 0, "Pills");
     }
-    console.log("Pills", level, pills);
+    console.log("Pills", index, pills);
     return pills;
 }
