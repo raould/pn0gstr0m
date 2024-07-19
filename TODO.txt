@@ -1,7 +1,6 @@
-
-* animate the menu.
-* my other metal band name really is The Wrong Abstractions.
 * this has quickly become an empirical big ball of mud. :-(
+* animate the menu opening/closing?
+* my other metal band name really is The Wrong Abstractions. :-(
 * all the todo's noted in code comments.
 * deperately need to refactor so many globals away (re: events, below).
 * what the heck is the difference of Step() vs. Draw() vs. Process*().
@@ -28,6 +27,7 @@
 * maybe add english based on paddle y velocity.
 * i know "!!" et. al. are dangerous but i can't stop using them sometimes.
 * very bad code smell wrt maxVX and order of how it gets set and used.
+  * also uh no idea how/why/where puck.vx gets to be > than {gameState,level}.maxVX
 * super fugly inconsistencies, some but not all of them include:
   * should extract all the left vs. right stuff into a Side class, parent of Paddle etc.
   * sorry the "class" coding style is so randomly ugly.
