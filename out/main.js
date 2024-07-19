@@ -195,8 +195,8 @@ var kSparkArrayInitialSize = 200;
 var kBarriersArrayInitialSize = 4;
 var kOptionsArrayInitialSize = 6;
 
-// prevent pills from showing up too often, or too early.
-var kPillSpawnCooldown = 1000 * 20;
+// prevent pills from showing up too often, or too early... but not too late.
+var kPillSpawnCooldown = 1000 * 10;
 var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
