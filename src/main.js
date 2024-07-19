@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gShowToasts = gDebug;
 
 var kCanvasName = "canvas"; // match: index.html
@@ -1043,18 +1043,21 @@ function DrawBounds( alpha=0.5 ) {
         self.MakeLevel();
 
         gPucks.A.push( self.CreateStartingPuck() );
-        // if (gDebug && !self.isAttract) {
-        //     ForCount(10, () => {
-        //         gPucks.A.push( self.CreateRandomPuck() );
-        //     });
-        // }
+        if (gDebug && !self.isAttract) {
+            ForCount(10, () => {
+                gPucks.A.push( self.CreateRandomPuck() );
+            });
+        }
+
         // I think the ensuing code indicates the Paddle should perhaps
-        // at least be split up into human & ai variants. :-\ so confused.
+        // at least be split up into human & ai variants. :-\ ...so confused.
 
         // this countdown is a block on both player & cpu ill spawning.
         // first wait is longer before the very first pill.
         // also see the 'must' check later on.
-        self.pillSpawnCountdown = kPillSpawnCooldown;
+        self.pillP1SpawnCountdown = kPillSpawnCooldown;
+        self.pillP2SpawnCountdown = kPillSpawnCooldown;
+
         // make sure the cpu doesn't get one first, that looks too mean/unfair,
         // however, allow a 2nd player to get one first!
         // also, neither side gets too many pills before the other.
@@ -1143,16 +1146,18 @@ function DrawBounds( alpha=0.5 ) {
             return;
         }
 
-        self.pillSpawnCountdown -= dt;
+        self.pillP1SpawnCountdown -= dt;
+        self.pillP2SpawnCountdown -= dt;
         var kDiffMax = 2;
 
         if (isU(self.level.p1Pill) &&
+            self.pillP1SpawnCountdown <= 0 &&
             self.unfairPillCount < kDiffMax) {
             self.level.p1Pill = self.MaybeSpawnPill(
                 dt, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups
             );
             if (exists(self.level.p1Pill)) {
-                self.pillSpawnCountdown = kPillSpawnCooldown;
+                self.pillP1SpawnCountdown = kPillSpawnCooldown;
                 self.unfairPillCount++;
                 self.isCpuPillAllowed = true;
                 AddSparks({x: self.level.p1Pill.x,
@@ -1166,12 +1171,14 @@ function DrawBounds( alpha=0.5 ) {
         }
 
         if (isU(self.level.p2Pill) &&
+            self.pillP2SpawnCountdown <= 0 &&
             self.isCpuPillAllowed &&
             self.unfairPillCount > -kDiffMax) {
             self.level.p2Pill = self.MaybeSpawnPill(
                 dt, self.level.p2Pill, kSpawnPlayerPillFactor*0.7, self.level.p2Powerups
             );
             if (exists(self.level.p2Pill)) {
+                self.pillP2SpawnCountdown = kPillSpawnCooldown;
                 self.unfairPillCount--;
                 AddSparks({x: self.level.p2Pill.x,
                            y: self.level.p2Pill.y,
@@ -1189,8 +1196,7 @@ function DrawBounds( alpha=0.5 ) {
     self.MaybeSpawnPill = function( dt, prev, spawnFactor, maker ) {
         var can_paused = !self.paused;
         var can_attract = !self.isAttract;
-        var can_timer = self.pillSpawnCountdown <= 0;
-        if (can_paused && can_attract && can_timer) {
+        if (can_paused && can_attract) {
             var must = self.pillSpawnCountdown < kPillSpawnCooldown * 2;
             var can_factor = gR.RandomBool(gDebug ? 0.1 : spawnFactor);
             var can_empty = isU(prev);
