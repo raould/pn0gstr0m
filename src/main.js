@@ -71,7 +71,7 @@ var gHighScore;
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
 // although i did try to compensate in the run loop.
-var kFPS = 40;
+var kFPS = 35;
 var kTimeStep = 1000/kFPS;
 var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
 var gStartTime = 0;
@@ -606,23 +606,31 @@ function DrawBounds( alpha=0.5 ) {
         if (self.stop) {
             return;
         }
-        // note: pausing game time is only handled/supported in GameState.
-        var tt = kTimeStep;
+
+        var remainder = kTimeStep;
         var now = Date.now();
         var clockDiff = now - self.lastTime;
 
-        // oy veh oh brother sheesh barf, trying to not progress time
+        // oy veh oh brother sheesh barf,
+        // trying to not progress time
         // if we were stopped in the debugger.
         if (clockDiff >= kMaybeWasPausedInTheDangedDebuggerMsec) {
             self.lastTime = now;
         }
         else {
             Gamepads.poll();
+
+            // this got complicated quickly, trying to handle time:
+            // a) only stepping if enough time has really passed.
+            // b) updating the screen even when paused & thus delta time is 0.
+
             self.lastTime = now;
-            gGameTime += clockDiff;
-            var dt = gGameTime - gLastFrameTime;
-            if (dt < kTimeStep) {
-                tt = kTimeStep - dt;
+            var paused = aub(self.handler.GetIsPaused?.(), false);
+            gGameTime += paused ? 0 : clockDiff;
+            var fdt = gGameTime - gLastFrameTime;
+
+            if (fdt < kTimeStep && !paused) {
+                remainder = kTimeStep - fdt;
             }
             else {
                 Assert(exists(self.handler), "RunLoop");
@@ -633,8 +641,8 @@ function DrawBounds( alpha=0.5 ) {
 
                 // even when paused, must Step to handle input.
                 // also call Draw to keep the screen in sync.
-                var paused = aub(self.handler.GetIsPaused?.(), false);
-                var next = self.handler.Step(paused ? 0 : dt);
+                paused = aub(self.handler.GetIsPaused?.(), false);
+                var next = self.handler.Step(paused ? 0 : fdt);
                 self.handler.Draw();
 
                 if( exists(next) && next !== self.state ) {
@@ -650,10 +658,10 @@ function DrawBounds( alpha=0.5 ) {
                 self.DrawCRTScanlines();
                 if (gShowToasts) { StepToasts(); }
 
-                tt = kTimeStep-(dt-kTimeStep);
+                remainder = kTimeStep-(fdt-kTimeStep);
             }
         }
-        setTimeout( self.RunLoop, Math.max(1, tt) );
+        setTimeout( self.RunLoop, Math.max(1, remainder) );
     };
 
     self.DrawCRTScanlines = function() {
@@ -951,8 +959,10 @@ function DrawBounds( alpha=0.5 ) {
         RecalculateConstants();
         ResetGlobalStorage();
         ResetInput();
+
         gP1Score = 0;
         gP2Score = 0;
+
         gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
         gStartTime = gGameTime;
         self.pauseButtonEnabled = false;
@@ -1081,6 +1091,7 @@ function DrawBounds( alpha=0.5 ) {
             self.level = MakeLevel(gLevelIndex, self.paddleP1, self.paddleP2);
         }
         self.maxVX = self.level.maxVX;
+        Assert(exists(self.maxVX));
         logOnDelta("maxVX", self.maxVX, 1);
     };
 
@@ -1108,6 +1119,7 @@ function DrawBounds( alpha=0.5 ) {
 
         self.ProcessAllInput();
         if (self.quit) {
+            SaveEndScreenshot(self);
             return gDebug ? kLevelWon : kTitle;
         }
         if (self.stepping) {
@@ -1576,21 +1588,6 @@ function DrawBounds( alpha=0.5 ) {
         Object.values(self.animations).forEach(a => a.Draw(self));
     };
 
-    self.DrawLevelTitle = function() {
-        // trying to keep chartjunk low for first level.
-        if (!self.isAttract && gLevelIndex > 1) {
-            const max = kAlphaFadeInMsec * 5; // match: MakeGameStartAnimation().
-            const dt = gGameTime - gStartTime;
-            if (dt < max) {
-                const t = T10(dt, max);
-                Cxdo(() => {
-                    gCx.fillStyle = RandomForColor(magentaSpec, t);
-                    DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.8), gRegularFontSizePt);
-                });
-            }
-        }
-    };
-
     self.Draw = function(props) {
         if (!self.isAttract) { ClearScreen(); }
         if (!gResizing) {
@@ -1628,7 +1625,6 @@ function DrawBounds( alpha=0.5 ) {
                 self.DrawMoveTarget(gP2Target);
             }
 
-            self.DrawLevelTitle();
             self.DrawAnimations(); // late/high z order so the animations can clear the screen if desired.
             self.DrawCRTOutline();
             if (!props?.isEndScreenshot) {
@@ -1731,7 +1727,7 @@ function DrawBounds( alpha=0.5 ) {
             if (self.goOn) {
                 gCx.fillStyle = RandomYellowSolid();
                 DrawText(
-                    "CONTINUE",
+                    "NEXT",
                     "center",
                     gw(0.5),
                     gh(0.8),
@@ -1786,7 +1782,7 @@ function DrawBounds( alpha=0.5 ) {
             if (self.goOn) {
                 gCx.fillStyle = RandomYellowSolid();
                 DrawText(
-                    "CONTINUE",
+                    "NEXT",
                     "center",
                     gw(0.5),
                     gh(0.8),
@@ -1851,10 +1847,10 @@ function DrawBounds( alpha=0.5 ) {
             if (self.goOn) {
                 gCx.fillStyle = RandomYellowSolid();
                 DrawText(
-                    "CONTINUE",
+                    "NEXT",
                     "center",
                     gw(0.5),
-                    gh(0.7),
+                    gh(0.8),
                     gRegularFontSizePt
                 );
             }
@@ -1878,14 +1874,26 @@ function DrawBounds( alpha=0.5 ) {
         gHighScore = Math.max(self.finalScore, (aub(gHighScore, self.finalScore)));
         localStorage.setItem(kHighScoreKey, gHighScore);
 
-        PlayBlip();
+        self.relevant = self.isNewHighScore();
+        if (self.relevant) {
+            PlayBlip();
+        }
+    };
+
+    self.isNewHighScore = function() {
+        return isU(self.previousHighScore) || self.finalScore > self.previousHighScore;
     };
 
     self.Step = function() {
-        var nextState;
-        self.goOn = (gGameTime - self.started) > self.timeoutMsg;
-        nextState = self.ProcessAllInput();
-        return nextState;
+        if (self.relevant) {
+            var nextState;
+            self.goOn = (gGameTime - self.started) > self.timeoutMsg;
+            nextState = self.ProcessAllInput();
+            return nextState;
+        }
+        else {
+            return kTitle;
+        }
     };
 
     self.ProcessAllInput = function() {
@@ -1921,7 +1929,9 @@ function DrawBounds( alpha=0.5 ) {
     };
     
     self.Draw = function() {
-        gSinglePlayer ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
+        if (self.relevant) {
+            gSinglePlayer ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
+        }
     };
 
     self.DrawSinglePlayer = function() {
@@ -1931,7 +1941,7 @@ function DrawBounds( alpha=0.5 ) {
         var nextState;
         Cxdo(() => {
             gCx.fillStyle = RandomMagentaSolid();
-            if (isU(self.previousHighScore) || self.finalScore > self.previousHighScore) {
+            if (self.isNewHighScore(self.previousHighScore, self.finalScore)) {
                 DrawText( "NEW HIGH SCORE!", "center", x, y - 80, gRegularFontSizePt );
             }
             var msg = `FINAL SCORE: ${gP1Score} - ${gP2Score} = ${self.finalScore}`;
@@ -1939,7 +1949,7 @@ function DrawBounds( alpha=0.5 ) {
 
             if (self.goOn) {
                 gCx.fillStyle = RandomYellowSolid();
-                DrawText( "RETURN", "center", x, y+120, gReducedFontSizePt );
+                DrawText( "NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt );
             }
         });
 

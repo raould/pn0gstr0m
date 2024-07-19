@@ -84,7 +84,7 @@ var gHighScore;
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
 // although i did try to compensate in the run loop.
-var kFPS = 40;
+var kFPS = 35;
 var kTimeStep = 1000 / kFPS;
 var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
 var gStartTime = 0;
@@ -672,24 +672,31 @@ function Lifecycle(handlerMap) {
     if (self.stop) {
       return;
     }
-    // note: pausing game time is only handled/supported in GameState.
-    var tt = kTimeStep;
+    var remainder = kTimeStep;
     var now = Date.now();
     var clockDiff = now - self.lastTime;
 
-    // oy veh oh brother sheesh barf, trying to not progress time
+    // oy veh oh brother sheesh barf,
+    // trying to not progress time
     // if we were stopped in the debugger.
     if (clockDiff >= kMaybeWasPausedInTheDangedDebuggerMsec) {
       self.lastTime = now;
     } else {
+      var _self$handler$GetIsPa, _self$handler;
       Gamepads.poll();
+
+      // this got complicated quickly, trying to handle time:
+      // a) only stepping if enough time has really passed.
+      // b) updating the screen even when paused & thus delta time is 0.
+
       self.lastTime = now;
-      gGameTime += clockDiff;
-      var dt = gGameTime - gLastFrameTime;
-      if (dt < kTimeStep) {
-        tt = kTimeStep - dt;
+      var paused = aub((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false);
+      gGameTime += paused ? 0 : clockDiff;
+      var fdt = gGameTime - gLastFrameTime;
+      if (fdt < kTimeStep && !paused) {
+        remainder = kTimeStep - fdt;
       } else {
-        var _self$handler$GetIsPa, _self$handler;
+        var _self$handler$GetIsPa2, _self$handler2;
         Assert(exists(self.handler), "RunLoop");
         if (self.transitioned) {
           self.handler = self.handlerMap[self.state]();
@@ -698,8 +705,8 @@ function Lifecycle(handlerMap) {
 
         // even when paused, must Step to handle input.
         // also call Draw to keep the screen in sync.
-        var paused = aub((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false);
-        var next = self.handler.Step(paused ? 0 : dt);
+        paused = aub((_self$handler$GetIsPa2 = (_self$handler2 = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa2.call(_self$handler2), false);
+        var next = self.handler.Step(paused ? 0 : fdt);
         self.handler.Draw();
         if (exists(next) && next !== self.state) {
           console.log("transitioned from ".concat(self.state, " to ").concat(next));
@@ -713,10 +720,10 @@ function Lifecycle(handlerMap) {
         if (gShowToasts) {
           StepToasts();
         }
-        tt = kTimeStep - (dt - kTimeStep);
+        remainder = kTimeStep - (fdt - kTimeStep);
       }
     }
-    setTimeout(self.RunLoop, Math.max(1, tt));
+    setTimeout(self.RunLoop, Math.max(1, remainder));
   };
   self.DrawCRTScanlines = function () {
     if (self.state != kRoot && self.state != kWarning) {
@@ -1114,6 +1121,7 @@ function GameState(props) {
       self.level = MakeLevel(gLevelIndex, self.paddleP1, self.paddleP2);
     }
     self.maxVX = self.level.maxVX;
+    Assert(exists(self.maxVX));
     logOnDelta("maxVX", self.maxVX, 1);
   };
   self.Pause = function () {
@@ -1140,6 +1148,7 @@ function GameState(props) {
     self.MaybeSpawnPills(dt);
     self.ProcessAllInput();
     if (self.quit) {
+      SaveEndScreenshot(self);
       return gDebug ? kLevelWon : kTitle;
     }
     if (self.stepping) {
@@ -1568,20 +1577,6 @@ function GameState(props) {
       return a.Draw(self);
     });
   };
-  self.DrawLevelTitle = function () {
-    // trying to keep chartjunk low for first level.
-    if (!self.isAttract && gLevelIndex > 1) {
-      var max = kAlphaFadeInMsec * 5; // match: MakeGameStartAnimation().
-      var dt = gGameTime - gStartTime;
-      if (dt < max) {
-        var t = T10(dt, max);
-        Cxdo(function () {
-          gCx.fillStyle = RandomForColor(magentaSpec, t);
-          DrawText("LEVEL ".concat(gLevelIndex), "center", gw(0.5), gh(0.8), gRegularFontSizePt);
-        });
-      }
-    }
-  };
   self.Draw = function (props) {
     if (!self.isAttract) {
       ClearScreen();
@@ -1619,7 +1614,6 @@ function GameState(props) {
       if (!gSinglePlayer) {
         self.DrawMoveTarget(gP2Target);
       }
-      self.DrawLevelTitle();
       self.DrawAnimations(); // late/high z order so the animations can clear the screen if desired.
       self.DrawCRTOutline();
       if (!(props != null && props.isEndScreenshot)) {
@@ -1709,7 +1703,7 @@ function LevelWonState() {
       DrawText("LEVEL ".concat(self.levelIndex, " WON!"), "center", gw(0.5), gh(0.5), gBigFontSizePt);
       if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
-        DrawText("CONTINUE", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
+        DrawText("NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
       }
     });
   };
@@ -1735,7 +1729,7 @@ function LevelWonState() {
       DrawText(rightMsg, "right", gw(0.8), gh(0.6), gSmallFontSizePt);
       if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
-        DrawText("CONTINUE", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
+        DrawText("NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
       }
     });
   };
@@ -1784,7 +1778,7 @@ function GameOverState() {
       DrawText("GAME OVER", "center", gw(0.5), gh(0.5), gBigFontSizePt);
       if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
-        DrawText("CONTINUE", "center", gw(0.5), gh(0.7), gRegularFontSizePt);
+        DrawText("NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
       }
     });
   };
@@ -1803,13 +1797,23 @@ function GameOverSummaryState() {
     self.previousHighScore = gHighScore;
     gHighScore = Math.max(self.finalScore, aub(gHighScore, self.finalScore));
     localStorage.setItem(kHighScoreKey, gHighScore);
-    PlayBlip();
+    self.relevant = self.isNewHighScore();
+    if (self.relevant) {
+      PlayBlip();
+    }
+  };
+  self.isNewHighScore = function () {
+    return isU(self.previousHighScore) || self.finalScore > self.previousHighScore;
   };
   self.Step = function () {
-    var nextState;
-    self.goOn = gGameTime - self.started > self.timeoutMsg;
-    nextState = self.ProcessAllInput();
-    return nextState;
+    if (self.relevant) {
+      var nextState;
+      self.goOn = gGameTime - self.started > self.timeoutMsg;
+      nextState = self.ProcessAllInput();
+      return nextState;
+    } else {
+      return kTitle;
+    }
   };
   self.ProcessAllInput = function () {
     var nextState;
@@ -1840,7 +1844,9 @@ function GameOverSummaryState() {
     return nextState;
   };
   self.Draw = function () {
-    gSinglePlayer ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
+    if (self.relevant) {
+      gSinglePlayer ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
+    }
   };
   self.DrawSinglePlayer = function () {
     ClearScreen();
@@ -1849,14 +1855,14 @@ function GameOverSummaryState() {
     var nextState;
     Cxdo(function () {
       gCx.fillStyle = RandomMagentaSolid();
-      if (isU(self.previousHighScore) || self.finalScore > self.previousHighScore) {
+      if (self.isNewHighScore(self.previousHighScore, self.finalScore)) {
         DrawText("NEW HIGH SCORE!", "center", x, y - 80, gRegularFontSizePt);
       }
       var msg = "FINAL SCORE: ".concat(gP1Score, " - ").concat(gP2Score, " = ").concat(self.finalScore);
       DrawText(msg, "center", x, y, gRegularFontSizePt);
       if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
-        DrawText("RETURN", "center", x, y + 120, gReducedFontSizePt);
+        DrawText("NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
       }
     });
     return nextState;

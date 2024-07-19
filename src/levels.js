@@ -14,6 +14,7 @@
 // (zero or) exactly 2 types of powerup per level.
 
 const gLevelRandom = new Random(42);
+const kAttractLevelIndex = -1;
 
 const gPillMakers = [
     // levels are 1-based, and level 1 has no powerups.
@@ -29,7 +30,7 @@ const gPillMakers = [
 
 function MakeAttract(paddleP1, paddleP2) {
     return new Level({
-        index: -1,
+        index: kAttractLevelIndex,
         maxVX: sxi(14),
         speedupFactor: 0,
         speedupTimeout: undefined,
@@ -62,21 +63,24 @@ function MakeLevel(index, paddleP1, paddleP2) {
 function MakePuckCount(index) {
     Assert(index > 0, "index is 1-based");
     // note: this is just a big swag.
-    return 10;//500 + (index-1) * 300;
+    return 3;//500 + (index-1) * 300;
 }
 
 function MakePills(index) {
     const lv0 = index - 1;
     let pills = [];
 
-    // the very first level has no powerups.
+    // skip the very first level, it has no powerups.
     if (lv0 > 0) {
+
         // the first n levels get 2 pills in order.
-        if (lv0*2 < gPillMakers.length-2) {
-            pills = gPillMakers.slice(lv0*2, lv0*2 + 2);
-            console.log("MakePills", index, pills);
+        if (lv0*2 <= gPillMakers.length-2) {
+            let i = (lv0-1)*2;
+            pills = gPillMakers.slice(i, i+2);
+            console.log("MakePills2x", index, pills);
             Assert(pills.length == 2);
         }
+
         // after those first n levels, the pills are random.
         else {
             const a = [...gPillMakers];
@@ -94,9 +98,11 @@ function MakePills(index) {
             Assert(p0.length == 1);
             Assert(p1.length == 1);
             pills = [p0[0], p1[0]];
+            console.log("MakePillsRandom", index, pills);
         }
         Assert(pills.length > 0, "Pills");
     }
+
     console.log("Pills", index, pills);
     return pills;
 }

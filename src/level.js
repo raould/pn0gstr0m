@@ -10,6 +10,9 @@ const kEnglishStep = 0.002;
     var self = this;
 
     self.Init = function() {
+        self.startTime = gGameTime;
+
+        // could be kAttractLevelIndex.
         self.index = props.index;
 
         // note: some of these are allowed to be undefined,
@@ -83,6 +86,7 @@ const kEnglishStep = 0.002;
         if (!isEndScreenshot) {
             self.DrawPills( alpha );
             self.DrawNoMorePucks();
+            self.DrawNotice();
             // todo: you'd maybe kind of expect lots of
             // other things like paddles and pucks to be
             // drawn by the level too, huh? ...
@@ -125,6 +129,20 @@ const kEnglishStep = 0.002;
             var x = ForSide(side, gw(0.25), gw(0.75));
             DrawText(msg, "center", x, gPillTextY, gSmallestFontSizePt);
         });
+    };
+
+    self.DrawNotice = function() {
+        if (self.index > 1) {
+            const max = kAlphaFadeInMsec * 5; // match: MakeGameStartAnimation().
+            const dt = gGameTime - self.startTime;
+            if (dt < max) {
+                const t = T10(dt, max);
+                Cxdo(() => {
+                    gCx.fillStyle = RandomForColor(magentaSpec, t);
+                    DrawText(`LEVEL ${self.index}`, "center", gw(0.5), gh(0.8), gRegularFontSizePt);
+                });
+            }
+        }
     };
 
     self.Init();
