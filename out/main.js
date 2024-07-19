@@ -31,7 +31,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = true;
+var gDebug = false;
 var gShowToasts = gDebug;
 var kCanvasName = "canvas"; // match: index.html
 var gLifecycle;
@@ -1090,9 +1090,9 @@ function GameState(props) {
     // first wait is longer before the very first pill.
     // also see the 'must' check later on.
     self.pillSpawnCountdown = kPillSpawnCooldown;
-    // make sure the cpu doesn't get one first, that looks too mean,
+    // make sure the cpu doesn't get one first, that looks too mean/unfair,
     // however, allow a 2nd player to get one first!
-    // also make sure neither side gets too many pills before the other.
+    // also, neither side gets too many pills before the other.
     self.isCpuPillAllowed = !gSinglePlayer;
     self.unfairPillCount = 0;
     if (!self.isAttract) {
