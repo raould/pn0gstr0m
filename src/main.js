@@ -71,7 +71,7 @@ var gHighScore;
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
 // although i did try to compensate in the run loop.
-var kFPS = 30;
+var kFPS = 40;
 var kTimeStep = 1000/kFPS;
 var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
 var gStartTime = 0;

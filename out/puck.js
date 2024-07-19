@@ -20,7 +20,7 @@ function Puck(props) {
     self.midX = self.x + self.width / 2;
     self.midY = self.y + self.height / 2;
     // tweak max vx a tad to avoid everything being too visually lock-step.
-    self.vx = Sign(props.vx) * Math.min(gR.RandomCentered(props.maxVX, 1), Math.abs(props.vx));
+    self.vx = gR.RandomCentered(props.vx, props.vx / 10);
     self.vy = AvoidZero(props.vy, 0.1);
     self.alive = true;
     self.startTime = !!props.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
@@ -97,7 +97,7 @@ function Puck(props) {
       self.alive = !(xout || yout);
       self.midX = self.x + self.width / 2;
       self.midY = self.y + self.height / 2;
-      // note: no clipping or adjusting done here.
+      // note: no clipping or adjusting done here, see collision routines.
     }
   };
   self.SplitPuck = function (_ref) {
@@ -158,8 +158,8 @@ function Puck(props) {
     }
 
     // speed up all pucks over time to force the level to end some day.
-    var nvx = self.vx * (isSuddenDeath ? 1.1 : 1.01);
-    console.log("puck vx updated", F(self.vx), "->", F(nvx));
+    var nvx = MinSigned(self.vx * (isSuddenDeath ? 1.1 : 1.01), maxVX);
+    console.log("puck vx updated", F(maxVX), F(self.vx), "->", F(nvx));
     self.vx = nvx;
     return np;
   };
@@ -184,12 +184,15 @@ function Puck(props) {
         var preSign = Sign(self.prevX - xywh.x);
         var postSign = Sign(self.x - xywh.x);
         var dxOverlaps = preSign != postSign;
+        if (dxOverlaps) {
+          console.log("x skipped over collision");
+        }
         return yOverlaps && (xOverlaps || dxOverlaps);
       }
     }
     return false;
   };
-  self.BounceCollidableX = function (xywh) {
+  self.AdjustAndBounceX = function (xywh) {
     if (self.vx > 0) {
       self.x = xywh.x - self.width;
     } else {
@@ -224,7 +227,7 @@ function Puck(props) {
     var hit = self.CollisionTest(paddle, paddle.blockvx);
     if (hit) {
       paddle.OnPuckHit();
-      self.BounceCollidableX(paddle); // todo: bounceY too?
+      self.AdjustAndBounceX(paddle); // todo: bounceY too?
       self.ApplyEnglish(paddle, englishFactor);
       // explicitly not calling PlayBlip(), gets too noisy.
       if (paddle.isSplitter) {
@@ -255,7 +258,7 @@ function Puck(props) {
         if (hit) {
           barrier.OnPuckHit();
           PlayBlip();
-          self.BounceCollidableX(barrier);
+          self.AdjustAndBounceX(barrier);
         }
       });
     }
@@ -267,7 +270,7 @@ function Puck(props) {
         if (hit) {
           option.OnPuckHit();
           PlayBlip();
-          self.BounceCollidableX(option);
+          self.AdjustAndBounceX(option);
         }
       });
     }

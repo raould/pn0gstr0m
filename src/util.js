@@ -28,11 +28,11 @@ function aub(a, b) {
 function noOp() {}
 
 const gLogOnDeltaMap = {};
-function logOnDelta(key, v, delta) {
+function logOnDelta(key, v, delta, xmsg="") {
     const ov = gLogOnDeltaMap[key];
     const update = isU(ov) || Math.abs(v-ov) >= delta;
     if (update) {
-        console.log(key, v);
+        console.log(key, v, xmsg);
         gLogOnDeltaMap[key] = v;
     }
 }

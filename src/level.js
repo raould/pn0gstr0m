@@ -69,7 +69,7 @@ const kEnglishStep = 0.002;
                     kMaxVX
                 );
                 self.englishFactor += dt / kTimeStep * kEnglishStep;
-                logOnDelta("maxVX", F(self.maxVX), 1);
+                logOnDelta("maxVX", F(self.maxVX), 1, F(kMaxVX));
                 logOnDelta("englishFactor", F(self.englishFactor), 0.1);
             }
         }

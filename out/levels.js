@@ -47,7 +47,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
   Assert(index > 0, "index is 1-based");
   return new Level({
     index: index,
-    maxVX: Math.min(kMaxVX / 2, sxi(12 + index * 2)),
+    maxVX: MinSigned(sxi(12 + index * 2), kMaxVX / 2),
     speedupTimeout: 1000 * 60 * 1,
     speedupFactor: 0.01,
     puckCount: MakePuckCount(index),

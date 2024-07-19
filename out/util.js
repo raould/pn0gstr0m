@@ -31,10 +31,11 @@ function aub(a, b) {
 function noOp() {}
 var gLogOnDeltaMap = {};
 function logOnDelta(key, v, delta) {
+  var xmsg = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : "";
   var ov = gLogOnDeltaMap[key];
   var update = isU(ov) || Math.abs(v - ov) >= delta;
   if (update) {
-    console.log(key, v);
+    console.log(key, v, xmsg);
     gLogOnDeltaMap[key] = v;
   }
 }

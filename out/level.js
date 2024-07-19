@@ -61,7 +61,7 @@ function Level(props) {
       if (self.speedupTimeout === 0) {
         self.maxVX = MinSigned(self.maxVX + self.speedupFactor * dt / kTimeStep, kMaxVX);
         self.englishFactor += dt / kTimeStep * kEnglishStep;
-        logOnDelta("maxVX", F(self.maxVX), 1);
+        logOnDelta("maxVX", F(self.maxVX), 1, F(kMaxVX));
         logOnDelta("englishFactor", F(self.englishFactor), 0.1);
       }
     }
