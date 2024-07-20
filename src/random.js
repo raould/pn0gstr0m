@@ -59,7 +59,7 @@
     self.Init();
 }
 
-/*class*/ function RandomLatch({ chance, latchDuration }) {
+/*class*/ function RandomLatch( chance, latchDuration ) {
     var self = this;
 
     self.Init = function() {

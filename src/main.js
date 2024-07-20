@@ -524,7 +524,7 @@ function DrawTitle(flicker=true) {
         DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
         var msg = "ETERNAL BETA";
         if (flicker && gDrawTitleLatch.MaybeLatch(gGameTime)) { msg = "ETERNAL BUGS"; }
-        DrawText( msg, "right", gw(0.876), gh(0.48), gReducedFontSizePt, flicker );
+        DrawText( msg, "right", gw(0.876), gh(0.48), gSmallFontSizePt, flicker );
     });
 }
 

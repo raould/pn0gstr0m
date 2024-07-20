@@ -61,9 +61,7 @@ function Random() {
 }
 
 /*class*/
-function RandomLatch(_ref) {
-  var chance = _ref.chance,
-    latchDuration = _ref.latchDuration;
+function RandomLatch(chance, latchDuration) {
   var self = this;
   self.Init = function () {
     self.latchedTime = undefined;
