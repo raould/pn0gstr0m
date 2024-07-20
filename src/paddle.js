@@ -393,7 +393,6 @@ function Paddle(props) {
         if( !should && hasPuck ) {
             should = !self.isPuckAttacking( self.aiPuck );
         }
-
         if( should ) {
             self.aiCountdownToUpdate = kAIPeriod;
         }

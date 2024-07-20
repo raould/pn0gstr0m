@@ -975,6 +975,8 @@ function DrawBounds( alpha=0.5 ) {
             self.theMenu = self.MakeMenu();
         }
 
+        // I think the ensuing code indicates the Paddle should perhaps
+        // at least be split up into human & ai variants. :-\ ...so confused.
         // warning: this setup is easily confusing wrt left vs. right.
         var lp = { x: gXInset, y: gh(0.5) };
         var rp = { x: gWidth-gXInset-gPaddleWidth, y: gh(0.5) };
@@ -1043,21 +1045,12 @@ function DrawBounds( alpha=0.5 ) {
         self.MakeLevel();
 
         gPucks.A.push( self.CreateStartingPuck() );
-        if (gDebug && !self.isAttract) {
-            ForCount(10, () => {
-                gPucks.A.push( self.CreateRandomPuck() );
-            });
-        }
-
-        // I think the ensuing code indicates the Paddle should perhaps
-        // at least be split up into human & ai variants. :-\ ...so confused.
 
         // this countdown is a block on both player & cpu ill spawning.
         // first wait is longer before the very first pill.
         // also see the 'must' check later on.
         self.pillP1SpawnCountdown = kPillSpawnCooldown;
         self.pillP2SpawnCountdown = kPillSpawnCooldown;
-
         // make sure the cpu doesn't get one first, that looks too mean/unfair,
         // however, allow a 2nd player to get one first!
         // also, neither side gets too many pills before the other.
@@ -1176,7 +1169,7 @@ function DrawBounds( alpha=0.5 ) {
             self.isCpuPillAllowed &&
             self.unfairPillCount > -kDiffMax) {
             // bias powerup creation toward the single player.
-            let factor = kSpawnPlayerPillFactor * (gSinglePlayer ? 0.7 : 1 );
+            const factor = kSpawnPlayerPillFactor * (gSinglePlayer ? 0.7 : 1 );
             self.level.p2Pill = self.MaybeSpawnPill(
                 self.pillP2SpawnCooldown < kPillSpawnCooldown * 2,
                 dt, self.level.p2Pill, factor, self.level.p2Powerups
@@ -1271,11 +1264,10 @@ function DrawBounds( alpha=0.5 ) {
                            y: (self.isAttract ?
                                gh(gR.RandomRange(0.4, 0.6)) :
                                gh(0.3)),
-                           vx: sign * self.maxVX/3,
+                           vx: sign * self.maxVX*0.2,
                            vy: (self.isAttract ?
                                 gR.RandomCentered(0, 2, 1) :
                                 0.3),
-                           maxVX: self.maxVX,
                            ur: true });
         return p;
     };
@@ -1285,7 +1277,6 @@ function DrawBounds( alpha=0.5 ) {
                            y: gh(gR.RandomRange(1/8, 7/8)),
                            vx: gR.RandomRange(self.maxVX*0.3, self.maxVX*0.5),
                            vy: gR.RandomCentered(1, 0.5),
-                           maxVX: self.maxVX,
                            ur: true });
         return p;
     };
@@ -1404,7 +1395,7 @@ function DrawBounds( alpha=0.5 ) {
                     self.level.IsSuddenDeath,
                     self.maxVX
                 );
-                if (self.level.spawning) {
+                if (self.level.isSpawning) {
                     Assert((splits?.length ?? 0) <= 1, splits?.length);
                     self.level.OnPuckSplit(splits.length);
                     // note: splits are pushed before parent, match: Draw()'s revEach() z order.
@@ -1599,7 +1590,7 @@ function DrawBounds( alpha=0.5 ) {
         if (!gResizing) {
             // painter's z order algorithm here below, keep important things last.
 
-            let isEndScreenshot = !!props?.isEndScreenshot;
+            const isEndScreenshot = !!props?.isEndScreenshot;
 
             self.DrawMidLine();
             self.DrawScoreHeader( isEndScreenshot );
@@ -1652,7 +1643,7 @@ function DrawBounds( alpha=0.5 ) {
             DrawText(`${self.unfairPillCount} ${self.pillP1SpawnCountdown} ${self.pillP2SpawnCountdown}`, "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
 
             gCx.fillStyle = RandomGrey();
-            var mvx = gPucks.A.reduce((m,p) => Math.max(m, Math.abs(p.vx)), 0);
+            var mvx = gPucks.A.reduce((m,p) => { return p.alive ? Math.max(m, Math.abs(p.vx)) : m; }, 0);
             DrawText(F(mvx.toString()), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
             gCx.fillStyle = "red";
             DrawText(F(self.maxVX.toString()), "left", gw(0.1), gh(0.1)+gSmallFontSize, gSmallFontSizePt);

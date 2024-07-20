@@ -135,13 +135,13 @@ function Puck(props) {
             const slowCountFactor = Math.pow(countFactor, 1.5);
             // keep a few of the fast ones around?
             const slow = !doejectSpeed && (self.vx > maxVX*0.7) && (gR.RandomFloat() < slowCountFactor);
-            const nvx = self.vx * (slow ? gR.RandomRange(0.8, 0.9) : gR.RandomRange(1.01, 1.1));
-            let nvy = self.vy;
-            nvy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
-            np = new Puck({ x: self.x, y: self.y, vx: nvx, vy: nvy, ur: false, forced, maxVX });
+            const vx = self.vx * (slow ? gR.RandomRange(0.8, 0.9) : gR.RandomRange(1.01, 1.1));
+            let vy = self.vy;
+            vy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
+            np = new Puck({ x: self.x, y: self.y, vx: vx, vy: vy, ur: false, forced, maxVX });
             PlayExplosion();
 
-            // fyi because SplitPuck is called during MovePucks,
+            // code smell: because SplitPuck is called during MovePucks,
             // we return the new puck to go onto the B list, whereas
             // MoveSparks happens after so it goes onto the A list.
             AddSparks({x:self.x, y:self.y, vx:self.vx, vy:self.vy});
@@ -195,6 +195,7 @@ function Puck(props) {
             self.x = xywh.x + xywh.width;
         }
         self.vx *= -1;
+        console.log("AdjustAndBounceX", F(self.vx));
     };
 
     self.ApplyEnglish = function( paddle, englishFactor ) {
@@ -313,15 +314,15 @@ function Puck(props) {
 
     self.WallsRepel = function( maxVX ) {
         var zone = gh(0.1);
-        // if the puck is not moving slowly, repel vertically away from walls
+        // if the puck is _not_ moving slowly, repel vertically away from walls
         // in order to try to prevent the user from just leaving their paddle
-        // at the wall indefinitely and not moving yet not losing pucks.
+        // at the wall indefinitely and not moving, yet not losing pucks boringness.
         if (Math.abs(self.vx) > maxVX * 0.5) {
             if (self.y - gYInset < zone && self.vy < 0) {
-                self.vy -= 0.005;
+                self.vy -= sy(0.005);
             }
             if (gh(1) - gYInset - self.y < zone && self.vy > 0) {
-                self.vy += 0.005;
+                self.vy += sy(0.005);
             }
         }
     };

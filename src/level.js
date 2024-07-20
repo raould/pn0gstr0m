@@ -3,7 +3,7 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-const kEnglishStep = 0.003;
+const kEnglishStep = 0.004;
 
 /*class*/ function Level(props) {
 
@@ -22,12 +22,11 @@ const kEnglishStep = 0.003;
 
         self.maxVX = props.maxVX;
 
-        self.speedupTimeout = props.speedupTimeout;
         self.speedupFactor = props.speedupFactor;
         self.englishFactor = 1;
 
         self.puckCount = props.puckCount;
-        self.spawning = exists(self.puckCount);
+        self.isSpawning = exists(self.puckCount);
 
         self.pills = props.pills;
         self.p1Powerups = new Powerups({
@@ -48,33 +47,24 @@ const kEnglishStep = 0.003;
     };
 
     self.OnPuckSplit = function(count) {
-        if (self.spawning && count > 0) {
+        if (self.isSpawning && count > 0) {
             Assert(exists(self.puckCount));
             self.puckCount = Math.max(0, self.puckCount - count);
-            self.spawning = self.puckCount > 0;
-            console.log(self.puckCount, self.spawning);
-
-            // speed up toward the (inevitable?) end!
-            if (!self.spawning) {
-                self.speedupTimeout = 0;
-            }
+            self.isSpawning = self.puckCount > 0;
+            console.log(self.puckCount, self.isSpawning);
         }
     };
 
     self.Step = function( dt ) {
-        if (exists(self.speedupTimeout)) {
-            Assert(exists(self.speedupFactor));
+        if (!self.isSpawning && exists(self.speedupFactor)) {
             Assert(exists(self.englishFactor));
-            self.speedupTimeout = Math.max(0, self.speedupTimeout-dt);
-            if (self.speedupTimeout === 0) {
-                self.maxVX = MinSigned(
-                    self.maxVX + self.speedupFactor * dt / kTimeStep,
-                    kMaxVX
-                );
-                self.englishFactor += dt / kTimeStep * kEnglishStep;
-                logOnDelta("maxVX", F(self.maxVX), 1, F(kMaxVX));
-                logOnDelta("englishFactor", F(self.englishFactor), 0.1);
-            }
+            self.maxVX = MinSigned(
+                self.maxVX + self.speedupFactor * dt / kTimeStep,
+                kMaxVX
+            );
+            self.englishFactor += dt / kTimeStep * kEnglishStep;
+            logOnDelta("+maxVX", F(self.maxVX), 1, F(kMaxVX));
+            logOnDelta("+englishFactor", F(self.englishFactor), 0.1);
         }
     };
 

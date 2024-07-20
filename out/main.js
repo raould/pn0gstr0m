@@ -1002,6 +1002,8 @@ function GameState(props) {
       self.theMenu = self.MakeMenu();
     }
 
+    // I think the ensuing code indicates the Paddle should perhaps
+    // at least be split up into human & ai variants. :-\ ...so confused.
     // warning: this setup is easily confusing wrt left vs. right.
     var lp = {
       x: gXInset,
@@ -1078,21 +1080,12 @@ function GameState(props) {
     })();
     self.MakeLevel();
     gPucks.A.push(self.CreateStartingPuck());
-    if (gDebug && !self.isAttract) {
-      ForCount(10, function () {
-        gPucks.A.push(self.CreateRandomPuck());
-      });
-    }
-
-    // I think the ensuing code indicates the Paddle should perhaps
-    // at least be split up into human & ai variants. :-\ ...so confused.
 
     // this countdown is a block on both player & cpu ill spawning.
     // first wait is longer before the very first pill.
     // also see the 'must' check later on.
     self.pillP1SpawnCountdown = kPillSpawnCooldown;
     self.pillP2SpawnCountdown = kPillSpawnCooldown;
-
     // make sure the cpu doesn't get one first, that looks too mean/unfair,
     // however, allow a 2nd player to get one first!
     // also, neither side gets too many pills before the other.
@@ -1277,9 +1270,8 @@ function GameState(props) {
     var p = new Puck({
       x: gw(ForSide(gP1Side, 0.3, 0.7)),
       y: self.isAttract ? gh(gR.RandomRange(0.4, 0.6)) : gh(0.3),
-      vx: sign * self.maxVX / 3,
+      vx: sign * self.maxVX * 0.2,
       vy: self.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
-      maxVX: self.maxVX,
       ur: true
     });
     return p;
@@ -1290,7 +1282,6 @@ function GameState(props) {
       y: gh(gR.RandomRange(1 / 8, 7 / 8)),
       vx: gR.RandomRange(self.maxVX * 0.3, self.maxVX * 0.5),
       vy: gR.RandomCentered(1, 0.5),
-      maxVX: self.maxVX,
       ur: true
     });
     return p;
@@ -1406,7 +1397,7 @@ function GameState(props) {
         // options, barriers, neos do not split pucks,
         // only the main player & cpu paddles.
         var splits = p.AllPaddlesCollision([self.paddleP1, self.paddleP2], self.level.englishFactor, self.level.IsSuddenDeath, self.maxVX);
-        if (self.level.spawning) {
+        if (self.level.isSpawning) {
           var _splits$length;
           Assert(((_splits$length = splits == null ? void 0 : splits.length) != null ? _splits$length : 0) <= 1, splits == null ? void 0 : splits.length);
           self.level.OnPuckSplit(splits.length);
@@ -1639,7 +1630,7 @@ function GameState(props) {
       DrawText("".concat(self.unfairPillCount, " ").concat(self.pillP1SpawnCountdown, " ").concat(self.pillP2SpawnCountdown), "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
       gCx.fillStyle = RandomGrey();
       var mvx = gPucks.A.reduce(function (m, p) {
-        return Math.max(m, Math.abs(p.vx));
+        return p.alive ? Math.max(m, Math.abs(p.vx)) : m;
       }, 0);
       DrawText(F(mvx.toString()), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
       gCx.fillStyle = "red";
