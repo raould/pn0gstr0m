@@ -93,7 +93,7 @@ function Level(props) {
         var oy = sy(13);
         gCx.fillRect(cx - ox, cy - oy * 1.45, ox * 2, oy * 2);
         gCx.fillStyle = RandomGreen(0.8);
-        DrawText("NO NEW PUCKS", "center", cx, cy, gReducedFontSizePt);
+        DrawText("SUDDEN DEATH", "center", cx, cy, gReducedFontSizePt);
       });
     }
   };
