@@ -593,7 +593,7 @@ function DrawTitle() {
     if (flicker && gDrawTitleLatch.MaybeLatch(gGameTime)) {
       msg = "ETERNAL BUGS";
     }
-    DrawText(msg, "right", gw(0.876), gh(0.48), gSmallFontSizePt, flicker);
+    DrawText(msg, "right", gw(0.876), gh(0.45), gSmallestFontSizePt, flicker);
   });
 }
 function DrawWarning() {
