@@ -61,7 +61,7 @@ function MakePuckCount(index) {
 }
 
 function MakePills(index) {
-    return [MakeForcePushProps, MakeDecimateProps]; // todo: do not commit this testing hack.
+    return [MakeEngorgeProps, MakeSplitProps];
 
     Assert(index != kAttractLevelIndex);
     const lv0 = index - 1;

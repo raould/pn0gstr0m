@@ -240,12 +240,12 @@ function MakeDecimateProps(maker) {
 
 function MakeEngorgeProps(maker) {
     var name = 'engorge';
+    var img = new Image();
+    img.src = "images/engorge.png";
     return {
         name,
         width: sx(22), height: sy(22),
         lifespan: kPillLifespan,
-        label: "+",
-        ylb: sy(30),
         isUrgent: true,
         fontSize: gBigFontSizePt,
         testFn: (gameState) => {
@@ -256,19 +256,12 @@ function MakeEngorgeProps(maker) {
             Cxdo(() => {
                 var wx = WX(self.x);
                 var wy = WY(self.y);
-
-                gCx.beginPath();
-                gCx.rect( wx, wy, self.width, self.height );
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
+                gCx.drawImage(img, wx, wy, self.width, self.height);
                 gCx.beginPath();
                 gCx.rect( wx, wy, self.width, self.height );
                 gCx.lineWidth = sx1(2);
                 gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
                 gCx.stroke();
-
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
             });
         },
         boomFn: (gameState) => {
