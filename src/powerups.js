@@ -10,6 +10,8 @@
 // note: look at the Make*Props() functions below
 // to see what-all fields need to be defined i.e.
 // (the business about ForSide and paddle references is wugly.)
+// NOTE: label, ylb are going away as i switch to bitmaps
+// so that i can more easily show them on each level splash screen.
 /* {
    name,
    isPlayerOnly,
@@ -133,14 +135,13 @@ var kPillLifespan = 1000 * 20;
 };
 
 function MakeForcePushProps(maker) {
-    var label = ForSide(maker.side, ">", "<");
     var name = "forcepush";
+    var img = new Image();
+    img.src = ForSide(maker.side, "images/forcepushL.png", "images/forcepushR.png");
     return {
         name,
         width: sx(18), height: sy(18),
         lifespan: kPillLifespan,
-        label,
-        ylb: sy(16),
         fontSize: gReducedFontSizePt,
         testFn: (gameState) => {
             return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
@@ -149,20 +150,15 @@ function MakeForcePushProps(maker) {
             Cxdo(() => {
                 var wx = WX(self.x);
                 var wy = WY(self.y);
-                var r = 20;
-
+                gCx.drawImage(img, wx, wy, self.width, self.height);
+                var mx = wx + ii(self.width/2);
+                var my = wy + ii(self.height/2);
                 gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, r );
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
-                gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, r );
+                gCx.arc(mx, my, self.width/2, 0, k2Pi);
+                gCx.closePath();
                 gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
                 gCx.lineWidth = sx1(2);
                 gCx.stroke();
-
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
             });
         },
         boomFn: (gameState) => {
@@ -193,8 +189,6 @@ function MakeDecimateProps(maker) {
         name,
         width: sx(18), height: sy(18),
         lifespan: kPillLifespan,
-        label: "*",
-        ylb: sy(18),
         fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
             // looks unfun if there aren't enough pucks to destroy.
@@ -203,14 +197,16 @@ function MakeDecimateProps(maker) {
         canSkip: true,
         drawFn: (self, alpha) => {
             Cxdo(() => {
-                gCx.drawImage(img, self.x, self.y, self.width, self.height);
-                var mx = self.x + ii(self.width/2);
-                var my = self.y + ii(self.height/2);
+                var wx = WX(self.x);
+                var wy = WY(self.y);
+                gCx.drawImage(img, wx, wy, self.width, self.height);
+                var mx = wx + ii(self.width/2);
+                var my = wy + ii(self.height/2);
                 gCx.beginPath();
-                gCx.moveTo(mx, self.y);
-                gCx.lineTo(self.x + self.width, my);
-                gCx.lineTo(mx, self.y + self.height);
-                gCx.lineTo(self.x, my);
+                gCx.moveTo(mx, wy);
+                gCx.lineTo(wx + self.width, my);
+                gCx.lineTo(mx, wy + self.height);
+                gCx.lineTo(wx, my);
                 gCx.closePath();
                 gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
                 gCx.lineWidth = sx1(2);
