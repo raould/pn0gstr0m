@@ -117,7 +117,7 @@ const kEnglishStep = 0.004;
             gCx.fillStyle = color;
             var msg = `${pill.name.toUpperCase()} ${ii(pill.lifespan/1000)}`;
             var x = ForSide(side, gw(0.25), gw(0.75));
-            DrawText(msg, "center", x, gPillTextY, gSmallestFontSizePt);
+            DrawText(msg, "center", x, gPillTextY, gSmallFontSizePt);
         });
     };
 

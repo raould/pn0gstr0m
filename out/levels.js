@@ -56,9 +56,11 @@ function MakeLevel(index, paddleP1, paddleP2) {
 function MakePuckCount(index) {
   Assert(index > 0, "index is 1-based");
   // note: this is just a big swag.
-  return 1; //250 + (index-1) * 300;
+  return 250 + (index - 1) * 300;
 }
 function MakePills(index) {
+  return [MakeForcePushProps, MakeDecimateProps]; // todo: do not commit this testing hack.
+
   Assert(index != kAttractLevelIndex);
   var lv0 = index - 1;
   var pills = [];

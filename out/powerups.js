@@ -170,7 +170,7 @@ function MakeForcePushProps(maker) {
         if (Sign(p.vx) == targetSign) {
           p.vx *= -1;
         } else {
-          p.vx = MinSigned(p.vx * 1.4, gameState.maxVX);
+          p.vx = MinSigned(p.vx * 1.15, gameState.maxVX);
         }
       });
       gameState.AddAnimation(MakeWaveAnimation({
@@ -183,6 +183,8 @@ function MakeForcePushProps(maker) {
 }
 function MakeDecimateProps(maker) {
   var name = 'decimate';
+  var img = new Image();
+  img.src = "images/decimate.png";
   return {
     name: name,
     width: sx(18),
@@ -198,28 +200,18 @@ function MakeDecimateProps(maker) {
     canSkip: true,
     drawFn: function drawFn(self, alpha) {
       Cxdo(function () {
-        var wx = WX(self.x);
-        var wy = WY(self.y);
-        var mx = wx + ii(self.width / 2);
-        var my = wy + ii(self.height / 2);
+        gCx.drawImage(img, self.x, self.y, self.width, self.height);
+        var mx = self.x + ii(self.width / 2);
+        var my = self.y + ii(self.height / 2);
         gCx.beginPath();
-        gCx.moveTo(mx, wy);
-        gCx.lineTo(wx + self.width, my);
-        gCx.lineTo(mx, wy + self.height);
-        gCx.lineTo(wx, my);
-        gCx.closePath();
-        gCx.fillStyle = backgroundColorStr;
-        gCx.fill();
-        gCx.beginPath();
-        gCx.moveTo(mx, wy);
-        gCx.lineTo(wx + self.width, my);
-        gCx.lineTo(mx, wy + self.height);
-        gCx.lineTo(wx, my);
+        gCx.moveTo(mx, self.y);
+        gCx.lineTo(self.x + self.width, my);
+        gCx.lineTo(mx, self.y + self.height);
+        gCx.lineTo(self.x, my);
         gCx.closePath();
         gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
         gCx.lineWidth = sx1(2);
         gCx.stroke();
-        DrawText(self.label, "center", wx + ii(self.width / 2), wy + self.ylb, self.fontSize);
       });
     },
     boomFn: function boomFn(gameState) {
