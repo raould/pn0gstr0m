@@ -264,23 +264,23 @@ function Puck(props) {
       });
     }
   };
-  self.OptionsCollision = function (options) {
-    if (self.alive && !self.isLocked && exists(options)) {
-      options.forEach(function (option) {
-        var hit = self.CollisionTest(option, ForSide(gP1Side, -1, 1));
+  self.XtrasCollision = function (xtras) {
+    if (self.alive && !self.isLocked && exists(xtras)) {
+      xtras.forEach(function (xtra) {
+        var hit = self.CollisionTest(xtra, ForSide(gP1Side, -1, 1));
         if (hit) {
-          option.OnPuckHit();
+          xtra.OnPuckHit();
           PlayBlip();
-          self.AdjustAndBounceX(option);
+          self.AdjustAndBounceX(xtra);
         }
       });
     }
   };
   self.NeoCollision = function (neo) {
     if (self.alive && !self.isLocked && exists(neo)) {
-      var hit = puck.CollisionTest(neo);
+      var hit = self.CollisionTest(neo);
       if (hit) {
-        neo.OnPuckHit();
+        neo.OnPuckHit(self);
         PlayBlip();
         // no bounce, get stuck instead.
         self.isLocked = true;

@@ -19,7 +19,7 @@ MakeDecimateProps, MakeEngorgeProps,
 // level 3
 MakeSplitProps, MakeDefendProps,
 // level 4
-MakeOptionProps, MakeNeoProps,
+MakeXtraProps, MakeNeoProps,
 // level 5
 MakeChaosProps];
 function MakeAttract(paddleP1, paddleP2) {
@@ -60,7 +60,7 @@ function MakePuckCount(index) {
 }
 function MakePills(index) {
   // todo: do not commit this testing hack long term.
-  return [MakeForcePushProps, MakeDecimateProps, MakeEngorgeProps, MakeSplitProps, MakeDefendProps, MakeOptionProps];
+  return [MakeForcePushProps, MakeDecimateProps, MakeEngorgeProps, MakeSplitProps, MakeDefendProps, MakeXtraProps, MakeNeoProps, MakeChaosProps];
   Assert(index != kAttractLevelIndex);
   var lv0 = index - 1;
   var pills = [];

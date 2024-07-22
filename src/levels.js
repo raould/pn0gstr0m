@@ -17,7 +17,7 @@ const gPillMakers = [
     MakeEngorgeProps, // level 3
     MakeSplitProps,
     MakeDefendProps,// level 4
-    MakeOptionProps,
+    MakeXtraProps,
     MakeNeoProps, // level 5
     MakeChaosProps,
 ];
@@ -67,7 +67,9 @@ function MakePills(index) {
             MakeEngorgeProps,
             MakeSplitProps,
             MakeDefendProps,
-            MakeOptionProps];
+            MakeXtraProps,
+            MakeNeoProps,
+            MakeChaosProps];
 
     Assert(index != kAttractLevelIndex);
     const lv0 = index - 1;

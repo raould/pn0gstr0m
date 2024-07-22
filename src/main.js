@@ -162,7 +162,7 @@ var kEjectSpeedCountThreshold = 90;
 var kPuckArrayInitialSize = 300;
 var kSparkArrayInitialSize = 200;
 var kBarriersArrayInitialSize = 4;
-var kOptionsArrayInitialSize = 6;
+var kXtrasArrayInitialSize = 6;
 
 // prevent pills from showing up too often, or too early... but not too late.
 var kPillSpawnCooldown = 1000 * 5;
@@ -1387,7 +1387,7 @@ function DrawBounds( alpha=0.5 ) {
                 self.UpdateScore(p);
             }
             if (p.alive) {
-                // options, barriers, neos do not split pucks,
+                // xtras, barriers, neos do not split pucks,
                 // only the main player & cpu paddles.
                 var splits = p.AllPaddlesCollision(
                     [ self.paddleP1, self.paddleP2 ],
@@ -1406,8 +1406,8 @@ function DrawBounds( alpha=0.5 ) {
                 p.WallsCollision( self.maxVX );
                 p.BarriersCollision(self.paddleP1.barriers.A);
                 p.BarriersCollision(self.paddleP2.barriers.A);
-                p.OptionsCollision(self.paddleP1.options.A);
-                p.OptionsCollision(self.paddleP2.options.A);
+                p.XtrasCollision(self.paddleP1.xtras.A);
+                p.XtrasCollision(self.paddleP2.xtras.A);
                 p.NeoCollision(self.paddleP1.neo);
                 p.NeoCollision(self.paddleP2.neo);
                 gPucks.B.push(p);

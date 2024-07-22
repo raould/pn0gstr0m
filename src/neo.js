@@ -102,7 +102,7 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
         }
     };
 
-    self.OnPuckHit = function() {
+    self.OnPuckHit = function( puck ) {
         self.locked.push( puck );
     };
 

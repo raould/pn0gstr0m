@@ -31,7 +31,7 @@
 
 /* misc ideas:
    see the future
-   option
+   xtra
    slowmo
    suction-blow
    magnasave
@@ -140,7 +140,7 @@ function MakeForcePushProps(maker) {
     img.src = ForSide(maker.side, "images/forcepushL.png", "images/forcepushR.png");
     return {
         name,
-        width: sx(15), height: sy(15),
+        width: sxi(15), height: syi(15),
         lifespan: kPillLifespan,
         fontSize: gReducedFontSizePt,
         testFn: (gameState) => {
@@ -151,8 +151,8 @@ function MakeForcePushProps(maker) {
                 var wx = WX(self.x);
                 var wy = WY(self.y);
                 gCx.drawImage(img, wx, wy, self.width, self.height);
-                var mx = wx + ii(self.width/2);
-                var my = wy + ii(self.height/2);
+                var mx = wx + self.width/2;
+                var my = wy + self.height/2;
                 gCx.beginPath();
                 gCx.arc(mx, my, self.width/2, 0, k2Pi);
                 gCx.closePath();
@@ -187,7 +187,7 @@ function MakeDecimateProps(maker) {
     img.src = "images/decimate.png";
     return {
         name,
-        width: sx(15), height: sy(15),
+        width: sxi(15), height: syi(15),
         lifespan: kPillLifespan,
         fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
@@ -244,7 +244,7 @@ function MakeEngorgeProps(maker) {
     img.src = "images/engorge.png";
     return {
         name,
-        width: sx(15), height: sy(25),
+        width: sxi(15), height: syi(25),
         lifespan: kPillLifespan,
         isUrgent: true,
         fontSize: gBigFontSizePt,
@@ -280,7 +280,7 @@ function MakeSplitProps(maker) {
     img.src = "images/split.png";
     return {
         name,
-        width: sx(15), height: sy(15),
+        width: sxi(15), height: syi(15),
         lifespan: kPillLifespan,
         fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
@@ -322,7 +322,7 @@ function MakeDefendProps(maker) {
     img.src = "images/defend.png";
     return {
         name,
-        width: sx(15), height: sy(30),
+        width: sxi(15), height: syi(30),
         lifespan: kPillLifespan,
         isUrgent: true,
         fontSize: gSmallFontSizePt,
@@ -370,43 +370,35 @@ function MakeDefendProps(maker) {
     };
 }
 
-function MakeOptionProps(maker) {
-    var name = 'option';
+function MakeXtraProps(maker) {
+    var name = 'xtra';
+    var img = new Image();
+    img.src = "images/xtra.png";
     return {
         name,
-        width: sx(22), height: sy(22),
+        width: sxi(20), height: syi(20),
         lifespan: kPillLifespan,
-        label: "!!",
-        ylb: sy(16),
         isUrgent: true,
         fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
-            return maker.paddle.options.A.length == 0 && (gDebug || gPucks.A.length > 20);
+            return maker.paddle.xtras.A.length == 0 && (gDebug || gPucks.A.length > 20);
         },
         canSkip: true,
         drawFn: (self, alpha) => {
             Cxdo(() => {
                 var wx = WX(self.x);
                 var wy = WY(self.y);
-                var r = 6;
-
+                gCx.drawImage(img, wx, wy, self.width, self.height);
                 gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, r );
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
-                gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, r );
+                gCx.RoundRect(wx, wy, self.width, self.height, 10);
                 gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
                 gCx.lineWidth = sx1(2);
                 gCx.stroke();
-
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
             });
         },
         boomFn: (gameState) => {
             PlayPowerupBoom();
-            var n = 6; // match: kOptionsArrayInitialSize.
+            var n = 6; // match: kXtrasArrayInitialSize.
             var yy = (gHeight-gYInset*2)/n;
             var width = gPaddleWidth*2/3;
             var height = Math.min(gPaddleHeight/2, yy/2);
@@ -417,7 +409,7 @@ function MakeOptionProps(maker) {
                 var y = gYInset+yy*i;
                 var yMin = y;
                 var yMax = y+yy;
-                maker.paddle.AddOption({
+                maker.paddle.AddXtra({
                     isPlayer: false,
                     side: maker.side,
                     x: x+xoff, y,
@@ -434,12 +426,12 @@ function MakeOptionProps(maker) {
 
 function MakeNeoProps(maker) {
     var name = 'neo';
+    var img = new Image();
+    img.src = "images/neo.png";
     return {
         name,
-        width: sx(22), height: sy(22),
+        width: sxi(22), height: syi(22),
         lifespan: kPillLifespan,
-        label: "#",
-        ylb: sy(15),
         isUrgent: true,
         fontSize: gSmallestFontSizePt,
         testFn: (gameState) => {
@@ -453,17 +445,7 @@ function MakeNeoProps(maker) {
                 var wy = WY(self.y);
                 var mx = wx + ii(self.width/2);
                 var my = wy + ii(self.height/2);
-                var o = sy1(5);
-
-                gCx.beginPath();
-                gCx.moveTo(mx, wy-o);
-                gCx.lineTo(wx+self.width+o, my);
-                gCx.lineTo(mx, wy+self.height+o);
-                gCx.lineTo(wx-o, my);
-                gCx.closePath();
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
+                gCx.drawImage(img, wx, wy, self.width, self.height);
                 gCx.beginPath();
                 gCx.moveTo(mx, wy);
                 gCx.lineTo(wx + self.width, my);
@@ -471,20 +453,9 @@ function MakeNeoProps(maker) {
                 gCx.lineTo(wx, my);
                 gCx.closePath();
                 gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.lineWidth = sx1(1);
+                gCx.lineWidth = sx1(2);
                 gCx.stroke();
 
-                gCx.beginPath();
-                gCx.moveTo(mx, wy-o);
-                gCx.lineTo(wx+self.width+o, my);
-                gCx.lineTo(mx, wy+self.height+o);
-                gCx.lineTo(wx-o, my);
-                gCx.closePath();
-                gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.lineWidth = sx1(1);
-                gCx.stroke();
-
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
             });
         },
         boomFn: (gameState) => {
@@ -499,13 +470,14 @@ function MakeNeoProps(maker) {
     };
 }
 
+// note: this one ended up being broken by ipados safari opacity bugs so is not used. :-(
 function MakeRadarProps(maker) {
     var name = 'radar';
     var x = ForSide(maker.side, gw(0.4), gw(0.6));
     return {
         name,
         isPlayerOnly: true,
-        width: sx(18), height: sy(18),
+        width: sxi(18), height: syi(18),
         lifespan: kPillLifespan,
         label: "?",
         ylb: sy(13),
@@ -546,7 +518,7 @@ function MakeChaosProps(maker) {
     var name = 'chaos';
     return {
         name,
-        width: sx(20), height: sy(20),
+        width: sxi(20), height: syi(20),
         lifespan: kPillLifespan,
         label: ["|", "/", "--", "\\", "|", "/", "--", "\\"],
         ylb: sy(14),

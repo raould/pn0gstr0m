@@ -34,10 +34,10 @@ function Paddle(props) {
             A: new ReuseArray(kBarriersArrayInitialSize),
             B: new ReuseArray(kBarriersArrayInitialSize)
         };
-        // options are mini paddles.
-        self.options = {
-            A: new ReuseArray(kOptionsArrayInitialSize),
-            B: new ReuseArray(kOptionsArrayInitialSize)
+        // xtras are mini paddles.
+        self.xtras = {
+            A: new ReuseArray(kXtrasArrayInitialSize),
+            B: new ReuseArray(kXtrasArrayInitialSize)
         };
         // neos are sticky fly traps.
         self.neo = undefined;
@@ -84,9 +84,9 @@ function Paddle(props) {
         self.barriers.A.push(b);
     };
 
-    self.AddOption = function( props ) {
+    self.AddXtra = function( props ) {
         var o = new Paddle(props);
-        self.options.A.push(o);
+        self.xtras.A.push(o);
     };
 
     self.AddNeo = function( props ) {
@@ -95,7 +95,7 @@ function Paddle(props) {
 
     self.StepPowerups = function( dt, gameState ) {
         self.StepBarriers( dt );
-        self.StepOptions( dt, gameState );
+        self.StepXtras( dt, gameState );
         self.StepNeo( dt, gameState );
     };
 
@@ -108,13 +108,13 @@ function Paddle(props) {
         SwapBuffers(self.barriers);
     };
 
-    self.StepOptions = function( dt, gameState ) {
-        self.options.B.clear();
-        self.options.A.forEach(o => {
+    self.StepXtras = function( dt, gameState ) {
+        self.xtras.B.clear();
+        self.xtras.A.forEach(o => {
             o.Step( dt, gameState );
-            o.alive && self.options.B.push( o );
+            o.alive && self.xtras.B.push( o );
         } );
-        SwapBuffers(self.options);
+        SwapBuffers(self.xtras);
     };
 
     self.StepNeo = function( dt, gameState ) {
@@ -174,8 +174,8 @@ function Paddle(props) {
         self.barriers.A.forEach(b => {
             b.Draw( alpha );
         });
-        self.options.A.forEach(o => {
-            o.Draw( alpha, gameState );
+        self.xtras.A.forEach(x => {
+            x.Draw( alpha, gameState );
         });
         if (exists(self.neo)) {
             self.neo.Draw( alpha, gameState );
