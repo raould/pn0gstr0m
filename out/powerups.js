@@ -537,32 +537,33 @@ function MakeRadarProps(maker) {
 }
 function MakeChaosProps(maker) {
   var name = 'chaos';
+  var img = new Image();
+  img.src = "images/chaos.png";
   return {
     name: name,
-    width: sxi(20),
-    height: syi(20),
+    width: sxi(14),
+    height: syi(14),
     lifespan: kPillLifespan,
-    label: ["|", "/", "--", "\\", "|", "/", "--", "\\"],
-    ylb: sy(14),
     fontSize: gSmallestFontSizePt,
     testFn: function testFn(gameState) {
       return (gDebug || gPucks.A.length > 10) && isU(maker.paddle.neo);
     },
     drawFn: function drawFn(self, alpha) {
       Cxdo(function () {
-        var wx = WX(self.x);
-        var wy = WY(self.y);
+        var o = gR.RandomCentered(sx1(4), sx1(2));
+        var wx = WX(self.x) - o;
+        var wy = WY(self.y) - o;
+        var ww = self.width + o * 2;
+        var wh = self.height + o * 2;
+        gCx.drawImage(img, wx, wy, ww, wh);
+        var mx = wx + ww / 2;
+        var my = wy + wh / 2;
         gCx.beginPath();
-        gCx.RoundRect(wx, wy, self.width, self.height, 3);
-        gCx.fillStyle = backgroundColorStr;
-        gCx.fill();
-        gCx.beginPath();
-        gCx.RoundRect(wx, wy, self.width, self.height, 3);
+        gCx.arc(mx, my, ww / 2, 0, k2Pi);
+        gCx.closePath();
         gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
         gCx.lineWidth = sx1(2);
         gCx.stroke();
-        var i = ii(gFrameCount / 5) % self.label.length;
-        DrawText(self.label[i], "center", wx + ii(self.width / 2), wy + self.ylb, self.fontSize);
       });
     },
     boomFn: function boomFn(gameState) {
