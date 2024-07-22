@@ -351,22 +351,16 @@ function cancelPointing() {
 var gPucks; // { A:[], B:[] }
 var gSparks; // { A:[], B:[] }
 
+// i just love not having an enum type.
 var kDebug = -2;
 var kRoot = -1;
 var kWarning = 0; // audio permission via user interaction effing eff.
 var kTitle = 1;
-var kGetReady = 2;
-// todo: currently can't actually do level splash
-// because there's no easy way to draw the
-// pills w/out a game state. :-(
-// level 1 does not show a level splash,
-// and must not have any powerups,
-// but all higher levels do.
-// todo: var kLevelSplash = 3;
-var kGame = 4;
-var kLevelWon = 5;
-var kGameOver = 6;
-var kGameOverSummary = 7;
+var kGetReady = 2; // includes 'level splash' for levels 2+.
+var kGame = 3;
+var kLevelWon = 4;
+var kGameOver = 5;
+var kGameOverSummary = 6;
 
 var gCanvas;
 var gCx;

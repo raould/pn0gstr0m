@@ -10,18 +10,6 @@
 const gLevelRandom = new Random(42);
 const kAttractLevelIndex = -1;
 
-const gPillMakers = [
-    // levels are 1-based, and level 1 has no powerups.
-    MakeForcePushProps, // level 2
-    MakeDecimateProps,
-    MakeEngorgeProps, // level 3
-    MakeSplitProps,
-    MakeDefendProps,// level 4
-    MakeXtraProps,
-    MakeNeoProps, // level 5
-    MakeChaosProps,
-];
-
 function MakeAttract(paddleP1, paddleP2) {
     return new Level({
         index: kAttractLevelIndex,
@@ -38,6 +26,7 @@ function MakeAttract(paddleP1, paddleP2) {
 // level is one-based.
 function MakeLevel(index, paddleP1, paddleP2) {
     Assert(index > 0, "index is 1-based");
+    const pillMakers = ChoosePillIds(index).map(pid => gPillMakers[pid]);
     const level = new Level({
         index,
         // maxVX is allowed to grow after there are no more splits.
@@ -46,7 +35,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
         puckCount: MakePuckCount(index),
         isP1Player: true,
         isP2Player: !gSinglePlayer,
-        pills: MakePills(index),
+        pills: pillMakers,
         paddleP1: paddleP1,
         paddleP2: paddleP2,
     });
@@ -60,25 +49,27 @@ function MakePuckCount(index) {
     return 250 + (index-1) * 300;
 }
 
-function MakePills(index) {
+function ChoosePillIds(index) {
+    return gPillIds; // todo: do not commit this testing hack long term.
+
     Assert(index != kAttractLevelIndex);
     const lv0 = index - 1;
-    let pills = [];
+    let pids = [];
 
     // skip the very first level, it has no powerups.
     if (lv0 > 0) {
 
         // the first n levels get 2 pills in order.
-        if (lv0*2 <= gPillMakers.length-2) {
+        if (lv0*2 <= gPillIds.length-2) {
             const i = (lv0-1)*2;
-            pills = gPillMakers.slice(i, i+2);
-            console.log("MakePills2x", index, pills);
-            Assert(pills.length == 2);
+            pids = gPillIds.slice(i, i+2);
+            console.log("ChoosePillIds by 2", index, pids);
+            Assert(pids.length == 2);
         }
 
         // after those first n levels, the pills are random.
         else {
-            const a = [...gPillMakers];
+            const a = [...gPillIds];
             var p0 = a.splice(
                 gLevelRandom.RandomRange(0, a.length-1),
                 1
@@ -92,12 +83,12 @@ function MakePills(index) {
             Assert(p0 != p1);
             Assert(p0.length == 1);
             Assert(p1.length == 1);
-            pills = [p0[0], p1[0]];
-            console.log("MakePillsRandom", index, pills);
+            pids = [p0[0], p1[0]];
+            console.log("ChoosePillIds Random", index, pids);
         }
-        Assert(pills.length > 0, "Pills");
+        Assert(pids.length > 0);
     }
 
-    console.log("Pills", index, pills);
-    return pills;
+    console.log("Pids", index, pids);
+    return pids;
 }

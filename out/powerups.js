@@ -59,6 +59,19 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 
 // needs to be longish so the cpu has any chance of getting it.
 var kPillLifespan = 1000 * 20;
+var kForcePushPill = 0;
+var kDecimatePill = 1;
+var kEngorgePill = 2;
+var kSplitPill = 3;
+var kDefendPill = 4;
+var kXtraPill = 5;
+var kNeoPill = 6;
+var kChaosPill = 7;
+
+// levels are 1-based, and level 1 has no powerups.
+// levels with powerup pills have 2 types of pill.
+var gPillIds = [kForcePushPill, kDecimatePill, kEngorgePill, kSplitPill, kDefendPill, kXtraPill, kNeoPill, kChaosPill];
+var gPillMakers = _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty({}, kForcePushPill, MakeForcePushProps), kDecimatePill, MakeDecimateProps), kEngorgePill, MakeEngorgeProps), kSplitPill, MakeSplitProps), kDefendPill, MakeDefendProps), kXtraPill, MakeXtraProps), kNeoPill, MakeNeoProps), kChaosPill, MakeChaosProps);
 
 /*class*/
 function Powerups(props) {
@@ -134,10 +147,42 @@ function Powerups(props) {
   self.Init();
 }
 ;
+
+// ----------------------------------------
+
+gImageCache = {
+  forcepushL: function () {
+    var img = new Image();
+    img.src = "images/forcepushL.png";
+    return img;
+  }(),
+  forcepushR: function () {
+    var img = new Image();
+    img.src = "images/forcepushR.png";
+    return img;
+  }()
+};
+function DrawForcePush(side, xywh, alpha) {
+  var img = gImageCache[ForSide(side, "forcepushL", "forcepushR")];
+  Cxdo(function () {
+    var wx = WX(xywh.x);
+    var wy = WY(xywh.y);
+    gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+    var mx = wx + xywh.width / 2;
+    var my = wy + xywh.height / 2;
+    gCx.beginPath();
+    gCx.arc(mx, my, xywh.width / 2, 0, k2Pi);
+    gCx.closePath();
+    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.lineWidth = sx1(2);
+    gCx.stroke();
+  });
+}
+
+// ----------------------------------------
+
 function MakeForcePushProps(maker) {
   var name = "forcepush";
-  var img = new Image();
-  img.src = ForSide(maker.side, "images/forcepushL.png", "images/forcepushR.png");
   return {
     name: name,
     width: sxi(15),
@@ -148,19 +193,7 @@ function MakeForcePushProps(maker) {
       return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
     },
     drawFn: function drawFn(self, alpha) {
-      Cxdo(function () {
-        var wx = WX(self.x);
-        var wy = WY(self.y);
-        gCx.drawImage(img, wx, wy, self.width, self.height);
-        var mx = wx + self.width / 2;
-        var my = wy + self.height / 2;
-        gCx.beginPath();
-        gCx.arc(mx, my, self.width / 2, 0, k2Pi);
-        gCx.closePath();
-        gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-        gCx.lineWidth = sx1(2);
-        gCx.stroke();
-      });
+      return DrawForcePush(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();

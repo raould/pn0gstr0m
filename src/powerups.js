@@ -46,6 +46,39 @@
 // needs to be longish so the cpu has any chance of getting it.
 var kPillLifespan = 1000 * 20;
 
+const kForcePushPill = 0;
+const kDecimatePill = 1;
+const kEngorgePill = 2;
+const kSplitPill = 3;
+const kDefendPill = 4;
+const kXtraPill = 5;
+const kNeoPill = 6;
+const kChaosPill = 7;
+
+// levels are 1-based, and level 1 has no powerups.
+// levels with powerup pills have 2 types of pill.
+const gPillIds = [
+    kForcePushPill,
+    kDecimatePill,
+    kEngorgePill,
+    kSplitPill,
+    kDefendPill,
+    kXtraPill,
+    kNeoPill,
+    kChaosPill,
+];
+
+const gPillMakers = {
+    [kForcePushPill]: MakeForcePushProps,
+    [kDecimatePill]: MakeDecimateProps,
+    [kEngorgePill]: MakeEngorgeProps,
+    [kSplitPill]: MakeSplitProps,
+    [kDefendPill]: MakeDefendProps,
+    [kXtraPill]: MakeXtraProps,
+    [kNeoPill]: MakeNeoProps,
+    [kChaosPill]: MakeChaosProps,
+};
+
 /*class*/ function Powerups( props ) {
 
     var self = this;
@@ -134,10 +167,42 @@ var kPillLifespan = 1000 * 20;
     self.Init();
 };
 
+// ----------------------------------------
+
+gImageCache = {
+    forcepushL: (() => {
+        var img = new Image();
+        img.src = "images/forcepushL.png";
+        return img;
+    })(),
+    forcepushR: (() => {
+        var img = new Image();
+        img.src = "images/forcepushR.png";
+        return img;
+    })(),
+};
+
+function DrawForcePush(side, xywh, alpha) {
+    var img = gImageCache[ForSide(side, "forcepushL", "forcepushR")];
+    Cxdo(() => {
+        var wx = WX(xywh.x);
+        var wy = WY(xywh.y);
+        gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+        var mx = wx + xywh.width/2;
+        var my = wy + xywh.height/2;
+        gCx.beginPath();
+        gCx.arc(mx, my, xywh.width/2, 0, k2Pi);
+        gCx.closePath();
+        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.lineWidth = sx1(2);
+        gCx.stroke();
+    });
+}
+
+// ----------------------------------------
+
 function MakeForcePushProps(maker) {
     var name = "forcepush";
-    var img = new Image();
-    img.src = ForSide(maker.side, "images/forcepushL.png", "images/forcepushR.png");
     return {
         name,
         width: sxi(15), height: syi(15),
@@ -146,21 +211,7 @@ function MakeForcePushProps(maker) {
         testFn: (gameState) => {
             return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
         },
-        drawFn: (self, alpha) => {
-            Cxdo(() => {
-                var wx = WX(self.x);
-                var wy = WY(self.y);
-                gCx.drawImage(img, wx, wy, self.width, self.height);
-                var mx = wx + self.width/2;
-                var my = wy + self.height/2;
-                gCx.beginPath();
-                gCx.arc(mx, my, self.width/2, 0, k2Pi);
-                gCx.closePath();
-                gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.lineWidth = sx1(2);
-                gCx.stroke();
-            });
-        },
+        drawFn: (self, alpha) => DrawForcePush(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var targetSign = ForSide(maker.side, -1, 1);
