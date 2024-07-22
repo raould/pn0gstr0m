@@ -57,7 +57,7 @@ const kChaosPill = 7;
 
 // levels are 1-based, and level 1 has no powerups.
 // levels with powerup pills have 2 types of pill.
-const gPillIds = [
+const gPillIDs = [
     kForcePushPill,
     kDecimatePill,
     kEngorgePill,

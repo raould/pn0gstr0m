@@ -70,7 +70,7 @@ var kChaosPill = 7;
 
 // levels are 1-based, and level 1 has no powerups.
 // levels with powerup pills have 2 types of pill.
-var gPillIds = [kForcePushPill, kDecimatePill, kEngorgePill, kSplitPill, kDefendPill, kXtraPill, kNeoPill, kChaosPill];
+var gPillIDs = [kForcePushPill, kDecimatePill, kEngorgePill, kSplitPill, kDefendPill, kXtraPill, kNeoPill, kChaosPill];
 var gPillMakers = _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty({}, kForcePushPill, MakeForcePushProps), kDecimatePill, MakeDecimateProps), kEngorgePill, MakeEngorgeProps), kSplitPill, MakeSplitProps), kDefendPill, MakeDefendProps), kXtraPill, MakeXtraProps), kNeoPill, MakeNeoProps), kChaosPill, MakeChaosProps);
 
 /*class*/

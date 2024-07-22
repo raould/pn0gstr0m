@@ -33,7 +33,7 @@ function MakeAttract(paddleP1, paddleP2) {
 // level is one-based.
 function MakeLevel(index, paddleP1, paddleP2) {
   Assert(index > 0, "index is 1-based");
-  var pillMakers = ChoosePillIds(index).map(function (pid) {
+  var pillMakers = ChoosePillIDs(index).map(function (pid) {
     return gPillMakers[pid];
   });
   var level = new Level({
@@ -56,9 +56,7 @@ function MakePuckCount(index) {
   // note: this is just a big swag.
   return 250 + (index - 1) * 300;
 }
-function ChoosePillIds(index) {
-  return gPillIds; // todo: do not commit this testing hack long term.
-
+function ChoosePillIDs(index) {
   Assert(index != kAttractLevelIndex);
   var lv0 = index - 1;
   var pids = [];
@@ -66,16 +64,16 @@ function ChoosePillIds(index) {
   // skip the very first level, it has no powerups.
   if (lv0 > 0) {
     // the first n levels get 2 pills in order.
-    if (lv0 * 2 <= gPillIds.length - 2) {
+    if (lv0 * 2 <= gPillIDs.length - 2) {
       var i = (lv0 - 1) * 2;
-      pids = gPillIds.slice(i, i + 2);
-      console.log("ChoosePillIds by 2", index, pids);
+      pids = gPillIDs.slice(i, i + 2);
+      console.log("ChoosePillIDs by 2", index, pids);
       Assert(pids.length == 2);
     }
 
     // after those first n levels, the pills are random.
     else {
-      var a = _toConsumableArray(gPillIds);
+      var a = _toConsumableArray(gPillIDs);
       var p0 = a.splice(gLevelRandom.RandomRange(0, a.length - 1), 1);
       var p1 = a.slice(gLevelRandom.RandomRange(0, a.length - 1), 1);
       Assert(exists(p0));
@@ -84,7 +82,7 @@ function ChoosePillIds(index) {
       Assert(p0.length == 1);
       Assert(p1.length == 1);
       pids = [p0[0], p1[0]];
-      console.log("ChoosePillIds Random", index, pids);
+      console.log("ChoosePillIDs Random", index, pids);
     }
     Assert(pids.length > 0);
   }

@@ -26,7 +26,7 @@ function MakeAttract(paddleP1, paddleP2) {
 // level is one-based.
 function MakeLevel(index, paddleP1, paddleP2) {
     Assert(index > 0, "index is 1-based");
-    const pillMakers = ChoosePillIds(index).map(pid => gPillMakers[pid]);
+    const pillMakers = ChoosePillIDs(index).map(pid => gPillMakers[pid]);
     const level = new Level({
         index,
         // maxVX is allowed to grow after there are no more splits.
@@ -49,9 +49,7 @@ function MakePuckCount(index) {
     return 250 + (index-1) * 300;
 }
 
-function ChoosePillIds(index) {
-    return gPillIds; // todo: do not commit this testing hack long term.
-
+function ChoosePillIDs(index) {
     Assert(index != kAttractLevelIndex);
     const lv0 = index - 1;
     let pids = [];
@@ -60,16 +58,16 @@ function ChoosePillIds(index) {
     if (lv0 > 0) {
 
         // the first n levels get 2 pills in order.
-        if (lv0*2 <= gPillIds.length-2) {
+        if (lv0*2 <= gPillIDs.length-2) {
             const i = (lv0-1)*2;
-            pids = gPillIds.slice(i, i+2);
-            console.log("ChoosePillIds by 2", index, pids);
+            pids = gPillIDs.slice(i, i+2);
+            console.log("ChoosePillIDs by 2", index, pids);
             Assert(pids.length == 2);
         }
 
         // after those first n levels, the pills are random.
         else {
-            const a = [...gPillIds];
+            const a = [...gPillIDs];
             var p0 = a.splice(
                 gLevelRandom.RandomRange(0, a.length-1),
                 1
@@ -84,7 +82,7 @@ function ChoosePillIds(index) {
             Assert(p0.length == 1);
             Assert(p1.length == 1);
             pids = [p0[0], p1[0]];
-            console.log("ChoosePillIds Random", index, pids);
+            console.log("ChoosePillIDs Random", index, pids);
         }
         Assert(pids.length > 0);
     }

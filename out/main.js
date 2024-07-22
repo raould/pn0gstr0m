@@ -422,7 +422,7 @@ var kWarning = 0; // audio permission via user interaction effing eff.
 var kTitle = 1;
 var kGetReady = 2; // includes 'level splash' for levels 2+.
 var kGame = 3;
-var kLevelWon = 4;
+var kLevelFin = 4;
 var kGameOver = 5;
 var kGameOverSummary = 6;
 var gCanvas;
@@ -878,7 +878,12 @@ function TitleState() {
       if (isU(gP1Side)) {
         SetP1Side("right");
       }
-      nextState = gSinglePlayer ? kGame : kGetReady;
+      if (gSinglePlayer) {
+        var pillIDs = ChoosePillIDs(gLevelIndex);
+        nextState = pillIDs.length > 0 ? kGame : kGetReady;
+      } else {
+        nextState = kGetReady;
+      }
     }
     return nextState;
   };
@@ -938,8 +943,9 @@ function GetReadyState() {
   self.Init = function () {
     ResetInput();
     gStateMuted = false;
-    self.timeout = 1000 * (gDebug ? 1 : 3) - 1;
+    self.timeout = 1000 * 3 - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
+    self.pillIDs = ChoosePillIDs(gLevelIndex);
     PlayBlip();
   };
   self.Step = function (dt) {
@@ -953,6 +959,10 @@ function GetReadyState() {
   };
   self.Draw = function () {
     ClearScreen();
+    self.DrawText();
+    self.DrawPills();
+  };
+  self.DrawText = function () {
     var t = Math.ceil(self.timeout / 1000);
     Cxdo(function () {
       gCx.fillStyle = RandomGreen();
@@ -962,6 +972,17 @@ function GetReadyState() {
       DrawText(ForSide(gP1Side, "P1", "P2"), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
       DrawText(ForSide(gP1Side, "P2", "P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
     });
+  };
+  self.DrawPills = function () {
+    if (self.pillIDs.length > 0) {
+      // note: everything about powerups
+      // is currently hardcoded to expect
+      // zero or two at most.
+      Cxdo(function () {
+        gCx.fillStyle = RandomGreen();
+        DrawText("POWERUPS", "center", gw(0.5), gh(0.7), gRegularFontSizePt);
+      });
+    }
   };
   self.Init();
 }
@@ -1139,7 +1160,7 @@ function GameState(props) {
     self.ProcessAllInput();
     if (self.quit) {
       SaveEndScreenshot(self);
-      return gDebug ? kLevelWon : kTitle;
+      return gDebug ? kLevelFin : kTitle;
     }
     if (self.stepping) {
       dt = kTimeStep;
@@ -1228,17 +1249,17 @@ function GameState(props) {
     var nextState;
     if (!self.isAttract && gPucks.A.length == 0) {
       if (gSinglePlayer) {
-        nextState = gP1Score < gP2Score ? kGameOver : kLevelWon;
+        nextState = gP1Score < gP2Score ? kGameOver : kLevelFin;
       } else {
         // in a tie, nobody records a 'win'.
         if (gP1Score == gP2Score) {
-          nextState = kLevelWon;
+          nextState = kLevelFin;
         } else if (gP1Score > gP2Score) {
           gP1Wins += 1;
         } else {
           gP2Wins += 1;
         }
-        nextState = is2PGameOver() ? kGameOver : kLevelWon;
+        nextState = is2PGameOver() ? kGameOver : kLevelFin;
       }
     }
     return nextState;
@@ -1640,7 +1661,7 @@ function GameState(props) {
 }
 
 /*class*/
-function LevelWonState() {
+function LevelFinState() {
   var self = this;
   self.Init = function () {
     ResetInput();
@@ -1671,9 +1692,9 @@ function LevelWonState() {
       if (ud || ap || apd) {
         gLevelIndex += 1;
         if (gSinglePlayer) {
-          return kGame;
+          return kGetReady;
         } else {
-          return is2PGameOver() ? kGameOverSummary : kGame;
+          return is2PGameOver() ? kGameOverSummary : kGetReady;
         }
       }
     }
@@ -2213,6 +2234,8 @@ var gMatchedAreaCount = 0;
 var kMatchedAreaRequirement = 10;
 function OnResize() {
   if (exists(gLifecycle)) {
+    // todo: allow/deny list of when we can resize,
+    // which happens to destroy all game state.
     if (gLifecycle.state == kGame) {
       if (exists(gLifecycle.handler)) {
         gLifecycle.handler.Pause();
@@ -2308,8 +2331,8 @@ function Start() {
   handlerMap[kGame] = function () {
     return new GameState();
   };
-  handlerMap[kLevelWon] = function () {
-    return new LevelWonState();
+  handlerMap[kLevelFin] = function () {
+    return new LevelFinState();
   };
   handlerMap[kGameOver] = function () {
     return new GameOverState();
