@@ -61,7 +61,12 @@ function MakePuckCount(index) {
 }
 
 function MakePills(index) {
-    return [MakeEngorgeProps, MakeSplitProps];
+    return [MakeForcePushProps,
+            MakeDecimateProps,
+            MakeEngorgeProps,
+            MakeSplitProps,
+            MakeDefendProps,
+            MakeOptionProps];
 
     Assert(index != kAttractLevelIndex);
     const lv0 = index - 1;

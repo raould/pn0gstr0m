@@ -140,7 +140,7 @@ function MakeForcePushProps(maker) {
     img.src = ForSide(maker.side, "images/forcepushL.png", "images/forcepushR.png");
     return {
         name,
-        width: sx(18), height: sy(18),
+        width: sx(15), height: sy(15),
         lifespan: kPillLifespan,
         fontSize: gReducedFontSizePt,
         testFn: (gameState) => {
@@ -187,7 +187,7 @@ function MakeDecimateProps(maker) {
     img.src = "images/decimate.png";
     return {
         name,
-        width: sx(18), height: sy(18),
+        width: sx(15), height: sy(15),
         lifespan: kPillLifespan,
         fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
@@ -244,7 +244,7 @@ function MakeEngorgeProps(maker) {
     img.src = "images/engorge.png";
     return {
         name,
-        width: sx(22), height: sy(22),
+        width: sx(15), height: sy(15),
         lifespan: kPillLifespan,
         isUrgent: true,
         fontSize: gBigFontSizePt,
@@ -276,12 +276,12 @@ function MakeEngorgeProps(maker) {
 
 function MakeSplitProps(maker) {
     var name = 'split';
+    var img = new Image();
+    img.src = "images/split.png";
     return {
         name,
-        width: sx(30), height: sy(24),
+        width: sx(15), height: sy(15),
         lifespan: kPillLifespan,
-        label: "//",
-        ylb: sy(18),
         fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
             return true;
@@ -290,21 +290,12 @@ function MakeSplitProps(maker) {
             Cxdo(() => {
                 var wx = WX(self.x);
                 var wy = WY(self.y);
-                var mx = wx + ii(self.width/2);
-                var my = wy + ii(self.height/2);
-
+                gCx.drawImage(img, wx, wy, self.width, self.height);
                 gCx.beginPath();
-                gCx.RoundRect(wx, wy, self.width, self.height, 20);
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
-                gCx.beginPath();
-                gCx.RoundRect(wx, wy, self.width, self.height, 20);
+                gCx.RoundRect(wx, wy, self.width, self.height, 10);
                 gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
                 gCx.lineWidth = sx1(2);
                 gCx.stroke();
-
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
             });
         },
         boomFn: (gameState) => {
