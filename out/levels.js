@@ -59,8 +59,6 @@ function MakePuckCount(index) {
   return 250 + (index - 1) * 300;
 }
 function MakePills(index) {
-  // todo: do not commit this testing hack long term.
-  return [MakeForcePushProps, MakeDecimateProps, MakeEngorgeProps, MakeSplitProps, MakeDefendProps, MakeXtraProps, MakeNeoProps, MakeChaosProps];
   Assert(index != kAttractLevelIndex);
   var lv0 = index - 1;
   var pills = [];
