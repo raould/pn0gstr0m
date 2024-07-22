@@ -160,6 +160,11 @@ AddImageToCache("forcepushL", "images/forcepushL.png", gImageCache);
 AddImageToCache("forcepushR", "images/forcepushR.png", gImageCache);
 AddImageToCache("decimate", "images/decimate.png", gImageCache);
 AddImageToCache("engorge", "images/engorge.png", gImageCache);
+AddImageToCache("split", "images/split.png", gImageCache);
+AddImageToCache("defend", "images/defend.png", gImageCache);
+AddImageToCache("xtra", "images/xtra.png", gImageCache);
+AddImageToCache("neo", "images/neo.png", gImageCache);
+AddImageToCache("chaos", "images/chaos.png", gImageCache);
 function DrawForcePush(side, xywh, alpha) {
   var img = gImageCache[ForSide(side, "forcepushL", "forcepushR")];
   Cxdo(function () {
@@ -208,6 +213,83 @@ function DrawEngorge(side, xywh, alpha) {
     gCx.stroke();
   });
 }
+function DrawSplit(side, xywh, alpha) {
+  var img = gImageCache["split"];
+  Cxdo(function () {
+    var wx = WX(xywh.x);
+    var wy = WY(xywh.y);
+    gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+    gCx.beginPath();
+    gCx.RoundRect(wx, wy, xywh.width, xywh.height, 10);
+    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.lineWidth = sx1(2);
+    gCx.stroke();
+  });
+}
+function DrawDefend(side, xywh, alpha) {
+  var img = gImageCache["defend"];
+  Cxdo(function () {
+    var wx = WX(xywh.x);
+    var wy = WY(xywh.y);
+    gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+    gCx.beginPath();
+    gCx.RoundRect(wx, wy, xywh.width, xywh.height, 10);
+    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.lineWidth = sx1(2);
+    gCx.stroke();
+  });
+}
+function DrawXtra(side, xywh, alpha) {
+  var img = gImageCache["xtra"];
+  Cxdo(function () {
+    var wx = WX(xywh.x);
+    var wy = WY(xywh.y);
+    gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+    gCx.beginPath();
+    gCx.RoundRect(wx, wy, xywh.width, xywh.height, 10);
+    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.lineWidth = sx1(2);
+    gCx.stroke();
+  });
+}
+function DrawNeo(side, xywh, alpha) {
+  var img = gImageCache["neo"];
+  Cxdo(function () {
+    var wx = WX(xywh.x);
+    var wy = WY(xywh.y);
+    var mx = wx + ii(xywh.width / 2);
+    var my = wy + ii(xywh.height / 2);
+    gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+    gCx.beginPath();
+    gCx.moveTo(mx, wy);
+    gCx.lineTo(wx + xywh.width, my);
+    gCx.lineTo(mx, wy + xywh.height);
+    gCx.lineTo(wx, my);
+    gCx.closePath();
+    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.lineWidth = sx1(2);
+    gCx.stroke();
+  });
+}
+function DrawChaos(side, xywh, alpha) {
+  var img = gImageCache["chaos"];
+  Cxdo(function () {
+    var o = gR.RandomCentered(sx1(4), sx1(2));
+    var wx = WX(xywh.x) - o;
+    var wy = WY(xywh.y) - o;
+    var ww = xywh.width + o * 2;
+    var wh = xywh.height + o * 2;
+    gCx.drawImage(img, wx, wy, ww, wh);
+    var mx = wx + ww / 2;
+    var my = wy + wh / 2;
+    gCx.beginPath();
+    gCx.arc(mx, my, ww / 2, 0, k2Pi);
+    gCx.closePath();
+    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.lineWidth = sx1(2);
+    gCx.stroke();
+  });
+}
 
 // ----------------------------------------
 
@@ -245,8 +327,6 @@ function MakeForcePushProps(maker) {
 }
 function MakeDecimateProps(maker) {
   var name = 'decimate';
-  var img = new Image();
-  img.src = "images/decimate.png";
   return {
     name: name,
     width: sxi(15),
@@ -299,8 +379,6 @@ function MakeDecimateProps(maker) {
 }
 function MakeEngorgeProps(maker) {
   var name = 'engorge';
-  var img = new Image();
-  img.src = "images/engorge.png";
   return {
     name: name,
     width: sxi(15),
@@ -327,8 +405,6 @@ function MakeEngorgeProps(maker) {
 ;
 function MakeSplitProps(maker) {
   var name = 'split';
-  var img = new Image();
-  img.src = "images/split.png";
   return {
     name: name,
     width: sxi(15),
@@ -339,16 +415,7 @@ function MakeSplitProps(maker) {
       return true;
     },
     drawFn: function drawFn(self, alpha) {
-      Cxdo(function () {
-        var wx = WX(self.x);
-        var wy = WY(self.y);
-        gCx.drawImage(img, wx, wy, self.width, self.height);
-        gCx.beginPath();
-        gCx.RoundRect(wx, wy, self.width, self.height, 10);
-        gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-        gCx.lineWidth = sx1(2);
-        gCx.stroke();
-      });
+      return DrawSplit(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
       var r = 10 / gPucks.A.length;
@@ -371,8 +438,6 @@ function MakeSplitProps(maker) {
 }
 function MakeDefendProps(maker) {
   var name = 'defend';
-  var img = new Image();
-  img.src = "images/defend.png";
   return {
     name: name,
     width: sxi(15),
@@ -385,16 +450,7 @@ function MakeDefendProps(maker) {
     },
     canSkip: true,
     drawFn: function drawFn(self, alpha) {
-      Cxdo(function () {
-        var wx = WX(self.x);
-        var wy = WY(self.y);
-        gCx.drawImage(img, wx, wy, self.width, self.height);
-        gCx.beginPath();
-        gCx.RoundRect(wx, wy, self.width, self.height, 10);
-        gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-        gCx.lineWidth = sx1(2);
-        gCx.stroke();
-      });
+      return DrawDefend(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();
@@ -430,8 +486,6 @@ function MakeDefendProps(maker) {
 }
 function MakeXtraProps(maker) {
   var name = 'xtra';
-  var img = new Image();
-  img.src = "images/xtra.png";
   return {
     name: name,
     width: sxi(20),
@@ -444,16 +498,7 @@ function MakeXtraProps(maker) {
     },
     canSkip: true,
     drawFn: function drawFn(self, alpha) {
-      Cxdo(function () {
-        var wx = WX(self.x);
-        var wy = WY(self.y);
-        gCx.drawImage(img, wx, wy, self.width, self.height);
-        gCx.beginPath();
-        gCx.RoundRect(wx, wy, self.width, self.height, 10);
-        gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-        gCx.lineWidth = sx1(2);
-        gCx.stroke();
-      });
+      return DrawXtra(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();
@@ -487,8 +532,6 @@ function MakeXtraProps(maker) {
 }
 function MakeNeoProps(maker) {
   var name = 'neo';
-  var img = new Image();
-  img.src = "images/neo.png";
   return {
     name: name,
     width: sxi(22),
@@ -502,22 +545,7 @@ function MakeNeoProps(maker) {
     },
     canSkip: true,
     drawFn: function drawFn(self, alpha) {
-      Cxdo(function () {
-        var wx = WX(self.x);
-        var wy = WY(self.y);
-        var mx = wx + ii(self.width / 2);
-        var my = wy + ii(self.height / 2);
-        gCx.drawImage(img, wx, wy, self.width, self.height);
-        gCx.beginPath();
-        gCx.moveTo(mx, wy);
-        gCx.lineTo(wx + self.width, my);
-        gCx.lineTo(mx, wy + self.height);
-        gCx.lineTo(wx, my);
-        gCx.closePath();
-        gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-        gCx.lineWidth = sx1(2);
-        gCx.stroke();
-      });
+      return DrawNeo(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();
@@ -530,54 +558,8 @@ function MakeNeoProps(maker) {
     }
   };
 }
-
-// note: this one ended up being broken by ipados safari opacity bugs so is not used. :-(
-function MakeRadarProps(maker) {
-  var name = 'radar';
-  var x = ForSide(maker.side, gw(0.4), gw(0.6));
-  return {
-    name: name,
-    isPlayerOnly: true,
-    width: sxi(18),
-    height: syi(18),
-    lifespan: kPillLifespan,
-    label: "?",
-    ylb: sy(13),
-    fontSize: gSmallestFontSizePt,
-    testFn: function testFn(gameState) {
-      // there can be only one per maker, and it lasts for ever.
-      return (gDebug || gPucks.A.length > 20) && !maker.powerupLocks[name];
-    },
-    canSkip: true,
-    drawFn: function drawFn(self, alpha) {
-      Cxdo(function () {
-        var wx = WX(self.x);
-        var wy = WY(self.y);
-        gCx.beginPath();
-        gCx.RoundRect(wx, wy, self.width, self.height, 3);
-        gCx.fillStyle = backgroundColorStr;
-        gCx.fill();
-        gCx.beginPath();
-        gCx.RoundRect(wx, wy, self.width, self.height, 3);
-        gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-        gCx.lineWidth = sx1(2);
-        gCx.stroke();
-        DrawText(self.label, "center", wx + ii(self.width / 2), wy + self.ylb, self.fontSize);
-      });
-    },
-    boomFn: function boomFn(gameState) {
-      PlayPowerupBoom();
-      maker.powerupLocks[name] = true;
-      gameState.AddAnimation(MakeRadarAnimation({
-        side: maker.side
-      }));
-    }
-  };
-}
 function MakeChaosProps(maker) {
   var name = 'chaos';
-  var img = new Image();
-  img.src = "images/chaos.png";
   return {
     name: name,
     width: sxi(14),
@@ -588,22 +570,7 @@ function MakeChaosProps(maker) {
       return (gDebug || gPucks.A.length > 10) && isU(maker.paddle.neo);
     },
     drawFn: function drawFn(self, alpha) {
-      Cxdo(function () {
-        var o = gR.RandomCentered(sx1(4), sx1(2));
-        var wx = WX(self.x) - o;
-        var wy = WY(self.y) - o;
-        var ww = self.width + o * 2;
-        var wh = self.height + o * 2;
-        gCx.drawImage(img, wx, wy, ww, wh);
-        var mx = wx + ww / 2;
-        var my = wy + wh / 2;
-        gCx.beginPath();
-        gCx.arc(mx, my, ww / 2, 0, k2Pi);
-        gCx.closePath();
-        gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-        gCx.lineWidth = sx1(2);
-        gCx.stroke();
-      });
+      return DrawChaos(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();
