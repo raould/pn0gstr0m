@@ -150,18 +150,16 @@ function Powerups(props) {
 
 // ----------------------------------------
 
-gImageCache = {
-  forcepushL: function () {
-    var img = new Image();
-    img.src = "images/forcepushL.png";
-    return img;
-  }(),
-  forcepushR: function () {
-    var img = new Image();
-    img.src = "images/forcepushR.png";
-    return img;
-  }()
-};
+function AddImageToCache(name, path, cache) {
+  var img = new Image();
+  img.src = path;
+  cache[name] = img;
+}
+gImageCache = {};
+AddImageToCache("forcepushL", "images/forcepushL.png", gImageCache);
+AddImageToCache("forcepushR", "images/forcepushR.png", gImageCache);
+AddImageToCache("decimate", "images/decimate.png", gImageCache);
+AddImageToCache("engorge", "images/engorge.png", gImageCache);
 function DrawForcePush(side, xywh, alpha) {
   var img = gImageCache[ForSide(side, "forcepushL", "forcepushR")];
   Cxdo(function () {
@@ -175,6 +173,38 @@ function DrawForcePush(side, xywh, alpha) {
     gCx.closePath();
     gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
     gCx.lineWidth = sx1(2);
+    gCx.stroke();
+  });
+}
+function DrawDecimate(side, xywh, alpha) {
+  var img = gImageCache["decimate"];
+  Cxdo(function () {
+    var wx = WX(xywh.x);
+    var wy = WY(xywh.y);
+    gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+    var mx = wx + ii(xywh.width / 2);
+    var my = wy + ii(xywh.height / 2);
+    gCx.beginPath();
+    gCx.moveTo(mx, wy);
+    gCx.lineTo(wx + xywh.width, my);
+    gCx.lineTo(mx, wy + xywh.height);
+    gCx.lineTo(wx, my);
+    gCx.closePath();
+    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.lineWidth = sx1(2);
+    gCx.stroke();
+  });
+}
+function DrawEngorge(side, xywh, alpha) {
+  var img = gImageCache["engorge"];
+  Cxdo(function () {
+    var wx = WX(xywh.x);
+    var wy = WY(xywh.y);
+    gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+    gCx.beginPath();
+    gCx.rect(wx, wy, xywh.width, xywh.height);
+    gCx.lineWidth = sx1(2);
+    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
     gCx.stroke();
   });
 }
@@ -229,22 +259,7 @@ function MakeDecimateProps(maker) {
     },
     canSkip: true,
     drawFn: function drawFn(self, alpha) {
-      Cxdo(function () {
-        var wx = WX(self.x);
-        var wy = WY(self.y);
-        gCx.drawImage(img, wx, wy, self.width, self.height);
-        var mx = wx + ii(self.width / 2);
-        var my = wy + ii(self.height / 2);
-        gCx.beginPath();
-        gCx.moveTo(mx, wy);
-        gCx.lineTo(wx + self.width, my);
-        gCx.lineTo(mx, wy + self.height);
-        gCx.lineTo(wx, my);
-        gCx.closePath();
-        gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-        gCx.lineWidth = sx1(2);
-        gCx.stroke();
-      });
+      return DrawDecimate(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
       // try to destroy at least 1, but leave at least 1 still alive.
@@ -298,16 +313,7 @@ function MakeEngorgeProps(maker) {
     },
     canSkip: true,
     drawFn: function drawFn(self, alpha) {
-      Cxdo(function () {
-        var wx = WX(self.x);
-        var wy = WY(self.y);
-        gCx.drawImage(img, wx, wy, self.width, self.height);
-        gCx.beginPath();
-        gCx.rect(wx, wy, self.width, self.height);
-        gCx.lineWidth = sx1(2);
-        gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-        gCx.stroke();
-      });
+      return DrawEngorge(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();
