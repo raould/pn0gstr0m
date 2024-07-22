@@ -256,7 +256,7 @@ function MakeEngorgeProps(maker) {
   return {
     name: name,
     width: sx(15),
-    height: sy(15),
+    height: sy(25),
     lifespan: kPillLifespan,
     isUrgent: true,
     fontSize: gBigFontSizePt,
@@ -332,13 +332,13 @@ function MakeSplitProps(maker) {
 }
 function MakeDefendProps(maker) {
   var name = 'defend';
+  var img = new Image();
+  img.src = "images/defend.png";
   return {
     name: name,
-    width: sx(20),
+    width: sx(15),
     height: sy(30),
     lifespan: kPillLifespan,
-    label: "#",
-    ylb: sy(20),
     isUrgent: true,
     fontSize: gSmallFontSizePt,
     testFn: function testFn(gameState) {
@@ -349,17 +349,12 @@ function MakeDefendProps(maker) {
       Cxdo(function () {
         var wx = WX(self.x);
         var wy = WY(self.y);
-        var r = 2;
+        gCx.drawImage(img, wx, wy, self.width, self.height);
         gCx.beginPath();
-        gCx.RoundRect(wx, wy, self.width, self.height, r);
-        gCx.fillStyle = backgroundColorStr;
-        gCx.fill();
-        gCx.beginPath();
-        gCx.RoundRect(wx, wy, self.width, self.height, r);
+        gCx.RoundRect(wx, wy, self.width, self.height, 10);
         gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
         gCx.lineWidth = sx1(2);
         gCx.stroke();
-        DrawText(self.label, "center", wx + ii(self.width / 2), wy + self.ylb, self.fontSize);
       });
     },
     boomFn: function boomFn(gameState) {

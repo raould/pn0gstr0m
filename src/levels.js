@@ -61,6 +61,7 @@ function MakePuckCount(index) {
 }
 
 function MakePills(index) {
+    // todo: do not commit this testing hack long term.
     return [MakeForcePushProps,
             MakeDecimateProps,
             MakeEngorgeProps,
