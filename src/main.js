@@ -2365,22 +2365,20 @@ function OnOrientationChange() {
     OnResize();
 }
 
-// the web is a pi(l)e of feces.
-
+// (the web is a pi(l)e of feces.)
 var gResizing = false;
 var gLastArea = 0;
 var gMatchedAreaCount = 0;
 var kMatchedAreaRequirement = 10;
+var kResizeAllowedStates = [kDebug, kRoot, kWarning, kTitle];
 function OnResize() {
     if (exists(gLifecycle)) {
-        // todo: allow/deny list of when we can resize,
-        // which happens to destroy all game state.
         if (gLifecycle.state == kGame) {
             if (exists(gLifecycle.handler)) {
                 gLifecycle.handler.Pause();
             }
         }
-        else if (!gResizing) {
+        else if (!gResizing && kResizeAllowedStates.includes(gLifecycle.state)) {
             gResizing = true;
             gLastArea = 0;
             gMatchedAreaCount = 0;
