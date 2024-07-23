@@ -26,7 +26,7 @@ function MakeAttract(paddleP1, paddleP2) {
 // level is one-based.
 function MakeLevel(index, paddleP1, paddleP2) {
     Assert(index > 0, "index is 1-based");
-    const pillMakers = ChoosePillIDs(index).map(pid => gPillMakers[pid]);
+    const pillMakers = ChoosePillIDs(index).map(pid => gPillInfo[pid]);
     const level = new Level({
         index,
         // maxVX is allowed to grow after there are no more splits.

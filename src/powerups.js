@@ -68,15 +68,47 @@ const gPillIDs = [
     kChaosPill,
 ];
 
-const gPillMakers = {
-    [kForcePushPill]: MakeForcePushProps,
-    [kDecimatePill]: MakeDecimateProps,
-    [kEngorgePill]: MakeEngorgeProps,
-    [kSplitPill]: MakeSplitProps,
-    [kDefendPill]: MakeDefendProps,
-    [kXtraPill]: MakeXtraProps,
-    [kNeoPill]: MakeNeoProps,
-    [kChaosPill]: MakeChaosProps,
+const gPillInfo = {
+    [kForcePushPill]: {
+        label: "FORCE PUSH",
+        maker: MakeForcePushProps,
+        drawer: DrawForcePushPill,
+    },
+    [kDecimatePill]: {
+        label: "DECIMATE",
+	maker: MakeDecimateProps,
+        drawer: DrawDecimatePill,
+    },
+    [kEngorgePill]: {
+        label: "ENGORGE",
+	maker: MakeEngorgeProps,
+        drawer: DrawEngorcePill,
+    },
+    [kSplitPill]: {
+        label: "SPLIT",
+	maker: MakeSplitProps,
+        drawer: DrawSplitPill,
+    },
+    [kDefendPill]: {
+        label: "DEFEND",
+	maker: MakeDefendProps,
+        drawer: DrawDefendPill,
+    },
+    [kXtraPill]: {
+        label: "XTRA",
+	maker: MakeXtraProps,
+        drawer: DrawXtraPill,
+    },
+    [kNeoPill]: {
+        label: "NEO",
+	maker: MakeNeoProps,
+        drawer: DrawNeoPill,
+    },
+    [kChaosPill]: {
+        label: "CHAOS",
+	maker: MakeChaosProps,
+        drawer: DrawChaosPill,
+    },
 };
 
 /*class*/ function Powerups( props ) {
@@ -186,7 +218,7 @@ AddImageToCache("xtra", "images/xtra.png", gImageCache);
 AddImageToCache("neo", "images/neo.png", gImageCache);
 AddImageToCache("chaos", "images/chaos.png", gImageCache);
 
-function DrawForcePush(side, xywh, alpha) {
+function DrawForcePushPill(side, xywh, alpha) {
     var img = gImageCache[ForSide(side, "forcepushL", "forcepushR")];
     Cxdo(() => {
         var wx = WX(xywh.x);
@@ -203,7 +235,7 @@ function DrawForcePush(side, xywh, alpha) {
     });
 }
 
-function DrawDecimate(side, xywh, alpha) {
+function DrawDecimatePill(side, xywh, alpha) {
     var img = gImageCache["decimate"];
     Cxdo(() => {
         var wx = WX(xywh.x);
@@ -223,7 +255,7 @@ function DrawDecimate(side, xywh, alpha) {
     });
 }
 
-function DrawEngorge(side, xywh, alpha) {
+function DrawEngorgePill(side, xywh, alpha) {
     var img = gImageCache["engorge"];
     Cxdo(() => {
         var wx = WX(xywh.x);
@@ -237,7 +269,7 @@ function DrawEngorge(side, xywh, alpha) {
     });
 }
 
-function DrawSplit(side, xywh, alpha) {
+function DrawSplitPill(side, xywh, alpha) {
     var img = gImageCache["split"];
     Cxdo(() => {
         var wx = WX(xywh.x);
@@ -251,7 +283,7 @@ function DrawSplit(side, xywh, alpha) {
     });
 }
 
-function DrawDefend(side, xywh, alpha) {
+function DrawDefendPill(side, xywh, alpha) {
     var img = gImageCache["defend"];
     Cxdo(() => {
         var wx = WX(xywh.x);
@@ -265,7 +297,7 @@ function DrawDefend(side, xywh, alpha) {
     });
 }
 
-function DrawXtra(side, xywh, alpha) {
+function DrawXtraPill(side, xywh, alpha) {
     var img = gImageCache["xtra"];
     Cxdo(() => {
         var wx = WX(xywh.x);
@@ -279,7 +311,7 @@ function DrawXtra(side, xywh, alpha) {
     });
 }
 
-function DrawNeo(side, xywh, alpha) {
+function DrawNeoPill(side, xywh, alpha) {
     var img = gImageCache["neo"];
     Cxdo(() => {
         var wx = WX(xywh.x);
@@ -299,7 +331,7 @@ function DrawNeo(side, xywh, alpha) {
     });
 }
 
-function DrawChaos(side, xywh, alpha) {
+function DrawChaosPill(side, xywh, alpha) {
     var img = gImageCache["chaos"];
     Cxdo(() => {
         var o = gR.RandomCentered(sx1(4), sx1(2));
@@ -331,7 +363,7 @@ function MakeForcePushProps(maker) {
         testFn: (gameState) => {
             return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
         },
-        drawFn: (self, alpha) => DrawForcePush(maker.side, self, alpha),
+        drawFn: (self, alpha) => DrawForcePushPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var targetSign = ForSide(maker.side, -1, 1);
@@ -364,7 +396,7 @@ function MakeDecimateProps(maker) {
             return gDebug || gPucks.A.length > 20;
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawDecimate(maker.side, self, alpha),
+        drawFn: (self, alpha) => DrawDecimatePill(maker.side, self, alpha),
         boomFn: (gameState) => {
             // try to destroy at least 1, but leave at least 1 still alive.
             // prefer destroying the ones closest to the player.
@@ -402,7 +434,7 @@ function MakeEngorgeProps(maker) {
             return !maker.paddle.engorged;
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawEngorge(maker.side, self, alpha),
+        drawFn: (self, alpha) => DrawEngorgePill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             gameState.AddAnimation(MakeEngorgeAnimation({
@@ -423,7 +455,7 @@ function MakeSplitProps(maker) {
         testFn: (gameState) => {
             return true;
         },
-        drawFn: (self, alpha) => DrawSplit(maker.side, self, alpha),
+        drawFn: (self, alpha) => DrawSplitPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             var r = 10/gPucks.A.length;
             var targets = gPucks.A.filter((p, i) => {
@@ -454,7 +486,7 @@ function MakeDefendProps(maker) {
             return maker.paddle.barriers.A.length == 0 && (gDebug || gPucks.A.length > 25);
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawDefend(maker.side, self, alpha),
+        drawFn: (self, alpha) => DrawDefendPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var n = 4; // match: kBarriersArrayInitialSize.
@@ -495,7 +527,7 @@ function MakeXtraProps(maker) {
             return maker.paddle.xtras.A.length == 0 && (gDebug || gPucks.A.length > 20);
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawXtra(maker.side, self, alpha),
+        drawFn: (self, alpha) => DrawXtraPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var n = 6; // match: kXtrasArrayInitialSize.
@@ -537,7 +569,7 @@ function MakeNeoProps(maker) {
             return (gDebug || gPucks.A.length > kEjectCountThreshold/2) && isU(maker.paddle.neo);
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawNeo(maker.side, self, alpha),
+        drawFn: (self, alpha) => DrawNeoPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             maker.paddle.AddNeo({
@@ -560,7 +592,7 @@ function MakeChaosProps(maker) {
         testFn: (gameState) => {
             return (gDebug || gPucks.A.length > 10) && isU(maker.paddle.neo);
         },
-        drawFn: (self, alpha) => DrawChaos(maker.side, self, alpha),
+        drawFn: (self, alpha) => DrawChaosPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var targets = [];

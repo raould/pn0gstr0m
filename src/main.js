@@ -929,7 +929,7 @@ function DrawBounds( alpha=0.5 ) {
         ClearScreen();
         self.DrawText();
         self.DrawPills();
-    }
+    };
 
     self.DrawText = function() {
         var t = Math.ceil(self.timeout/1000);
@@ -951,6 +951,13 @@ function DrawBounds( alpha=0.5 ) {
             Cxdo(() => {
                 gCx.fillStyle = RandomGreen();
                 DrawText("POWERUPS", "center", gw(0.5), gh(0.7), gRegularFontSizePt);
+                var dx = gw() / self.pillIDs.length;
+                var x0 = gw() / 2 - dx / 2;
+                for (let i = 0; i < self.pillIDs.length; ++i) {
+                    var pid = self.pillIDs[i];
+                    var { label, drawer } = gPillInfo[pid];
+                    DrawText(label, "center", x0 + dx*i,gh(0.8), gSmallFontsizePt);
+                }
             });
         }
     };

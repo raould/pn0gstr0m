@@ -16,7 +16,7 @@
 
     self.Get = function() {
         return self.values[self.index];
-    }
+    };
 
     self.Step = function() {
         if (gGameTime - self.prevTime > self.timeStep) {
