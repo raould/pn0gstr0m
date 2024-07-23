@@ -10,17 +10,12 @@
 // note: look at the Make*Props() functions below
 // to see what-all fields need to be defined i.e.
 // (the business about ForSide and paddle references is wugly.)
-// NOTE: label, ylb are going away as i switch to bitmaps
-// so that i can more easily show them on each level splash screen.
 /* {
    name,
    isPlayerOnly,
    width, height,
    lifespan,
-   label,
-   ylb,
    isUrgent,
-   fontSize,
    testFn: (gameState) => {},
    canSkip, // don't get stuck waiting on this one's testFn to pass.
    drawFn: (self, alpha) => {},
@@ -46,6 +41,7 @@
 // needs to be longish so the cpu has any chance of getting it.
 var kPillLifespan = 1000 * 20;
 
+// just am enum, not array indices.
 const kForcePushPill = 0;
 const kDecimatePill = 1;
 const kEngorgePill = 2;
@@ -73,43 +69,52 @@ const gPillInfo = {
         label: "FORCE PUSH",
         maker: MakeForcePushProps,
         drawer: DrawForcePushPill,
+        width: sxi(15), height: syi(15),
     },
     [kDecimatePill]: {
         label: "DECIMATE",
 	maker: MakeDecimateProps,
         drawer: DrawDecimatePill,
+        width: sxi(15), height: syi(15),
     },
     [kEngorgePill]: {
         label: "ENGORGE",
 	maker: MakeEngorgeProps,
-        drawer: DrawEngorcePill,
+        drawer: DrawEngorgePill,
+        width: sxi(15), height: syi(25),
     },
     [kSplitPill]: {
         label: "SPLIT",
 	maker: MakeSplitProps,
         drawer: DrawSplitPill,
+        width: sxi(15), height: syi(15),
     },
     [kDefendPill]: {
         label: "DEFEND",
 	maker: MakeDefendProps,
         drawer: DrawDefendPill,
+        width: sxi(15), height: syi(30),
     },
     [kXtraPill]: {
         label: "XTRA",
 	maker: MakeXtraProps,
         drawer: DrawXtraPill,
+        width: sxi(20), height: syi(20),
     },
     [kNeoPill]: {
         label: "NEO",
 	maker: MakeNeoProps,
         drawer: DrawNeoPill,
+        width: sxi(22), height: syi(22),
     },
     [kChaosPill]: {
         label: "CHAOS",
 	maker: MakeChaosProps,
         drawer: DrawChaosPill,
+        width: sxi(14), height: syi(14),
     },
 };
+Assert(gPillInfo);
 
 /*class*/ function Powerups( props ) {
 
@@ -355,11 +360,11 @@ function DrawChaosPill(side, xywh, alpha) {
 
 function MakeForcePushProps(maker) {
     var name = "forcepush";
+    var { width, height } = gPillInfo[kForcePushPill];
     return {
         name,
-        width: sxi(15), height: syi(15),
+        width, height,
         lifespan: kPillLifespan,
-        fontSize: gReducedFontSizePt,
         testFn: (gameState) => {
             return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
         },
@@ -386,11 +391,11 @@ function MakeForcePushProps(maker) {
 
 function MakeDecimateProps(maker) {
     var name = 'decimate';
+    var { width, height } = gPillInfo[kDecimatePill];
     return {
         name,
-        width: sxi(15), height: syi(15),
+        width, height,
         lifespan: kPillLifespan,
-        fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
             // looks unfun if there aren't enough pucks to destroy.
             return gDebug || gPucks.A.length > 20;
@@ -424,12 +429,12 @@ function MakeDecimateProps(maker) {
 
 function MakeEngorgeProps(maker) {
     var name = 'engorge';
+    var { width, height } = gPillInfo[kEngorgePill];
     return {
         name,
-        width: sxi(15), height: syi(25),
+        width, height,
         lifespan: kPillLifespan,
         isUrgent: true,
-        fontSize: gBigFontSizePt,
         testFn: (gameState) => {
             return !maker.paddle.engorged;
         },
@@ -447,11 +452,11 @@ function MakeEngorgeProps(maker) {
 
 function MakeSplitProps(maker) {
     var name = 'split';
+    var { width, height } = gPillInfo[kSplitPill];
     return {
         name,
-        width: sxi(15), height: syi(15),
+        width, height,
         lifespan: kPillLifespan,
-        fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
             return true;
         },
@@ -476,12 +481,12 @@ function MakeSplitProps(maker) {
 
 function MakeDefendProps(maker) {
     var name = 'defend';
+    var { width, height } = gPillInfo[kDefendPill];
     return {
         name,
-        width: sxi(15), height: syi(30),
+        width, height,
         lifespan: kPillLifespan,
         isUrgent: true,
-        fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
             return maker.paddle.barriers.A.length == 0 && (gDebug || gPucks.A.length > 25);
         },
@@ -517,12 +522,12 @@ function MakeDefendProps(maker) {
 
 function MakeXtraProps(maker) {
     var name = 'xtra';
+    var { width, height } = gPillInfo[kXtraPill];
     return {
         name,
-        width: sxi(20), height: syi(20),
+        width, height,
         lifespan: kPillLifespan,
         isUrgent: true,
-        fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
             return maker.paddle.xtras.A.length == 0 && (gDebug || gPucks.A.length > 20);
         },
@@ -558,12 +563,12 @@ function MakeXtraProps(maker) {
 
 function MakeNeoProps(maker) {
     var name = 'neo';
+    var { width, height } = gPillInfo[kNeoPill];
     return {
         name,
-        width: sxi(22), height: syi(22),
+        width, height,
         lifespan: kPillLifespan,
         isUrgent: true,
-        fontSize: gSmallestFontSizePt,
         testFn: (gameState) => {
             // todo: in some playtesting this was being spawned too often, maybe each props needs a spawn weight too?
             return (gDebug || gPucks.A.length > kEjectCountThreshold/2) && isU(maker.paddle.neo);
@@ -584,11 +589,11 @@ function MakeNeoProps(maker) {
 
 function MakeChaosProps(maker) {
     var name = 'chaos';
+    var { width, height } = gPillInfo[kChaosPill];
     return {
         name,
-        width: sxi(14), height: syi(14),
+        width, height,
         lifespan: kPillLifespan,
-        fontSize: gSmallestFontSizePt,
         testFn: (gameState) => {
             return (gDebug || gPucks.A.length > 10) && isU(maker.paddle.neo);
         },

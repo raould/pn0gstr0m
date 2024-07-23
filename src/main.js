@@ -909,7 +909,7 @@ function DrawBounds( alpha=0.5 ) {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        self.timeout = 1000 * 3 - 1;
+        self.timeout = 1000 * 3 - 1; // todo: maybe longer for levels with powerups?
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.pillIDs = ChoosePillIDs(gLevelIndex);
         PlayBlip();
@@ -950,13 +950,17 @@ function DrawBounds( alpha=0.5 ) {
             // zero or two at most.
             Cxdo(() => {
                 gCx.fillStyle = RandomGreen();
-                DrawText("POWERUPS", "center", gw(0.5), gh(0.7), gRegularFontSizePt);
+                DrawText("POWERUPS", "center", gw(0.5), gh(0.7), gReducedFontSizePt);
                 var dx = gw() / self.pillIDs.length;
                 var x0 = gw() / 2 - dx / 2;
                 for (let i = 0; i < self.pillIDs.length; ++i) {
-                    var pid = self.pillIDs[i];
-                    var { label, drawer } = gPillInfo[pid];
-                    DrawText(label, "center", x0 + dx*i,gh(0.8), gSmallFontsizePt);
+                    let pid = self.pillIDs[i];
+                    let { label, drawer, width, height } = gPillInfo[pid];
+                    let x = x0 + dx*i;
+                    drawer(gP1Side,
+                           { x, y: gh(0.8), width, height },
+                           1);
+                    DrawText(label, "center", x,gh(0.9), gSmallFontSizePt);
                 }
             });
         }
