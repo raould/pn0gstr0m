@@ -64,7 +64,7 @@ const gPillIDs = [
     kChaosPill,
 ];
 
-const gPillInfo = {
+var gPillInfo = {
     [kForcePushPill]: {
         label: "FORCE PUSH",
         maker: MakeForcePushProps,
