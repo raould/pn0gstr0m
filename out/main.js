@@ -31,7 +31,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = true;
+var gDebug = false;
 var gShowToasts = gDebug;
 var kCanvasName = "canvas"; // match: index.html
 var gLifecycle;
@@ -1024,8 +1024,8 @@ function GameState(props) {
       x: gWidth - gXInset - gPaddleWidth,
       y: gh(0.5)
     };
-    var p1label = self.isAttract ? undefined : "P1";
-    var p2label = self.isAttract ? undefined : gSinglePlayer ? "GPT" : "P2";
+    var p1label = self.isAttract || gLevelIndex > 1 ? undefined : "P1";
+    var p2label = self.isAttract || gLevelIndex > 1 ? undefined : gSinglePlayer ? "GPT" : "P2";
     ForSide(gP1Side, function () {
       // p1 is always a human player.
       // p2 is either cpu or human.

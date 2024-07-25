@@ -54,7 +54,8 @@ function Level(props) {
     if (!self.isSpawning && exists(self.speedupFactor)) {
       Assert(exists(self.englishFactor));
       self.maxVX = MinSigned(self.maxVX + self.speedupFactor * dt / kTimeStep, kMaxVX);
-      self.englishFactor += dt / kTimeStep * kEnglishStep;
+      var englishBoost = gPucks.A.length == 1 ? 5 : 1;
+      self.englishFactor += dt / kTimeStep * kEnglishStep * englishBoost;
       logOnDelta("+maxVX", F(self.maxVX), 1, F(kMaxVX));
       logOnDelta("+englishFactor", F(self.englishFactor), 0.1);
     }
@@ -92,7 +93,7 @@ function Level(props) {
         var oy = sy(13);
         gCx.fillRect(cx - ox, cy - oy * 1.45, ox * 2, oy * 2);
         gCx.fillStyle = RandomGreen(0.8);
-        DrawText("SUDDEN DEATH", "center", cx, cy, gReducedFontSizePt);
+        DrawText("EL FIN", "center", cx, cy, gReducedFontSizePt);
       });
     }
   };

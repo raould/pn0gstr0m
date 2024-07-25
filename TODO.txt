@@ -1,4 +1,5 @@
 * this has quickly become an empirical big ball of mud. :-(
+* make paddle puck collision more generous at least at the end of a level.
 * animate the menu opening/closing?
 * my other metal band name really is The Wrong Abstractions. :-(
 * all the todo's noted in code comments.
