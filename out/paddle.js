@@ -82,7 +82,7 @@ function Paddle(props) {
     var bounds;
     // increase bounds when we are at the end of the level.
     if (isSuddenDeath && gPucks.A.length <= 3 && ((_gPucks$A$metadata = gPucks.A.metadata) == null ? void 0 : _gPucks$A$metadata.pmaxvx) > maxVX / 2) {
-      var yvf = self.height * (velocityFudge ? 0.2 : 0);
+      var yvf = self.height * 0.2;
       bounds = {
         x: self.x,
         y: self.y - yvf,
