@@ -9,7 +9,7 @@ function AddImageToCache(name, path, cache) {
     cache[name] = img;
 }
 
-gImageCache = {};
+const gImageCache = {};
 AddImageToCache("forcepushL", "images/forcepushL.png", gImageCache);
 AddImageToCache("forcepushR", "images/forcepushR.png", gImageCache);
 AddImageToCache("decimate", "images/decimate.png", gImageCache);

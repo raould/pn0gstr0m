@@ -10,7 +10,7 @@ function AddImageToCache(name, path, cache) {
   img.src = path;
   cache[name] = img;
 }
-gImageCache = {};
+var gImageCache = {};
 AddImageToCache("forcepushL", "images/forcepushL.png", gImageCache);
 AddImageToCache("forcepushR", "images/forcepushR.png", gImageCache);
 AddImageToCache("decimate", "images/decimate.png", gImageCache);
