@@ -34,7 +34,7 @@ function MakeAttract(paddleP1, paddleP2) {
 function MakeLevel(index, paddleP1, paddleP2) {
   Assert(index > 0, "index is 1-based");
   var pillMakers = ChoosePillIDs(index).map(function (pid) {
-    return gPillInfo[pid];
+    return gPillInfo[pid].maker;
   });
   var level = new Level({
     index: index,
