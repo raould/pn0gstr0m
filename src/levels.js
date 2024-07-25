@@ -45,7 +45,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
 function MakePuckCount(index) {
     Assert(index > 0, "index is 1-based");
     // note: this is just a big swag.
-    return 250 + (index-1) * 300;
+    return 10;//250 + (index-1) * 300;
 }
 
 let gChosenPillIDsCache;

@@ -169,11 +169,8 @@ function Puck(props) {
                 var xSafe = xRight || xLeft;
                 var xOverlaps = !xSafe;
 
-                var py0 = self.y;
-                var py1 = self.y;
-                var yTop = py0 >= oy1;
-                var yBottom = py1 < oy0;
-
+                var yTop = self.y >= xywh.y+xywh.height;
+                var yBottom = self.y+self.height < xywh.y;
                 var ySafe = yTop || yBottom;
                 var yOverlaps = !ySafe;
 
@@ -229,7 +226,7 @@ function Puck(props) {
 
     self.PaddleCollision = function( paddle, englishFactor, isSuddenDeath, maxVX ) {
         var newPuck = undefined;
-        var hit = self.CollisionTest( paddle.GetCollisionBounds(self.level.isSpawning, maxVX), paddle.blockvx );
+        var hit = self.CollisionTest( paddle.GetCollisionBounds(isSuddenDeath, maxVX), paddle.blockvx );
         if ( hit ) {
             paddle.OnPuckHit();
             self.AdjustAndBounceX( paddle ); // todo: bounceY too?

@@ -1420,7 +1420,7 @@ function GameState(props) {
       if (p.alive) {
         // xtras, barriers, neos do not split pucks,
         // only the main player & cpu paddles.
-        var splits = p.AllPaddlesCollision([self.paddleP1, self.paddleP2], self.level.englishFactor, self.level.IsSuddenDeath, self.maxVX);
+        var splits = p.AllPaddlesCollision([self.paddleP1, self.paddleP2], self.level.englishFactor, self.level.IsSuddenDeath(), self.maxVX);
         if (self.level.isSpawning) {
           var _splits$length;
           Assert(((_splits$length = splits == null ? void 0 : splits.length) != null ? _splits$length : 0) <= 1, splits == null ? void 0 : splits.length);

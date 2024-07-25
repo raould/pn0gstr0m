@@ -1451,7 +1451,7 @@ function DrawDebugList() {
                 var splits = p.AllPaddlesCollision(
                     [ self.paddleP1, self.paddleP2 ],
                     self.level.englishFactor,
-                    self.level.IsSuddenDeath,
+                    self.level.IsSuddenDeath(),
                     self.maxVX
                 );
                 if (self.level.isSpawning) {

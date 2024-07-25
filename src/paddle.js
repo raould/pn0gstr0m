@@ -79,11 +79,11 @@ function Paddle(props) {
         self.nudgeX();
     };
 
-    self.GetCollisionBounds = function(isSpawning, maxVX) {
+    self.GetCollisionBounds = function(isSuddenDeath, maxVX) {
         var bounds;
         // increase bounds when we are at the end of the level.
-        if (!isSpawning &&
-            gPucks.A.count <= 3 &&
+        if (isSuddenDeath &&
+            gPucks.A.length <= 3 &&
             gPucks.A.metadata?.pmaxvx > maxVX/2) {
             var yvf = xywh.height * (velocityFudge ? 0.2 : 0);
             bounds = {
