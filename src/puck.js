@@ -158,7 +158,7 @@ function Puck(props) {
         return np;
     };
 
-    self.CollisionTest = function( xywh, blockvx, velocityFudge ) {
+    self.CollisionTest = function( xywh, blockvx ) {
         if( self.alive && !self.isLocked ) {
             if (isU(blockvx) || Sign(self.vx) == blockvx) {
                 // !? assuming small enough simulation stepping !?
@@ -169,19 +169,8 @@ function Puck(props) {
                 var xSafe = xRight || xLeft;
                 var xOverlaps = !xSafe;
 
-                var yvf = xywh.height * (velocityFudge ? 0.2 : 0);
-                var oy0 = xywh.y - yvf;
-                var oy1 = xywh.y + xywh.height + yvf;
-                if (gDebug) {
-                    gDebugDrawList.push(() => {
-                        gCx.strokeStyle = "yellow";
-                        gCx.strokeRect(xywh.x, oy0, xywh.x+xywh.width, oy1-oy0);
-                    });
-                }
-
                 var py0 = self.y;
-                var py1 = self.y + self.height;
-
+                var py1 = self.y;
                 var yTop = py0 >= oy1;
                 var yBottom = py1 < oy0;
 
@@ -240,7 +229,7 @@ function Puck(props) {
 
     self.PaddleCollision = function( paddle, englishFactor, isSuddenDeath, maxVX ) {
         var newPuck = undefined;
-        var hit = self.CollisionTest( paddle, paddle.blockvx, true );
+        var hit = self.CollisionTest( paddle.GetCollisionBounds(self.level.isSpawning, maxVX), paddle.blockvx );
         if ( hit ) {
             paddle.OnPuckHit();
             self.AdjustAndBounceX( paddle ); // todo: bounceY too?

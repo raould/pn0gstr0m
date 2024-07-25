@@ -13,6 +13,7 @@ function ReuseArray(initialCapacity) {
   var self = this;
   self.length = 0;
   self.array = Array(initialCapacity);
+  self.metadata = {};
   self.clear = function () {
     self.length = 0;
   };

@@ -1438,6 +1438,7 @@ function DrawDebugList() {
     };
 
     self.MovePucks = function( dt ) {
+        var pmaxvx = -Number.MAX_SAFE_INTEGER;
         gPucks.B.clear();
         gPucks.A.forEach((p, i) => {
             p.Step( dt );
@@ -1468,9 +1469,15 @@ function DrawDebugList() {
                 p.XtrasCollision(self.paddleP2.xtras.A);
                 p.NeoCollision(self.paddleP1.neo);
                 p.NeoCollision(self.paddleP2.neo);
+
+                self.paddleP1.OnPuckMoved(p, i);
+                self.paddleP2.OnPuckMoved(p, i);
+
+                // splits' pmaxvx will get processed on the next frame.
+                pmaxvx = Math.max(Math.abs(p.vx), pmaxvx);
+                gPucks.B.metadata.pmaxvx = pmaxvx;
+
                 gPucks.B.push(p);
-                self.paddleP1.OnPuck(p, i);
-                self.paddleP2.OnPuck(p, i);
             }
         });
         SwapBuffers(gPucks);

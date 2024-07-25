@@ -77,6 +77,33 @@ function Paddle(props) {
     self.attackingNearCount = 0;
     self.nudgeX();
   };
+  self.GetCollisionBounds = function (isSpawning, maxVX) {
+    var _gPucks$A$metadata;
+    var bounds;
+    // increase bounds when we are at the end of the level.
+    if (!isSpawning && gPucks.A.count <= 3 && ((_gPucks$A$metadata = gPucks.A.metadata) == null ? void 0 : _gPucks$A$metadata.pmaxvx) > maxVX / 2) {
+      var yvf = xywh.height * (velocityFudge ? 0.2 : 0);
+      bounds = {
+        x: self.x,
+        y: self.y - yvf,
+        width: self.width,
+        height: self.height + yvf
+      };
+    }
+    bounds = {
+      x: self.x,
+      y: self.y,
+      width: self.width,
+      height: self.height
+    };
+    if (gDebug) {
+      gDebugDrawList.push(function () {
+        gCx.strokeStyle = "yellow";
+        gCx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+      });
+    }
+    return bounds;
+  };
   self.AddBarrier = function (props) {
     var b = new Barrier(props);
     self.barriers.A.push(b);
@@ -291,7 +318,7 @@ function Paddle(props) {
 
   // ........................................ AI (hacky junk).
 
-  self.OnPuck = function (p, i) {
+  self.OnPuckMoved = function (p, i) {
     if (i == 0) {
       self.attackingNearCount = 0;
     }
