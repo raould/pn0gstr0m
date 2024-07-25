@@ -920,7 +920,9 @@ function DrawBounds( alpha=0.5 ) {
             // zero or two at most.
             Cxdo(() => {
                 gCx.fillStyle = RandomGreen();
-                DrawText("POWERUPS", "center", gw(0.5), gh(0.75), gSmallFontSizePt);
+                var ty = gh(0.9);
+                var fpt = gSmallFontSizePt;
+                DrawText("<< POWERUPS >>", "center", gw(0.5), ty, fpt);
                 var dx = gw() / self.pillIDs.length;
                 var x0 = gw() / 2 - dx / 2;
                 for (let i = 0; i < self.pillIDs.length; ++i) {
@@ -930,7 +932,7 @@ function DrawBounds( alpha=0.5 ) {
                     drawer(gP1Side,
                            { x: x-width, y: gh(0.7), width: width*2, height: height*2 },
                            1);
-                    DrawText(label, "center", x,gh(0.9), gSmallFontSizePt);
+                    DrawText(label, "center", x, ty, fpt);
                 }
             });
         }

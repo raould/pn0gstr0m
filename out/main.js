@@ -930,7 +930,9 @@ function GetReadyState() {
       // zero or two at most.
       Cxdo(function () {
         gCx.fillStyle = RandomGreen();
-        DrawText("POWERUPS", "center", gw(0.5), gh(0.75), gSmallFontSizePt);
+        var ty = gh(0.9);
+        var fpt = gSmallFontSizePt;
+        DrawText("<< POWERUPS >>", "center", gw(0.5), ty, fpt);
         var dx = gw() / self.pillIDs.length;
         var x0 = gw() / 2 - dx / 2;
         for (var i = 0; i < self.pillIDs.length; ++i) {
@@ -947,7 +949,7 @@ function GetReadyState() {
             width: width * 2,
             height: height * 2
           }, 1);
-          DrawText(label, "center", x, gh(0.9), gSmallFontSizePt);
+          DrawText(label, "center", x, ty, fpt);
         }
       });
     }
