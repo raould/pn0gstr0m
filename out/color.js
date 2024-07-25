@@ -80,7 +80,7 @@ function rgba255s(array, alpha) {
   return str;
 }
 function RandomColor(alpha) {
-  return rgba255s([gR.RandomRange(0, 255), gR.RandomRange(0, 255), gR.RandomRange(0, 255), alpha != null ? alpha : 1]);
+  return rgba255s([gR.RandomRangeInt(0, 255), gR.RandomRangeInt(0, 255), gR.RandomRangeInt(0, 255), alpha != null ? alpha : 1]);
 }
 function RandomForColor(spec, alpha) {
   if (alpha == undefined) {

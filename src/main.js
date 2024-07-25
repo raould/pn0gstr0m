@@ -545,6 +545,43 @@ function DrawBounds( alpha=0.5 ) {
     });
 }
 
+function CreateCRTOutlinePath() {
+    // beware: this is specifically not in Cxdo().
+    var inset = ii(Math.min(gXInset, gYInset)*0.8);
+    gCx.beginPath();
+    gCx.moveTo(inset, inset);
+    gCx.bezierCurveTo(inset, 0,
+                      gw(1)-inset, 0,
+                      gw(1)-inset, inset);
+    gCx.bezierCurveTo(gw(1), inset,
+                      gw(1), gh(1)-inset,
+                      gw(1)-inset, gh(1)-inset);
+
+    gCx.moveTo(inset, inset);
+    gCx.bezierCurveTo(0, inset,
+                      0, gh(1)-inset,
+                      inset, gh(1)-inset);
+    gCx.bezierCurveTo(inset, gh(1),
+                      gw(1)-inset, gh(1),
+                      gw(1)-inset, gh(1)-inset);
+}
+
+
+function DrawCRTOutline() {
+    Cxdo(() => {
+        CreateCRTOutlinePath();
+        gCx.lineWidth = sx1(4);
+        gCx.strokeStyle = crtOutlineColorStr;
+        gCx.stroke();
+    });
+}    
+
+function ResetClipping() {
+    gCx.clearRect(0, 0, gw(), gh());
+    self.CreateCRTOutlinePath();
+    gCx.clip();
+}
+
 // ----------------------------------------
 
 /*class*/ function Lifecycle( handlerMap ) {
@@ -843,6 +880,7 @@ function DrawBounds( alpha=0.5 ) {
             });
             self.theMenu.Draw();
             self.DrawMusicName();
+            DrawCRTOutline();
         }
     };
 
@@ -898,6 +936,7 @@ function DrawBounds( alpha=0.5 ) {
         ClearScreen();
         self.DrawText();
         self.DrawPills();
+        DrawCRTOutline();
     };
 
     self.DrawText = function() {
@@ -930,7 +969,12 @@ function DrawBounds( alpha=0.5 ) {
                     let { label, drawer, width, height } = gPillInfo[pid];
                     let x = x0 + dx*i;
                     drawer(gP1Side,
-                           { x: x-width, y: gh(0.7), width: width*2, height: height*2 },
+                           {
+                               x: x-(width/2),
+                               y: gh(0.7)-(height/2),
+                               width,
+                               height,
+                           },
                            1);
                     DrawText(label, "center", x, ty, fpt);
                 }
@@ -1474,12 +1518,7 @@ function DrawBounds( alpha=0.5 ) {
 
     self.DrawCRTOutline = function() {
         if (!self.isAttract) {
-            Cxdo(() => {
-                CreateCRTOutlinePath();
-                gCx.lineWidth = sx1(4);
-                gCx.strokeStyle = crtOutlineColorStr;
-                gCx.stroke();
-            });
+            DrawCRTOutline();
         }
     };
 
@@ -1593,7 +1632,7 @@ function DrawBounds( alpha=0.5 ) {
 
             const isEndScreenshot = !!props?.isEndScreenshot;
 
-            self.DrawMidLine();
+            if (!isEndScreenshot) { self.DrawMidLine(); }
             self.DrawScoreHeader( isEndScreenshot );
             self.level.Draw({ alpha: self.Alpha(), isEndScreenshot });
 
@@ -2404,34 +2443,6 @@ function CheckResizeMatch() {
         gMatchedAreaCount = 0;
         gLastArea = area;
     }   
-}
-
-
-function CreateCRTOutlinePath() {
-    // beware: this is specifically not in Cxdo().
-    var inset = ii(Math.min(gXInset, gYInset)*0.8);
-    gCx.beginPath();
-    gCx.moveTo(inset, inset);
-    gCx.bezierCurveTo(inset, 0,
-                      gw(1)-inset, 0,
-                      gw(1)-inset, inset);
-    gCx.bezierCurveTo(gw(1), inset,
-                      gw(1), gh(1)-inset,
-                      gw(1)-inset, gh(1)-inset);
-
-    gCx.moveTo(inset, inset);
-    gCx.bezierCurveTo(0, inset,
-                      0, gh(1)-inset,
-                      inset, gh(1)-inset);
-    gCx.bezierCurveTo(inset, gh(1),
-                      gw(1)-inset, gh(1),
-                      gw(1)-inset, gh(1)-inset);
-}
-
-function ResetClipping() {
-    gCx.clearRect(0, 0, gw(), gh());
-    self.CreateCRTOutlinePath();
-    gCx.clip();
 }
 
 function Start() {

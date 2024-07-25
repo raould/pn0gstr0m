@@ -7,7 +7,6 @@
 // note: it is *hard coded* below that there are
 // (0 or) exactly 2 types of powerup per level.
 
-const gLevelRandom = new Random(42);
 const kAttractLevelIndex = -1;
 
 function MakeAttract(paddleP1, paddleP2) {
@@ -55,10 +54,10 @@ function ChoosePillIDs(index) {
     let pids = [];
 
     // skip the very first level, it has no powerups.
-    if (lv0 > 0) {
+    if (true) {//lv0 > 0) {
 
         // the first n levels get 2 pills in order.
-        if (lv0*2 <= gPillIDs.length-2) {
+        if (false) { // lv0*2 <= gPillIDs.length-2) {
             const i = (lv0-1)*2;
             pids = gPillIDs.slice(i, i+2);
             console.log("ChoosePillIDs by 2", index, pids);
@@ -67,13 +66,14 @@ function ChoosePillIDs(index) {
 
         // after those first n levels, the pills are random.
         else {
+            const r = new Random(index);
             const a = [...gPillIDs];
-            var p0 = a.splice(
-                gLevelRandom.RandomRange(0, a.length-1),
+            const p0 = a.splice(
+                r.RandomRangeInt(0, a.length-1),
                 1
             );
-            const p1 = a.slice(
-                gLevelRandom.RandomRange(0, a.length-1),
+            const p1 = a.splice(
+                r.RandomRangeInt(0, a.length-1),
                 1
             );
             Assert(exists(p0));

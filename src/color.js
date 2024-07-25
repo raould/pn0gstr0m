@@ -59,9 +59,9 @@ function rgba255s(array, alpha) {
 function RandomColor(alpha) {
     return rgba255s(
         [
-            gR.RandomRange(0, 255),
-            gR.RandomRange(0, 255),
-            gR.RandomRange(0, 255),
+            gR.RandomRangeInt(0, 255),
+            gR.RandomRangeInt(0, 255),
+            gR.RandomRangeInt(0, 255),
             alpha ?? 1
         ]
     );

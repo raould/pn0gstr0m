@@ -46,7 +46,7 @@
 
     // closed interval [min, max].
     self.RandomRangeInt = function( min, max ) {
-        return Math.round(self.RandomRange(min,max));
+        return Math.floor(self.RandomRange(min,max));
     };
 
     self.RandomCentered = function( center, halfRange, halfDeadZone=0 ) {
