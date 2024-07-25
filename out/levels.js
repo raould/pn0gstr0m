@@ -55,15 +55,18 @@ function MakePuckCount(index) {
   // note: this is just a big swag.
   return 250 + (index - 1) * 300;
 }
+var gChosenPillIDsCache;
 function ChoosePillIDs(index) {
+  var _gChosenPillIDsCache;
   Assert(index != kAttractLevelIndex);
   var lv0 = index - 1;
+  if (((_gChosenPillIDsCache = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache.index) === index) {
+    var _gChosenPillIDsCache2;
+    return (_gChosenPillIDsCache2 = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache2.pids;
+  }
   var pids = [];
-
   // skip the very first level, it has no powerups.
-  if (true) {
-    //lv0 > 0) {
-
+  if (lv0 > 0) {
     // the first n levels get 2 pills in order.
     if (false) {
       // lv0*2 <= gPillIDs.length-2) {
@@ -90,5 +93,9 @@ function ChoosePillIDs(index) {
     Assert(pids.length > 0);
   }
   console.log("Pids", index, pids);
+  gChosenPillIDsCache = {
+    index: index,
+    pids: pids
+  };
   return pids;
 }
