@@ -85,7 +85,7 @@ function Paddle(props) {
         if (isSuddenDeath &&
             gPucks.A.length <= 3 &&
             gPucks.A.metadata?.pmaxvx > maxVX/2) {
-            var yvf = xywh.height * (velocityFudge ? 0.2 : 0);
+            var yvf = self.height * (velocityFudge ? 0.2 : 0);
             bounds = {
                 x: self.x,
                 y: self.y - yvf,
