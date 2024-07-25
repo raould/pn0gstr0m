@@ -85,19 +85,21 @@ function Paddle(props) {
         if (isSuddenDeath &&
             gPucks.A.length <= 3 &&
             gPucks.A.metadata?.pmaxvx > maxVX/2) {
-            var yvf = self.height * 0.2;
+            var yvf = self.height * 0.15;
             bounds = {
                 x: self.x,
                 y: self.y - yvf,
                 width: self.width,
-                height: self.height + yvf,
+                height: self.height + yvf*2,
             }
         }
-        bounds = {
-            x: self.x,
-            y: self.y,
-            width: self.width,
-            height: self.height,
+        else {
+            bounds = {
+                x: self.x,
+                y: self.y,
+                width: self.width,
+                height: self.height,
+            }
         }
         if (gDebug) {
             gDebugDrawList.push(() => {

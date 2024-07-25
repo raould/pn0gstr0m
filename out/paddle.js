@@ -82,20 +82,21 @@ function Paddle(props) {
     var bounds;
     // increase bounds when we are at the end of the level.
     if (isSuddenDeath && gPucks.A.length <= 3 && ((_gPucks$A$metadata = gPucks.A.metadata) == null ? void 0 : _gPucks$A$metadata.pmaxvx) > maxVX / 2) {
-      var yvf = self.height * 0.2;
+      var yvf = self.height * 0.15;
       bounds = {
         x: self.x,
         y: self.y - yvf,
         width: self.width,
-        height: self.height + yvf
+        height: self.height + yvf * 2
+      };
+    } else {
+      bounds = {
+        x: self.x,
+        y: self.y,
+        width: self.width,
+        height: self.height
       };
     }
-    bounds = {
-      x: self.x,
-      y: self.y,
-      width: self.width,
-      height: self.height
-    };
     if (gDebug) {
       gDebugDrawList.push(function () {
         gCx.strokeStyle = "yellow";
