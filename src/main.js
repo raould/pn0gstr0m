@@ -17,7 +17,8 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
+var gDebugDrawList = [];
 var gShowToasts = gDebug;
 
 var kCanvasName = "canvas"; // match: index.html
@@ -582,6 +583,17 @@ function ResetClipping() {
     gCx.clip();
 }
 
+function DrawDebugList() {
+    if (gDebug) {
+        Cxdo(() => {
+            for (let i = 0; i < gDebugDrawList.length; ++i) {
+                gDebugDrawList[i]();
+            }
+        });
+        gDebugDrawList = [];
+    }
+}
+
 // ----------------------------------------
 
 /*class*/ function Lifecycle( handlerMap ) {
@@ -655,6 +667,7 @@ function ResetClipping() {
                 ++gFrameCount;
 
                 self.DrawCRTScanlines();
+                DrawDebugList();
                 if (gShowToasts) { StepToasts(); }
 
                 remainder = kTimeStep-(fdt-kTimeStep);

@@ -31,7 +31,8 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
+var gDebugDrawList = [];
 var gShowToasts = gDebug;
 var kCanvasName = "canvas"; // match: index.html
 var gLifecycle;
@@ -617,6 +618,16 @@ function ResetClipping() {
   self.CreateCRTOutlinePath();
   gCx.clip();
 }
+function DrawDebugList() {
+  if (gDebug) {
+    Cxdo(function () {
+      for (var i = 0; i < gDebugDrawList.length; ++i) {
+        gDebugDrawList[i]();
+      }
+    });
+    gDebugDrawList = [];
+  }
+}
 
 // ----------------------------------------
 
@@ -683,6 +694,7 @@ function Lifecycle(handlerMap) {
         gLastFrameTime = gGameTime;
         ++gFrameCount;
         self.DrawCRTScanlines();
+        DrawDebugList();
         if (gShowToasts) {
           StepToasts();
         }
