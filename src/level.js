@@ -76,7 +76,6 @@ const kEnglishStep = 0.004;
         if (!isEndScreenshot) {
             self.DrawPills( alpha );
             self.DrawNoMorePucks();
-            self.DrawNotice();
             // todo: you'd maybe kind of expect lots of
             // other things like paddles and pucks to be
             // drawn by the level too, huh? ...
@@ -119,20 +118,6 @@ const kEnglishStep = 0.004;
             var x = ForSide(side, gw(0.25), gw(0.75));
             DrawText(msg, "center", x, gPillTextY, gSmallFontSizePt);
         });
-    };
-
-    self.DrawNotice = function() {
-        if (self.index > 1) { // only show on level 2 and higher.
-            const max = kAlphaFadeInMsec * 5; // match: MakeGameStartAnimation().
-            const dt = gGameTime - self.startTime;
-            if (dt < max) {
-                const t = T10(dt, max);
-                Cxdo(() => {
-                    gCx.fillStyle = RandomForColor(magentaSpec, t);
-                    DrawText(`LEVEL ${self.index}`, "center", gw(0.5), gh(0.8), gRegularFontSizePt);
-                });
-            }
-        }
     };
 
     self.Init();

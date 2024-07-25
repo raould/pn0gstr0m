@@ -196,21 +196,6 @@ function Powerups(props) {
 
 // ----------------------------------------
 
-function AddImageToCache(name, path, cache) {
-  var img = new Image();
-  img.src = path;
-  cache[name] = img;
-}
-gImageCache = {};
-AddImageToCache("forcepushL", "images/forcepushL.png", gImageCache);
-AddImageToCache("forcepushR", "images/forcepushR.png", gImageCache);
-AddImageToCache("decimate", "images/decimate.png", gImageCache);
-AddImageToCache("engorge", "images/engorge.png", gImageCache);
-AddImageToCache("split", "images/split.png", gImageCache);
-AddImageToCache("defend", "images/defend.png", gImageCache);
-AddImageToCache("xtra", "images/xtra.png", gImageCache);
-AddImageToCache("neo", "images/neo.png", gImageCache);
-AddImageToCache("chaos", "images/chaos.png", gImageCache);
 function DrawForcePushPill(side, xywh, alpha) {
   var img = gImageCache[ForSide(side, "forcepushL", "forcepushR")];
   Cxdo(function () {

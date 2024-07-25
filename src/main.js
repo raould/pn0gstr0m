@@ -804,7 +804,7 @@ function DrawBounds( alpha=0.5 ) {
             }
             if (gSinglePlayer) {
                 var pillIDs = ChoosePillIDs(gLevelIndex);
-                nextState = (pillIDs.length > 0) ? kGame : kGetReady;
+                nextState = (pillIDs.length == 0) ? kGame : kGetReady;
             }
             else {
                 nextState = kGetReady;
@@ -877,7 +877,8 @@ function DrawBounds( alpha=0.5 ) {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        self.timeout = 1000 * 3 - 1; // todo: maybe longer for levels with powerups?
+        var seconds = ChoosePillIDs(gLevelIndex).length > 0 ? 5 : 3;
+        self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.pillIDs = ChoosePillIDs(gLevelIndex);
         PlayBlip();
@@ -903,6 +904,7 @@ function DrawBounds( alpha=0.5 ) {
         var t = Math.ceil(self.timeout/1000);
         Cxdo(() => {
             gCx.fillStyle = RandomGreen();
+            DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.3), gSmallFontSizePt);
             DrawText(`GET READY! ${t}`, "center", gw(0.5), gh(0.5), gBigFontSizePt);
             // match: GameState.DrawScoreHeader() et. al.
             gCx.fillStyle = RandomGreen(0.3);
@@ -918,7 +920,7 @@ function DrawBounds( alpha=0.5 ) {
             // zero or two at most.
             Cxdo(() => {
                 gCx.fillStyle = RandomGreen();
-                DrawText("POWERUPS", "center", gw(0.5), gh(0.7), gReducedFontSizePt);
+                DrawText("POWERUPS", "center", gw(0.5), gh(0.75), gSmallFontSizePt);
                 var dx = gw() / self.pillIDs.length;
                 var x0 = gw() / 2 - dx / 2;
                 for (let i = 0; i < self.pillIDs.length; ++i) {
@@ -926,7 +928,7 @@ function DrawBounds( alpha=0.5 ) {
                     let { label, drawer, width, height } = gPillInfo[pid];
                     let x = x0 + dx*i;
                     drawer(gP1Side,
-                           { x, y: gh(0.8), width, height },
+                           { x: x-width, y: gh(0.7), width: width*2, height: height*2 },
                            1);
                     DrawText(label, "center", x,gh(0.9), gSmallFontSizePt);
                 }

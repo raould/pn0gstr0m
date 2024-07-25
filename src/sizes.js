@@ -23,9 +23,11 @@ var kAspectRatio = 16/9;
 var kHtmlWidth = 512; // match: index.html
 var kHtmlHeight = 288; // match: index.html
 Assert(Math.abs(kHtmlWidth/kHtmlHeight - kAspectRatio) < 0.1, "unexpected html aspect ratio");
+
 var gWidth = kHtmlWidth;
 var gHeight = kHtmlHeight;
 Assert(Math.abs(gWidth/gHeight - kAspectRatio) < 0.1, "unexpected g aspect ratio");
+
 function getBorderFactor() {
     // giving portrait more buffer on left and right for thumbs also
     // because the overall playfield is visually smaller, has fewer pixels

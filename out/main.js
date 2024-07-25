@@ -828,7 +828,7 @@ function TitleState() {
       }
       if (gSinglePlayer) {
         var pillIDs = ChoosePillIDs(gLevelIndex);
-        nextState = pillIDs.length > 0 ? kGame : kGetReady;
+        nextState = pillIDs.length == 0 ? kGame : kGetReady;
       } else {
         nextState = kGetReady;
       }
@@ -891,7 +891,8 @@ function GetReadyState() {
   self.Init = function () {
     ResetInput();
     gStateMuted = false;
-    self.timeout = 1000 * 3 - 1; // todo: maybe longer for levels with powerups?
+    var seconds = ChoosePillIDs(gLevelIndex).length > 0 ? 5 : 3;
+    self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.pillIDs = ChoosePillIDs(gLevelIndex);
     PlayBlip();
@@ -914,6 +915,7 @@ function GetReadyState() {
     var t = Math.ceil(self.timeout / 1000);
     Cxdo(function () {
       gCx.fillStyle = RandomGreen();
+      DrawText("LEVEL ".concat(gLevelIndex), "center", gw(0.5), gh(0.3), gSmallFontSizePt);
       DrawText("GET READY! ".concat(t), "center", gw(0.5), gh(0.5), gBigFontSizePt);
       // match: GameState.DrawScoreHeader() et. al.
       gCx.fillStyle = RandomGreen(0.3);
@@ -928,7 +930,7 @@ function GetReadyState() {
       // zero or two at most.
       Cxdo(function () {
         gCx.fillStyle = RandomGreen();
-        DrawText("POWERUPS", "center", gw(0.5), gh(0.7), gReducedFontSizePt);
+        DrawText("POWERUPS", "center", gw(0.5), gh(0.75), gSmallFontSizePt);
         var dx = gw() / self.pillIDs.length;
         var x0 = gw() / 2 - dx / 2;
         for (var i = 0; i < self.pillIDs.length; ++i) {
@@ -940,10 +942,10 @@ function GetReadyState() {
             height = _gPillInfo$pid.height;
           var x = x0 + dx * i;
           drawer(gP1Side, {
-            x: x,
-            y: gh(0.8),
-            width: width,
-            height: height
+            x: x - width,
+            y: gh(0.7),
+            width: width * 2,
+            height: height * 2
           }, 1);
           DrawText(label, "center", x, gh(0.9), gSmallFontSizePt);
         }
