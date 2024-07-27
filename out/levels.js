@@ -68,14 +68,12 @@ function ChoosePillIDs(index) {
   // skip the very first level, it has no powerups.
   if (lv0 > 0) {
     // the first n levels get 2 pills in order.
-    if (false) {
-      // lv0*2 <= gPillIDs.length-2) {
+    if (lv0 * 2 <= gPillIDs.length - 2) {
       var i = (lv0 - 1) * 2;
       pids = gPillIDs.slice(i, i + 2);
       console.log("ChoosePillIDs by 2", index, pids);
       Assert(pids.length == 2);
     }
-
     // after those first n levels, the pills are random.
     else {
       var r = new Random(index);
