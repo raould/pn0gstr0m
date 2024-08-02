@@ -62,9 +62,10 @@ var gMonochrome = false;
 var kGreenFadeInMsec = gDebug ? 1000 : 7000;
 // "fade" in from 0 alpha to specified alphas. match: MakeGameStartAnimation.
 var kAlphaFadeInMsec = 700;
-var kHighScoreStorageKey = 'pn0g_high'; // per game.
+
+// todo: per-game high score doesn't make sense
+// now that we have levels that start scores at 0 to 0.
 var kLevelHighScoresStorageKey = 'pn0g_level_highs'; // per level.
-var gHighScore;
 var gLevelHighScores;
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
@@ -97,6 +98,7 @@ var gBigFontSize;
 var gRegularFontSize;
 var gReducedFontSize;
 var gSmallFontSize;
+var gSmallerFontSize;
 var gSmallestFontSize;
 var gBigFontSizePt;
 var gRegularFontSizePt;
@@ -129,11 +131,13 @@ function RecalculateConstants() {
   gRegularFontSize = NearestEven(gw(0.047));
   gReducedFontSize = NearestEven(gw(0.037));
   gSmallFontSize = NearestEven(gw(0.027));
+  gSmallerFontSize = NearestEven(gw(0.021));
   gSmallestFontSize = NearestEven(gw(0.018));
   gBigFontSizePt = gBigFontSize + "pt";
   gRegularFontSizePt = gRegularFontSize + "pt";
   gReducedFontSizePt = gReducedFontSize + "pt";
   gSmallFontSizePt = gSmallFontSize + "pt";
+  gSmallerFontSizePt = gSmallerFontSize + "pt";
   gSmallestFontSizePt = gSmallestFontSize + "pt";
   gPillTextY = gh(0.9);
   console.log(gBigFontSize, gBigFontSizePt, gRegularFontSize, gRegularFontSizePt, gReducedFontSize, gReducedFontSizePt, gSmallFontSize, gSmallFontSizePt, gSmallestFontSize, gSmallestFontSizePt);
@@ -866,24 +870,9 @@ function TitleState() {
       if (isU(gP1Side)) {
         SetP1Side("right");
       }
-      if (gSinglePlayer) {
-        var pillIDs = ChoosePillIDs(gLevelIndex);
-        nextState = pillIDs.length == 0 ? kGame : kGetReady;
-      } else {
-        nextState = kGetReady;
-      }
+      nextState = kGetReady;
     }
     return nextState;
-  };
-
-  // match: GetReadyState.Draw() et. al.
-  self.DrawHighScore = function () {
-    if (exists(gHighScore)) {
-      Cxdo(function () {
-        gCx.fillStyle = RandomMagenta(0.4);
-        DrawText("HI: " + gHighScore, "right", gw(0.8), gh(0.12), gSmallFontSizePt);
-      });
-    }
   };
   self.Draw = function () {
     ClearScreen();
@@ -893,7 +882,6 @@ function TitleState() {
     } else {
       Cxdo(function () {
         self.attract.Draw();
-        self.DrawHighScore();
         DrawTitle();
         gCx.fillStyle = RandomGreen();
         var msg = "CONTROLS: TOUCH / MOUSE / GAMEPAD / W,S / I,K / u,v";
@@ -955,28 +943,29 @@ function GetReadyState() {
   };
   self.DrawText = function () {
     var t = Math.ceil(self.timeout / 1000);
+    var zpt = MakePuckCount(gLevelIndex);
     Cxdo(function () {
-      gCx.fillStyle = RandomGreen();
-      DrawText("LEVEL ".concat(gLevelIndex), "center", gw(0.5), gh(0.3), gSmallFontSizePt);
-      DrawText("GET READY! ".concat(t), "center", gw(0.5), gh(0.55), gBigFontSizePt);
       // match: GameState.DrawScoreHeader() et. al.
       gCx.fillStyle = RandomGreen(0.3);
       DrawText(ForSide(gP1Side, "P1", "P2"), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
       DrawText(ForSide(gP1Side, "P2", "P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
+      gCx.fillStyle = RandomGreen();
+      DrawText("LEVEL ".concat(gLevelIndex), "center", gw(0.5), gh(0.3), gSmallFontSizePt);
+      DrawText("GET READY! ".concat(t), "center", gw(0.5), gh(0.5), gBigFontSizePt);
+      gCx.fillStyle = RandomForColor(cyanSpec);
+      DrawText("ZERO POINT ENERGY LEVEL ".concat(zpt), "center", gw(0.5), gh(0.9), gSmallFontSizePt);
     });
   };
   self.DrawPills = function () {
     // 0 pills on attract and level 1;
     // 2 pills in order for the first N levels;
     // 4 random pills thereafter.
-    var ty = gh(0.85);
-    var fsz = gSmallFontSize;
-    var fpt = gSmallFontSizePt;
+    var ty = gh(0.8);
     if (self.pillIDs.length > 0) {
       Cxdo(function () {
         gCx.fillStyle = RandomGreen();
         if (self.pillIDs.length <= 2) {
-          DrawText("< POWERUPS >", "center", gw(0.5), ty, fpt);
+          DrawText("POWERUPS", "center", gw(0.5), ty, gReducedFontSizePt);
         }
         var dx = gw() / (self.pillIDs.length + 1);
         var x0 = dx;
@@ -985,16 +974,18 @@ function GetReadyState() {
           var _gPillInfo$pid = gPillInfo[pid],
             name = _gPillInfo$pid.name,
             drawer = _gPillInfo$pid.drawer,
-            width = _gPillInfo$pid.width,
-            height = _gPillInfo$pid.height;
+            wfn = _gPillInfo$pid.wfn,
+            hfn = _gPillInfo$pid.hfn;
+          var width = wfn();
+          var height = hfn();
           var x = x0 + dx * i;
           drawer(gP1Side, {
             x: x - width / 2,
-            y: gh(0.7) - height / 2,
+            y: ty - height * 1.8,
             width: width,
             height: height
           }, 1);
-          DrawText(name, "center", x, ty, fpt);
+          DrawText(name, "center", x, ty, gSmallestFontSizePt);
         }
       });
     }
@@ -1019,10 +1010,11 @@ function GameState(props) {
     RecalculateConstants();
     ResetGlobalStorage();
     ResetInput();
-    gP1Score = 0;
-    gP2Score = 0;
     gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
     gStartTime = gGameTime;
+    gP1Score = 0;
+    gP2Score = 0;
+    self.levelHighScore = gLevelHighScores[gLevelIndex];
     self.pauseButtonEnabled = false;
     self.paused = false;
     self.animations = {};
@@ -1332,7 +1324,6 @@ function GameState(props) {
   self.ProcessOneInput = function (cmds) {
     var _self$theMenu4;
     // note: oddly enough, the paddles handle their own input.
-
     if (cmds.step) {
       if (self.paused) {
         self.stepping = true;
@@ -1352,10 +1343,9 @@ function GameState(props) {
     }
     if (cmds.clearHighScore) {
       if (self.paused) {
-        gHighScore = undefined;
-        localStorage.removeItem(kHighScoreStorageKey);
         gLevelHighScores = {};
         localStorage.removeItem(kLevelHighScoresStorageKey);
+        self.levelHighScore = undefined;
       }
     }
     if (cmds.addPuck) {
@@ -1365,7 +1355,6 @@ function GameState(props) {
         });
       }
     }
-
     // everything below is about pause state and menu showing oh boy.
     if ((_self$theMenu4 = self.theMenu) != null && _self$theMenu4.ProcessOneInput(cmds)) {
       return;
@@ -1531,8 +1520,8 @@ function GameState(props) {
       var p2 = gSinglePlayer ? "GPT: " : "P2: ";
       ForSide(self.isAttract ? "right" : gP1Side, function () {
         gCx.fillStyle = style;
-        if (exists(gHighScore)) {
-          DrawText("HI: " + gHighScore, "left", gw(0.2), gh(0.12), gSmallFontSizePt);
+        if (exists(self.levelHighScore)) {
+          DrawText("LVL HI: " + self.levelHighScore, "left", gw(0.2), gh(0.12), gSmallerFontSizePt);
         }
         if (!self.isAttract) {
           DrawText(p2 + gP2Score, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
@@ -1540,8 +1529,8 @@ function GameState(props) {
         }
       }, function () {
         gCx.fillStyle = style;
-        if (exists(gHighScore)) {
-          DrawText("HI: " + gHighScore, "right", gw(0.8), gh(0.12), gSmallFontSizePt);
+        if (exists(self.levelHighScore)) {
+          DrawText("LVL HI: " + self.levelHighScore, "right", gw(0.8), gh(0.12), gSmallerFontSizePt);
         }
         if (!self.isAttract) {
           DrawText(p2 + gP2Score, "left", gw(0.2), gh(0.22), gRegularFontSizePt);
@@ -1874,17 +1863,6 @@ function GameOverSummaryState() {
     self.timeoutMsg = 1000;
     self.timeoutEnd = 1000 * 10;
     self.started = gGameTime;
-    self.finalScore = gSinglePlayer ? gP1Score - gP2Score : Math.max(gP1Score, gP2Score);
-    self.previousHighScore = gHighScore;
-    gHighScore = Math.max(self.finalScore, aub(gHighScore, self.finalScore));
-    localStorage.setItem(kHighScoreStorageKey, gHighScore);
-    self.relevant = self.isNewHighScore();
-    if (self.relevant) {
-      PlayBlip();
-    }
-  };
-  self.isNewHighScore = function () {
-    return isU(self.previousHighScore) || self.finalScore > self.previousHighScore;
   };
   self.Step = function () {
     if (self.relevant) {
@@ -1936,9 +1914,6 @@ function GameOverSummaryState() {
     var nextState;
     Cxdo(function () {
       gCx.fillStyle = RandomMagentaSolid();
-      if (self.isNewHighScore(self.previousHighScore, self.finalScore)) {
-        DrawText("NEW HIGH SCORE!", "center", x, y - 80, gRegularFontSizePt);
-      }
       var msg = "FINAL SCORE: ".concat(gP1Score, " - ").concat(gP2Score, " = ").concat(self.finalScore);
       DrawText(msg, "center", x, y, gRegularFontSizePt);
       if (self.goOn) {
@@ -2359,10 +2334,6 @@ function CheckResizeMatch() {
   }
 }
 function Start() {
-  var hs = localStorage.getItem(kHighScoreStorageKey);
-  if (exists(hs)) {
-    gHighScore = parseInt(hs);
-  }
   var lhs = localStorage.getItem(kLevelHighScoresStorageKey);
   if (exists(lhs)) {
     gLevelHighScores = JSON.parse(lhs);

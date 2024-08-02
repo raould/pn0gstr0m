@@ -23,6 +23,13 @@ function aub(a, b) {
   return a != undefined ? a : b;
 }
 function noOp() {}
+var gLogOnceMap = {};
+function logOnce(key, msg) {
+  if (!gLogOnceMap[key]) {
+    console.log(msg);
+    gLogOnceMap[key] = true;
+  }
+}
 var gLogOnDeltaMap = {};
 function logOnDelta(key, v, delta, xmsg) {
   var ov = gLogOnDeltaMap[key];

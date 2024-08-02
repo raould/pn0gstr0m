@@ -71,58 +71,95 @@ var gPillIDs = [kForcePushPill, kDecimatePill, kEngorgePill, kSplitPill, kDefend
 // there should be 2 per level
 // for the first n levels.
 Assert(gPillIDs.length % 2 === 0);
+
+// note: width and height are functions
+// because they need to be evaluated after
+// all the display resizing is done.
 var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty({}, kForcePushPill, {
   name: "FORCE PUSH",
   maker: MakeForcePushProps,
   drawer: DrawForcePushPill,
-  width: sxi(30),
-  height: syi(30)
+  wfn: function wfn() {
+    return sxi(25);
+  },
+  hfn: function hfn() {
+    return syi(25);
+  }
 }), kDecimatePill, {
   name: "DECIMATE",
   maker: MakeDecimateProps,
   drawer: DrawDecimatePill,
-  width: sxi(30),
-  height: syi(30)
+  wfn: function wfn() {
+    return sxi(25);
+  },
+  hfn: function hfn() {
+    return syi(25);
+  }
 }), kEngorgePill, {
   name: "ENGORGE",
   maker: MakeEngorgeProps,
   drawer: DrawEngorgePill,
-  width: sxi(25),
-  height: syi(35)
+  wfn: function wfn() {
+    return sxi(25);
+  },
+  hfn: function hfn() {
+    return syi(35);
+  }
 }), kSplitPill, {
   // "SPLIT" could be a confusing name since
   // the level msg says "n splits remaining".
   name: "ZPLT",
   maker: MakeSplitProps,
   drawer: DrawSplitPill,
-  width: sxi(30),
-  height: syi(30)
+  wfn: function wfn() {
+    return sxi(25);
+  },
+  hfn: function hfn() {
+    return syi(25);
+  }
 }), kDefendPill, {
   name: "DEFEND",
   maker: MakeDefendProps,
   drawer: DrawDefendPill,
-  width: sxi(25),
-  height: syi(40)
+  wfn: function wfn() {
+    return sxi(25);
+  },
+  hfn: function hfn() {
+    return syi(40);
+  }
 }), kXtraPill, {
   name: "XTRA",
   maker: MakeXtraProps,
   drawer: DrawXtraPill,
-  width: sxi(30),
-  height: syi(30)
+  wfn: function wfn() {
+    return sxi(25);
+  },
+  hfn: function hfn() {
+    return syi(25);
+  }
 }), kNeoPill, {
   name: "NEO",
   maker: MakeNeoProps,
   drawer: DrawNeoPill,
-  width: sxi(30),
-  height: syi(30)
+  wfn: function wfn() {
+    return sxi(25);
+  },
+  hfn: function hfn() {
+    return syi(25);
+  }
 }), kChaosPill, {
   name: "CHAOS",
   maker: MakeChaosProps,
   drawer: DrawChaosPill,
-  width: sxi(30),
-  height: syi(30)
+  wfn: function wfn() {
+    return sxi(25);
+  },
+  hfn: function hfn() {
+    return syi(25);
+  }
 });
 Assert(gPillInfo);
+console.log(gPillInfo);
 
 /*class*/
 function Powerups(props) {
@@ -333,8 +370,10 @@ function DrawChaosPill(side, xywh, alpha) {
 function MakeForcePushProps(maker) {
   var _gPillInfo$kForcePush = gPillInfo[kForcePushPill],
     name = _gPillInfo$kForcePush.name,
-    width = _gPillInfo$kForcePush.width,
-    height = _gPillInfo$kForcePush.height;
+    wfn = _gPillInfo$kForcePush.wfn,
+    hfn = _gPillInfo$kForcePush.hfn;
+  var width = wfn();
+  var height = hfn();
   return {
     name: name,
     width: width,
@@ -367,8 +406,10 @@ function MakeForcePushProps(maker) {
 function MakeDecimateProps(maker) {
   var _gPillInfo$kDecimateP = gPillInfo[kDecimatePill],
     name = _gPillInfo$kDecimateP.name,
-    width = _gPillInfo$kDecimateP.width,
-    height = _gPillInfo$kDecimateP.height;
+    wfn = _gPillInfo$kDecimateP.wfn,
+    hfn = _gPillInfo$kDecimateP.hfn;
+  var width = wfn();
+  var height = hfn();
   return {
     name: name,
     width: width,
@@ -427,8 +468,10 @@ function MakeDecimateProps(maker) {
 function MakeEngorgeProps(maker) {
   var _gPillInfo$kEngorgePi = gPillInfo[kEngorgePill],
     name = _gPillInfo$kEngorgePi.name,
-    width = _gPillInfo$kEngorgePi.width,
-    height = _gPillInfo$kEngorgePi.height;
+    wfn = _gPillInfo$kEngorgePi.wfn,
+    hfn = _gPillInfo$kEngorgePi.hfn;
+  var width = wfn();
+  var height = hfn();
   return {
     name: name,
     width: width,
@@ -455,8 +498,10 @@ function MakeEngorgeProps(maker) {
 function MakeSplitProps(maker) {
   var _gPillInfo$kSplitPill = gPillInfo[kSplitPill],
     name = _gPillInfo$kSplitPill.name,
-    width = _gPillInfo$kSplitPill.width,
-    height = _gPillInfo$kSplitPill.height;
+    wfn = _gPillInfo$kSplitPill.wfn,
+    hfn = _gPillInfo$kSplitPill.hfn;
+  var width = wfn();
+  var height = hfn();
   return {
     name: name,
     width: width,
@@ -496,8 +541,10 @@ function MakeSplitProps(maker) {
 function MakeDefendProps(maker) {
   var _gPillInfo$kDefendPil = gPillInfo[kDefendPill],
     name = _gPillInfo$kDefendPil.name,
-    width = _gPillInfo$kDefendPil.width,
-    height = _gPillInfo$kDefendPil.height;
+    wfn = _gPillInfo$kDefendPil.wfn,
+    hfn = _gPillInfo$kDefendPil.hfn;
+  var width = wfn();
+  var height = hfn();
   return {
     name: name,
     width: width,
@@ -546,8 +593,10 @@ function MakeDefendProps(maker) {
 function MakeXtraProps(maker) {
   var _gPillInfo$kXtraPill = gPillInfo[kXtraPill],
     name = _gPillInfo$kXtraPill.name,
-    width = _gPillInfo$kXtraPill.width,
-    height = _gPillInfo$kXtraPill.height;
+    wfn = _gPillInfo$kXtraPill.wfn,
+    hfn = _gPillInfo$kXtraPill.hfn;
+  var width = wfn();
+  var height = hfn();
   return {
     name: name,
     width: width,
@@ -591,8 +640,10 @@ function MakeXtraProps(maker) {
 function MakeNeoProps(maker) {
   var _gPillInfo$kNeoPill = gPillInfo[kNeoPill],
     name = _gPillInfo$kNeoPill.name,
-    width = _gPillInfo$kNeoPill.width,
-    height = _gPillInfo$kNeoPill.height;
+    wfn = _gPillInfo$kNeoPill.wfn,
+    hfn = _gPillInfo$kNeoPill.hfn;
+  var width = wfn();
+  var height = hfn();
   return {
     name: name,
     width: width,
@@ -621,8 +672,10 @@ function MakeNeoProps(maker) {
 function MakeChaosProps(maker) {
   var _gPillInfo$kChaosPill = gPillInfo[kChaosPill],
     name = _gPillInfo$kChaosPill.name,
-    width = _gPillInfo$kChaosPill.width,
-    height = _gPillInfo$kChaosPill.height;
+    wfn = _gPillInfo$kChaosPill.wfn,
+    hfn = _gPillInfo$kChaosPill.hfn;
+  var width = wfn();
+  var height = hfn();
   return {
     name: name,
     width: width,
