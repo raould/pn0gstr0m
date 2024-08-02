@@ -31,8 +31,9 @@ function GenerateLightningPath(props) {
   for (var t = 1; t <= steps; ++t) {
     var px = points[t - 1][0];
     var py = points[t - 1][1];
-    var x = x0 + sx * t;
-    var y = y0 + sy * t;
+    var rt = gR.RandomCentered(t, 0.1);
+    var x = x0 + sx * rt;
+    var y = y0 + sy * rt;
     var dx = x - px;
     var dy = y - py;
     var n = Math.sqrt(dx * dx + dy * dy);
@@ -41,14 +42,14 @@ function GenerateLightningPath(props) {
     }
     var nx = -dy / n;
     var ny = dx / n;
-    var xo = x + nx * RandomCentered(0, range, range / 2);
-    var yo = y + ny * RandomCentered(0, range, range / 2);
+    var xo = x + nx * gR.RandomCentered(0, range, range / 2);
+    var yo = y + ny * gR.RandomCentered(0, range, range / 2);
     points.push([O5(xo), O5(yo)]);
   }
   return points;
 }
 function AddLightningPath(props) {
-  // props = { color, x0, y0, x1, y1, range, steps=5 }
+  // props = { color, ...GenerateLightningPath.props }
   var color = props.color,
     x0 = props.x0,
     y0 = props.y0,
@@ -64,8 +65,9 @@ function AddLightningPath(props) {
         gCx.lineTo(p[0], p[1]);
       }
     });
-    gCx.lineWidth = sx1(3);
-    gCx.globalAlpha = 0.3;
+    gCx.lineTo(x1, y1);
+    gCx.lineWidth = 3;
+    gCx.globalAlpha = 0.5;
     gCx.stroke();
     gCx.beginPath();
     gCx.moveTo(points[0][0], points[0][1]);
@@ -75,13 +77,13 @@ function AddLightningPath(props) {
       }
     });
     gCx.lineTo(x1, y1);
-    gCx.lineWidth = sx1(1);
+    gCx.lineWidth = 1;
     gCx.globalAlpha = 1;
     gCx.stroke();
   });
 }
 function MakeGameStartAnimation() {
-  var lifespan = kAlphaFadeInMsec;
+  var lifespan = kAlphaFadeInMsec; // match: DrawMessage().
   return new GSAnimation({
     name: "gamestart",
     lifespan: lifespan,
@@ -105,7 +107,7 @@ function MakeGameStartAnimation() {
         }
         gCx.beginPath(); // shutter effect.
         gCx.rect(0, lastY, gWidth, gHeight - lastY);
-        gCx.fillStyle = "rgb(0, 0, 16)";
+        gCx.fillStyle = backgroundColorStr;
         gCx.fill();
         for (var i = ii(c / 2); i < c; ++i) {
           // bottom bars.
@@ -134,14 +136,14 @@ function MakePoofAnimation(x, y, radius) {
         gCx.strokeStyle = RandomForColor(redSpec, alpha);
         gCx.lineWidth = sx1(1);
         gCx.beginPath();
-        gCx.arc(WX(x), WY(y), r * RandomRange(1, 1.05), 0, k2Pi);
+        gCx.arc(WX(x), WY(y), r * gR.RandomRange(1, 1.05), 0, k2Pi);
         gCx.stroke();
         gCx.beginPath();
-        gCx.arc(WX(x), WY(y), r / 2 * RandomRange(1, 1.05), 0, k2Pi);
+        gCx.arc(WX(x), WY(y), r / 2 * gR.RandomRange(1, 1.05), 0, k2Pi);
         gCx.stroke();
         gCx.beginPath();
         gCx.lineWidth = sx1(2);
-        gCx.arc(WX(x), WY(y), r / 4 * RandomRange(1, 1.05), 0, k2Pi);
+        gCx.arc(WX(x), WY(y), r / 4 * gR.RandomRange(1, 1.05), 0, k2Pi);
         gCx.stroke();
       });
     }
@@ -235,14 +237,15 @@ function MakeTargetsLightningAnimation(props) {
     drawFn: function drawFn() {
       targets.forEach(function (xy) {
         AddLightningPath({
-          color: RandomBool(0.1) ? RandomMagenta() : RandomBlue(),
-          // er, ahem, there's some bug where the last leg of lightning is
+          color: gR.RandomBool(0.4) ? RandomMagenta() : RandomBlue(),
+          // todo: er, ahem, there's maybe some bug where the last leg of lightning is
           // very short e.g. decimate, so i am reversing start and end
           // on purpose to compensate because it looks less bad for now.
           x0: xy.x,
           y0: xy.y,
           x1: paddle.GetMidX(),
           y1: paddle.GetMidY(),
+          steps: 10,
           range: sx1(15)
         });
       });
@@ -403,7 +406,7 @@ function MakeChaosAnimation(props) {
       targets.forEach(function (p, i) {
         if (p.alive) {
           AddLightningPath({
-            color: RandomForColor(RandomBool(0.5) ? magentaSpec : yellowSpec),
+            color: RandomForColor(gR.RandomBool(0.5) ? magentaSpec : yellowSpec),
             x0: p.x,
             y0: Sign(oldvys[i]) == 1 ? gYInset : gHeight - gYInset,
             x1: p.x,

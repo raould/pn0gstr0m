@@ -15,10 +15,7 @@
    isPlayerOnly,
    width, height,
    lifespan,
-   label,
-   ylb,
    isUrgent,
-   fontSize,
    testFn: (gameState) => {},
    canSkip, // don't get stuck waiting on this one's testFn to pass.
    drawFn: (self, alpha) => {},
@@ -27,8 +24,102 @@
    }
 */
 
+/* misc ideas:
+   see the future
+   xtra
+   slowmo
+   suction-blow
+   magnasave
+   bigger bar
+   smaller bar
+   swap sides
+   autoplay
+   cute animal catching
+   bombs
+*/
+
 // needs to be longish so the cpu has any chance of getting it.
 var kPillLifespan = 1000 * 20;
+
+// just am enum, not array indices.
+const kForcePushPill = 0;
+const kDecimatePill = 1;
+const kEngorgePill = 2;
+const kSplitPill = 3;
+const kDefendPill = 4;
+const kXtraPill = 5;
+const kNeoPill = 6;
+const kChaosPill = 7;
+
+// levels are 1-based, and level 1 has no powerups.
+// levels with powerup pills have 2 types of pill.
+const gPillIDs = [
+    kForcePushPill,
+    kDecimatePill,
+    kEngorgePill,
+    kSplitPill,
+    kDefendPill,
+    kChaosPill,
+    kXtraPill,
+    kNeoPill,
+];
+// there should be 2 per level
+// for the first n levels.
+Assert(gPillIDs.length%2===0);
+
+var gPillInfo = {
+    [kForcePushPill]: {
+        name: "FORCE PUSH",
+        maker: MakeForcePushProps,
+        drawer: DrawForcePushPill,
+        width: sxi(30), height: syi(30),
+    },
+    [kDecimatePill]: {
+        name: "DECIMATE",
+	maker: MakeDecimateProps,
+        drawer: DrawDecimatePill,
+        width: sxi(30), height: syi(30),
+    },
+    [kEngorgePill]: {
+        name: "ENGORGE",
+	maker: MakeEngorgeProps,
+        drawer: DrawEngorgePill,
+        width: sxi(25), height: syi(35),
+    },
+    [kSplitPill]: {
+        // "SPLIT" could be a confusing name since
+        // the level msg says "n splits remaining".
+        name: "ZPLT",
+	maker: MakeSplitProps,
+        drawer: DrawSplitPill,
+        width: sxi(30), height: syi(30),
+    },
+    [kDefendPill]: {
+        name: "DEFEND",
+	maker: MakeDefendProps,
+        drawer: DrawDefendPill,
+        width: sxi(25), height: syi(40),
+    },
+    [kXtraPill]: {
+        name: "XTRA",
+	maker: MakeXtraProps,
+        drawer: DrawXtraPill,
+        width: sxi(30), height: syi(30),
+    },
+    [kNeoPill]: {
+        name: "NEO",
+	maker: MakeNeoProps,
+        drawer: DrawNeoPill,
+        width: sxi(30), height: syi(30),
+    },
+    [kChaosPill]: {
+        name: "CHAOS",
+	maker: MakeChaosProps,
+        drawer: DrawChaosPill,
+        width: sxi(30), height: syi(30),
+    },
+};
+Assert(gPillInfo);
 
 /*class*/ function Powerups( props ) {
 
@@ -51,14 +142,14 @@ var kPillLifespan = 1000 * 20;
         if (exists(propsBase)) {
             // fyi allow pills to have different lifespans, tho currently they are all the same.
             Assert(exists(propsBase.lifespan), "lifespan");
-            var y = RandomChoice(gh(0.1), gh(0.9)-propsBase.height);
+            var y = gR.RandomChoice(gh(0.1), gh(0.9)-propsBase.height);
             var props = {
                 ...propsBase,
                 name: propsBase.name,
                 x: ForSide(self.side, gw(0.35), gw(0.65)),
                 y,
                 vx: ForSide(self.side, -1,1) * sx(3),
-                vy: RandomCentered(0, 2, 0.5),
+                vy: gR.RandomCentered(0, 2, 0.5),
             };
             return new Pill(props);
         }
@@ -69,8 +160,13 @@ var kPillLifespan = 1000 * 20;
         self.UpdateDeck();
 
         var newFn = Peek(self.powerupDeck);
-        Assert(exists(newFn), "bad powerup deck entry");
+        if (isU(newFn)) {
+            return undefined;
+        }
+
+        Assert(typeof newFn == "function", `newFn()? ${self.powerupDeck} ${typeof newFn}`);
         var s = newFn(self);
+        Assert(exists(s), "newFn?");
 
         // the order of these conditionals does matter.
         if (self.isPlayerOnly(s)) {
@@ -89,7 +185,7 @@ var kPillLifespan = 1000 * 20;
 
     self.UpdateDeck = function() {
         // used them all, restart deck.
-        if (isU(self.powerupDeck) || self.powerupDeck.length < 1) {
+        if (self.powerupDeck.length <= 0 && self.specs.length > 0) {
             self.powerupDeck = [...self.specs].reverse();
             Assert(self.powerupDeck.length > 0, "invalid powerup deck length");
         }
@@ -107,45 +203,160 @@ var kPillLifespan = 1000 * 20;
 
     self.isSkippable = function( spec ) {
         // don't get stuck on a powerup that might never happen.
-        return aorb(spec.canSkip, false);
+        return aub(spec.canSkip, false);
     };
 
     self.Init();
 };
 
+// ----------------------------------------
+
+function DrawForcePushPill(side, xywh, alpha) {
+    var img = gImageCache[ForSide(side, "forcepushL", "forcepushR")];
+    Cxdo(() => {
+        var wx = WX(xywh.x);
+        var wy = WY(xywh.y);
+        gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+        var mx = wx + xywh.width/2;
+        var my = wy + xywh.height/2;
+        gCx.beginPath();
+        gCx.arc(mx, my, xywh.width/2, 0, k2Pi);
+        gCx.closePath();
+        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.lineWidth = sx1(2);
+        gCx.stroke();
+    });
+}
+
+function DrawDecimatePill(side, xywh, alpha) {
+    var img = gImageCache["decimate"];
+    Cxdo(() => {
+        var wx = WX(xywh.x);
+        var wy = WY(xywh.y);
+        gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+        var mx = wx + ii(xywh.width/2);
+        var my = wy + ii(xywh.height/2);
+        gCx.beginPath();
+        gCx.moveTo(mx, wy);
+        gCx.lineTo(wx + xywh.width, my);
+        gCx.lineTo(mx, wy + xywh.height);
+        gCx.lineTo(wx, my);
+        gCx.closePath();
+        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.lineWidth = sx1(2);
+        gCx.stroke();
+    });
+}
+
+function DrawEngorgePill(side, xywh, alpha) {
+    var img = gImageCache["engorge"];
+    Cxdo(() => {
+        var wx = WX(xywh.x);
+        var wy = WY(xywh.y);
+        gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+        gCx.beginPath();
+        gCx.rect( wx, wy, xywh.width, xywh.height );
+        gCx.lineWidth = sx1(2);
+        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.stroke();
+    });
+}
+
+function DrawSplitPill(side, xywh, alpha) {
+    var img = gImageCache["split"];
+    Cxdo(() => {
+        var wx = WX(xywh.x);
+        var wy = WY(xywh.y);
+        gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+        gCx.beginPath();
+        gCx.RoundRect(wx, wy, xywh.width, xywh.height, 10);
+        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.lineWidth = sx1(2);
+        gCx.stroke();
+    });
+}
+
+function DrawDefendPill(side, xywh, alpha) {
+    var img = gImageCache["defend"];
+    Cxdo(() => {
+        var wx = WX(xywh.x);
+        var wy = WY(xywh.y);
+        gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+        gCx.beginPath();
+        gCx.RoundRect(wx, wy, xywh.width, xywh.height, 10);
+        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.lineWidth = sx1(2);
+        gCx.stroke();
+    });
+}
+
+function DrawXtraPill(side, xywh, alpha) {
+    var img = gImageCache["xtra"];
+    Cxdo(() => {
+        var wx = WX(xywh.x);
+        var wy = WY(xywh.y);
+        gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+        gCx.beginPath();
+        gCx.RoundRect(wx, wy, xywh.width, xywh.height, 10);
+        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.lineWidth = sx1(2);
+        gCx.stroke();
+    });
+}
+
+function DrawNeoPill(side, xywh, alpha) {
+    var img = gImageCache["neo"];
+    Cxdo(() => {
+        var wx = WX(xywh.x);
+        var wy = WY(xywh.y);
+        var mx = wx + ii(xywh.width/2);
+        var my = wy + ii(xywh.height/2);
+        gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+        gCx.beginPath();
+        gCx.moveTo(mx, wy);
+        gCx.lineTo(wx + xywh.width, my);
+        gCx.lineTo(mx, wy + xywh.height);
+        gCx.lineTo(wx, my);
+        gCx.closePath();
+        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.lineWidth = sx1(2);
+        gCx.stroke();
+    });
+}
+
+function DrawChaosPill(side, xywh, alpha) {
+    var img = gImageCache["chaos"];
+    Cxdo(() => {
+        // make it randomly resizing to look more chaotic.
+        var o = gR.RandomRange(1, sx1(4));
+        var wx = WX(xywh.x)-o;
+        var wy = WY(xywh.y)-o;
+        var ww = xywh.width + o*2;
+        var wh = xywh.height + o*2;
+        gCx.drawImage(img, wx, wy, ww, wh);
+        var mx = wx + ww/2;
+        var my = wy + wh/2;
+        gCx.beginPath();
+        gCx.arc(mx, my, ww/2, 0, k2Pi);
+        gCx.closePath();
+        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.lineWidth = sx1(2);
+        gCx.stroke();
+    });
+}
+
+// ----------------------------------------
+
 function MakeForcePushProps(maker) {
-    var label = ForSide(maker.side, ">", "<");
-    var name = "forcepush";
+    var { name, width, height } = gPillInfo[kForcePushPill];
     return {
         name,
-        width: sx(18), height: sy(18),
+        width, height,
         lifespan: kPillLifespan,
-        label,
-        ylb: sy(16),
-        fontSize: gReducedFontSizePt,
         testFn: (gameState) => {
             return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
         },
-        drawFn: (self, alpha) => {
-            Cxdo(() => {
-                var wx = WX(self.x);
-                var wy = WY(self.y);
-                var r = 20;
-
-                gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, r );
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
-                gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, r );
-                gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.lineWidth = sx1(2);
-                gCx.stroke();
-
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
-            });
-        },
+        drawFn: (self, alpha) => DrawForcePushPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var targetSign = ForSide(maker.side, -1, 1);
@@ -154,7 +365,7 @@ function MakeForcePushProps(maker) {
                     p.vx *= -1;
                 }
                 else {
-                    p.vx = MinSigned(p.vx*1.4, gMaxVX);
+                    p.vx = MinSigned(p.vx*1.15, gameState.maxVX);
                 }
             });
             gameState.AddAnimation(MakeWaveAnimation({
@@ -167,53 +378,25 @@ function MakeForcePushProps(maker) {
 }
 
 function MakeDecimateProps(maker) {
-    var name = 'decimate';
+    var { name, width, height } = gPillInfo[kDecimatePill];
     return {
         name,
-        width: sx(18), height: sy(18),
+        width, height,
         lifespan: kPillLifespan,
-        label: "*",
-        ylb: sy(18),
-        fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
             // looks unfun if there aren't enough pucks to destroy.
             return gDebug || gPucks.A.length > 20;
         },
         canSkip: true,
-        drawFn: (self, alpha) => {
-            Cxdo(() => {
-                var wx = WX(self.x);
-                var wy = WY(self.y);
-                var mx = wx + ii(self.width/2);
-                var my = wy + ii(self.height/2);
-
-                gCx.beginPath();
-                gCx.moveTo(mx, wy);
-                gCx.lineTo(wx + self.width, my);
-                gCx.lineTo(mx, wy + self.height);
-                gCx.lineTo(wx, my);
-                gCx.closePath();
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
-                gCx.beginPath();
-                gCx.moveTo(mx, wy);
-                gCx.lineTo(wx + self.width, my);
-                gCx.lineTo(mx, wy + self.height);
-                gCx.lineTo(wx, my);
-                gCx.closePath();
-                gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.lineWidth = sx1(2);
-                gCx.stroke();
-
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
-            });
-        },
+        drawFn: (self, alpha) => DrawDecimatePill(maker.side, self, alpha),
         boomFn: (gameState) => {
             // try to destroy at least 1, but leave at least 1 still alive.
             // prefer destroying the ones closest to the player.
-            var count = Math.max(1, Math.floor(gPucks.A.length*0.6)); // technically not "deci"mate, i know.
-            if (count < gPucks.A.length-1) {
+            var count = Math.max(1, Math.floor(gPucks.A.length*0.4)); // not deci-mate, i know.
+            if (gPucks.A.length > 1 && count === 0) {
+                count = 1;
+            }
+            if (gPucks.A.length - count > 0) {
                 PlayPowerupBoom();
                 var byd = gPucks.A.
                     map((p) => { return {d:Math.abs(p.x-maker.paddle.x), p:p}; }).
@@ -222,7 +405,7 @@ function MakeDecimateProps(maker) {
                 Assert(targets.length < gPucks.A.length);
                 targets.forEach(p => {
                     p.alive = false;
-                    AddSparks(p.x, p.y, p.vx, p.vy);
+                    AddSparks({ x:p.x, y:p.y, vx:p.vx, vy:p.vy, count:2, rx:sx(1), ry:sy(1) });
                 });
                 gameState.AddAnimation(MakeTargetsLightningAnimation({
                     lifespan: 200,
@@ -235,38 +418,17 @@ function MakeDecimateProps(maker) {
 }
 
 function MakeEngorgeProps(maker) {
-    var name = 'engorge';
+    var { name, width, height } = gPillInfo[kEngorgePill];
     return {
         name,
-        width: sx(22), height: sy(22),
+        width, height,
         lifespan: kPillLifespan,
-        label: "+",
-        ylb: sy(30),
         isUrgent: true,
-        fontSize: gBigFontSizePt,
         testFn: (gameState) => {
             return !maker.paddle.engorged;
         },
         canSkip: true,
-        drawFn: (self, alpha) => {
-            Cxdo(() => {
-                var wx = WX(self.x);
-                var wy = WY(self.y);
-
-                gCx.beginPath();
-                gCx.rect( wx, wy, self.width, self.height );
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
-                gCx.beginPath();
-                gCx.rect( wx, wy, self.width, self.height );
-                gCx.lineWidth = sx1(2);
-                gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.stroke();
-
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
-            });
-        },
+        drawFn: (self, alpha) => DrawEngorgePill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             gameState.AddAnimation(MakeEngorgeAnimation({
@@ -278,45 +440,25 @@ function MakeEngorgeProps(maker) {
 };
 
 function MakeSplitProps(maker) {
-    var name = 'split';
+    var { name, width, height } = gPillInfo[kSplitPill];
     return {
         name,
-        width: sx(30), height: sy(24),
+        width, height,
         lifespan: kPillLifespan,
-        label: "//",
-        ylb: sy(18),
-        fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
             return true;
         },
-        drawFn: (self, alpha) => {
-            Cxdo(() => {
-                var wx = WX(self.x);
-                var wy = WY(self.y);
-                var mx = wx + ii(self.width/2);
-                var my = wy + ii(self.height/2);
-
-                gCx.beginPath();
-                gCx.RoundRect(wx, wy, self.width, self.height, 20);
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
-                gCx.beginPath();
-                gCx.RoundRect(wx, wy, self.width, self.height, 20);
-                gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.lineWidth = sx1(2);
-                gCx.stroke();
-
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
-            });
-        },
+        drawFn: (self, alpha) => DrawSplitPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             var r = 10/gPucks.A.length;
             var targets = gPucks.A.filter((p, i) => {
-                return i < 1 ? true : RandomBool(r);
+                return i < 1 ? true : gR.RandomBool(r);
             });
             targets.forEach(p => {
-                gPucks.A.push(p.SplitPuck(true));
+                var maxVX = gameState.level.maxVX;
+                var splits = p.SplitPuck({ forced: true, maxVX });
+                gameState.level.OnPuckSplit(1);
+                gPucks.A.push(splits);
             });
             gameState.AddAnimation(MakeSplitAnimation({
                 lifespan: 250,
@@ -329,39 +471,17 @@ function MakeSplitProps(maker) {
 }
 
 function MakeDefendProps(maker) {
-    var name = 'defend';
+    var { name, width, height } = gPillInfo[kDefendPill];
     return {
         name,
-        width: sx(20), height: sy(30),
+        width, height,
         lifespan: kPillLifespan,
-        label: "#",
-        ylb: sy(20),
         isUrgent: true,
-        fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
             return maker.paddle.barriers.A.length == 0 && (gDebug || gPucks.A.length > 25);
         },
         canSkip: true,
-        drawFn: (self, alpha) => {
-            Cxdo(() => {
-                var wx = WX(self.x);
-                var wy = WY(self.y);
-                var r = 2;
-
-                gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, r );
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
-                gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, r );
-                gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.lineWidth = sx1(2);
-                gCx.stroke();
-
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
-            });
-        },
+        drawFn: (self, alpha) => DrawDefendPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var n = 4; // match: kBarriersArrayInitialSize.
@@ -390,43 +510,21 @@ function MakeDefendProps(maker) {
     };
 }
 
-function MakeOptionProps(maker) {
-    var name = 'option';
+function MakeXtraProps(maker) {
+    var { name, width, height } = gPillInfo[kXtraPill];
     return {
         name,
-        width: sx(22), height: sy(22),
+        width, height,
         lifespan: kPillLifespan,
-        label: "!!",
-        ylb: sy(16),
         isUrgent: true,
-        fontSize: gSmallFontSizePt,
         testFn: (gameState) => {
-            return maker.paddle.options.A.length == 0 && (gDebug || gPucks.A.length > 20);
+            return maker.paddle.xtras.A.length == 0 && (gDebug || gPucks.A.length > 20);
         },
         canSkip: true,
-        drawFn: (self, alpha) => {
-            Cxdo(() => {
-                var wx = WX(self.x);
-                var wy = WY(self.y);
-                var r = 6;
-
-                gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, r );
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
-                gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, r );
-                gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.lineWidth = sx1(2);
-                gCx.stroke();
-
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
-            });
-        },
+        drawFn: (self, alpha) => DrawXtraPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
-            var n = 6; // match: kOptionsArrayInitialSize.
+            var n = 6; // match: kXtrasArrayInitialSize.
             var yy = (gHeight-gYInset*2)/n;
             var width = gPaddleWidth*2/3;
             var height = Math.min(gPaddleHeight/2, yy/2);
@@ -437,14 +535,11 @@ function MakeOptionProps(maker) {
                 var y = gYInset+yy*i;
                 var yMin = y;
                 var yMax = y+yy;
-                maker.paddle.AddOption({
-                    isPlayer: false,
-                    side: maker.side,
+                maker.paddle.AddXtra({
                     x: x+xoff, y,
                     yMin, yMax,
                     width, height,
                     hp,
-                    isSplitter: true,
                     stepSize: Math.max(1,(yMax-yMin)/10),
                 });
             });
@@ -453,60 +548,18 @@ function MakeOptionProps(maker) {
 }
 
 function MakeNeoProps(maker) {
-    var name = 'neo';
+    var { name, width, height } = gPillInfo[kNeoPill];
     return {
         name,
-        width: sx(22), height: sy(22),
+        width, height,
         lifespan: kPillLifespan,
-        label: "#",
-        ylb: sy(15),
         isUrgent: true,
-        fontSize: gSmallestFontSizePt,
         testFn: (gameState) => {
             // todo: in some playtesting this was being spawned too often, maybe each props needs a spawn weight too?
             return (gDebug || gPucks.A.length > kEjectCountThreshold/2) && isU(maker.paddle.neo);
         },
         canSkip: true,
-        drawFn: (self, alpha) => {
-            Cxdo(() => {
-                var wx = WX(self.x);
-                var wy = WY(self.y);
-                var mx = wx + ii(self.width/2);
-                var my = wy + ii(self.height/2);
-                var o = sy1(5);
-
-                gCx.beginPath();
-                gCx.moveTo(mx, wy-o);
-                gCx.lineTo(wx+self.width+o, my);
-                gCx.lineTo(mx, wy+self.height+o);
-                gCx.lineTo(wx-o, my);
-                gCx.closePath();
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
-                gCx.beginPath();
-                gCx.moveTo(mx, wy);
-                gCx.lineTo(wx + self.width, my);
-                gCx.lineTo(mx, wy + self.height);
-                gCx.lineTo(wx, my);
-                gCx.closePath();
-                gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.lineWidth = sx1(1);
-                gCx.stroke();
-
-                gCx.beginPath();
-                gCx.moveTo(mx, wy-o);
-                gCx.lineTo(wx+self.width+o, my);
-                gCx.lineTo(mx, wy+self.height+o);
-                gCx.lineTo(wx-o, my);
-                gCx.closePath();
-                gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.lineWidth = sx1(1);
-                gCx.stroke();
-
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
-            });
-        },
+        drawFn: (self, alpha) => DrawNeoPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             maker.paddle.AddNeo({
@@ -519,85 +572,22 @@ function MakeNeoProps(maker) {
     };
 }
 
-function MakeRadarProps(maker) {
-    var name = 'radar';
-    var x = ForSide(maker.side, gw(0.4), gw(0.6));
-    return {
-        name,
-        isPlayerOnly: true,
-        width: sx(18), height: sy(18),
-        lifespan: kPillLifespan,
-        label: "?",
-        ylb: sy(13),
-        fontSize: gSmallestFontSizePt,
-        testFn: (gameState) => {
-            // there can be only one per maker, and it lasts for ever.
-            return (gDebug || gPucks.A.length > 20) && !maker.powerupLocks[name];
-        },
-        canSkip: true,
-        drawFn: (self, alpha) => {
-            Cxdo(() => {
-                var wx = WX(self.x);
-                var wy = WY(self.y);
-                gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, 3 );
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
-                gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, 3 );
-                gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.lineWidth = sx1(2);
-                gCx.stroke();
-                DrawText( self.label, "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
-            });
-        },
-        boomFn: (gameState) => {
-            PlayPowerupBoom();
-            maker.powerupLocks[name] = true;
-            gameState.AddAnimation(MakeRadarAnimation({
-                side: maker.side
-            }));
-        },
-    };
-}
-
 function MakeChaosProps(maker) {
-    var name = 'chaos';
+    var { name, width, height } = gPillInfo[kChaosPill];
     return {
         name,
-        width: sx(20), height: sy(20),
+        width, height,
         lifespan: kPillLifespan,
-        label: ["|", "/", "--", "\\", "|", "/", "--", "\\"],
-        ylb: sy(14),
-        fontSize: gSmallestFontSizePt,
         testFn: (gameState) => {
             return (gDebug || gPucks.A.length > 10) && isU(maker.paddle.neo);
         },
-        drawFn: (self, alpha) => {
-            Cxdo(() => {
-                var wx = WX(self.x);
-                var wy = WY(self.y);
-                gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, 3 );
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-
-                gCx.beginPath();
-                gCx.RoundRect( wx, wy, self.width, self.height, 3 );
-                gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-                gCx.lineWidth = sx1(2);
-                gCx.stroke();
-                var i = ii(gFrameCount/5) % self.label.length;
-                DrawText( self.label[i], "center", wx+ii(self.width/2), wy+self.ylb, self.fontSize );
-            });
-        },
+        drawFn: (self, alpha) => DrawChaosPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var targets = [];
             gPucks.A.forEach((p,i) => {
                 if (isMultiple(i, 3)) {
-                    p.vy *= -RandomCentered(4, 2);
+                    p.vy *= -gR.RandomCentered(4, 2);
                     targets.push(p);
                 }
             });

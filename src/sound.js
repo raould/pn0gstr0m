@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -158,7 +158,7 @@ function PlaySfxDebounced(name) {
         Assert(meta != undefined, name, `PlaySfxDebounced ${name}`);
         if (meta != undefined) {
             var last = meta.last || 0;
-            if (Date.now()-last > RandomCentered(25,10) /*msec*/) {
+            if (Date.now()-last > gR.RandomCentered(25,10) /*msec*/) {
                 sid = PlaySound(name);
             }
         }
@@ -190,7 +190,7 @@ function MakePlayFn(count, basename, playfn) {
     Assert(count >= 0, count, `MakePlayFn ${basename}`);
     var gNames = Array(count).fill().map((e,i) => `${basename}${i+1}`);
     return () => {
-        var index = RandomRangeInt(0, count-1);
+        var index = gR.RandomRangeInt(0, count-1);
         var name = gNames[index];
         return playfn(name);
     };

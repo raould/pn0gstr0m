@@ -25,6 +25,8 @@ function Paddle(props) {
     self.Init = function(label) {
         self.id = gNextID++;
 
+        self.isXtra = props.isXtra; // temporary, for debugging.
+
         self.isPlayer = props.isPlayer;
         self.side = props.side;
         // barriers are { x, y, width, height,
@@ -34,10 +36,10 @@ function Paddle(props) {
             A: new ReuseArray(kBarriersArrayInitialSize),
             B: new ReuseArray(kBarriersArrayInitialSize)
         };
-        // options are mini paddles.
-        self.options = {
-            A: new ReuseArray(kOptionsArrayInitialSize),
-            B: new ReuseArray(kOptionsArrayInitialSize)
+        // xtras are mini paddles.
+        self.xtras = {
+            A: new ReuseArray(kXtrasArrayInitialSize),
+            B: new ReuseArray(kXtrasArrayInitialSize)
         };
         // neos are sticky fly traps.
         self.neo = undefined;
@@ -47,16 +49,15 @@ function Paddle(props) {
         self.x0 = props.x;
         self.x = props.x;
         self.y = props.y;
-        self.yMin = aorb(props.yMin, gYInset);
-        self.yMax = aorb(props.yMax, gHeight-gYInset);
+        self.yMin = aub(props.yMin, gYInset);
+        self.yMax = aub(props.yMax, gHeight-gYInset);
         self.isAtLimit = false;
         self.prevX = self.x;
         self.prevY = self.y;
         self.width = props.width;
         self.height = props.height;
-        self.blockvx = self.x >= gw(0.5) ? 1 : -1;
-        self.isSplitter = aorb(props.isSplitter, false);
-        self.isPillSeeker = aorb(props.isPillSeeker, false);
+        self.isSplitter = aub(props.isSplitter, false);
+        self.isPillSeeker = aub(props.isPillSeeker, false);
         self.alive = isU(self.hp) || self.hp > 0;
         self.engorgedHeight = gPaddleHeight * 2;
         self.engorgedWidth = gPaddleWidth * 0.8;
@@ -66,7 +67,7 @@ function Paddle(props) {
         self.aiCountdownToUpdate = kAIPeriod;
         self.label = props.label;
         self.engorged = false;
-        self.stepSize = aorb(props.stepSize, gPaddleStepSize);
+        self.stepSize = aub(props.stepSize, gPaddleStepSize);
         self.keyStates = props.keyStates;
         // todo: fold button & stick states together into a gamepadState wrapper.
         self.buttonState = props.buttonState;
@@ -77,6 +78,34 @@ function Paddle(props) {
         self.scanCount = 10;
         self.attackingNearCount = 0;
         self.nudgeX();
+        self.englishFactor = 1;
+    };
+
+    self.GetCollisionBounds = function(isSuddenDeath, maxVX) {
+        var bounds;
+        // increase bounds when we are at the end of the level.
+        if (self.isPlayer &&
+            isSuddenDeath &&
+            gPucks.A.length <= 3 &&
+            gPucks.A.metadata?.pmaxvx > maxVX/2) {
+            var yvf = self.height * 0.15;
+            bounds = {
+                x: self.x,
+                y: self.y - yvf,
+                width: self.width,
+                height: self.height + yvf*2,
+            };
+        }
+        else {
+            bounds = self;
+        }
+        if (gDebug) {
+            gDebugDrawList.push(() => {
+                gCx.strokeStyle = "yellow";
+                gCx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+            });
+        }
+        return bounds;
     };
 
     self.AddBarrier = function( props ) {
@@ -84,9 +113,18 @@ function Paddle(props) {
         self.barriers.A.push(b);
     };
 
-    self.AddOption = function( props ) {
-        var o = new Paddle(props);
-        self.options.A.push(o);
+    self.AddXtra = function( props ) {
+        // todo: this is complected hard coded ugly stuff
+        // because it is merging things.
+        var o = new Paddle({
+            side: self.side,
+            ...props,
+            isPlayer: false,
+            isSplitter: false,
+            isPillSeeker: false,
+            isXtra: true,
+        });
+        self.xtras.A.push(o);
     };
 
     self.AddNeo = function( props ) {
@@ -95,7 +133,7 @@ function Paddle(props) {
 
     self.StepPowerups = function( dt, gameState ) {
         self.StepBarriers( dt );
-        self.StepOptions( dt, gameState );
+        self.StepXtras( dt, gameState );
         self.StepNeo( dt, gameState );
     };
 
@@ -108,13 +146,13 @@ function Paddle(props) {
         SwapBuffers(self.barriers);
     };
 
-    self.StepOptions = function( dt, gameState ) {
-        self.options.B.clear();
-        self.options.A.forEach(o => {
+    self.StepXtras = function( dt, gameState ) {
+        self.xtras.B.clear();
+        self.xtras.A.forEach(o => {
             o.Step( dt, gameState );
-            o.alive && self.options.B.push( o );
+            o.alive && self.xtras.B.push( o );
         } );
-        SwapBuffers(self.options);
+        SwapBuffers(self.xtras);
     };
 
     self.StepNeo = function( dt, gameState ) {
@@ -123,13 +161,11 @@ function Paddle(props) {
         }
     };
 
-    self.CollisionTest = function( puck ) {
-        var hit = puck.CollisionTest( self, self.blockvx );
-        if (hit && exists(self.hp)) {
+    self.OnPuckHit = function() {
+        if (exists(self.hp)) {
             self.hp--;
             self.alive = self.hp > 0;
         }
-        return hit;
     };
 
     self.BeginEngorged = function() {
@@ -176,12 +212,16 @@ function Paddle(props) {
         self.barriers.A.forEach(b => {
             b.Draw( alpha );
         });
-        self.options.A.forEach(o => {
-            o.Draw( alpha, gameState );
+        self.xtras.A.forEach(x => {
+            x.Draw( alpha, gameState );
         });
         if (exists(self.neo)) {
             self.neo.Draw( alpha, gameState );
         }
+        self.DrawPaddle( alpha, hp01 );
+    };
+
+    self.DrawPaddle = function( alpha, hp01 ) {
         Cxdo(() => {
             var hpw = isU(self.hp) ?
                 self.width :
@@ -210,7 +250,7 @@ function Paddle(props) {
                 }
                 else {
                     var ly = self.y-20;
-                    var bright = gRandom() > gt01;
+                    var bright = gR.RandomFloat() > gt01;
                     // alpha flicker progressing toward fully faded then gone.
                     var bm = bright ? 1 : 0.5;
                     // a hack: also use alpha to "clip" the label before it renders out of crt bounds.
@@ -224,23 +264,35 @@ function Paddle(props) {
     };
 
     self.DrawDebug = function() {
+        self.DrawDebugSinglePaddle(self);
+        self.xtras.A.forEach(x => self.DrawDebugSinglePaddle(x));
+    };
+
+    self.DrawDebugSinglePaddle = function(paddle) {
         if (gDebug) {
             Cxdo(() => {
-                if (exists(self.debugMsg)) {
+                gCx.beginPath();
+                gCx.strokeStyle = "red";
+                gCx.moveTo(paddle.GetMidX(), paddle.GetMidY());
+                gCx.lineTo(paddle.GetMidX() + sx1(10) * paddle.normalX, paddle.GetMidY());
+                gCx.lineWidth = 2;
+                gCx.stroke();
+
+                if (exists(paddle.debugMsg)) {
                     gCx.fillStyle = "blue";
                     DrawText(
-                        self.debugMsg,
-                        ForSide(self.side, "left", "right"),
-                        ForSide(self.side, gw(0.1), gw(0.9)),
+                        paddle.debugMsg,
+                        ForSide(paddle.side, "left", "right"),
+                        ForSide(paddle.side, gw(0.1), gw(0.9)),
                         gh(0.2),
                         gSmallFontSizePt
                     );
                 }
-                if( exists(self.aiPuck)) {
+                if( exists(paddle.aiPuck)) {
                     gCx.strokeStyle = "red";
                     gCx.beginPath();
-                    gCx.arc( self.aiPuck.GetMidX(), self.aiPuck.GetMidY(),
-                             self.aiPuck.width * 1.5,
+                    gCx.arc( paddle.aiPuck.midX, paddle.aiPuck.midY,
+                             paddle.aiPuck.width * 1.5,
                              0, k2Pi,
                              true );
                     gCx.stroke();
@@ -334,7 +386,7 @@ function Paddle(props) {
 
     // ........................................ AI (hacky junk).
 
-    self.OnPuck = function( p, i ) {
+    self.OnPuckMoved = function( p, i ) {
         if (i == 0) {
             self.attackingNearCount = 0;
         }
@@ -373,7 +425,7 @@ function Paddle(props) {
 
         if (exists(self.aiPuck) && self.isPuckAttacking(self.aiPuck)) {
             self.debugMsg = "PUCK";
-            self.AISeekTargetMidY( dt, self.aiPuck.GetMidY(), 1 );
+            self.AISeekTargetMidY( dt, self.aiPuck.midY, 1 );
             return;
         }
 
@@ -395,7 +447,6 @@ function Paddle(props) {
         if( !should && hasPuck ) {
             should = !self.isPuckAttacking( self.aiPuck );
         }
-
         if( should ) {
             self.aiCountdownToUpdate = kAIPeriod;
         }
