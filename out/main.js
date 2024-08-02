@@ -1639,6 +1639,7 @@ function GameState(props) {
       // pucks going away from (single) player.
       gPucks.A.revEach(function (p) {
         if (Sign(p.vx) == ForSide(gP1Side, 1, -1)) {
+          Assert(exists(p));
           p.Draw(self.Alpha());
         }
       });

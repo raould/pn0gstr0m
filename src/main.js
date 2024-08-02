@@ -1694,6 +1694,7 @@ function DrawDebugList() {
             // pucks going away from (single) player.
             gPucks.A.revEach(p => {
                 if (Sign(p.vx) == ForSide(gP1Side, 1, -1)) {
+                    Assert(exists(p));
                     p.Draw( self.Alpha() );
                 }
             });

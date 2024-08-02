@@ -456,9 +456,11 @@ function MakeSplitProps(maker) {
             });
             targets.forEach(p => {
                 var maxVX = gameState.level.maxVX;
-                var splits = p.SplitPuck({ forced: true, maxVX });
+                var split = p.SplitPuck({ forced: true, maxVX });
                 gameState.level.OnPuckSplit(1);
-                gPucks.A.push(splits);
+                var p = gPuckPool.Alloc();
+                p.PlacementInit(split);
+                gPucks.A.push(p);
             });
             gameState.AddAnimation(MakeSplitAnimation({
                 lifespan: 250,
