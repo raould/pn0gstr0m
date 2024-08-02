@@ -59,9 +59,9 @@ function rgba255s(array, alpha) {
 function RandomColor(alpha) {
     return rgba255s(
         [
-            RandomRange(0, 255),
-            RandomRange(0, 255),
-            RandomRange(0, 255),
+            gR.RandomRangeInt(0, 255),
+            gR.RandomRangeInt(0, 255),
+            gR.RandomRangeInt(0, 255),
             alpha ?? 1
         ]
     );
@@ -69,13 +69,13 @@ function RandomColor(alpha) {
 
 function RandomForColor(spec, alpha) {
     if (alpha == undefined) { alpha = 1; }
-    if (RandomBool(0.05)) {
+    if (gR.RandomBool(0.05)) {
         return rgba255s(spec.strong, alpha);
     }
     else {
         // NTSC.
         return rgba255s(
-            spec.regular.map(ch => RandomCentered(ch, 16)),
+            spec.regular.map(ch => gR.RandomCentered(ch, 16)),
             alpha
         );
     }
@@ -91,7 +91,7 @@ function RandomForColorFadeIn(color, alpha) {
         // i.e. attract mode.
         return rgba255s(greenSpec.strong, alpha);
     }
-    else if (gRandom() > GameTime01(kGreenFadeInMsec)) {
+    else if (gR.RandomFloat() > GameTime01(kGreenFadeInMsec)) {
         // gradully go from green to color at game start.
         return rgba255s(greenSpec.strong, alpha);
     }

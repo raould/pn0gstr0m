@@ -53,7 +53,7 @@ function MenuConstants() {
     font_size: font_size
   };
 }
-function MakeEscButton(_ref) {
+function MakeMenuButton(_ref) {
   var OnClose = _ref.OnClose;
   // esc button cannot ever have focus
   // because that was asymmetric and
@@ -62,7 +62,7 @@ function MakeEscButton(_ref) {
   // also, purposefully has a different look
   // than the buttons in the menu.
   var w = sx(110);
-  var besc = new Button({
+  var bmenu = new Button({
     x: gw(0.5) - w / 2,
     y: gh(0.8),
     width: w,
@@ -81,14 +81,14 @@ function MakeEscButton(_ref) {
       bself.title = (gSinglePlayer ? "1p  " : "2pp ") + (gSfxMuted ? "  " : "m ") + (gMusicMuted ? " " : "o");
     },
     click_fn: function click_fn(bself) {
-      bself.isOpen = !bself.isOpen;
+      bself.isOpen = !bself.isOpen; // see below.
       if (!bself.isOpen) {
         OnClose();
       }
     }
   });
-  besc.isOpen = false;
-  return besc;
+  bmenu.isOpen = false; // see above.
+  return bmenu;
 }
 function MakePlayerButtons(_ref2) {
   var k = _ref2.constants,
@@ -268,7 +268,7 @@ function MenuBehavior(_ref6) {
   self.Init = function () {
     var _self$navigation$self;
     self.isHidden = isHidden;
-    self.besc = MakeEscButton({
+    self.bmenu = MakeMenuButton({
       OnClose: OnClose
     });
     self.navigation = navigation;
@@ -278,8 +278,11 @@ function MenuBehavior(_ref6) {
       fb.has_focus = true;
     }
   };
+  self.isOpen = function () {
+    return self.bmenu.isOpen;
+  };
   self.Step = function () {
-    if (self.besc.isOpen) {
+    if (self.bmenu.isOpen) {
       var wants_focusId = undefined;
       Object.entries(self.navigation).forEach(function (e) {
         var bid = e[0];
@@ -292,8 +295,8 @@ function MenuBehavior(_ref6) {
         }
       });
     }
-    if (self.besc.isOpen || !self.isHidden) {
-      self.besc.Step();
+    if (self.bmenu.isOpen || !self.isHidden) {
+      self.bmenu.Step();
     }
     if (exists(wants_focusId) && wants_focusId != self.focusId) {
       self.Focus(wants_focusId);
@@ -318,11 +321,11 @@ function MenuBehavior(_ref6) {
   };
   self.ProcessOneInput = function (cmds) {
     var n, a, p1, p2;
-    if (self.besc.isOpen) {
+    if (self.bmenu.isOpen) {
       n = self.ProcessNavigation();
       a = self.ProcessAccept(cmds);
     }
-    if (self.besc.isOpen || !self.isHidden) {
+    if (self.bmenu.isOpen || !self.isHidden) {
       p1 = self.ProcessTarget(gP1Target);
       p2 = self.ProcessTarget(gP2Target);
     }
@@ -352,7 +355,7 @@ function MenuBehavior(_ref6) {
     }
   };
   self.ProcessAccept = function (cmds) {
-    if (isAnyActivatePressed(cmds) && self.besc.isOpen) {
+    if (isAnyActivatePressed(cmds) && self.bmenu.isOpen) {
       var bspec = self.navigation[self.focusId];
       if (exists(bspec)) {
         bspec.button.Click();
@@ -366,12 +369,12 @@ function MenuBehavior(_ref6) {
     var hit = false;
     if (target.isDown()) {
       // menu.
-      if (self.besc.isOpen) {
+      if (self.bmenu.isOpen) {
         var found = Object.entries(self.navigation).find(function (e) {
           return e[1].button.ProcessTarget(target);
         });
         if (exists(found)) {
-          if (found != self.besc) {
+          if (found != self.bmenu) {
             self.Focus(found[0]);
           }
           found[1].button.Click();
@@ -380,16 +383,16 @@ function MenuBehavior(_ref6) {
 
         // touching outside the menu closes it.
         if (!hit) {
-          self.besc.Click();
+          self.bmenu.Click();
           target.ClearPointer();
           hit = true;
         }
       }
       // esc.
-      if (!hit && (self.besc.isOpen || !self.isHidden)) {
-        hit = self.besc.ProcessTarget(target);
+      if (!hit && (self.bmenu.isOpen || !self.isHidden)) {
+        hit = self.bmenu.ProcessTarget(target);
         if (hit) {
-          self.besc.Click();
+          self.bmenu.Click();
         }
       }
     }
@@ -397,15 +400,16 @@ function MenuBehavior(_ref6) {
   };
   self.Draw = function () {
     // menu.
-    if (self.besc.isOpen) {
+    if (self.bmenu.isOpen) {
       Cxdo(function () {
-        // fade the background a tad.
-        gCx.globalAlpha = gDebug ? 0 : 0.8;
-        gCx.fillStyle = backgroundColorStr;
-        gCx.fillRect(0, 0, gw(1), gh(1));
         if (gDebug) {
-          // so i can see the game and step it still.
+          // fade buttons so i can watch stepping the game.
           gCx.globalAlpha = 0.5;
+        } else {
+          // fade the background a tad under the menu to not visually conflict.
+          gCx.globalAlpha = gDebug ? 0 : 0.8;
+          gCx.fillStyle = backgroundColorStr;
+          gCx.fillRect(0, 0, gw(1), gh(1));
         }
         Object.values(self.navigation).forEach(function (bspec) {
           return bspec.button.Draw();
@@ -413,8 +417,8 @@ function MenuBehavior(_ref6) {
       });
     }
     // esc.
-    if (self.besc.isOpen || !self.isHidden) {
-      self.besc.Draw();
+    if (self.bmenu.isOpen || !self.isHidden) {
+      self.bmenu.Draw();
     }
   };
   self.Init();

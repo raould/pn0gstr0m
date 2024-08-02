@@ -6,13 +6,6 @@
 var k2Pi = Math.PI*2;
 var kPi2 = Math.PI/2;
 
-function Assert(result, msg) {
-    if (!result) {
-        console.error("ASSERTION FAILED", msg);
-        debugger;
-    }
-}
-
 function isU(u) {
     return u == undefined;
 }
@@ -21,11 +14,25 @@ function exists(u) {
     return u != undefined;
 }
 
-function aorb(a, b) {
+function aub(a, b) {
     return a != undefined ? a : b;
 }
 
 function noOp() {}
+
+const gLogOnDeltaMap = {};
+function logOnDelta(key, v, delta, xmsg) {
+    const ov = gLogOnDeltaMap[key];
+    const update = isU(ov) || Math.abs(v-ov) >= delta;
+    if (update) {
+        if (exists(xmsg)) {
+            console.log(key, v, xmsg);
+        } else {
+            console.log(key, v);
+        }
+        gLogOnDeltaMap[key] = v;
+    }
+}
 
 function SafeDiv(num, denom) {
     return num / (denom != 0 ? denom : 1);
@@ -49,13 +56,17 @@ function NearestEven(n) {
     return isEven(n) ? n : n+1;
 }
 
-// your fault if you don't pass an integer value.
+// you have to pass an integer value, really.
 function isEven(n) {
-    return Math.abs(n)%2 == 0;
+    Assert(Number.isInteger(n), n);
+    return isMultiple(n, 2);
 }
 
+// you have to pass integer values, really.
 function isMultiple(v, m) {
-    return Math.abs(v)%m == 0;
+    Assert(Number.isInteger(v), v);
+    Assert(Number.isInteger(m), m);
+    return Math.abs(v) % m == 0;
 }
 
 function Swap(a, b) {
@@ -110,6 +121,10 @@ function Clip(n, min, max) {
 
 function MinSigned(n, max) {
     var fm = Math.min(Math.abs(n), Math.abs(max));
+    return Sign(n) * fm;
+}
+function MaxSigned(n, max) {
+    var fm = Math.max(Math.abs(n), Math.abs(max));
     return Sign(n) * fm;
 }
 

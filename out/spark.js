@@ -5,20 +5,23 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-function Spark(x0, y0, vx, vy) {
+function Spark() {
   var self = this;
   self.Init = function () {
     self.id = gNextID++;
-    self.x = x0;
-    self.y = y0;
+    self.alive = false;
+  };
+  self.PlacementInit = function (props) {
+    self.x = props.x;
+    self.y = props.y;
     self.prevX = self.x;
     self.prevY = self.y;
     self.width = gSparkWidth;
     self.height = gSparkHeight;
-    self.vx = vx;
-    self.vy = vy;
+    self.vx = props.vx;
+    self.vy = props.vy;
     // randomize lifespan a little for visual variety.
-    self.frameCount = RandomRange(0, 5);
+    self.frameCount = gR.RandomRange(0, 5);
     self.alive = true;
   };
   self.Draw = function (alpha) {
