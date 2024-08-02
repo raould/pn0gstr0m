@@ -109,20 +109,21 @@ function Level(props) {
     // todo: not actually sure how best to represent this to players in the ui. :-\
     var msg = undefined;
     if (self.IsLastOfThePucks()) {
-      msg = "".concat(self.puckCount, " SPLITS REMAIN");
+      msg = "ZERO POINT ENERGY ".concat(self.puckCount);
     }
     if (self.IsSuddenDeath()) {
       msg = "EL FIN";
     }
     if (exists(msg)) {
       Cxdo(function () {
+        // remove dotted center line.
         gCx.fillStyle = backgroundColorStr;
         var cx = gw(0.5);
         var cy = gh(0.9);
         var ox = sx(65);
         var oy = sy(13);
         gCx.fillRect(cx - ox, cy - oy * 1.45, ox * 2, oy * 2);
-        gCx.fillStyle = RandomGreen(0.8);
+        gCx.fillStyle = RandomCyan(0.8);
         DrawText(msg, "center", cx, cy, gSmallFontSizePt);
       });
     }

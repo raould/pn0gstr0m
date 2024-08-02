@@ -124,20 +124,22 @@ const kEnglishStep = 0.004;
         // todo: not actually sure how best to represent this to players in the ui. :-\
         var msg = undefined;
         if (self.IsLastOfThePucks()) {
-            msg = `${self.puckCount} SPLITS REMAIN`;
+            msg = `ZERO POINT ENERGY ${self.puckCount}`;
         }            
         if (self.IsSuddenDeath()) {
             msg = "EL FIN";
         }
         if (exists(msg)) {
             Cxdo(() => {
+                // remove dotted center line.
                 gCx.fillStyle = backgroundColorStr;
                 var cx = gw(0.5);
                 var cy = gh(0.9);
                 var ox = sx(65);
                 var oy = sy(13);
                 gCx.fillRect(cx-ox, cy-oy*1.45, ox*2, oy*2);
-                gCx.fillStyle = RandomGreen(0.8);
+
+                gCx.fillStyle = RandomCyan(0.8);
                 DrawText(msg,
                          "center",
                          cx, cy,

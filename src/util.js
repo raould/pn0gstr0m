@@ -20,6 +20,14 @@ function aub(a, b) {
 
 function noOp() {}
 
+const gLogOnceMap = {};
+function logOnce(key, msg) {
+    if (!gLogOnceMap[key]) {
+        console.log(msg);
+        gLogOnceMap[key] = true;
+    }
+}
+
 const gLogOnDeltaMap = {};
 function logOnDelta(key, v, delta, xmsg) {
     const ov = gLogOnDeltaMap[key];
