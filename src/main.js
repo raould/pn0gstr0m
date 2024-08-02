@@ -91,6 +91,7 @@ var gBigFontSizePt;
 var gRegularFontSizePt;
 var gReducedFontSizePt;
 var gSmallFontSizePt;
+var gSmallerFontSizePt;
 var gSmallestFontSizePt;
 var gPillTextY;
 
