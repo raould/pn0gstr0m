@@ -361,13 +361,13 @@ function Paddle(props) {
     if (isU(self.aiPill) || !self.aiPill.alive) {
       self.aiPill = undefined;
     }
-    self.AISeek(dt);
+    self.AISeek(dt, gameState.level.index);
     if (self.shouldUpdate()) {
       self.UpdatePuckTarget();
       self.UpdatePillTarget(gameState);
     }
   };
-  self.AISeek = function (dt) {
+  self.AISeek = function (dt, levelIndex) {
     // heuristics are kind of a nightmare to maintain;
     // the order here does matter. and still isn't great.
     var PS = self.isPillSeeker;
@@ -375,7 +375,15 @@ function Paddle(props) {
     // ai paddle can turn around vertically more responsively
     // than most any human player, hence < 1 rather than = 1
     // for regular mode.
-    var scale = gHardMode ? 1.2 : 0.4;
+    var levelScale = (levelIndex - 1) * 0.05;
+    var scale = (gHardMode ? 1.1 : 0.4) + levelScale;
+    scale = Clip(scale, 0.1, 1.2);
+    if (gDebug) {
+      gDebugDrawList.push(function () {
+        gCx.fillStyle = "blue";
+        DrawText(F(scale), "center", gw(0.8), gh(0.6), gSmallestFontSizePt);
+      });
+    }
     if (PS && exists(self.aiPill) && self.aiPill.isUrgent) {
       self.debugMsg = "PILL_1";
       self.AISeekTargetMidY(dt, self.aiPill.y + self.aiPill.height / 2, scale);
