@@ -34,6 +34,7 @@ var k2PWinBy = 3;
 function is2PGameOver() { return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy; }
 var gLevelIndex = 1; // 1-based.
 var gHardMode = LoadLocal(LocalStorageKeys.hardMode, false);
+var gZenMode = false; // todo: this has a lot of consequences.
 
 // ----------------------------------------
 

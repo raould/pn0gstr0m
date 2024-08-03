@@ -7,37 +7,37 @@
 
 /*
 
- this is kind of complected because it is handling
- both the menu and the game states. :-\ software kinda
- sucks, coding is hard, there's just too much variation.
- also, because some of the keyboard input first gets
- handled in the *State in main.
- also, all the button positions are sorta hard-coded.
- also-also, there's too many things that need to refer
- to each other, and special cases, like how the esc button
- can never have keyboard focus, or the menu needs to know
- when it closes, to reset the focusId.
+  this is kind of complected because it is handling
+  both the menu and the game states. :-\ software kinda
+  sucks, coding is hard, there's just too much variation.
+  also, because some of the keyboard input first gets
+  handled in the *State in main.
+  also, all the button positions are sorta hard-coded.
+  also-also, there's too many things that need to refer
+  to each other, and special cases, like how the esc button
+  can never have keyboard focus, or the menu needs to know
+  when it closes, to reset the focusId.
 
- * on title screen, the esc button is not hidden and can
-   be clicked by pointer or via esc key.
- * in-game, the esc button should be hidden, so the menu
-   can only be opened via esc / pause keys / gamepad buttons,
-   or by clicking/tapping on the pause icon. blimey.
- * in the menu, clicking/tapping on a button both focuses
-   and immediately activates it, whereas with the keyboard
-   or gamepad you navigate to a button and then have to
-   seperately activate it.
+  * on title screen, the esc button is not hidden and can
+  be clicked by pointer or via esc key.
+  * in-game, the esc button should be hidden, so the menu
+  can only be opened via esc / pause keys / gamepad buttons,
+  or by clicking/tapping on the pause icon. blimey.
+  * in the menu, clicking/tapping on a button both focuses
+  and immediately activates it, whereas with the keyboard
+  or gamepad you navigate to a button and then have to
+  seperately activate it.
 
- * (todo: combine stick and button states into a parent gamepad wrapper?)
- 
- */
+  * (todo: combine stick and button states into a parent gamepad wrapper?)
+  
+  */
 
 function MenuConstants() {
   var by0 = gh(0.05);
   var bw = gw(0.2);
   var bh = gSmallFontSize * 1.7;
   var bl = gw(0.5) - bw / 2;
-  var bs = bh * 1.5;
+  var bs = bh * 1.3;
   var margin = {
     x: bw * 0.2,
     y: bh * 0.2
@@ -64,7 +64,7 @@ function MakeMenuButton(_ref) {
   var w = sx(110);
   var bmenu = new Button({
     x: gw(0.5) - w / 2,
-    y: gh(0.8),
+    y: gh(0.85),
     width: w,
     height: gReducedFontSize * 1.4,
     radii: 0,
@@ -90,7 +90,7 @@ function MakeMenuButton(_ref) {
   bmenu.isOpen = false; // see above.
   return bmenu;
 }
-function MakeGameplayButtons(_ref2) {
+function MakePlayerButtons(_ref2) {
   var k = _ref2.constants,
     playerRadios = _ref2.playerRadios;
   return {
@@ -131,10 +131,16 @@ function MakeGameplayButtons(_ref2) {
         gSinglePlayer = false;
         playerRadios.OnSelect(bself);
       }
-    }),
-    bpH: new Button({
+    })
+  };
+}
+function MakeModeButtons(_ref3) {
+  var k = _ref3.constants,
+    modeRadios = _ref3.modeRadios;
+  return {
+    bHard: new Button({
       x: k.bl,
-      y: k.by0 + 2 * k.bs,
+      y: k.by0 + k.bs * 2.5,
       width: k.bw,
       height: k.bh,
       title: "HARD MODE",
@@ -147,15 +153,31 @@ function MakeGameplayButtons(_ref2) {
       click_fn: function click_fn(bself) {
         gHardMode = !gHardMode;
       }
+    }),
+    bZen: new Button({
+      x: k.bl,
+      y: k.by0 + k.bs * 3.5,
+      width: k.bw,
+      height: k.bh,
+      title: "ZEN MODE",
+      margin: k.margin,
+      font_size: k.font_size,
+      is_checkbox: true,
+      step_fn: function step_fn(bself) {
+        bself._is_checked = gZenMode;
+      },
+      click_fn: function click_fn(bself) {
+        gZenMode = !gZenMode;
+      }
     })
   };
 }
-function MakeMuteButtons(_ref3) {
-  var k = _ref3.constants;
+function MakeMuteButtons(_ref4) {
+  var k = _ref4.constants;
   return {
-    bsfx: new Button({
+    bSfx: new Button({
       x: k.bl,
-      y: k.by0 + k.bs * 3.5,
+      y: k.by0 + k.bs * 5,
       width: k.bw,
       height: k.bh,
       title: "SFX",
@@ -169,9 +191,9 @@ function MakeMuteButtons(_ref3) {
         gSfxMuted = !gSfxMuted;
       }
     }),
-    bmusic: new Button({
+    bMusic: new Button({
       x: k.bl,
-      y: k.by0 + k.bs * 4.5,
+      y: k.by0 + k.bs * 6,
       width: k.bw,
       height: k.bh,
       title: "MUSIC",
@@ -191,18 +213,24 @@ function MakeMuteButtons(_ref3) {
 function MakeMainMenuButtons() {
   var constants = new MenuConstants();
   var playerRadios = new Radios();
-  var _MakeGameplayButtons = MakeGameplayButtons({
+  var modeRadios = new Radios();
+  var _MakePlayerButtons = MakePlayerButtons({
       constants: constants,
       playerRadios: playerRadios
     }),
-    bp1 = _MakeGameplayButtons.bp1,
-    bp2 = _MakeGameplayButtons.bp2,
-    bpH = _MakeGameplayButtons.bpH;
+    bp1 = _MakePlayerButtons.bp1,
+    bp2 = _MakePlayerButtons.bp2;
+  var _MakeModeButtons = MakeModeButtons({
+      constants: constants,
+      modeRadios: modeRadios
+    }),
+    bHard = _MakeModeButtons.bHard,
+    bZen = _MakeModeButtons.bZen;
   var _MakeMuteButtons = MakeMuteButtons({
       constants: constants
     }),
-    bmusic = _MakeMuteButtons.bmusic,
-    bsfx = _MakeMuteButtons.bsfx;
+    bMusic = _MakeMuteButtons.bMusic,
+    bSfx = _MakeMuteButtons.bSfx;
   playerRadios.AddButton(bp1);
   playerRadios.AddButton(bp2);
   return {
@@ -215,28 +243,33 @@ function MakeMainMenuButtons() {
       bp2: {
         button: bp2,
         up: "bp1",
-        down: "bpH"
+        down: "bHard"
       },
-      bpH: {
-        button: bpH,
+      bHard: {
+        button: bHard,
         up: "up2",
-        down: "bsfx"
+        down: "bZen"
       },
-      bsfx: {
-        button: bsfx,
-        up: "bp2",
-        down: "bmusic"
+      bZen: {
+        button: bZen,
+        up: "bHard",
+        down: "bSfx"
       },
-      bmusic: {
-        button: bmusic,
-        up: "bsfx"
+      bSfx: {
+        button: bSfx,
+        up: "bZen",
+        down: "bMusic"
+      },
+      bMusic: {
+        button: bMusic,
+        up: "bSfx"
       }
     }
   };
 }
-function MakeQuitButton(_ref4) {
-  var k = _ref4.constants,
-    OnQuit = _ref4.OnQuit;
+function MakeQuitButton(_ref5) {
+  var k = _ref5.constants,
+    OnQuit = _ref5.OnQuit;
   return new Button({
     x: k.bl,
     y: k.by0 + k.bs * 2,
@@ -253,27 +286,27 @@ function MakeQuitButton(_ref4) {
     }
   });
 }
-function MakeGameMenuButtons(_ref5) {
-  var OnQuit = _ref5.OnQuit;
+function MakeGameMenuButtons(_ref6) {
+  var OnQuit = _ref6.OnQuit;
   var constants = new MenuConstants();
   var _MakeMuteButtons2 = MakeMuteButtons({
       constants: constants
     }),
-    bsfx = _MakeMuteButtons2.bsfx;
-  var bquit = MakeQuitButton({
+    bSfx = _MakeMuteButtons2.bSfx;
+  var bQuit = MakeQuitButton({
     constants: constants,
     OnQuit: OnQuit
   });
   return {
-    focusId: "bsfx",
+    focusId: "bSfx",
     navigation: {
-      bquit: {
-        button: bquit,
-        down: "bsfx"
+      bQuit: {
+        button: bQuit,
+        down: "bSfx"
       },
-      bsfx: {
-        button: bsfx,
-        up: "bquit"
+      bSfx: {
+        button: bSfx,
+        up: "bQuit"
       }
     }
   };
@@ -281,11 +314,11 @@ function MakeGameMenuButtons(_ref5) {
 ;
 
 /*class*/
-function MenuBehavior(_ref6) {
-  var isHidden = _ref6.isHidden,
-    OnClose = _ref6.OnClose,
-    navigation = _ref6.navigation,
-    focusId = _ref6.focusId;
+function MenuBehavior(_ref7) {
+  var isHidden = _ref7.isHidden,
+    OnClose = _ref7.OnClose,
+    navigation = _ref7.navigation,
+    focusId = _ref7.focusId;
   var self = this;
   self.Init = function () {
     var _self$navigation$self;

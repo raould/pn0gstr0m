@@ -48,6 +48,7 @@ function is2PGameOver() {
 }
 var gLevelIndex = 1; // 1-based.
 var gHardMode = LoadLocal(LocalStorageKeys.hardMode, false);
+var gZenMode = false; // todo: this has a lot of consequences.
 
 // ----------------------------------------
 
