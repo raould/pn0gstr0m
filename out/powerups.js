@@ -75,6 +75,7 @@ Assert(gPillIDs.length % 2 === 0);
 // note: width and height are functions
 // because they need to be evaluated after
 // all the display resizing is done.
+// see: width and height in GetReadyState.DrawPills().
 var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty({}, kForcePushPill, {
   name: "FORCE PUSH",
   maker: MakeForcePushProps,
