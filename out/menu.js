@@ -33,7 +33,7 @@
  */
 
 function MenuConstants() {
-  var by0 = gh(0.1);
+  var by0 = gh(0.05);
   var bw = gw(0.2);
   var bh = gSmallFontSize * 1.7;
   var bl = gw(0.5) - bw / 2;
@@ -90,7 +90,7 @@ function MakeMenuButton(_ref) {
   bmenu.isOpen = false; // see above.
   return bmenu;
 }
-function MakePlayerButtons(_ref2) {
+function MakeGameplayButtons(_ref2) {
   var k = _ref2.constants,
     playerRadios = _ref2.playerRadios;
   return {
@@ -131,6 +131,22 @@ function MakePlayerButtons(_ref2) {
         gSinglePlayer = false;
         playerRadios.OnSelect(bself);
       }
+    }),
+    bpH: new Button({
+      x: k.bl,
+      y: k.by0 + 2 * k.bs,
+      width: k.bw,
+      height: k.bh,
+      title: "HARD MODE",
+      margin: k.margin,
+      font_size: k.font_size,
+      is_checkbox: true,
+      step_fn: function step_fn(bself) {
+        bself.is_checked = gHardMode;
+      },
+      click_fn: function click_fn(bself) {
+        gHardMode = !gHardMode;
+      }
     })
   };
 }
@@ -139,7 +155,7 @@ function MakeMuteButtons(_ref3) {
   return {
     bsfx: new Button({
       x: k.bl,
-      y: k.by0 + k.bs * 2.5,
+      y: k.by0 + k.bs * 3.5,
       width: k.bw,
       height: k.bh,
       title: "SFX",
@@ -155,7 +171,7 @@ function MakeMuteButtons(_ref3) {
     }),
     bmusic: new Button({
       x: k.bl,
-      y: k.by0 + k.bs * 3.5,
+      y: k.by0 + k.bs * 4.5,
       width: k.bw,
       height: k.bh,
       title: "MUSIC",
@@ -175,12 +191,13 @@ function MakeMuteButtons(_ref3) {
 function MakeMainMenuButtons() {
   var constants = new MenuConstants();
   var playerRadios = new Radios();
-  var _MakePlayerButtons = MakePlayerButtons({
+  var _MakeGameplayButtons = MakeGameplayButtons({
       constants: constants,
       playerRadios: playerRadios
     }),
-    bp1 = _MakePlayerButtons.bp1,
-    bp2 = _MakePlayerButtons.bp2;
+    bp1 = _MakeGameplayButtons.bp1,
+    bp2 = _MakeGameplayButtons.bp2,
+    bpH = _MakeGameplayButtons.bpH;
   var _MakeMuteButtons = MakeMuteButtons({
       constants: constants
     }),
@@ -198,6 +215,11 @@ function MakeMainMenuButtons() {
       bp2: {
         button: bp2,
         up: "bp1",
+        down: "bpH"
+      },
+      bpH: {
+        button: bpH,
+        up: "up2",
         down: "bsfx"
       },
       bsfx: {
@@ -217,7 +239,7 @@ function MakeQuitButton(_ref4) {
     OnQuit = _ref4.OnQuit;
   return new Button({
     x: k.bl,
-    y: k.by0 + k.bs,
+    y: k.by0 + k.bs * 2,
     width: k.bw,
     height: k.bh,
     margin: k.margin,

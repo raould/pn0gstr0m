@@ -368,27 +368,32 @@ function Paddle(props) {
     }
   };
   self.AISeek = function (dt) {
-    // heuristics are kind of a nightmare to maintain. :-/ the order here does matter.
-
+    // heuristics are kind of a nightmare to maintain;
+    // the order here does matter. and still isn't great.
     var PS = self.isPillSeeker;
+
+    // ai paddle can turn around vertically more responsively
+    // than most any human player, hence < 1 rather than = 1
+    // for regular mode.
+    var scale = gHardMode ? 1.2 : 0.4;
     if (PS && exists(self.aiPill) && self.aiPill.isUrgent) {
       self.debugMsg = "PILL_1";
-      self.AISeekTargetMidY(dt, self.aiPill.y + self.aiPill.height / 2, 1.2);
+      self.AISeekTargetMidY(dt, self.aiPill.y + self.aiPill.height / 2, scale);
       return;
     }
     if (PS && self.attackingNearCount == 0 && exists(self.aiPill)) {
       self.debugMsg = "PILL_2";
-      self.AISeekTargetMidY(dt, self.aiPill.y + self.aiPill.height / 2, 1.2);
+      self.AISeekTargetMidY(dt, self.aiPill.y + self.aiPill.height / 2, scale);
       return;
     }
     if (exists(self.aiPuck) && self.isPuckAttacking(self.aiPuck)) {
       self.debugMsg = "PUCK";
-      self.AISeekTargetMidY(dt, self.aiPuck.midY, 1);
+      self.AISeekTargetMidY(dt, self.aiPuck.midY, scale);
       return;
     }
     if (PS && exists(self.aiPill)) {
       self.debugMsg = "PILL_3";
-      self.AISeekTargetMidY(dt, self.aiPill.y + self.aiPill.height / 2, 1.2);
+      self.AISeekTargetMidY(dt, self.aiPill.y + self.aiPill.height / 2, scale);
       return;
     }
   };
@@ -410,11 +415,11 @@ function Paddle(props) {
     return should;
   };
   self.AISeekTargetMidY = function (dt, tmy, scale) {
-    var deadzone = self.height * 0.2;
+    var deadzone = self.height * scale * 1 / 3;
     if (tmy <= self.GetMidY() - deadzone) {
-      self.MoveUp(dt, kAIMoveScale * scale);
+      self.MoveUp(dt, scale);
     } else if (tmy >= self.GetMidY() + deadzone) {
-      self.MoveDown(dt, kAIMoveScale * scale);
+      self.MoveDown(dt, scale);
     }
   };
   self.isPuckAttacking = function (puck) {
@@ -460,7 +465,7 @@ function Paddle(props) {
     }
   };
   self.UpdatePillTarget = function (gameState) {
-    self.aiPill = gameState.level.cpuPill;
+    self.aiPill = gameState.level.p2Pill;
   };
   self.Init(props.label);
 }
