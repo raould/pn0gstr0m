@@ -985,9 +985,10 @@ function GetReadyState() {
           var width = wfn();
           var height = hfn();
           var x = x0 + dx * i;
+          var oy = Math.sin(x * 10 + gGameTime / 100) * (height / 2) * 0.1;
           drawer(gP1Side, {
             x: x - width / 2,
-            y: ty - height * 1.8,
+            y: ty - height / 2 - sy(40) - oy,
             width: width,
             height: height
           }, 1);
