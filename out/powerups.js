@@ -133,10 +133,10 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
   maker: MakeXtraProps,
   drawer: DrawXtraPill,
   wfn: function wfn() {
-    return sxi(20);
+    return sxi(15);
   },
   hfn: function hfn() {
-    return syi(20);
+    return syi(40);
   }
 }), kNeoPill, {
   name: "NEO",
