@@ -374,8 +374,9 @@ function Paddle(props) {
 
     // ai paddle can turn around vertically more responsively
     // than most any human player, hence < 1 rather than = 1
-    // for regular mode.
-    var levelScale = (levelIndex - 1) * 0.05;
+    // for regular mode. but even in easy mode, ai slowly
+    // gets better to make things more interesting.
+    var levelScale = (levelIndex - 1) * 0.02;
     var scale = (gHardMode ? 1.1 : 0.4) + levelScale;
     scale = Clip(scale, 0.1, 1.2);
     if (gDebug) {
