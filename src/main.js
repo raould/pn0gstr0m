@@ -959,7 +959,7 @@ function DrawDebugList() {
 
     self.DrawText = function() {
         var t = Math.ceil(self.timeout/1000);
-        var zpt = MakePuckCount(gLevelIndex);
+        var zpt = MakeSplitsCount(gLevelIndex);
         Cxdo(() => {
             // match: GameState.DrawScoreHeader() et. al.
             gCx.fillStyle = RandomGreen(0.3);
@@ -971,7 +971,7 @@ function DrawDebugList() {
             DrawText(`GET READY! ${t}`, "center", gw(0.5), gh(0.5), gBigFontSizePt);
 
             gCx.fillStyle = RandomForColor(cyanSpec);
-            DrawText(`ZERO POINT ENERGY LEVEL ${zpt}`, "center", gw(0.5), gh(0.9), gSmallFontSizePt);
+            DrawText(`ZERO POINT ENERGY: ${zpt}`, "center", gw(0.5), gh(0.9), gSmallFontSizePt);
         });
     };
 
@@ -1162,7 +1162,7 @@ function DrawDebugList() {
         }
         self.maxVX = self.level.maxVX;
         Assert(exists(self.maxVX));
-        logOnDelta("maxVX", self.maxVX, 1);
+        //logOnDelta("maxVX", self.maxVX, 1);
     };
 
     self.Pause = function() {
@@ -1184,7 +1184,7 @@ function DrawDebugList() {
         self.theMenu?.Step(); // fyi this doesn't process menu inputs, that is below.
         self.level.Step( dt );
         self.maxVX = self.level.maxVX; // todo: code smell global.
-        logOnDelta("maxVX", self.maxVX, 1);
+        //logOnDelta("maxVX", self.maxVX, 1);
         self.MaybeSpawnPills( dt );
 
         self.ProcessAllInput();
