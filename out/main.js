@@ -141,7 +141,6 @@ function RecalculateConstants() {
   gSmallerFontSizePt = gSmallerFontSize + "pt";
   gSmallestFontSizePt = gSmallestFontSize + "pt";
   gPillTextY = gh(0.9);
-  console.log(gBigFontSize, gBigFontSizePt, gRegularFontSize, gRegularFontSizePt, gReducedFontSize, gReducedFontSizePt, gSmallFontSize, gSmallFontSizePt, gSmallestFontSize, gSmallestFontSizePt);
 }
 
 // anything here below that ends up depending on
