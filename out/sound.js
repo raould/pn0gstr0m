@@ -24,7 +24,6 @@ var gAudio = {
   id2name: {}
 };
 var gMusicID;
-var kMusicStorageKey = "pn0g_music";
 
 /* muting implementation is... tricky? i am 
  * using gStateMuted to prevent the attract
@@ -105,7 +104,7 @@ function BeginMusic() {
       return i + 1;
     });
     // refresh to full list if unknown.
-    var unplayedStr = localStorage.getItem(kMusicStorageKey);
+    var unplayedStr = LoadLocal(LocalStorageKeys.unplayed);
     if (unplayedStr == null || _kill_unplayed) {
       unplayed = unplayedAll;
     }
@@ -114,18 +113,16 @@ function BeginMusic() {
     else {
       var unplayed = JSON.parse(unplayedStr);
       if (unplayed.length == 0) {
-        var jsonStr = JSON.stringify(unplayedAll);
-        localStorage.setItem(kMusicStorageKey, jsonStr);
+        SaveLocal(LocalStorageKeys.unplayed, unplayedAll);
       }
-      unplayedStr = localStorage.getItem(kMusicStorageKey);
-      unplayed = JSON.parse(unplayedStr);
+      unplayed = LoadLocal(LocalStorageKeys.unplayed);
     }
     Assert(unplayed != null, "BeginMusic: null");
     Assert(unplayed.length > 0, "BeginMusic: 0");
     // not random, always play musicN in order since we 'load' them in order.
     var num = unplayed.shift();
     // save the now-smaller remaining-items list.
-    localStorage.setItem(kMusicStorageKey, JSON.stringify(unplayed));
+    SaveLocal(LocalStorageKeys.unplayed, unplayed);
     var name = "music".concat(num);
     gMusicID = PlayMusic(name);
   }

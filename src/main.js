@@ -17,6 +17,8 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
+LoadLocalStorageCache();
+
 var gDebug = false;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
@@ -24,7 +26,7 @@ var gShowToasts = gDebug;
 var kCanvasName = "canvas"; // match: index.html
 var gLifecycle;
 
-var gSinglePlayer = true;
+var gSinglePlayer = LoadLocal(LocalStorageKeys.singlePlayer, true);
 var kScoreIncrement = 1;
 var gP1Score = 0;
 var gP2Score = 0;
@@ -52,7 +54,6 @@ var kAlphaFadeInMsec = 700;
 
 // todo: per-game high score doesn't make sense
 // now that we have levels that start scores at 0 to 0.
-var kLevelHighScoresStorageKey = 'pn0g_level_highs'; // per level.
 var gLevelHighScores;
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
@@ -1379,7 +1380,7 @@ function DrawDebugList() {
         if (cmds.clearHighScore) {
             if (self.paused) {
                 gLevelHighScores = {};
-                localStorage.removeItem(kLevelHighScoresStorageKey);
+                DeleteLocal(LocalStorageKeys.highScores);
                 self.levelHighScore = undefined;
             }
         }
@@ -1775,7 +1776,7 @@ function DrawDebugList() {
 
         if (self.isNewHighScore) {
             gLevelHighScores[gLevelIndex] = self.highScore;
-            localStorage.setItem(kLevelHighScoresStorageKey, JSON.stringify(gLevelHighScores));
+            SaveLocal(LocalStorageKeys.highScores, gLevelHighScores);
         }
     };
 
@@ -2515,9 +2516,9 @@ function CheckResizeMatch() {
 }
 
 function Start() {
-    var lhs = localStorage.getItem(kLevelHighScoresStorageKey);
+    var lhs = LoadLocal(LocalStorageKeys.highScores);
     if (exists(lhs)) {
-        gLevelHighScores = JSON.parse(lhs);
+        gLevelHighScores = lhs;
     }
     if (isU(gLevelHighScores)) {
         gLevelHighScores = {};
