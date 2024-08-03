@@ -36,7 +36,7 @@ var gDebugDrawList = [];
 var gShowToasts = gDebug;
 var kCanvasName = "canvas"; // match: index.html
 var gLifecycle;
-var gSinglePlayer = true;
+var gSinglePlayer = LoadLocal(LocalStorageKeys.singlePlayer, true);
 var kScoreIncrement = 1;
 var gP1Score = 0;
 var gP2Score = 0;
@@ -47,7 +47,7 @@ function is2PGameOver() {
   return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy;
 }
 var gLevelIndex = 1; // 1-based.
-var gHardMode = false;
+var gHardMode = LoadLocal(LocalStorageKeys.hardMode, false);
 
 // ----------------------------------------
 
@@ -64,10 +64,9 @@ var kGreenFadeInMsec = gDebug ? 1000 : 7000;
 // "fade" in from 0 alpha to specified alphas. match: MakeGameStartAnimation.
 var kAlphaFadeInMsec = 700;
 
-// todo: per-game high score doesn't make sense
-// now that we have levels that start scores at 0 to 0.
-var kLevelHighScoresStorageKey = 'pn0g_level_highs'; // per level.
-var gLevelHighScores;
+// per-game high score doesn't make sense
+// now that we have levels that start scores at 0:0.
+var gLevelHighScores = LoadLocal(LocalStorageKeys.highScores, {});
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
 // although i did try to compensate in the run loop.
@@ -640,6 +639,22 @@ function DrawDebugList() {
     gDebugDrawList = [];
   }
 }
+function UpdateLocalStorage() {
+  // todo: ugly that this only works "because globals".
+
+  // note:
+
+  // (1) this doesn't update the level high score dict
+  // since that requires deep-equals testing. so that is
+  // left to be done hard-coded elsewhere.
+
+  // (2) this doesn't include the unplayed music, see sound.js
+
+  SaveLocal(LocalStorageKeys.singlePlayer, gSinglePlayer);
+  SaveLocal(LocalStorageKeys.hardMode, gHardMode);
+  SaveLocal(LocalStorageKeys.sfxMuted, gSfxMuted);
+  SaveLocal(LocalStorageKeys.musicMuted, gMusicMuted);
+}
 
 // ----------------------------------------
 
@@ -710,6 +725,7 @@ function Lifecycle(handlerMap) {
         if (gShowToasts) {
           StepToasts();
         }
+        UpdateLocalStorage();
         remainder = kTimeStep - (fdt - kTimeStep);
       }
     }
@@ -1352,7 +1368,7 @@ function GameState(props) {
     if (cmds.clearHighScore) {
       if (self.paused) {
         gLevelHighScores = {};
-        localStorage.removeItem(kLevelHighScoresStorageKey);
+        DeleteLocal(LocalStorageKeys.highScores);
         self.levelHighScore = undefined;
       }
     }
@@ -1729,7 +1745,7 @@ function LevelFinState() {
     PlayGameOver();
     if (self.isNewHighScore) {
       gLevelHighScores[gLevelIndex] = self.highScore;
-      localStorage.setItem(kLevelHighScoresStorageKey, JSON.stringify(gLevelHighScores));
+      SaveLocal(LocalStorageKeys.highScores, gLevelHighScores, true);
     }
   };
   self.Step = function () {
@@ -2342,13 +2358,6 @@ function CheckResizeMatch() {
   }
 }
 function Start() {
-  var lhs = localStorage.getItem(kLevelHighScoresStorageKey);
-  if (exists(lhs)) {
-    gLevelHighScores = JSON.parse(lhs);
-  }
-  if (isU(gLevelHighScores)) {
-    gLevelHighScores = {};
-  }
   gCanvas = document.getElementById(kCanvasName);
   gCx = gCanvas.getContext('2d');
   gCx.MoveTo = MoveTo;

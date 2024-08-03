@@ -160,7 +160,6 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
   }
 });
 Assert(gPillInfo);
-console.log(gPillInfo);
 
 /*class*/
 function Powerups(props) {

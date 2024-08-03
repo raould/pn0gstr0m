@@ -1,7 +1,12 @@
 * this has quickly become an empirical big ball of mud. :-(
 * quit should really ask ays?
 * maybe have rare 3x split into even smaller, faster pucks?
-* cpu looks stupendously dumb not going for easy pills.
+* do i need clearFn() for gamepad buttons and joystick? or what else instead?
+* check that the gamepad buttons & sticks non/repeat is sane/right.
+* really test all the possible inputs!
+* hm, original pucks must also speed up at the end of the level.
+* ugh, really need Level to own Paddle, Pucks, etc. for last puck(s) changes.
+* playtest all the speedup/timeout/english factors, sheesh.
 * maybe rainbow hsv/hsl coloring of puck generations?
 * animate the menu opening/closing?
 * my other metal band name really is The Wrong Abstractions. :-(
@@ -59,15 +64,3 @@ i frankly kinda hate javascript at times like these, perf is entirely too unclea
 * at lest in v8 apparently don't use delete on {}'s, set the value to undefined or false, because performance.
   * is deleting required to avoid memory leaking? i feel like logically it should be.
 * is {...nocmds} better than {} and setting entries to true/false? no idea, no way to know.
-
-----------------------------------------
-
-in progress:
-
-* do i need clearFn() for gamepad buttons and joystick? or what else instead?
-* check that the gamepad buttons & sticks non/repeat is sane/right.
-* really test all the possible inputs!
-* level splash showing powerups.
-* hm, original pucks must also speed up at the end of the level.
-* ugh, really need Level to own Paddle, Pucks, etc. for last puck(s) changes.
-* playtest all the speedup/timeout/english factors, sheesh.
