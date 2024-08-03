@@ -31,7 +31,7 @@
  */
 
 function MenuConstants() {
-    var by0 = gh(0.1);
+    var by0 = gh(0.05);
     var bw = gw(0.2);
     var bh = gSmallFontSize*1.7;
     var bl = gw(0.5)-bw/2;
@@ -83,7 +83,7 @@ function MakeMenuButton({ OnClose }) {
     return bmenu;
 }
 
-function MakePlayerButtons({constants:k, playerRadios}) {
+function MakeGameplayButtons({constants:k, playerRadios}) {
     return {
         bp1: new Button({
             x: k.bl, y: k.by0,
@@ -120,13 +120,28 @@ function MakePlayerButtons({constants:k, playerRadios}) {
                 playerRadios.OnSelect(bself);
             }
         }),
+
+        bpH: new Button({
+            x: k.bl, y: k.by0 + 2*k.bs,
+            width: k.bw, height: k.bh,
+            title: "HARD MODE",
+            margin: k.margin,
+            font_size: k.font_size,
+            is_checkbox: true,
+            step_fn: (bself) => {
+                bself.is_checked = gHardMode;
+            },
+            click_fn: (bself) => {
+                gHardMode = !gHardMode;
+            }
+        }),
     };
 }
 
 function MakeMuteButtons({constants:k}) {
     return {
         bsfx: new Button({
-            x: k.bl, y: k.by0 + k.bs * 2.5,
+            x: k.bl, y: k.by0 + k.bs * 3.5,
             width: k.bw, height: k.bh,
             title: "SFX",
             margin: k.margin,
@@ -140,7 +155,7 @@ function MakeMuteButtons({constants:k}) {
             }
         }),
         bmusic: new Button({
-            x: k.bl, y: k.by0 + k.bs * 3.5,
+            x: k.bl, y: k.by0 + k.bs * 4.5,
             width: k.bw, height: k.bh,
             title: "MUSIC",
             margin: k.margin,
@@ -160,7 +175,7 @@ function MakeMuteButtons({constants:k}) {
 function MakeMainMenuButtons() {
     var constants = new MenuConstants();
     var playerRadios = new Radios();
-    var {bp1, bp2} = MakePlayerButtons({
+    var {bp1, bp2, bpH} = MakeGameplayButtons({
         constants, playerRadios
     });
     var {bmusic, bsfx} = MakeMuteButtons({
@@ -178,6 +193,11 @@ function MakeMainMenuButtons() {
             bp2: {
                 button: bp2,
                 up: "bp1",
+                down: "bpH",
+            },
+            bpH: {
+                button: bpH,
+                up: "up2",
                 down: "bsfx",
             },
             bsfx: {
@@ -195,7 +215,7 @@ function MakeMainMenuButtons() {
 
 function MakeQuitButton({ constants:k, OnQuit }) {
     return new Button({
-        x: k.bl, y: k.by0 + k.bs,
+        x: k.bl, y: k.by0 + k.bs * 2,
         width: k.bw, height: k.bh,
         margin: k.margin,
         // leading spaces for alignment with checkboxes.

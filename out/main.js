@@ -47,6 +47,7 @@ function is2PGameOver() {
   return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy;
 }
 var gLevelIndex = 1; // 1-based.
+var gHardMode = false;
 
 // ----------------------------------------
 
@@ -79,7 +80,6 @@ var gLastFrameTime = gStartTime;
 var gFrameCount = 0;
 var kMoveStep = 1; // i don't really know what the units are here at all.
 var kAIPeriod = 5;
-var kAIMoveScale = 1.2;
 var gMidLineDashCount;
 var gMidLineDashWidth;
 var gXInset;
