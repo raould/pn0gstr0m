@@ -564,23 +564,28 @@ function DrawBounds( alpha=0.5 ) {
 
 function CreateCRTOutlinePath() {
     // beware: this is specifically not in Cxdo().
+    // yet another bleedin' empirical safari bug?
+    // there is a 1 px black line from top left
+    // to bottom right no matter what i do?!
+    // so try to keep this on bottom most z order
+    // when you call it. sheesh.
+
     var inset = ii(Math.min(gXInset, gYInset)*0.8);
     gCx.beginPath();
     gCx.moveTo(inset, inset);
+
     gCx.bezierCurveTo(inset, 0,
                       gw(1)-inset, 0,
                       gw(1)-inset, inset);
     gCx.bezierCurveTo(gw(1), inset,
                       gw(1), gh(1)-inset,
                       gw(1)-inset, gh(1)-inset);
-
-    gCx.moveTo(inset, inset);
-    gCx.bezierCurveTo(0, inset,
-                      0, gh(1)-inset,
+    gCx.bezierCurveTo(gw(1)-inset, gh(1),
+                      inset, gh(1),
                       inset, gh(1)-inset);
-    gCx.bezierCurveTo(inset, gh(1),
-                      gw(1)-inset, gh(1),
-                      gw(1)-inset, gh(1)-inset);
+    gCx.bezierCurveTo(0, gh(1)-inset,
+                      0, inset,
+                      inset, inset);
 }
 
 
@@ -763,11 +768,11 @@ function DrawDebugList() {
             DrawResizing();
         }
         else {
+            DrawCRTOutline();
             DrawTitle(false);
             DrawWarning();
             DrawLandscape();
             DrawBounds();
-            DrawCRTOutline();
         }
     };
 
@@ -881,6 +886,7 @@ function DrawDebugList() {
             DrawResizing();
         }
         else {
+            DrawCRTOutline();
             Cxdo(() => {
                 self.attract.Draw();
                 DrawTitle();
@@ -893,7 +899,6 @@ function DrawDebugList() {
             });
             self.theMenu.Draw();
             self.DrawMusicName();
-            DrawCRTOutline();
         }
     };
 
@@ -947,9 +952,9 @@ function DrawDebugList() {
 
     self.Draw = function() {
         ClearScreen();
+        DrawCRTOutline();
         self.DrawText();
         self.DrawPills();
-        DrawCRTOutline();
     };
 
     self.DrawText = function() {
@@ -1667,6 +1672,8 @@ function DrawDebugList() {
         if (!gResizing) {
             // painter's z order algorithm here below, keep important things last.
 
+            self.DrawCRTOutline();
+
             const isEndScreenshot = !!props?.isEndScreenshot;
 
             if (!isEndScreenshot) { self.DrawMidLine(); }
@@ -1708,8 +1715,6 @@ function DrawDebugList() {
             if (!isEndScreenshot) {
                 self.DrawAnimations(); // late/high z order so the animations can clear the screen if desired.
             }
-
-            self.DrawCRTOutline();
 
             if (!isEndScreenshot) {
                 self.theMenu?.Draw();

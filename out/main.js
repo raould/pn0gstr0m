@@ -604,14 +604,19 @@ function DrawBounds() {
 }
 function CreateCRTOutlinePath() {
   // beware: this is specifically not in Cxdo().
+  // yet another bleedin' empirical safari bug?
+  // there is a 1 px black line from top left
+  // to bottom right no matter what i do?!
+  // so try to keep this on bottom most z order
+  // when you call it. sheesh.
+
   var inset = ii(Math.min(gXInset, gYInset) * 0.8);
   gCx.beginPath();
   gCx.moveTo(inset, inset);
   gCx.bezierCurveTo(inset, 0, gw(1) - inset, 0, gw(1) - inset, inset);
   gCx.bezierCurveTo(gw(1), inset, gw(1), gh(1) - inset, gw(1) - inset, gh(1) - inset);
-  gCx.moveTo(inset, inset);
-  gCx.bezierCurveTo(0, inset, 0, gh(1) - inset, inset, gh(1) - inset);
-  gCx.bezierCurveTo(inset, gh(1), gw(1) - inset, gh(1), gw(1) - inset, gh(1) - inset);
+  gCx.bezierCurveTo(gw(1) - inset, gh(1), inset, gh(1), inset, gh(1) - inset);
+  gCx.bezierCurveTo(0, gh(1) - inset, 0, inset, inset, inset);
 }
 function DrawCRTOutline() {
   Cxdo(function () {
@@ -777,11 +782,11 @@ function WarningState() {
     if (gResizing) {
       DrawResizing();
     } else {
+      DrawCRTOutline();
       DrawTitle(false);
       DrawWarning();
       DrawLandscape();
       DrawBounds();
-      DrawCRTOutline();
     }
   };
   self.Init();
@@ -881,6 +886,7 @@ function TitleState() {
       self.started = gGameTime;
       DrawResizing();
     } else {
+      DrawCRTOutline();
       Cxdo(function () {
         self.attract.Draw();
         DrawTitle();
@@ -893,7 +899,6 @@ function TitleState() {
       });
       self.theMenu.Draw();
       self.DrawMusicName();
-      DrawCRTOutline();
     }
   };
   self.DrawMusicName = function () {
@@ -938,9 +943,9 @@ function GetReadyState() {
   };
   self.Draw = function () {
     ClearScreen();
+    DrawCRTOutline();
     self.DrawText();
     self.DrawPills();
-    DrawCRTOutline();
   };
   self.DrawText = function () {
     var t = Math.ceil(self.timeout / 1000);
@@ -1611,6 +1616,7 @@ function GameState(props) {
     if (!gResizing) {
       // painter's z order algorithm here below, keep important things last.
 
+      self.DrawCRTOutline();
       var isEndScreenshot = !!(props != null && props.isEndScreenshot);
       if (!isEndScreenshot) {
         self.DrawMidLine();
@@ -1653,7 +1659,6 @@ function GameState(props) {
       if (!isEndScreenshot) {
         self.DrawAnimations(); // late/high z order so the animations can clear the screen if desired.
       }
-      self.DrawCRTOutline();
       if (!isEndScreenshot) {
         var _self$theMenu6;
         (_self$theMenu6 = self.theMenu) == null || _self$theMenu6.Draw();
