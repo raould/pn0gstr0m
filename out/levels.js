@@ -58,22 +58,37 @@ var gChosenPillIDsCache;
 function ChoosePillIDs(index) {
   var _gChosenPillIDsCache;
   Assert(index != kAttractLevelIndex);
-  var lv0 = index - 1;
+  var i0 = index - 1;
   if (((_gChosenPillIDsCache = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache.index) === index) {
     var _gChosenPillIDsCache2;
     return (_gChosenPillIDsCache2 = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache2.pids;
   }
+  var pids = ChoosePillIDsUncached(index);
+  console.log("Pids", index, pids);
+  gChosenPillIDsCache = {
+    index: index,
+    pids: pids
+  };
+  return pids;
+}
+function ChoosePillIDsUncached(index) {
   var pids = [];
-  // skip the very first level, it has no powerups.
-  if (lv0 > 0) {
+  var i0 = index - 1;
+
+  // attract and first level have no pills.
+  if (i0 > 0) {
     // the first n levels get 2 pills in order.
-    if (index <= gPillIDs.length / 2) {
-      Assert(lv0 > 0, "attract and level 1 should not have pills");
-      var i = (lv0 - 1) * 2;
+    if (i0 <= gPillIDs.length / 2) {
+      Assert(i0 > 0, "attract and level 1 should not have pills", index);
+      var i = (i0 - 1) * 2;
       pids = gPillIDs.slice(i, i + 2);
-      //console.log("ChoosePillIDs by 2", index, pids);
+      console.log("ChoosePillIDsUncached by 2", index, pids, pids.map(function (i) {
+        var _gPillInfo$i;
+        return (_gPillInfo$i = gPillInfo[i]) == null ? void 0 : _gPillInfo$i.name;
+      }));
       Assert(pids.length === 2);
     }
+
     // after those first n levels, 4 random pills per level.
     // todo: make the 4 feel more random level to level,
     // they seem to repeat too easily.
@@ -81,16 +96,13 @@ function ChoosePillIDs(index) {
       var r = new Random(index);
       var p = _toConsumableArray(gPillIDs);
       pids = [p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0]];
-      //console.log("ChoosePillIDs random 4", index, pids);
+      console.log("ChoosePillIDsUncached random 4", index, pids, pids.map(function (i) {
+        var _gPillInfo$i2;
+        return (_gPillInfo$i2 = gPillInfo[i]) == null ? void 0 : _gPillInfo$i2.name;
+      }));
       Assert(pids.length === 4);
     }
     Assert(pids.length > 0);
   }
-
-  //console.log("Pids", index, pids);
-  gChosenPillIDsCache = {
-    index: index,
-    pids: pids
-  };
   return pids;
 }

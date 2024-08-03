@@ -108,7 +108,7 @@ var gPillInfo = {
         name: "XTRA",
 	maker: MakeXtraProps,
         drawer: DrawXtraPill,
-        wfn: () => sxi(20), hfn: () => syi(20),
+        wfn: () => sxi(15), hfn: () => syi(40),
     },
     [kNeoPill]: {
         name: "NEO",

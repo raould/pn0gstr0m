@@ -50,23 +50,35 @@ function MakeSplitsCount(index) {
 let gChosenPillIDsCache;
 function ChoosePillIDs(index) {
     Assert(index != kAttractLevelIndex);
-    const lv0 = index - 1;
+    const i0 = index - 1;
 
     if (gChosenPillIDsCache?.index === index) {
         return gChosenPillIDsCache?.pids;
     }
 
+    const pids = ChoosePillIDsUncached(index);
+
+    console.log("Pids", index, pids);
+    gChosenPillIDsCache = { index, pids };
+    return pids;
+}
+
+function ChoosePillIDsUncached(index) {
     let pids = [];
-    // skip the very first level, it has no powerups.
-    if (lv0 > 0) {
+    const i0 = index-1;
+
+    // attract and first level have no pills.
+    if (i0 > 0) {
+
         // the first n levels get 2 pills in order.
-        if (index <= gPillIDs.length/2) {
-            Assert(lv0 > 0, "attract and level 1 should not have pills");
-            const i = (lv0-1)*2;
+        if (i0 <= gPillIDs.length/2) {
+            Assert(i0 > 0, "attract and level 1 should not have pills", index);
+            const i = (i0-1)*2;
             pids = gPillIDs.slice(i, i+2);
-            //console.log("ChoosePillIDs by 2", index, pids);
+            console.log("ChoosePillIDsUncached by 2", index, pids, pids.map(i => gPillInfo[i]?.name));
             Assert(pids.length === 2);
         }
+
         // after those first n levels, 4 random pills per level.
         // todo: make the 4 feel more random level to level,
         // they seem to repeat too easily.
@@ -79,13 +91,11 @@ function ChoosePillIDs(index) {
                 p.splice(r.RandomRangeInt(0, p.length-1), 1)[0],
                 p.splice(r.RandomRangeInt(0, p.length-1), 1)[0],
             ];
-            //console.log("ChoosePillIDs random 4", index, pids);
+            console.log("ChoosePillIDsUncached random 4", index, pids, pids.map(i => gPillInfo[i]?.name));
             Assert(pids.length === 4);
         }
         Assert(pids.length > 0);
     }
 
-    //console.log("Pids", index, pids);
-    gChosenPillIDsCache = { index, pids };
     return pids;
 }
