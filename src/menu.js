@@ -16,6 +16,8 @@
   can never have keyboard focus, or the menu needs to know
   when it closes, to reset the focusId.
 
+  also? this code just kinda sucks by now, sorry.
+
   * on title screen, the esc button is not hidden and can
   be clicked by pointer or via esc key.
   * in-game, the esc button should be hidden, so the menu
@@ -134,10 +136,14 @@ function MakeModeButtons({constants:k, modeRadios}) {
             font_size: k.font_size,
             is_checkbox: true,
             step_fn: (bself) => {
+                var was_checked = bself.is_checked;
                 bself.is_checked = gHardMode;
+                bself.wants_focus = bself.is_checked && !was_checked;
             },
             click_fn: (bself) => {
                 gHardMode = !gHardMode;
+                gZenMode = gHardMode ? false : gZenMode;
+                modeRadios.OnSelect(bself);
             }
         }),
 
@@ -149,10 +155,14 @@ function MakeModeButtons({constants:k, modeRadios}) {
             font_size: k.font_size,
             is_checkbox: true,
             step_fn: (bself) => {
-                bself._is_checked = gZenMode;
+                var was_checked = bself.is_checked;
+                bself.is_checked = gZenMode;
+                bself.wants_focus = bself.is_checked && !was_checked;
             },
             click_fn: (bself) => {
                 gZenMode = !gZenMode;
+                gHardMode = gZenMode ? false : gHardMode;
+                modeRadios.OnSelect(bself);
             }
         }),
     };
