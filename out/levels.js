@@ -86,7 +86,8 @@ function ChoosePillIDs(index) {
     }
     Assert(pids.length > 0);
   }
-  console.log("Pids", index, pids);
+
+  //console.log("Pids", index, pids);
   gChosenPillIDsCache = {
     index: index,
     pids: pids
