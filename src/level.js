@@ -28,9 +28,9 @@ const kEnglishStep = 0.004;
         self.englishFactorPlayer = 1;
         self.englishFactorCPU = 1;
 
-        self.initPuckCount = props.puckCount;
-        self.puckCount = props.puckCount;
-        self.isSpawning = exists(self.puckCount);
+        self.initPuckCount = props.splitsCount;
+        self.splitsCount = props.splitsCount;
+        self.isSpawning = exists(self.splitsCount);
 
         // todo: maybe GameState shouldn't own the paddles.
         self.paddleP1 = props.paddleP1;
@@ -56,9 +56,9 @@ const kEnglishStep = 0.004;
 
     self.OnPuckSplit = function(count) {
         if (self.isSpawning && count > 0) {
-            Assert(exists(self.puckCount));
-            self.puckCount = Math.max(0, self.puckCount - count);
-            self.isSpawning = self.puckCount > 0;
+            Assert(exists(self.splitsCount));
+            self.splitsCount = Math.max(0, self.splitsCount - count);
+            self.isSpawning = self.splitsCount > 0;
         }
     };
 
@@ -81,20 +81,20 @@ const kEnglishStep = 0.004;
             self.paddleP1.englishFactor = self.paddleP1.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
             self.paddleP2.englishFactor = self.paddleP2.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
 
-            logOnDelta("+maxVX", F(self.maxVX), 1, F(kMaxVX));
-            logOnDelta("+englishFactorPlayer", F(self.englishFactorPlayer), 0.1);
-            logOnDelta("+englishFactorCPU", F(self.englishFactorCPU), 0.1);
+            // logOnDelta("+maxVX", F(self.maxVX), 1, F(kMaxVX));
+            // logOnDelta("+englishFactorPlayer", F(self.englishFactorPlayer), 0.1);
+            // logOnDelta("+englishFactorCPU", F(self.englishFactorCPU), 0.1);
         }
     };
 
     self.IsLastOfThePucks = function() {
         return exists(self.initPuckCount) &&
-            exists(self.puckCount) &&
-            self.puckCount <= 201;
+            exists(self.splitsCount) &&
+            self.splitsCount <= 201;
     };
 
     self.IsSuddenDeath = function() {
-        return exists(self.puckCount) && self.puckCount <= 0;
+        return exists(self.splitsCount) && self.splitsCount <= 0;
     };
 
     self.Draw = function({ alpha, isEndScreenshot }) {
@@ -124,7 +124,7 @@ const kEnglishStep = 0.004;
         // todo: not actually sure how best to represent this to players in the ui. :-\
         var msg = undefined;
         if (self.IsLastOfThePucks()) {
-            msg = `ZERO POINT ENERGY ${self.puckCount}`;
+            msg = `ZERO POINT ENERGY: ${self.splitsCount}`;
         }            
         if (self.IsSuddenDeath()) {
             msg = "EL FIN";

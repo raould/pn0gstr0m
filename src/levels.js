@@ -12,7 +12,7 @@ function MakeAttract(paddleP1, paddleP2) {
         index: kAttractLevelIndex,
         isAttract: true,
         maxVX: sxi(14),
-        puckCount: undefined,
+        splitsCount: undefined,
         isP1Player: false,
         isP2Player: false,
         pills: [],
@@ -31,7 +31,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
         // maxVX is allowed to grow after there are no more splits.
         maxVX: sxi(12 + index),
         speedupFactor: 0.0001,
-        puckCount: MakePuckCount(index),
+        splitsCount: MakeSplitsCount(index),
         isP1Player: true,
         isP2Player: !gSinglePlayer,
         pills: pillMakers,
@@ -41,7 +41,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
     return level;
 }
 
-function MakePuckCount(index) {
+function MakeSplitsCount(index) {
     Assert(index > 0, "index is 1-based");
     // note: this is just a big bad random swag.
     return 400 + index * 50;

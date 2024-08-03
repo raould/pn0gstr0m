@@ -177,7 +177,7 @@ function Puck() {
 
     // try to hurry up when the level has no more pucks.
     var nvx = MinSigned(self.vx * (isSuddenDeath ? 1.1 : 1), maxVX);
-    console.log("SplitPuck: puck vx updated", F(self.vx), F(maxVX), "->", F(nvx));
+    //console.log("SplitPuck: puck vx updated", F(self.vx), F(maxVX), "->", F(nvx));
     self.vx = nvx;
     return np;
   };
@@ -215,7 +215,6 @@ function Puck() {
       self.x = xywh.x + xywh.width;
     }
     self.vx *= -1;
-    console.log("AdjustAndBounceX", F(self.vx));
   };
   self.ApplyEnglish = function (paddle) {
     // see also: english in level.js
@@ -243,9 +242,6 @@ function Puck() {
   self.PaddleCollision = function (paddle, isSuddenDeath, maxVX) {
     var newprops = undefined;
     var bounds = paddle.GetCollisionBounds(isSuddenDeath, maxVX);
-    if (!!paddle.isXtra) {
-      console.log("xtra");
-    }
     var hit = self.CollisionTest(bounds, -paddle.normalX);
     if (hit) {
       paddle.OnPuckHit();
