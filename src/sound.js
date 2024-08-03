@@ -96,18 +96,23 @@ function BeginMusic() {
     if (!gMusicMuted) {
         // max list of music numbers in order (javascript sucks?).
         const unplayedAll = Array(kMusicSfxCount).fill().map((_,i) => {return i+1;});
+
         // if unknown (or forced), refresh to full list.
         let unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
         if (_kill_unplayed || unplayed.length == 0) {
             unplayed = unplayedAll;
         }
+
         Assert(unplayed != null, "BeginMusic: null");
         Assert(unplayed.length > 0, "BeginMusic: 0");
         // not random, always play musicN in order since we 'load' them in order.
         const num = unplayed.shift();
+
         // save the now-smaller remaining-items list.
         SaveLocal(LocalStorageKeys.unplayed, unplayed, true);
+
         const name = `music${num}`;
+        console.log("BeginMusic", name);
         gMusicID = PlayMusic(name);
     }
 }

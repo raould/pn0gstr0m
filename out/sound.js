@@ -103,6 +103,7 @@ function BeginMusic() {
     var unplayedAll = Array(kMusicSfxCount).fill().map(function (_, i) {
       return i + 1;
     });
+
     // if unknown (or forced), refresh to full list.
     var unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
     if (_kill_unplayed || unplayed.length == 0) {
@@ -112,9 +113,11 @@ function BeginMusic() {
     Assert(unplayed.length > 0, "BeginMusic: 0");
     // not random, always play musicN in order since we 'load' them in order.
     var num = unplayed.shift();
+
     // save the now-smaller remaining-items list.
     SaveLocal(LocalStorageKeys.unplayed, unplayed, true);
     var name = "music".concat(num);
+    console.log("BeginMusic", name);
     gMusicID = PlayMusic(name);
   }
 }
