@@ -12,7 +12,7 @@ const LocalStorageKeys = {
     unplayed: 'pn0g_unplayed',
 };
 
-gLocalStorageCache = {};
+const gLocalStorageCache = {};
 
 function LoadLocalStorageCache() {
     Object.values(LocalStorageKeys).forEach(key => {

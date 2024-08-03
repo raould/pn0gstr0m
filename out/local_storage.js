@@ -14,7 +14,7 @@ var LocalStorageKeys = {
   musicMuted: 'pn0g_music_muted',
   unplayed: 'pn0g_unplayed'
 };
-gLocalStorageCache = {};
+var gLocalStorageCache = {};
 function LoadLocalStorageCache() {
   Object.values(LocalStorageKeys).forEach(function (key) {
     var json = localStorage.getItem(key);
