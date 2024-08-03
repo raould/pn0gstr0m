@@ -604,6 +604,23 @@ function DrawDebugList() {
     }
 }
 
+function UpdateLocalStorage() {
+    // todo: ugly that this only works "because globals".
+
+    // note:
+
+    // (1) this doesn't update the level high score dict
+    // since that requires deep-equals testing. so that is
+    // left to be done hard-coded elsewhere.
+
+    // (2) this doesn't include the unplayed music, see sound.js
+
+    SaveLocal(LocalStorageKeys.singlePlayer, gSinglePlayer);
+    SaveLocal(LocalStorageKeys.hardMode, gHardMode);
+    SaveLocal(LocalStorageKeys.sfxMuted, gSfxMuted);
+    SaveLocal(LocalStorageKeys.musicMuted, gMusicMuted);
+}
+
 // ----------------------------------------
 
 /*class*/ function Lifecycle( handlerMap ) {
@@ -679,6 +696,7 @@ function DrawDebugList() {
                 self.DrawCRTScanlines();
                 DrawDebugList();
                 if (gShowToasts) { StepToasts(); }
+                UpdateLocalStorage();
 
                 remainder = kTimeStep-(fdt-kTimeStep);
             }
