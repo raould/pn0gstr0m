@@ -76,19 +76,19 @@ var gPillInfo = {
         name: "FORCE PUSH",
         maker: MakeForcePushProps,
         drawer: DrawForcePushPill,
-        wfn: () => sxi(25), hfn: () => syi(25),
+        wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kDecimatePill]: {
         name: "DECIMATE",
 	maker: MakeDecimateProps,
         drawer: DrawDecimatePill,
-        wfn: () => sxi(25), hfn: () => syi(25),
+        wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kEngorgePill]: {
         name: "ENGORGE",
 	maker: MakeEngorgeProps,
         drawer: DrawEngorgePill,
-        wfn: () => sxi(25), hfn: () => syi(35),
+        wfn: () => sxi(20), hfn: () => syi(35),
     },
     [kSplitPill]: {
         // "SPLIT" could be a confusing name since
@@ -96,31 +96,31 @@ var gPillInfo = {
         name: "ZPLT",
 	maker: MakeSplitProps,
         drawer: DrawSplitPill,
-        wfn: () => sxi(25), hfn: () => syi(25),
+        wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kDefendPill]: {
         name: "DEFEND",
 	maker: MakeDefendProps,
         drawer: DrawDefendPill,
-        wfn: () => sxi(25), hfn: () => syi(40),
+        wfn: () => sxi(20), hfn: () => syi(40),
     },
     [kXtraPill]: {
         name: "XTRA",
 	maker: MakeXtraProps,
         drawer: DrawXtraPill,
-        wfn: () => sxi(25), hfn: () => syi(25),
+        wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kNeoPill]: {
         name: "NEO",
 	maker: MakeNeoProps,
         drawer: DrawNeoPill,
-        wfn: () => sxi(25), hfn: () => syi(25),
+        wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kChaosPill]: {
         name: "CHAOS",
 	maker: MakeChaosProps,
         drawer: DrawChaosPill,
-        wfn: () => sxi(25), hfn: () => syi(25),
+        wfn: () => sxi(20), hfn: () => syi(20),
     },
 };
 Assert(gPillInfo);

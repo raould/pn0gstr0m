@@ -81,27 +81,27 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
   maker: MakeForcePushProps,
   drawer: DrawForcePushPill,
   wfn: function wfn() {
-    return sxi(25);
+    return sxi(20);
   },
   hfn: function hfn() {
-    return syi(25);
+    return syi(20);
   }
 }), kDecimatePill, {
   name: "DECIMATE",
   maker: MakeDecimateProps,
   drawer: DrawDecimatePill,
   wfn: function wfn() {
-    return sxi(25);
+    return sxi(20);
   },
   hfn: function hfn() {
-    return syi(25);
+    return syi(20);
   }
 }), kEngorgePill, {
   name: "ENGORGE",
   maker: MakeEngorgeProps,
   drawer: DrawEngorgePill,
   wfn: function wfn() {
-    return sxi(25);
+    return sxi(20);
   },
   hfn: function hfn() {
     return syi(35);
@@ -113,17 +113,17 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
   maker: MakeSplitProps,
   drawer: DrawSplitPill,
   wfn: function wfn() {
-    return sxi(25);
+    return sxi(20);
   },
   hfn: function hfn() {
-    return syi(25);
+    return syi(20);
   }
 }), kDefendPill, {
   name: "DEFEND",
   maker: MakeDefendProps,
   drawer: DrawDefendPill,
   wfn: function wfn() {
-    return sxi(25);
+    return sxi(20);
   },
   hfn: function hfn() {
     return syi(40);
@@ -133,30 +133,30 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
   maker: MakeXtraProps,
   drawer: DrawXtraPill,
   wfn: function wfn() {
-    return sxi(25);
+    return sxi(20);
   },
   hfn: function hfn() {
-    return syi(25);
+    return syi(20);
   }
 }), kNeoPill, {
   name: "NEO",
   maker: MakeNeoProps,
   drawer: DrawNeoPill,
   wfn: function wfn() {
-    return sxi(25);
+    return sxi(20);
   },
   hfn: function hfn() {
-    return syi(25);
+    return syi(20);
   }
 }), kChaosPill, {
   name: "CHAOS",
   maker: MakeChaosProps,
   drawer: DrawChaosPill,
   wfn: function wfn() {
-    return sxi(25);
+    return sxi(20);
   },
   hfn: function hfn() {
-    return syi(25);
+    return syi(20);
   }
 });
 Assert(gPillInfo);
