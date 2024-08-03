@@ -78,7 +78,7 @@ function MakeMenuButton(_ref) {
     font_size: gReducedFontSizePt,
     step_fn: function step_fn(bself) {
       bself.has_focus = false;
-      bself.title = (gSinglePlayer ? "1p  " : "2pp ") + (gSfxMuted ? "  " : "m ") + (gMusicMuted ? " " : "o");
+      bself.title = (gSinglePlayer ? "1p  " : "2pp ") + (gSfxMuted ? "  " : "m ") + (gMusicMuted ? " " : "o") + (gHardMode ? "*" : " ");
     },
     click_fn: function click_fn(bself) {
       bself.isOpen = !bself.isOpen; // see below.

@@ -70,7 +70,8 @@ function MakeMenuButton({ OnClose }) {
             bself.has_focus = false;
             bself.title = (gSinglePlayer ? "1p  " : "2pp ") +
                 (gSfxMuted ? "  " : "m ") +
-                (gMusicMuted ? " " : "o");
+                (gMusicMuted ? " " : "o") +
+                (gHardMode ? "*" : " ");
         },
         click_fn: (bself) => {
             bself.isOpen = !bself.isOpen; // see below.
