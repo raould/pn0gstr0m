@@ -64,7 +64,7 @@ function ChoosePillIDs(index) {
             Assert(lv0 > 0, "attract and level 1 should not have pills");
             const i = (lv0-1)*2;
             pids = gPillIDs.slice(i, i+2);
-            console.log("ChoosePillIDs by 2", index, pids);
+            //console.log("ChoosePillIDs by 2", index, pids);
             Assert(pids.length === 2);
         }
         // after those first n levels, 4 random pills per level.
@@ -79,7 +79,7 @@ function ChoosePillIDs(index) {
                 p.splice(r.RandomRangeInt(0, p.length-1), 1)[0],
                 p.splice(r.RandomRangeInt(0, p.length-1), 1)[0],
             ];
-            console.log("ChoosePillIDs random 4", index, pids);
+            //console.log("ChoosePillIDs random 4", index, pids);
             Assert(pids.length === 4);
         }
         Assert(pids.length > 0);
