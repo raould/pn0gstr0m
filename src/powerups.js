@@ -124,7 +124,6 @@ var gPillInfo = {
     },
 };
 Assert(gPillInfo);
-console.log(gPillInfo);
 
 /*class*/ function Powerups( props ) {
 

@@ -17,16 +17,15 @@ var gAudio = {
 };
 
 var gMusicID;
-var kMusicStorageKey = "pn0g_music";
 
 /* muting implementation is... tricky? i am 
  * using gStateMuted to prevent the attract
  * mode from playing game blip and explosion sfx,
  * but we still want the music to play.
  */
-var gStateMuted = true;
-var gMusicMuted = false;
-var gSfxMuted = false;
+var gStateMuted = false;
+var gMusicMuted = LoadLocal(LocalStorageKeys.musicMuted, false);
+var gSfxMuted = LoadLocal(LocalStorageKeys.sfxMuted, false);
 
 function RegisterMusic(name, basename, props) {
     RegisterSound(name, basename, props, true);
@@ -96,30 +95,24 @@ function BeginMusic() {
     StopAudio(true);
     if (!gMusicMuted) {
         // max list of music numbers in order (javascript sucks?).
-        var unplayedAll = Array(kMusicSfxCount).fill().map((_,i) => {return i+1;});
-        // refresh to full list if unknown.
-        var unplayedStr = localStorage.getItem(kMusicStorageKey);
-        if (unplayedStr == null || _kill_unplayed) {
+        const unplayedAll = Array(kMusicSfxCount).fill().map((_,i) => {return i+1;});
+
+        // if unknown (or forced), refresh to full list.
+        let unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
+        if (_kill_unplayed || unplayed.length == 0) {
             unplayed = unplayedAll;
         }
-        // else parse the unplayed list.
-        // if that is [] then reset to all.
-        else {
-            var unplayed = JSON.parse(unplayedStr);
-            if (unplayed.length == 0) {
-                var jsonStr = JSON.stringify(unplayedAll);
-                localStorage.setItem(kMusicStorageKey, jsonStr);
-            }
-            unplayedStr = localStorage.getItem(kMusicStorageKey);
-            unplayed = JSON.parse(unplayedStr);
-        }
+
         Assert(unplayed != null, "BeginMusic: null");
         Assert(unplayed.length > 0, "BeginMusic: 0");
         // not random, always play musicN in order since we 'load' them in order.
-        var num = unplayed.shift();
+        const num = unplayed.shift();
+
         // save the now-smaller remaining-items list.
-        localStorage.setItem(kMusicStorageKey, JSON.stringify(unplayed));
-        var name = `music${num}`;
+        SaveLocal(LocalStorageKeys.unplayed, unplayed, true);
+
+        const name = `music${num}`;
+        console.log("BeginMusic", name);
         gMusicID = PlayMusic(name);
     }
 }
@@ -152,12 +145,12 @@ function PlaySfx(name, ignoreMuted=false) {
 }
 
 function PlaySfxDebounced(name) {
-    var sid;
+    let sid;
     if (!gStateMuted && !gSfxMuted) {
-        var meta = gAudio.name2meta[name];
+        const meta = gAudio.name2meta[name];
         Assert(meta != undefined, name, `PlaySfxDebounced ${name}`);
         if (meta != undefined) {
-            var last = meta.last || 0;
+            const last = meta.last || 0;
             if (Date.now()-last > gR.RandomCentered(25,10) /*msec*/) {
                 sid = PlaySound(name);
             }
@@ -167,14 +160,14 @@ function PlaySfxDebounced(name) {
 }
 
 function PlaySound(name) {
-    var sid = undefined;
-    var meta = gAudio.name2meta[name];
+    let sid = undefined;
+    const meta = gAudio.name2meta[name];
     Assert(meta != undefined, `PlaySound ${name}`);
     if (meta != undefined) {
-        var howl = meta.howl;
+        const howl = meta.howl;
         // currently only allowing one name-instance at a time.
         if (howl != undefined) {
-            var id = meta.id;
+            const id = meta.id;
             if (id != undefined) {
                 howl.stop();
             }
@@ -188,10 +181,10 @@ function PlaySound(name) {
 
 function MakePlayFn(count, basename, playfn) {
     Assert(count >= 0, count, `MakePlayFn ${basename}`);
-    var gNames = Array(count).fill().map((e,i) => `${basename}${i+1}`);
+    const gNames = Array(count).fill().map((e,i) => `${basename}${i+1}`);
     return () => {
-        var index = gR.RandomRangeInt(0, count-1);
-        var name = gNames[index];
+        const index = gR.RandomRangeInt(0, count-1);
+        const name = gNames[index];
         return playfn(name);
     };
 }
