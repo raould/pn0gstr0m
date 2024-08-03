@@ -105,22 +105,15 @@ function BeginMusic() {
     });
     // if unknown (or forced), refresh to full list.
     var unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
-    if (_kill_unplayed) {
+    if (_kill_unplayed || unplayed.length == 0) {
       unplayed = unplayedAll;
-    }
-    // if unplayed is [] then reset to all and refresh our variable.
-    else {
-      if (unplayed.length == 0) {
-        SaveLocal(LocalStorageKeys.unplayed, unplayedAll);
-      }
-      unplayed = LoadLocal(LocalStorageKeys.unplayed);
     }
     Assert(unplayed != null, "BeginMusic: null");
     Assert(unplayed.length > 0, "BeginMusic: 0");
     // not random, always play musicN in order since we 'load' them in order.
     var num = unplayed.shift();
     // save the now-smaller remaining-items list.
-    SaveLocal(LocalStorageKeys.unplayed, unplayed);
+    SaveLocal(LocalStorageKeys.unplayed, unplayed, true);
     var name = "music".concat(num);
     gMusicID = PlayMusic(name);
   }

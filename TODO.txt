@@ -69,7 +69,6 @@ in progress:
   * gHardMode.
   * gSfxMuted.
   * gMusicMuted.
-
 * do i need clearFn() for gamepad buttons and joystick? or what else instead?
 * check that the gamepad buttons & sticks non/repeat is sane/right.
 * really test all the possible inputs!

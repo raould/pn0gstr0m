@@ -31,9 +31,12 @@ LoadLocalStorageCache();
 
 // ----------------------------------------
 
-function SaveLocal(key, value) {
+// primitives work ok for === but not arrays or objects,
+// those would need a deep equals which i'm loathe to import
+// hence the 'forced' argument. :-(
+function SaveLocal(key, value, forced=false) {
     var v0 = gLocalStorageCache[key];
-    if (v0 !== value) {
+    if (v0 !== value || forced) {
         localStorage.setItem(key, JSON.stringify(value));
         gLocalStorageCache[key] = value;
         console.log("SaveLocal", key, value);

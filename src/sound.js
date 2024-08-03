@@ -95,26 +95,19 @@ function BeginMusic() {
     StopAudio(true);
     if (!gMusicMuted) {
         // max list of music numbers in order (javascript sucks?).
-        var unplayedAll = Array(kMusicSfxCount).fill().map((_,i) => {return i+1;});
+        const unplayedAll = Array(kMusicSfxCount).fill().map((_,i) => {return i+1;});
         // if unknown (or forced), refresh to full list.
-        var unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
-        if (_kill_unplayed) {
+        let unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
+        if (_kill_unplayed || unplayed.length == 0) {
             unplayed = unplayedAll;
-        }
-        // if unplayed is [] then reset to all and refresh our variable.
-        else {
-            if (unplayed.length == 0) {
-                SaveLocal(LocalStorageKeys.unplayed, unplayedAll);
-            }
-            unplayed = LoadLocal(LocalStorageKeys.unplayed);
         }
         Assert(unplayed != null, "BeginMusic: null");
         Assert(unplayed.length > 0, "BeginMusic: 0");
         // not random, always play musicN in order since we 'load' them in order.
-        var num = unplayed.shift();
+        const num = unplayed.shift();
         // save the now-smaller remaining-items list.
-        SaveLocal(LocalStorageKeys.unplayed, unplayed);
-        var name = `music${num}`;
+        SaveLocal(LocalStorageKeys.unplayed, unplayed, true);
+        const name = `music${num}`;
         gMusicID = PlayMusic(name);
     }
 }
@@ -147,12 +140,12 @@ function PlaySfx(name, ignoreMuted=false) {
 }
 
 function PlaySfxDebounced(name) {
-    var sid;
+    let sid;
     if (!gStateMuted && !gSfxMuted) {
-        var meta = gAudio.name2meta[name];
+        const meta = gAudio.name2meta[name];
         Assert(meta != undefined, name, `PlaySfxDebounced ${name}`);
         if (meta != undefined) {
-            var last = meta.last || 0;
+            const last = meta.last || 0;
             if (Date.now()-last > gR.RandomCentered(25,10) /*msec*/) {
                 sid = PlaySound(name);
             }
@@ -162,14 +155,14 @@ function PlaySfxDebounced(name) {
 }
 
 function PlaySound(name) {
-    var sid = undefined;
-    var meta = gAudio.name2meta[name];
+    let sid = undefined;
+    const meta = gAudio.name2meta[name];
     Assert(meta != undefined, `PlaySound ${name}`);
     if (meta != undefined) {
-        var howl = meta.howl;
+        const howl = meta.howl;
         // currently only allowing one name-instance at a time.
         if (howl != undefined) {
-            var id = meta.id;
+            const id = meta.id;
             if (id != undefined) {
                 howl.stop();
             }
@@ -183,10 +176,10 @@ function PlaySound(name) {
 
 function MakePlayFn(count, basename, playfn) {
     Assert(count >= 0, count, `MakePlayFn ${basename}`);
-    var gNames = Array(count).fill().map((e,i) => `${basename}${i+1}`);
+    const gNames = Array(count).fill().map((e,i) => `${basename}${i+1}`);
     return () => {
-        var index = gR.RandomRangeInt(0, count-1);
-        var name = gNames[index];
+        const index = gR.RandomRangeInt(0, count-1);
+        const name = gNames[index];
         return playfn(name);
     };
 }

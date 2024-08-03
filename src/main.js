@@ -1792,7 +1792,7 @@ function UpdateLocalStorage() {
 
         if (self.isNewHighScore) {
             gLevelHighScores[gLevelIndex] = self.highScore;
-            SaveLocal(LocalStorageKeys.highScores, gLevelHighScores);
+            SaveLocal(LocalStorageKeys.highScores, gLevelHighScores, true);
         }
     };
 
