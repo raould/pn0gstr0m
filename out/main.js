@@ -985,7 +985,9 @@ function GetReadyState() {
           var height = hfn();
           var x = x0 + dx * i;
           var oy = Math.sin(x * 10 + gGameTime / 100) * (height / 2) * 0.1;
-          drawer(gP1Side, {
+          drawer(gP1Side,
+          // just the least wrong choice.
+          {
             x: x - width / 2,
             y: ty - height / 2 - sy(40) - oy,
             width: width,
