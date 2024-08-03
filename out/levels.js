@@ -14,6 +14,7 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 // yes this is really hard to playtest.
 
 var kAttractLevelIndex = -1;
+var kZenLevelIndex = -2;
 function MakeAttract(paddleP1, paddleP2) {
   return new Level({
     index: kAttractLevelIndex,
@@ -29,8 +30,9 @@ function MakeAttract(paddleP1, paddleP2) {
 }
 
 // level is one-based.
+// zen mode means only one level!
 function MakeLevel(index, paddleP1, paddleP2) {
-  Assert(index > 0, "index is 1-based");
+  Assert(index !== 0, "index is 1-based");
   var pillMakers = ChoosePillIDs(index).map(function (pid) {
     return gPillInfo[pid].maker;
   });
@@ -50,7 +52,10 @@ function MakeLevel(index, paddleP1, paddleP2) {
   return level;
 }
 function MakeSplitsCount(index) {
-  Assert(index > 0, "index is 1-based");
+  Assert(index !== 0, "index is 1-based");
+  if (index === kZenLevelIndex) {
+    return undefined;
+  }
   // note: this is just a big bad random swag.
   return 400 + index * 50;
 }
@@ -58,6 +63,9 @@ var gChosenPillIDsCache;
 function ChoosePillIDs(index) {
   var _gChosenPillIDsCache;
   Assert(index != kAttractLevelIndex);
+  if (index === kZenLevelIndex) {
+    return _toConsumableArray(gPillIDs);
+  }
   var i0 = index - 1;
   if (((_gChosenPillIDsCache = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache.index) === index) {
     var _gChosenPillIDsCache2;

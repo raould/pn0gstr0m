@@ -157,6 +157,7 @@ function MakeModeButtons(_ref3) {
       click_fn: function click_fn(bself) {
         gHardMode = !gHardMode;
         gZenMode = gHardMode ? false : gZenMode;
+        gLevelIndex = 1;
         modeRadios.OnSelect(bself);
       }
     }),
@@ -177,6 +178,7 @@ function MakeModeButtons(_ref3) {
       click_fn: function click_fn(bself) {
         gZenMode = !gZenMode;
         gHardMode = gZenMode ? false : gHardMode;
+        gLevelIndex = kZenLevelIndex;
         modeRadios.OnSelect(bself);
       }
     })

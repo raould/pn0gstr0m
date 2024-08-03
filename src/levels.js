@@ -6,6 +6,7 @@
 // yes this is really hard to playtest.
 
 const kAttractLevelIndex = -1;
+const kZenLevelIndex = -2;
 
 function MakeAttract(paddleP1, paddleP2) {
     return new Level({
@@ -22,8 +23,9 @@ function MakeAttract(paddleP1, paddleP2) {
 }
 
 // level is one-based.
+// zen mode means only one level!
 function MakeLevel(index, paddleP1, paddleP2) {
-    Assert(index > 0, "index is 1-based");
+    Assert(index !== 0, "index is 1-based");
     const pillMakers = ChoosePillIDs(index).map(pid => gPillInfo[pid].maker);
     const level = new Level({
         index,
@@ -42,7 +44,10 @@ function MakeLevel(index, paddleP1, paddleP2) {
 }
 
 function MakeSplitsCount(index) {
-    Assert(index > 0, "index is 1-based");
+    Assert(index !== 0, "index is 1-based");
+    if (index === kZenLevelIndex) {
+        return undefined;
+    }
     // note: this is just a big bad random swag.
     return 400 + index * 50;
 }
@@ -50,14 +55,16 @@ function MakeSplitsCount(index) {
 let gChosenPillIDsCache;
 function ChoosePillIDs(index) {
     Assert(index != kAttractLevelIndex);
-    const i0 = index - 1;
 
+    if (index === kZenLevelIndex) {
+        return [...gPillIDs];
+    }
+
+    const i0 = index - 1;
     if (gChosenPillIDsCache?.index === index) {
         return gChosenPillIDsCache?.pids;
     }
-
     const pids = ChoosePillIDsUncached(index);
-
     console.log("Pids", index, pids);
     gChosenPillIDsCache = { index, pids };
     return pids;

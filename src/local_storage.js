@@ -10,6 +10,7 @@ const LocalStorageKeys = {
     sfxMuted: 'pn0g_sfx_muted',
     musicMuted: 'pn0g_music_muted',
     unplayed: 'pn0g_unplayed',
+    zenMode: 'pn0g_zen',
 };
 
 const gLocalStorageCache = {};

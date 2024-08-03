@@ -12,7 +12,8 @@ var LocalStorageKeys = {
   hardMode: 'pn0g_hard_mode',
   sfxMuted: 'pn0g_sfx_muted',
   musicMuted: 'pn0g_music_muted',
-  unplayed: 'pn0g_unplayed'
+  unplayed: 'pn0g_unplayed',
+  zenMode: 'pn0g_zen'
 };
 var gLocalStorageCache = {};
 function LoadLocalStorageCache() {

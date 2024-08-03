@@ -64,3 +64,10 @@ i frankly kinda hate javascript at times like these, perf is entirely too unclea
 * at lest in v8 apparently don't use delete on {}'s, set the value to undefined or false, because performance.
   * is deleting required to avoid memory leaking? i feel like logically it should be.
 * is {...nocmds} better than {} and setting entries to true/false? no idea, no way to know.
+
+----------------------------------------
+
+zen mode hell:
+* local storage for menu.
+* high score is different.
+* ugh even more of lots of conditionals now.
