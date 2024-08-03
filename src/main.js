@@ -17,8 +17,6 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-LoadLocalStorageCache();
-
 var gDebug = false;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
@@ -35,7 +33,7 @@ var gP2Wins = 0;
 var k2PWinBy = 3;
 function is2PGameOver() { return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy; }
 var gLevelIndex = 1; // 1-based.
-var gHardMode = false;
+var gHardMode = LoadLocal(LocalStorageKeys.hardMode, false);
 
 // ----------------------------------------
 
@@ -52,9 +50,9 @@ var kGreenFadeInMsec = gDebug ? 1000 : 7000;
 // "fade" in from 0 alpha to specified alphas. match: MakeGameStartAnimation.
 var kAlphaFadeInMsec = 700;
 
-// todo: per-game high score doesn't make sense
-// now that we have levels that start scores at 0 to 0.
-var gLevelHighScores;
+// per-game high score doesn't make sense
+// now that we have levels that start scores at 0:0.
+var gLevelHighScores = LoadLocal(LocalStorageKeys.highScores, {});
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
 // although i did try to compensate in the run loop.
@@ -2534,14 +2532,6 @@ function CheckResizeMatch() {
 }
 
 function Start() {
-    var lhs = LoadLocal(LocalStorageKeys.highScores);
-    if (exists(lhs)) {
-        gLevelHighScores = lhs;
-    }
-    if (isU(gLevelHighScores)) {
-        gLevelHighScores = {};
-    }
-
     gCanvas = document.getElementById( kCanvasName );
     gCx = gCanvas.getContext('2d');
     gCx.MoveTo = MoveTo;

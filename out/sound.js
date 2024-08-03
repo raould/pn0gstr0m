@@ -30,9 +30,9 @@ var gMusicID;
  * mode from playing game blip and explosion sfx,
  * but we still want the music to play.
  */
-var gStateMuted = true;
-var gMusicMuted = false;
-var gSfxMuted = false;
+var gStateMuted = false;
+var gMusicMuted = LoadLocal(LocalStorageKeys.musicMuted, false);
+var gSfxMuted = LoadLocal(LocalStorageKeys.sfxMuted, false);
 function RegisterMusic(name, basename, props) {
   RegisterSound(name, basename, props, true);
 }
@@ -103,15 +103,13 @@ function BeginMusic() {
     var unplayedAll = Array(kMusicSfxCount).fill().map(function (_, i) {
       return i + 1;
     });
-    // refresh to full list if unknown.
-    var unplayedStr = LoadLocal(LocalStorageKeys.unplayed);
-    if (unplayedStr == null || _kill_unplayed) {
+    // if unknown (or forced), refresh to full list.
+    var unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
+    if (_kill_unplayed) {
       unplayed = unplayedAll;
     }
-    // else parse the unplayed list.
-    // if that is [] then reset to all.
+    // if unplayed is [] then reset to all and refresh our variable.
     else {
-      var unplayed = JSON.parse(unplayedStr);
       if (unplayed.length == 0) {
         SaveLocal(LocalStorageKeys.unplayed, unplayedAll);
       }

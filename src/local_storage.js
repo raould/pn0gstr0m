@@ -27,6 +27,10 @@ function LoadLocalStorageCache() {
     console.log("LoadCache", gLocalStorageCache);
 }
 
+LoadLocalStorageCache();
+
+// ----------------------------------------
+
 function SaveLocal(key, value) {
     var v0 = gLocalStorageCache[key];
     if (v0 !== value) {
