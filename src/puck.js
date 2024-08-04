@@ -25,8 +25,19 @@ function Puck() {
         self.vx = gR.RandomCentered(props.vx, props.vx/10);
         self.vy = AvoidZero(props.vy, 0.1);
         self.alive = true;
-        self.startTime = !!props.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
-        self.modeColor = ForGameMode(RandomCyan, RandomCyan, RandomZen)();
+        self.ur = aub(props.ur, false);
+        self.startTime = self.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
+        self.modeColor = aub(props.modeColor,
+                             ForGameMode(
+                                 RandomForColor(cyanSpec),
+                                 RandomForColor(cyanSpec),
+                                 RandomForColor(zenSpec))
+                            );
+        console.log("modeColor", props.modeColor, self.modeColor);
+        gLevelPuckCount++;
+        if (gLevelPuckCount % 10 === 0) {
+            NextZenHSV();
+        }
         self.splitColor = aub(props.forced, false) ? "yellow" : "white";        
         self.isLocked = false;
     };
@@ -65,7 +76,8 @@ function Puck() {
 
         // young pucks (from paddle splits or powerups) render another color briefly.
         var dt = GameTime01(1000, self.startTime);
-        var inplayStyle = (gR.RandomFloat() > dt) ? self.splitColor : self.modeColor;
+        var fadeinStyle = FadeIn(1);
+        var inplayStyle = aub(fadeinStyle, (gR.RandomFloat() > dt) ? self.splitColor : self.modeColor);
         var lostStyle = RandomYellow(0.7);
         var isLost = (self.x+self.width < gXInset || self.x > gw(1)-gXInset);
         var style = isLost ? lostStyle : inplayStyle;
@@ -85,12 +97,22 @@ function Puck() {
             gCx.fill();
 
             if (gDebug) {
+                // tail to show direction of movement.
+                // different y for opposite vx.
                 gCx.beginPath();
                 var oy = self.vx > 0 ? -1 : self.height+1;
                 gCx.strokeStyle = self.vx > 0 ? "magenta" : "pink";
                 gCx.moveTo(self.prevX+self.width/2, self.prevY+oy);
                 gCx.lineTo(self.midX, self.y+oy);
                 gCx.stroke();
+
+                // highlight the ur pucks.
+                if (self.ur) {
+                    gCx.beginPath();
+                    gCx.rect(wx, wy, width, height);
+                    gCx.strokeStyle = "red";
+                    gCx.stroke();
+                }
             }
         });
     };

@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
 
@@ -94,10 +94,11 @@ var gLevelHighScores = LoadLocal(LocalStorageKeys.highScores, {});
 var kFPS = 35;
 var kTimeStep = 1000/kFPS;
 var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
-var gStartTime = 0;
+var gLevelTime = 0;
+var gLastFrameTime = gLevelTime;
 var gGameTime = 0;
-var gLastFrameTime = gStartTime;
 var gFrameCount = 0;
+var gLevelPuckCount = 0;
 var kMoveStep = 1; // i don't really know what the units are here at all.
 var kAIPeriod = 5;
 
@@ -180,8 +181,8 @@ var kXtrasArrayInitialSize = 6;
 // prevent pills from showing up too often, or too early - but not too late.
 var PillSpawnCooldownFn = () => ForGameMode(
     () => 1000 * 5,
-    () => 1000 * 8,
     () => 1000 * 10,
+    () => 1000 * 20,
 )();
 var kSpawnPlayerPillFactor = 0.003;
 
@@ -393,7 +394,7 @@ var gR = new Random( 0x1BADB002 );
 
 // ----------------------------------------
 
-function GameTime01(period, start=gStartTime) {
+function GameTime01(period, start=gLevelTime) {
     var diff = gGameTime - start;
     period = Math.max(1, period);
     var t = T01nl(diff, period);
@@ -734,7 +735,6 @@ function UpdateLocalStorage() {
                 DrawDebugList();
                 if (gShowToasts) { StepToasts(); }
                 UpdateLocalStorage();
-                nextZenSpec();
 
                 remainder = kTimeStep-(fdt-kTimeStep);
             }
@@ -1088,7 +1088,8 @@ function UpdateLocalStorage() {
         ResetInput();
 
         gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
-        gStartTime = gGameTime;
+        gLevelTime = gGameTime;
+        gLevelPuckCount = 0;
 
         gP1Score = 0;
         gP2Score = 0;
@@ -1405,6 +1406,7 @@ function UpdateLocalStorage() {
                           vy: (self.isAttract ?
                                gR.RandomCentered(0, 2, 1) :
                                0.3),
+                          modeColor: rgba255s(cyanSpec.regular, 1),
                           ur: true });
         gPucks.A.push(p);
     };

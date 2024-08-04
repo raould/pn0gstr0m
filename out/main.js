@@ -31,7 +31,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
 var kCanvasName = "canvas"; // match: index.html
@@ -105,10 +105,11 @@ var gLevelHighScores = LoadLocal(LocalStorageKeys.highScores, {});
 var kFPS = 35;
 var kTimeStep = 1000 / kFPS;
 var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
-var gStartTime = 0;
+var gLevelTime = 0;
+var gLastFrameTime = gLevelTime;
 var gGameTime = 0;
-var gLastFrameTime = gStartTime;
 var gFrameCount = 0;
+var gLevelPuckCount = 0;
 var kMoveStep = 1; // i don't really know what the units are here at all.
 var kAIPeriod = 5;
 var gMidLineDashCount;
@@ -191,9 +192,9 @@ var PillSpawnCooldownFn = function PillSpawnCooldownFn() {
   return ForGameMode(function () {
     return 1000 * 5;
   }, function () {
-    return 1000 * 8;
-  }, function () {
     return 1000 * 10;
+  }, function () {
+    return 1000 * 20;
   })();
 };
 var kSpawnPlayerPillFactor = 0.003;
@@ -439,7 +440,7 @@ var gR = new Random(0x1BADB002);
 // ----------------------------------------
 
 function GameTime01(period) {
-  var start = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : gStartTime;
+  var start = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : gLevelTime;
   var diff = gGameTime - start;
   period = Math.max(1, period);
   var t = T01nl(diff, period);
@@ -766,7 +767,6 @@ function Lifecycle(handlerMap) {
           StepToasts();
         }
         UpdateLocalStorage();
-        nextZenSpec();
         remainder = kTimeStep - (fdt - kTimeStep);
       }
     }
@@ -1086,7 +1086,8 @@ function GameState(props) {
     ResetGlobalStorage();
     ResetInput();
     gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
-    gStartTime = gGameTime;
+    gLevelTime = gGameTime;
+    gLevelPuckCount = 0;
     gP1Score = 0;
     gP2Score = 0;
     self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelIndex];
@@ -1376,6 +1377,7 @@ function GameState(props) {
       y: self.isAttract ? gh(gR.RandomRange(0.4, 0.6)) : gh(0.3),
       vx: sign * self.maxVX * 0.2,
       vy: self.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
+      modeColor: rgba255s(cyanSpec.regular, 1),
       ur: true
     });
     gPucks.A.push(p);

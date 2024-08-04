@@ -39,23 +39,52 @@ const backgroundColorStr = "black";
 // match: backgroundColorStr, index.html
 const scanlineColorStr = "rgba(0, 0, 0, 0.15)";
 
-let zenSpec = cyanSpec;
-function nextZenSpec() {
-    // todo: this should really be done in hsv/hsl/hsb.
-    const regular = [
-        ii((zenSpec.regular[0]+1) % 255),
-        ii((zenSpec.regular[1]+3) % 255),
-        ii((zenSpec.regular[2]+5) % 255),
-    ];
-    // todo: argh this is not really the stronger
-    // version of regular at all,
-    // it is just more towards white. :-(
-    const strong = [
-        ii((regular[0] + 64) % 255),
-        ii((regular[1] + 64) % 255),
-        ii((regular[2] + 64) % 255),
-    ];
-    zenSpec = { regular, strong };
+const zenHSV = [180, 255, 255];
+const zenRGB = [0, 0, 0];
+const zenSpec = { regular: zenRGB, strong: zenRGB };
+hsv2rgb(zenHSV, zenRGB);
+
+function NextZenHSV() {
+    zenHSV[0] = (zenHSV[0] + 1) % 255;
+    hsv2rgb(zenHSV, zenRGB);
+}
+
+function hsv2rgb(hsv, rgb) {
+    var h = hsv[0];
+    var s = hsv[1];
+    var v = hsv[2];
+
+    if (s === 0) {
+        rgb[0] = v;
+        rgb[1] = v;
+        rgb[2] = v;
+        return;
+    }
+
+    var h05 = Math.floor(h / 43);
+    var hr = (h - h05*43) * 6;
+    var p = Math.floor((v * (255-s)) >> 8);
+    var q = Math.floor((v * (255-((s*hr) >> 8))) >> 8);
+    var t = Math.floor((v * (255-((s*(255-hr)) >> 8))) >> 8);
+
+    if (h05 === 0) {
+        rgb[0] = v; rgb[1] = t; rgb[2] = p;
+    }
+    else if (h05 === 1) {
+        rgb[0] = q; rgb[1] = v; rgb[2] = p;
+    }
+    else if (h05 === 2) {
+        rgb[0] = p; rgb[1] = v; rgb[2] = t;
+    }
+    else if (h05 === 3) {
+        rgb[0] = p; rgb[1] = q; rgb[2] = v;
+    }
+    else if (h05 === 4) {
+        rgb[0] = t; rgb[1] = p; rgb[2] = v;
+    }
+    else {
+        rgb[0] = v; rgb[1] = p; rgb[2] = q;
+    }
 }
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
@@ -92,7 +121,7 @@ function RandomForColor(spec, alpha) {
         return rgba255s(spec.strong, alpha);
     }
     else {
-        // NTSC.
+        // "NTSC" ha ha.
         return rgba255s(
             spec.regular.map(ch => gR.RandomCentered(ch, 16)),
             alpha
@@ -100,12 +129,7 @@ function RandomForColor(spec, alpha) {
     }
 }
 
-// evil globals herein.
-// everything starts off all green to harken back to pongy games,
-// even if they weren't actually all on green screens, hah, 
-// then gradually flickers into the given color. 
-function RandomForColorFadeIn(color, alpha) {
-    if (alpha == undefined) { alpha = 1; }
+function FadeIn(alpha) {
     if (gMonochrome) {
         // i.e. attract mode.
         return rgba255s(greenSpec.strong, alpha);
@@ -114,19 +138,28 @@ function RandomForColorFadeIn(color, alpha) {
         // gradully go from green to color at game start.
         return rgba255s(greenSpec.strong, alpha);
     }
+    return undefined;
+}
+
+// evil globals herein.
+// everything starts off all green to harken back to pongy games,
+// even if they weren't actually all on green screens, hah, 
+// then gradually flickers into the given color. 
+function RandomForColorFadeIn(spec, alpha=1) {
+    var faded = FadeIn(alpha);
+    if (exists(faded)) {
+        return faded;
+    }
     else {
-        // even more fading in, to go along with MakeGameStartAnimation.
+        // even more with the fading in, see MakeGameStartAnimation.
         alpha = Math.min(
             alpha,
             Clip01(GameTime01(kAlphaFadeInMsec))
         );
-        return RandomForColor(color, alpha);
+        return RandomForColor(spec, alpha);
     }
 }
 
-function RandomZenSolid() {
-    return RandomForColorFadeIn(zenSpec, 1);
-}
 function RandomZen(alpha) {
     return RandomForColorFadeIn(zenSpec, alpha);
 }
