@@ -50,6 +50,8 @@ var gLevelIndex = 1; // 1-based. code smell: -1 is attract, -2 is zen.
 var kAttractLevelIndex = -1;
 var kZenLevelIndex = -2;
 
+// todo: the game mode stuff is a big ball of mud within
+// the larger death star of mud that is all of this code.
 // enum, mutually exclusive.
 var kGameModeRegular = "regular";
 var kGameModeHard = "hard";
@@ -65,6 +67,7 @@ function setGameMode(mode) {
   } else if (gGameMode === kGameModeZen) {
     gLevelIndex = kZenLevelIndex;
   }
+  console.log("setGameMode", mode, gLevelIndex);
 }
 
 // ----------------------------------------
@@ -1064,7 +1067,7 @@ function GameState(props) {
     gStartTime = gGameTime;
     gP1Score = 0;
     gP2Score = 0;
-    self.levelHighScore = gLevelHighScores[gLevelIndex];
+    self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelIndex];
     self.pauseButtonEnabled = false;
     self.paused = false;
     self.animations = {};
@@ -1085,6 +1088,8 @@ function GameState(props) {
       x: gWidth - gXInset - gPaddleWidth,
       y: gh(0.5)
     };
+
+    // show paddle labels for zen or level 1.
     var p1label = self.isAttract || gLevelIndex > 1 ? undefined : "P1";
     var p2label = self.isAttract || gLevelIndex > 1 ? undefined : gSinglePlayer ? "GPT" : "P2";
     ForSide(gP1Side, function () {
@@ -1291,9 +1296,8 @@ function GameState(props) {
   self.StepNextState = function () {
     if (self.isAttract) {
       if (gPucks.A.length === 0) {
-        gPucks.A.push(
         // attract never ends until dismissed.
-        self.CreateStartingPuck());
+        self.CreateStartingPuck();
       }
       return undefined;
     } else {
@@ -1465,6 +1469,7 @@ function GameState(props) {
     var pmaxvx = -Number.MAX_SAFE_INTEGER;
     gPucks.B.clear();
     gPucks.A.forEach(function (p, i) {
+      Assert(exists(p));
       p.Step(dt, self.maxVX, kMaxVY);
       Assert(!isNaN(p.x), p);
       Assert(!isNaN(p.y), p);
@@ -1475,20 +1480,16 @@ function GameState(props) {
         // xtras, barriers, neos do not split pucks,
         // only the main player & cpu paddles.
         var splits = p.AllPaddlesCollision([self.paddleP1, self.paddleP2], self.level.IsSuddenDeath(), self.maxVX);
-        if (self.level.isSpawning) {
-          var _splits$length;
-          Assert(((_splits$length = splits == null ? void 0 : splits.length) != null ? _splits$length : 0) <= 1, splits == null ? void 0 : splits.length);
-          self.level.OnPuckSplit(splits.length);
-          // note: splits are pushed before parent, match: Draw()'s revEach() z order.
-          if (!self.isAttract) {
-            for (var _i = 0; (_ref3 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref3 : 0; ++_i) {
-              var _ref3;
-              var s = gPuckPool.Alloc();
-              // enforcing hard limit on puck allocations.
-              if (exists(s)) {
-                s.PlacementInit(splits[_i]);
-                gPucks.B.push(s);
-              }
+        self.level.OnPuckSplits(splits);
+
+        // note: splits are pushed before parent, match: Draw()'s revEach() z order.
+        if (!self.isAttract) {
+          for (var _i = 0; (_ref3 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref3 : 0; ++_i) {
+            var _ref3;
+            var s = gPuckPool.Alloc();
+            if (exists(s)) {
+              s.PlacementInit(splits[_i]);
+              gPucks.B.push(s);
             }
           }
         }

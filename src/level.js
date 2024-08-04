@@ -11,7 +11,7 @@ const kEnglishStep = 0.004;
     var self = this;
 
     self.Init = function() {
-        self.isAttract = props.isAttract;
+        self.isAttract = aub(props.isAttract, false);
         self.startTime = gGameTime;
 
         // could be kAttractLevelIndex.
@@ -28,9 +28,8 @@ const kEnglishStep = 0.004;
         self.englishFactorPlayer = 1;
         self.englishFactorCPU = 1;
 
-        self.initPuckCount = props.splitsCount;
         self.splitsCount = props.splitsCount;
-        self.isSpawning = exists(self.splitsCount);
+        self.isSpawning = props.isSpawning;
 
         // todo: maybe GameState shouldn't own the paddles.
         self.paddleP1 = props.paddleP1;
@@ -54,17 +53,19 @@ const kEnglishStep = 0.004;
         self.p2Pill = undefined;
     };
 
-    self.OnPuckSplit = function(count) {
-        if (self.isSpawning && count > 0) {
-            Assert(exists(self.splitsCount));
-            self.splitsCount = Math.max(0, self.splitsCount - count);
-            self.isSpawning = self.splitsCount > 0;
+    self.OnPuckSplits = function(splits) {
+        if (self.isSpawning) {
+            Assert((splits?.length ?? 0) <= 1, splits?.length);
+            if (splits.length > 0 && exists(self.splitsCount)) {
+                self.splitsCount = Math.max(0, self.splitsCount - count);
+                self.isSpawning = self.splitsCount > 0;
+            }
         }
     };
 
     self.Step = function( dt ) {
         if (!self.isSpawning && exists(self.speedupFactor)) {
-            // allow pucks to go faster, up to a hard limit.
+            // allow future spawned pucks to go faster, up to a hard limit.
             self.maxVX = MinSigned(
                 self.maxVX + self.speedupFactor * dt / kTimeStep,
                 kMaxVX
@@ -88,9 +89,7 @@ const kEnglishStep = 0.004;
     };
 
     self.IsLastOfThePucks = function() {
-        return exists(self.initPuckCount) &&
-            exists(self.splitsCount) &&
-            self.splitsCount <= 201;
+        return exists(self.splitsCount) && self.splitsCount <= 200;
     };
 
     self.IsSuddenDeath = function() {

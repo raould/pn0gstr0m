@@ -37,6 +37,8 @@ var gLevelIndex = 1; // 1-based. code smell: -1 is attract, -2 is zen.
 const kAttractLevelIndex = -1;
 const kZenLevelIndex = -2;
 
+// todo: the game mode stuff is a big ball of mud within
+// the larger death star of mud that is all of this code.
 // enum, mutually exclusive.
 var kGameModeRegular = "regular";
 var kGameModeHard = "hard";
@@ -57,6 +59,7 @@ function setGameMode(mode) {
     else if (gGameMode === kGameModeZen) {
         gLevelIndex = kZenLevelIndex;
     }
+    console.log("setGameMode", mode, gLevelIndex);
 }
 
 // ----------------------------------------
@@ -1074,7 +1077,7 @@ function UpdateLocalStorage() {
 
         gP1Score = 0;
         gP2Score = 0;
-        self.levelHighScore = gLevelHighScores[gLevelIndex];
+        self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelIndex];
 
         self.pauseButtonEnabled = false;
         self.paused = false;
@@ -1091,8 +1094,11 @@ function UpdateLocalStorage() {
         // warning: this setup is easily confusing wrt left vs. right.
         var lp = { x: gXInset, y: gh(0.5) };
         var rp = { x: gWidth-gXInset-gPaddleWidth, y: gh(0.5) };
+
+        // show paddle labels for zen or level 1.
         var p1label = (self.isAttract || gLevelIndex > 1) ? undefined : "P1";
         var p2label = (self.isAttract || gLevelIndex > 1) ? undefined : (gSinglePlayer ? "GPT" : "P2");
+
         ForSide(gP1Side, 
                 () => {
                     // p1 is always a human player.
@@ -1318,10 +1324,8 @@ function UpdateLocalStorage() {
     self.StepNextState = function() {
         if (self.isAttract) {
             if (gPucks.A.length === 0) {
-                gPucks.A.push(
-                    // attract never ends until dismissed.
-                    self.CreateStartingPuck()
-                );
+                // attract never ends until dismissed.
+                self.CreateStartingPuck()
             }
             return undefined;
         }
@@ -1496,7 +1500,8 @@ function UpdateLocalStorage() {
         let pmaxvx = -Number.MAX_SAFE_INTEGER;
         gPucks.B.clear();
         gPucks.A.forEach((p, i) => {
-            p.Step( dt, self.maxVX, kMaxVY );
+            Assert(exists(p));
+            p.Step(dt, self.maxVX, kMaxVY);
             Assert(!isNaN(p.x), p);
             Assert(!isNaN(p.y), p);
             if (!self.isAttract && !p.alive) {
@@ -1510,22 +1515,19 @@ function UpdateLocalStorage() {
                     self.level.IsSuddenDeath(),
                     self.maxVX
                 );
-                if (self.level.isSpawning) {
-                    Assert((splits?.length ?? 0) <= 1, splits?.length);
-                    self.level.OnPuckSplit(splits.length);
-                    // note: splits are pushed before parent, match: Draw()'s revEach() z order.
-                    if( !self.isAttract ) {
-                        for (let i = 0; i < splits?.length ?? 0; ++i) {
-                            var s = gPuckPool.Alloc();
-                            // enforcing hard limit on puck allocations.
-                            if (exists(s)) {
-                                s.PlacementInit(splits[i]);
-                                gPucks.B.push(s);
-                            }
+                self.level.OnPuckSplits(splits);
+                
+                // note: splits are pushed before parent, match: Draw()'s revEach() z order.
+                if( !self.isAttract ) {
+                    for (let i = 0; i < splits?.length ?? 0; ++i) {
+                        var s = gPuckPool.Alloc();
+                        if (exists(s)) {
+                            s.PlacementInit(splits[i]);
+                            gPucks.B.push(s);
                         }
                     }
                 }
-                p.WallsCollision( self.maxVX );
+                p.WallsCollision(self.maxVX);
                 p.BarriersCollision(self.paddleP1.barriers.A);
                 p.BarriersCollision(self.paddleP2.barriers.A);
                 p.XtrasCollision(self.paddleP1.xtras.A);

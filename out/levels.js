@@ -17,8 +17,8 @@ function MakeAttract(paddleP1, paddleP2) {
   return new Level({
     index: kAttractLevelIndex,
     isAttract: true,
+    isSpawning: false,
     maxVX: sxi(14),
-    splitsCount: undefined,
     isP1Player: false,
     isP2Player: false,
     pills: [],
@@ -27,14 +27,13 @@ function MakeAttract(paddleP1, paddleP2) {
   });
 }
 function MakeZen(paddleP1, paddleP2) {
-  var splitsCount = MakeSplitsCount(kZenLevelIndex);
   var pills = ChoosePillIDs(kZenLevelIndex).map(function (pid) {
     return gPillInfo[pid].maker;
   });
   return new Level({
     index: kZenLevelIndex,
+    isSpawning: true,
     maxVX: sxi(18),
-    splitsCount: splitsCount,
     isP1Player: true,
     isP2Player: !gSinglePlayer,
     pills: pills,
@@ -53,7 +52,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
   });
   var level = new Level({
     index: index,
-    isAttract: false,
+    isSpawning: true,
     // maxVX is allowed to grow after there are no more splits.
     maxVX: sxi(12 + index),
     speedupFactor: 0.0001,
