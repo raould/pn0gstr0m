@@ -7,8 +7,8 @@
 // though i do partially blame the utterly asinine canvas string based api.
 // there really needs to be a cleanup of all this, like how spec.dark works.
 
-var black = [0x0, 0x0, 0x0];
-var white = [0xFF, 0xFF, 0xFF];
+const black = [0x0, 0x0, 0x0];
+const white = [0xFF, 0xFF, 0xFF];
 
 function MakeDark(spec) {
     return {
@@ -17,30 +17,49 @@ function MakeDark(spec) {
     };
 }
 
-var greySpec = { regular: [0xA0, 0xA0, 0xA0], strong: [0xA0, 0xA0, 0xA0] };
-var greyDarkSpec = MakeDark(greySpec);
-var greenSpec = { regular: [0x10, 0xE0, 0x00], strong: [0x00, 0xFF, 0x00] };
-var greenDarkSpec = MakeDark(greenSpec);
-var blueSpec = { regular: [0x05, 0x71, 0xB0], strong: [0x00, 0x00, 0xFF] };
-var blueDarkSpec = MakeDark(blueSpec);
-var redSpec = { regular: [0xB5, 0x19, 0x19], strong: [0xFF, 0x00, 0x00] };
-var redDarkSpec = MakeDark(redSpec);
-var cyanSpec = { regular: [0x57, 0xC4, 0xAD], strong: [0x00, 0xFF, 0xFF] };
-var cyanDarkSpec = MakeDark(cyanSpec);
-var yellowSpec = { regular: [0xED, 0xA2, 0x47], strong: [0xFF, 0xFF, 0x00] };
-var yellowDarkSpec = MakeDark(yellowSpec);
-var magentaSpec = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF] };
-var magentaDarkSpec = MakeDark(magentaSpec);
+const greySpec = { regular: [0xA0, 0xA0, 0xA0], strong: [0xA0, 0xA0, 0xA0] };
+const greyDarkSpec = MakeDark(greySpec);
+const greenSpec = { regular: [0x10, 0xE0, 0x00], strong: [0x00, 0xFF, 0x00] };
+const greenDarkSpec = MakeDark(greenSpec);
+const blueSpec = { regular: [0x05, 0x71, 0xB0], strong: [0x00, 0x00, 0xFF] };
+const blueDarkSpec = MakeDark(blueSpec);
+const redSpec = { regular: [0xB5, 0x19, 0x19], strong: [0xFF, 0x00, 0x00] };
+const redDarkSpec = MakeDark(redSpec);
+const cyanSpec = { regular: [0x57, 0xC4, 0xAD], strong: [0x00, 0xFF, 0xFF] };
+const cyanDarkSpec = MakeDark(cyanSpec);
+const yellowSpec = { regular: [0xED, 0xA2, 0x47], strong: [0xFF, 0xFF, 0x00] };
+const yellowDarkSpec = MakeDark(yellowSpec);
+const magentaSpec = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF] };
+const magentaDarkSpec = MakeDark(magentaSpec);
 
-var warningColorStr = "white";
-var crtOutlineColorStr = "rgb(16, 64, 16)";
+const warningColorStr = "white";
+const crtOutlineColorStr = "rgb(16, 64, 16)";
 // match: index.html.
-var backgroundColorStr = "black";
+const backgroundColorStr = "black";
 // match: backgroundColorStr, index.html
-var scanlineColorStr = "rgba(0, 0, 0, 0.15)";
+const scanlineColorStr = "rgba(0, 0, 0, 0.15)";
+
+let zenSpec = cyanSpec;
+function nextZenSpec() {
+    // todo: this should really be done in hsv/hsl/hsb.
+    const regular = [
+        ii((zenSpec.regular[0]+1) % 255),
+        ii((zenSpec.regular[1]+3) % 255),
+        ii((zenSpec.regular[2]+5) % 255),
+    ];
+    // todo: argh this is not really the stronger
+    // version of regular at all,
+    // it is just more towards white. :-(
+    const strong = [
+        ii((regular[0] + 64) % 255),
+        ii((regular[1] + 64) % 255),
+        ii((regular[2] + 64) % 255),
+    ];
+    zenSpec = { regular, strong };
+}
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
-var _tc = Array(4);
+const _tc = Array(4);
 function rgba255s(array, alpha) {
     // detect any old style code that called this function.
     Assert(Array.isArray(array), "expected array as first parameter");
@@ -51,8 +70,8 @@ function rgba255s(array, alpha) {
     if (array.length == 4) {
         _tc[3] = array[3];
     }
-    var joined = _tc.map((ch,i) => ((i < 3) ? Clip255(ch) : ch)).join(",");
-    var str = ((array.length == 4 || exists(alpha)) ? "rgba(" : "rgb(") + joined + ")";
+    const joined = _tc.map((ch,i) => ((i < 3) ? Clip255(ch) : ch)).join(",");
+    const str = ((array.length == 4 || exists(alpha)) ? "rgba(" : "rgb(") + joined + ")";
     return  str;
 }
 
@@ -103,6 +122,13 @@ function RandomForColorFadeIn(color, alpha) {
         );
         return RandomForColor(color, alpha);
     }
+}
+
+function RandomZenSolid() {
+    return RandomForColorFadeIn(zenSpec, 1);
+}
+function RandomZen(alpha) {
+    return RandomForColorFadeIn(zenSpec, alpha);
 }
 
 function RandomGreySolid() {

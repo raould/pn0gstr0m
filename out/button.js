@@ -50,7 +50,9 @@ function Button(props) {
       height: self.height
     };
     self.title = props.title;
-    self.align = aub(props.align, "center"); // but does not affect checkboxes! :-\
+    // warning: note: todo: anything other than "left" alignment is probably buggy.
+    // note: checkboxes override self.align.
+    self.align = aub(props.align, "left");
     self.color = props.color;
     self.font_size = props.font_size;
     self.click_fn = aub(props.click_fn,

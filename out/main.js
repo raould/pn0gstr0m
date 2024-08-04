@@ -59,13 +59,13 @@ var kAttractLevelIndex = -1;
 var kZenLevelIndex = -2;
 // levels are 1-based. 
 var gLevelIndex = gGameMode === kGameModeZen ? kZenLevelIndex : 1;
-function ForGameMode(rfn, hfn, zfn) {
+function ForGameMode(regular, hard, zen) {
   if (gGameMode === kGameModeRegular) {
-    rfn();
+    return regular;
   } else if (gGameMode === kGameModeHard) {
-    hfn();
+    return hard;
   } else if (gGameMode === kGameModeZen) {
-    zfn();
+    return zen;
   }
 }
 function SetGameMode(mode) {
@@ -77,7 +77,7 @@ function SetGameMode(mode) {
     return gLevelIndex = 1;
   }, function () {
     return gLevelIndex = kZenLevelIndex;
-  });
+  })();
   console.log("SetGameMode", mode, gLevelIndex);
 }
 
@@ -194,7 +194,7 @@ var PillSpawnCooldownFn = function PillSpawnCooldownFn() {
     return 1000 * 8;
   }, function () {
     return 1000 * 10;
-  });
+  })();
 };
 var kSpawnPlayerPillFactor = 0.003;
 
@@ -766,6 +766,7 @@ function Lifecycle(handlerMap) {
           StepToasts();
         }
         UpdateLocalStorage();
+        nextZenSpec();
         remainder = kTimeStep - (fdt - kTimeStep);
       }
     }

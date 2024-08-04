@@ -53,6 +53,7 @@ function MakeMuteButton({constants:k}) {
         x: k.bl, y: k.by0 + k.bs*2,
         width: k.bw, height: k.bh,
         title: "SFX",
+        align: "left",
         margin: k.margin,
         font_size: k.font_size,
         is_checkbox: true,

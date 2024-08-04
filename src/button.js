@@ -43,7 +43,9 @@
         self.margin = aub(props.margin, {x:0, y:0});
         self.rect = { x: self.x, y: self.y, width: self.width, height: self.height };
         self.title = props.title;
-        self.align = aub(props.align, "center"); // but does not affect checkboxes! :-\
+        // warning: note: todo: anything other than "left" alignment is probably buggy.
+        // note: checkboxes override self.align.
+        self.align = aub(props.align, "left");
         self.color = props.color;
         self.font_size = props.font_size;
         self.click_fn = aub(

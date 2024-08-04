@@ -60,6 +60,19 @@ var crtOutlineColorStr = "rgb(16, 64, 16)";
 var backgroundColorStr = "black";
 // match: backgroundColorStr, index.html
 var scanlineColorStr = "rgba(0, 0, 0, 0.15)";
+var zenSpec = cyanSpec;
+function nextZenSpec() {
+  // todo: this should really be done in hsv/hsl/hsb.
+  var regular = [ii((zenSpec.regular[0] + 1) % 255), ii((zenSpec.regular[1] + 3) % 255), ii((zenSpec.regular[2] + 5) % 255)];
+  // todo: argh this is not really the stronger
+  // version of regular at all,
+  // it is just more towards white. :-(
+  var strong = [ii((regular[0] + 64) % 255), ii((regular[1] + 64) % 255), ii((regular[2] + 64) % 255)];
+  zenSpec = {
+    regular: regular,
+    strong: strong
+  };
+}
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 var _tc = Array(4);
@@ -115,6 +128,12 @@ function RandomForColorFadeIn(color, alpha) {
     alpha = Math.min(alpha, Clip01(GameTime01(kAlphaFadeInMsec)));
     return RandomForColor(color, alpha);
   }
+}
+function RandomZenSolid() {
+  return RandomForColorFadeIn(zenSpec, 1);
+}
+function RandomZen(alpha) {
+  return RandomForColorFadeIn(zenSpec, alpha);
 }
 function RandomGreySolid() {
   return RandomForColorFadeIn(greySpec, 1);

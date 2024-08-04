@@ -26,7 +26,8 @@ function Puck() {
         self.vy = AvoidZero(props.vy, 0.1);
         self.alive = true;
         self.startTime = !!props.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
-        self.splitColor = aub(props.forced, false) ? "yellow" : "white";
+        self.modeColor = ForGameMode(RandomCyan, RandomCyan, RandomZen)();
+        self.splitColor = aub(props.forced, false) ? "yellow" : "white";        
         self.isLocked = false;
     };
 
@@ -64,10 +65,10 @@ function Puck() {
 
         // young pucks (from paddle splits or powerups) render another color briefly.
         var dt = GameTime01(1000, self.startTime);
-        var regularStyle = (gR.RandomFloat() > dt) ? self.splitColor : RandomCyan();
+        var inplayStyle = (gR.RandomFloat() > dt) ? self.splitColor : self.modeColor;
         var lostStyle = RandomYellow(0.7);
         var isLost = (self.x+self.width < gXInset || self.x > gw(1)-gXInset);
-        var style = isLost ? lostStyle : regularStyle;
+        var style = isLost ? lostStyle : inplayStyle;
 
         Cxdo(() => {
             // a thin outline keeps things crisp when there are lots of pucks.
