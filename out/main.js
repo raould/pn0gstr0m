@@ -46,9 +46,6 @@ var k2PWinBy = 3;
 function is2PGameOver() {
   return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy;
 }
-var gLevelIndex = 1; // 1-based. code smell: -1 is attract, -2 is zen. 
-var kAttractLevelIndex = -1;
-var kZenLevelIndex = -2;
 
 // todo: the game mode stuff is a big ball of mud within
 // the larger death star of mud that is all of this code.
@@ -57,6 +54,11 @@ var kGameModeRegular = "regular";
 var kGameModeHard = "hard";
 var kGameModeZen = "zen";
 var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
+// code smell: sentinel values, -1 is attract, -2 is zen. 
+var kAttractLevelIndex = -1;
+var kZenLevelIndex = -2;
+// levels are 1-based. 
+var gLevelIndex = gGameMode === kGameModeZen ? kZenLevelIndex : 1;
 function setGameMode(mode) {
   Assert(mode === kGameModeRegular || mode === kGameModeHard || mode === kGameModeZen, mode);
   gGameMode = mode;

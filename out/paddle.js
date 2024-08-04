@@ -377,7 +377,8 @@ function Paddle(props) {
     // for regular mode. but even in easy mode, ai slowly
     // gets better to make things more interesting.
     var levelScale = (levelIndex - 1) * 0.02;
-    var scale = (gGameMode === kGameModeHard ? 1.1 : 0.4) + levelScale;
+    // both zen and hard modes get faster ai paddle movement.
+    var scale = (gGameMode === kGameModeRegular ? 0.4 : 1.1) + levelScale;
     scale = Clip(scale, 0.1, 1.2);
     if (gDebug) {
       gDebugDrawList.push(function () {
