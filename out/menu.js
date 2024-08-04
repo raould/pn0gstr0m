@@ -38,12 +38,16 @@ function MenuConstants() {
   // note: even with these calculations,
   // there is still a lot of hard-coding
   // in the various Make*Buttons() below.
-  var by0 = gh(0.05);
+
+  // hard coded assumption: there are 3 groups of buttons.
+  var by0 = gh(0.4);
   var bw = gw(0.2);
   var bh = gSmallFontSize * 1.7;
-  var bl = gw(0.5) - bw / 2;
   var bs = bh * 1.3;
   var ss = bh / 2;
+  var bx0 = gw(0.5) - bw * 1.2 - bw / 2;
+  var bx1 = gw(0.5) - bw / 2;
+  var bx2 = gw(0.5) + bw * 1.2 - bw / 2;
   var margin = {
     x: bw * 0.2,
     y: bh * 0.2
@@ -53,9 +57,11 @@ function MenuConstants() {
     by0: by0,
     bw: bw,
     bh: bh,
-    bl: bl,
     bs: bs,
     ss: ss,
+    bx0: bx0,
+    bx1: bx1,
+    bx2: bx2,
     margin: margin,
     font_size: font_size
   };
@@ -109,7 +115,7 @@ function MakePlayerButtons(_ref2) {
     playerRadios = _ref2.playerRadios;
   return {
     bp1: new Button({
-      x: k.bl,
+      x: k.bx0,
       y: k.by0,
       width: k.bw,
       height: k.bh,
@@ -128,7 +134,7 @@ function MakePlayerButtons(_ref2) {
       }
     }),
     bp2: new Button({
-      x: k.bl,
+      x: k.bx0,
       y: k.by0 + k.bs,
       width: k.bw,
       height: k.bh,
@@ -153,8 +159,8 @@ function MakeModeButtons(_ref3) {
     modeRadios = _ref3.modeRadios;
   return {
     bHard: new Button({
-      x: k.bl,
-      y: k.by0 + k.bs * 2 + k.ss,
+      x: k.bx1,
+      y: k.by0,
       width: k.bw,
       height: k.bh,
       title: "HARD MODE",
@@ -172,8 +178,8 @@ function MakeModeButtons(_ref3) {
       }
     }),
     bZen: new Button({
-      x: k.bl,
-      y: k.by0 + k.bs * 3 + k.ss,
+      x: k.bx1,
+      y: k.by0 + k.bs,
       width: k.bw,
       height: k.bh,
       title: "ZEN MODE",
@@ -196,8 +202,8 @@ function MakeMuteButtons(_ref4) {
   var k = _ref4.constants;
   return {
     bSfx: new Button({
-      x: k.bl,
-      y: k.by0 + k.bs * 4 + k.ss * 2,
+      x: k.bx2,
+      y: k.by0,
       width: k.bw,
       height: k.bh,
       title: "SFX",
@@ -212,8 +218,8 @@ function MakeMuteButtons(_ref4) {
       }
     }),
     bMusic: new Button({
-      x: k.bl,
-      y: k.by0 + k.bs * 5 + k.ss * 2,
+      x: k.bx2,
+      y: k.by0 + k.bs,
       width: k.bw,
       height: k.bh,
       title: "MUSIC",

@@ -1573,10 +1573,11 @@ function GameState(props) {
     Cxdo(function () {
       var style = RandomMagenta(self.Alpha(isEndScreenshot ? 1 : 0.4));
       var p2 = gSinglePlayer ? "GPT: " : "P2: ";
+      var hiMsg = gGameMode === kGameModeZen ? "HI: " : "LVL HI: ";
       ForSide(self.isAttract ? "right" : gP1Side, function () {
         gCx.fillStyle = style;
         if (exists(self.levelHighScore)) {
-          DrawText("LVL HI: " + self.levelHighScore, "left", gw(0.2), gh(0.12), gSmallerFontSizePt);
+          DrawText(hiMsg + self.levelHighScore, "left", gw(0.2), gh(0.12), gSmallerFontSizePt);
         }
         if (!self.isAttract) {
           DrawText(p2 + gP2Score, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
@@ -1585,7 +1586,7 @@ function GameState(props) {
       }, function () {
         gCx.fillStyle = style;
         if (exists(self.levelHighScore)) {
-          DrawText("LVL HI: " + self.levelHighScore, "right", gw(0.8), gh(0.12), gSmallerFontSizePt);
+          DrawText(hiMsg + self.levelHighScore, "right", gw(0.8), gh(0.12), gSmallerFontSizePt);
         }
         if (!self.isAttract) {
           DrawText(p2 + gP2Score, "left", gw(0.2), gh(0.22), gRegularFontSizePt);
