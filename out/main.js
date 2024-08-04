@@ -187,13 +187,15 @@ var kBarriersArrayInitialSize = 4;
 var kXtrasArrayInitialSize = 6;
 
 // prevent pills from showing up too often, or too early - but not too late.
-var PillSpawnCooldownFn = ForGameMode(function () {
-  return 1000 * 5;
-}, function () {
-  return 1000 * 8;
-}, function () {
-  return 1000 * 10;
-});
+var PillSpawnCooldownFn = function PillSpawnCooldownFn() {
+  return ForGameMode(function () {
+    return 1000 * 5;
+  }, function () {
+    return 1000 * 8;
+  }, function () {
+    return 1000 * 10;
+  });
+};
 var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
@@ -862,10 +864,12 @@ function TitleState() {
     self.theMenu = self.MakeMenu();
   };
   self.MakeMenu = function () {
-    return new MenuBehavior(_objectSpread({
+    return new Menu(_objectSpread({
       isHidden: false,
       OnClose: function OnClose() {
         ResetP1Side();
+        // forget any extra in-menu state
+        // like which button is default selected.
         self.theMenu = self.MakeMenu();
       }
     }, MakeMainMenuButtons()));
@@ -1191,10 +1195,13 @@ function GameState(props) {
     }
   };
   self.MakeMenu = function () {
-    return new MenuBehavior(_objectSpread({
+    return new Menu(_objectSpread({
       isHidden: true,
       OnClose: function OnClose() {
         self.paused = false;
+        // forget any extra in-menu state
+        // like which button is default seleted.
+        self.theMenu = self.MakeMenu();
       }
     }, MakeGameMenuButtons({
       OnQuit: function OnQuit() {

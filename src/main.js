@@ -178,7 +178,7 @@ var kBarriersArrayInitialSize = 4;
 var kXtrasArrayInitialSize = 6;
 
 // prevent pills from showing up too often, or too early - but not too late.
-var PillSpawnCooldownFn = ForGameMode(
+var PillSpawnCooldownFn = () => ForGameMode(
     () => 1000 * 5,
     () => 1000 * 8,
     () => 1000 * 10,
@@ -839,10 +839,12 @@ function UpdateLocalStorage() {
     };
 
     self.MakeMenu = function() {
-        return new MenuBehavior({
+        return new Menu({
             isHidden: false,
             OnClose: () => {
                 ResetP1Side();
+                // forget any extra in-menu state
+                // like which button is default selected.
                 self.theMenu = self.MakeMenu();
             },
             ...MakeMainMenuButtons(),
@@ -1193,10 +1195,13 @@ function UpdateLocalStorage() {
     };
 
     self.MakeMenu = function() {
-        return new MenuBehavior({
+        return new Menu({
             isHidden: true,
             OnClose: () => {
                 self.paused = false;
+                // forget any extra in-menu state
+                // like which button is default seleted.
+                self.theMenu = self.MakeMenu();
             },
             ...MakeGameMenuButtons({
                 OnQuit: () => {
