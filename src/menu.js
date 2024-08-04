@@ -77,10 +77,11 @@ function MakeMenuButton({ OnClose }) {
         self.isHidden = isHidden;
         self.bMenu = MakeMenuButton({ OnClose });
         self.navigation = navigation;
+
         self.focusId = focusId;
-        Assert(exists(self.focusId), "must have an initial focus, for keyboard nagivation")
         var fb = self.navigation[self.focusId]?.button;
-        if (exists(fb)) { fb.has_focus = true; }
+        Assert(exists(fb), "must have an initial focus, for keyboard nagivation");
+        fb.has_focus = true;
     };
 
     self.isOpen = function() {

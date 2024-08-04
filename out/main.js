@@ -920,7 +920,7 @@ function TitleState() {
       return undefined;
     }
     if (isAnyMenuPressed(cmds)) {
-      self.theMenu.bmenu.Click();
+      self.theMenu.bMenu.Click();
       clearAnyMenuPressed(); // todo: code smell.
       return undefined;
     }
@@ -1230,7 +1230,7 @@ function GameState(props) {
       var _self$theMenu;
       if (!((_self$theMenu = self.theMenu) != null && _self$theMenu.isOpen())) {
         var _self$theMenu2;
-        (_self$theMenu2 = self.theMenu) == null || _self$theMenu2.bmenu.Click(); // sure hope this stays in sync.
+        (_self$theMenu2 = self.theMenu) == null || _self$theMenu2.bMenu.Click(); // sure hope this stays in sync.
         clearAnyMenuPressed(); // todo: code smell.
       }
     }
@@ -1461,7 +1461,7 @@ function GameState(props) {
       var _self$theMenu5;
       // match: Pause().
       self.paused = !self.paused;
-      (_self$theMenu5 = self.theMenu) == null || _self$theMenu5.bmenu.Click(); // sure hope this stays in sync.
+      (_self$theMenu5 = self.theMenu) == null || _self$theMenu5.bMenu.Click(); // sure hope this stays in sync.
       clearAnyMenuPressed(); // todo: code smell.
     }
   };

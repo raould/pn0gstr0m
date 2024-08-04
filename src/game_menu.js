@@ -14,6 +14,7 @@ function GameMenuConstants() {
     var bs = bh * 1.3;
     var ss = bh/2;
 
+    // all buttons are vertically aligned.
     var bl = gw(0.5) - bw/2;
 
     var margin = { x: bw*0.2, y: bh*0.2 };
@@ -55,6 +56,7 @@ function MakeMuteButton({constants:k}) {
         margin: k.margin,
         font_size: k.font_size,
         is_checkbox: true,
+        is_checked: gSfxMuted,
         step_fn: (bself) => {
             bself.is_checked = !gSfxMuted;
         },

@@ -94,11 +94,9 @@ function Menu(_ref2) {
     });
     self.navigation = navigation;
     self.focusId = focusId;
-    Assert(exists(self.focusId), "must have an initial focus, for keyboard nagivation");
     var fb = (_self$navigation$self = self.navigation[self.focusId]) == null ? void 0 : _self$navigation$self.button;
-    if (exists(fb)) {
-      fb.has_focus = true;
-    }
+    Assert(exists(fb), "must have an initial focus, for keyboard nagivation");
+    fb.has_focus = true;
   };
   self.isOpen = function () {
     return self.bMenu.isOpen;

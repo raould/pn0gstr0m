@@ -903,7 +903,7 @@ function UpdateLocalStorage() {
             return undefined;
         }
         if (isAnyMenuPressed(cmds)) {
-            self.theMenu.bmenu.Click();
+            self.theMenu.bMenu.Click();
             clearAnyMenuPressed(); // todo: code smell.
             return undefined;
         }
@@ -1233,7 +1233,7 @@ function UpdateLocalStorage() {
         self.paused = true;
         if (exists(self.theMenu)) {
             if (!self.theMenu?.isOpen()) {
-                self.theMenu?.bmenu.Click(); // sure hope this stays in sync.
+                self.theMenu?.bMenu.Click(); // sure hope this stays in sync.
                 clearAnyMenuPressed(); // todo: code smell.
             }
         }
@@ -1482,7 +1482,7 @@ function UpdateLocalStorage() {
         if (isAnyMenuPressed(cmds) || cmds.pause || pbp) {
             // match: Pause().
             self.paused = !self.paused;
-            self.theMenu?.bmenu.Click(); // sure hope this stays in sync.
+            self.theMenu?.bMenu.Click(); // sure hope this stays in sync.
             clearAnyMenuPressed(); // todo: code smell.
         }
     };
