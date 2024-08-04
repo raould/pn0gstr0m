@@ -173,7 +173,7 @@ function MakeModeButtons(_ref3) {
         bself.wants_focus = bself.is_checked && !was_checked;
       },
       click_fn: function click_fn(bself) {
-        setGameMode(gGameMode === kGameModeHard ? kGameModeRegular : kGameModeHard);
+        SetGameMode(gGameMode === kGameModeHard ? kGameModeRegular : kGameModeHard);
         modeRadios.OnSelect(bself);
       }
     }),
@@ -192,7 +192,7 @@ function MakeModeButtons(_ref3) {
         bself.wants_focus = bself.is_checked && !was_checked;
       },
       click_fn: function click_fn(bself) {
-        setGameMode(gGameMode === kGameModeZen ? kGameModeRegular : kGameModeZen);
+        SetGameMode(gGameMode === kGameModeZen ? kGameModeRegular : kGameModeZen);
         modeRadios.OnSelect(bself);
       }
     })

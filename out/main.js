@@ -59,17 +59,26 @@ var kAttractLevelIndex = -1;
 var kZenLevelIndex = -2;
 // levels are 1-based. 
 var gLevelIndex = gGameMode === kGameModeZen ? kZenLevelIndex : 1;
-function setGameMode(mode) {
+function ForGameMode(rfn, hfn, zfn) {
+  if (gGameMode === kGameModeRegular) {
+    rfn();
+  } else if (gGameMode === kGameModeHard) {
+    hfn();
+  } else if (gGameMode === kGameModeZen) {
+    zfn();
+  }
+}
+function SetGameMode(mode) {
   Assert(mode === kGameModeRegular || mode === kGameModeHard || mode === kGameModeZen, mode);
   gGameMode = mode;
-  if (gGameMode === kGameModeRegular) {
-    gLevelIndex = 1;
-  } else if (gGameMode === kGameModeHard) {
-    gLevelIndex = 1;
-  } else if (gGameMode === kGameModeZen) {
-    gLevelIndex = kZenLevelIndex;
-  }
-  console.log("setGameMode", mode, gLevelIndex);
+  ForGameMode(function () {
+    return gLevelIndex = 1;
+  }, function () {
+    return gLevelIndex = 1;
+  }, function () {
+    return gLevelIndex = kZenLevelIndex;
+  });
+  console.log("SetGameMode", mode, gLevelIndex);
 }
 
 // ----------------------------------------
@@ -177,8 +186,14 @@ var kSparkPoolSize = 500;
 var kBarriersArrayInitialSize = 4;
 var kXtrasArrayInitialSize = 6;
 
-// prevent pills from showing up too often, or too early... but not too late.
-var kPillSpawnCooldown = 1000 * 5;
+// prevent pills from showing up too often, or too early - but not too late.
+var PillSpawnCooldownFn = ForGameMode(function () {
+  return 1000 * 5;
+}, function () {
+  return 1000 * 8;
+}, function () {
+  return 1000 * 10;
+});
 var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
@@ -1163,8 +1178,8 @@ function GameState(props) {
     // this countdown is a block on both player & cpu ill spawning.
     // first wait is longer before the very first pill.
     // also see the 'must' check later on.
-    self.pillP1SpawnCountdown = kPillSpawnCooldown;
-    self.pillP2SpawnCountdown = kPillSpawnCooldown;
+    self.pillP1SpawnCountdown = PillSpawnCooldownFn();
+    self.pillP2SpawnCountdown = PillSpawnCooldownFn();
     // make sure the cpu doesn't get one first, that looks too mean/unfair,
     // however, allow a 2nd player to get one first!
     // also, neither side gets too many pills before the other.
@@ -1249,9 +1264,9 @@ function GameState(props) {
     self.pillP2SpawnCountdown -= dt;
     var kDiffMax = 2;
     if (isU(self.level.p1Pill) && self.pillP1SpawnCountdown <= 0 && self.unfairPillCount < kDiffMax) {
-      self.level.p1Pill = self.MaybeSpawnPill(self.pillP1SpawnCooldown < kPillSpawnCooldown * 2, dt, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups);
+      self.level.p1Pill = self.MaybeSpawnPill(self.pillP1SpawnCooldown < PillSpawnCooldownFn() * 2, dt, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups);
       if (exists(self.level.p1Pill)) {
-        self.pillP1SpawnCountdown = kPillSpawnCooldown;
+        self.pillP1SpawnCountdown = PillSpawnCooldownFn();
         self.unfairPillCount++;
         self.isCpuPillAllowed = true;
         AddSparks({
@@ -1268,9 +1283,9 @@ function GameState(props) {
     if (isU(self.level.p2Pill) && self.pillP2SpawnCountdown <= 0 && self.isCpuPillAllowed && self.unfairPillCount > -kDiffMax) {
       // bias powerup creation toward the single player.
       var factor = kSpawnPlayerPillFactor * (gSinglePlayer ? 0.7 : 1);
-      self.level.p2Pill = self.MaybeSpawnPill(self.pillP2SpawnCooldown < kPillSpawnCooldown * 2, dt, self.level.p2Pill, factor, self.level.p2Powerups);
+      self.level.p2Pill = self.MaybeSpawnPill(self.pillP2SpawnCooldown < PillSpawnCooldownFn() * 2, dt, self.level.p2Pill, factor, self.level.p2Powerups);
       if (exists(self.level.p2Pill)) {
-        self.pillP2SpawnCountdown = kPillSpawnCooldown;
+        self.pillP2SpawnCountdown = PillSpawnCooldownFn();
         self.unfairPillCount--;
         AddSparks({
           x: self.level.p2Pill.x,

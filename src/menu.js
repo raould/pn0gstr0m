@@ -158,7 +158,7 @@ function MakeModeButtons({constants:k, modeRadios}) {
                 bself.wants_focus = bself.is_checked && !was_checked;
             },
             click_fn: (bself) => {
-                setGameMode(gGameMode === kGameModeHard ? kGameModeRegular : kGameModeHard);
+                SetGameMode(gGameMode === kGameModeHard ? kGameModeRegular : kGameModeHard);
                 modeRadios.OnSelect(bself);
             }
         }),
@@ -176,7 +176,7 @@ function MakeModeButtons({constants:k, modeRadios}) {
                 bself.wants_focus = bself.is_checked && !was_checked;
             },
             click_fn: (bself) => {
-                setGameMode(gGameMode === kGameModeZen ? kGameModeRegular : kGameModeZen);
+                SetGameMode(gGameMode === kGameModeZen ? kGameModeRegular : kGameModeZen);
                 modeRadios.OnSelect(bself);
             }
         }),
