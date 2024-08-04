@@ -43,7 +43,7 @@ function MakeMenuButton(_ref) {
   // also, purposefully has a different look
   // than the buttons in the menu.
   var w = sx(110);
-  var bmenu = new Button({
+  var bMenu = new Button({
     x: gw(0.5) - w / 2,
     y: gh(0.80),
     width: w,
@@ -75,8 +75,8 @@ function MakeMenuButton(_ref) {
       }
     }
   });
-  bmenu.isOpen = false; // see above.
-  return bmenu;
+  bMenu.isOpen = false; // see above.
+  return bMenu;
 }
 
 /*class*/
@@ -89,21 +89,22 @@ function Menu(_ref2) {
   self.Init = function () {
     var _self$navigation$self;
     self.isHidden = isHidden;
-    self.bmenu = MakeMenuButton({
+    self.bMenu = MakeMenuButton({
       OnClose: OnClose
     });
     self.navigation = navigation;
     self.focusId = focusId;
+    Assert(exists(self.focusId), "must have an initial focus, for keyboard nagivation");
     var fb = (_self$navigation$self = self.navigation[self.focusId]) == null ? void 0 : _self$navigation$self.button;
     if (exists(fb)) {
       fb.has_focus = true;
     }
   };
   self.isOpen = function () {
-    return self.bmenu.isOpen;
+    return self.bMenu.isOpen;
   };
   self.Step = function () {
-    if (self.bmenu.isOpen) {
+    if (self.bMenu.isOpen) {
       var wants_focusId = undefined;
       Object.entries(self.navigation).forEach(function (e) {
         var bid = e[0];
@@ -116,8 +117,8 @@ function Menu(_ref2) {
         }
       });
     }
-    if (self.bmenu.isOpen || !self.isHidden) {
-      self.bmenu.Step();
+    if (self.bMenu.isOpen || !self.isHidden) {
+      self.bMenu.Step();
     }
     if (exists(wants_focusId) && wants_focusId != self.focusId) {
       self.Focus(wants_focusId);
@@ -142,11 +143,11 @@ function Menu(_ref2) {
   };
   self.ProcessOneInput = function (cmds) {
     var n, a, p1, p2;
-    if (self.bmenu.isOpen) {
+    if (self.bMenu.isOpen) {
       n = self.ProcessNavigation();
       a = self.ProcessAccept(cmds);
     }
-    if (self.bmenu.isOpen || !self.isHidden) {
+    if (self.bMenu.isOpen || !self.isHidden) {
       p1 = self.ProcessTarget(gP1Target);
       p2 = self.ProcessTarget(gP2Target);
     }
@@ -176,7 +177,7 @@ function Menu(_ref2) {
     }
   };
   self.ProcessAccept = function (cmds) {
-    if (isAnyActivatePressed(cmds) && self.bmenu.isOpen) {
+    if (isAnyActivatePressed(cmds) && self.bMenu.isOpen) {
       var bspec = self.navigation[self.focusId];
       if (exists(bspec)) {
         bspec.button.Click();
@@ -190,12 +191,12 @@ function Menu(_ref2) {
     var hit = false;
     if (target.isDown()) {
       // menu.
-      if (self.bmenu.isOpen) {
+      if (self.bMenu.isOpen) {
         var found = Object.entries(self.navigation).find(function (e) {
           return e[1].button.ProcessTarget(target);
         });
         if (exists(found)) {
-          if (found != self.bmenu) {
+          if (found != self.bMenu) {
             self.Focus(found[0]);
           }
           found[1].button.Click();
@@ -204,16 +205,16 @@ function Menu(_ref2) {
 
         // touching outside the menu closes it.
         if (!hit) {
-          self.bmenu.Click();
+          self.bMenu.Click();
           target.ClearPointer();
           hit = true;
         }
       }
       // esc.
-      if (!hit && (self.bmenu.isOpen || !self.isHidden)) {
-        hit = self.bmenu.ProcessTarget(target);
+      if (!hit && (self.bMenu.isOpen || !self.isHidden)) {
+        hit = self.bMenu.ProcessTarget(target);
         if (hit) {
-          self.bmenu.Click();
+          self.bMenu.Click();
         }
       }
     }
@@ -221,7 +222,7 @@ function Menu(_ref2) {
   };
   self.Draw = function () {
     // menu.
-    if (self.bmenu.isOpen) {
+    if (self.bMenu.isOpen) {
       Cxdo(function () {
         if (gDebug) {
           // fade buttons so i can watch stepping the game.
@@ -238,8 +239,8 @@ function Menu(_ref2) {
       });
     }
     // esc.
-    if (self.bmenu.isOpen || !self.isHidden) {
-      self.bmenu.Draw();
+    if (self.bMenu.isOpen || !self.isHidden) {
+      self.bMenu.Draw();
     }
   };
   self.Init();
