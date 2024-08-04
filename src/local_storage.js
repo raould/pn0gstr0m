@@ -6,11 +6,10 @@
 const LocalStorageKeys = {
     highScores: 'pn0g_level_highs', // per level.
     singlePlayer: 'pn0g_single_player',
-    hardMode: 'pn0g_hard_mode',
+    gameMode: 'pn0g_game_mode',
     sfxMuted: 'pn0g_sfx_muted',
     musicMuted: 'pn0g_music_muted',
     unplayed: 'pn0g_unplayed',
-    zenMode: 'pn0g_zen',
 };
 
 const gLocalStorageCache = {};

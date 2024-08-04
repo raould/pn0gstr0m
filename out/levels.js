@@ -13,8 +13,6 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 
 // yes this is really hard to playtest.
 
-var kAttractLevelIndex = -1;
-var kZenLevelIndex = -2;
 function MakeAttract(paddleP1, paddleP2) {
   return new Level({
     index: kAttractLevelIndex,
@@ -28,12 +26,29 @@ function MakeAttract(paddleP1, paddleP2) {
     paddleP2: paddleP2
   });
 }
+function MakeZen(paddleP1, paddleP2) {
+  var splitsCount = MakeSplitsCount(kZenLevelIndex);
+  var pills = ChoosePillIDs(kZenLevelIndex).map(function (pid) {
+    return gPillInfo[pid].maker;
+  });
+  return new Level({
+    index: kZenLevelIndex,
+    maxVX: sxi(18),
+    splitsCount: splitsCount,
+    isP1Player: true,
+    isP2Player: !gSinglePlayer,
+    pills: pills,
+    paddleP1: paddleP1,
+    paddleP2: paddleP2
+  });
+}
 
 // level is one-based.
 // zen mode means only one level!
 function MakeLevel(index, paddleP1, paddleP2) {
   Assert(index !== 0, "index is 1-based");
-  var pillMakers = ChoosePillIDs(index).map(function (pid) {
+  var splitsCount = MakeSplitsCount(index);
+  var pills = ChoosePillIDs(index).map(function (pid) {
     return gPillInfo[pid].maker;
   });
   var level = new Level({
@@ -42,10 +57,10 @@ function MakeLevel(index, paddleP1, paddleP2) {
     // maxVX is allowed to grow after there are no more splits.
     maxVX: sxi(12 + index),
     speedupFactor: 0.0001,
-    splitsCount: MakeSplitsCount(index),
+    splitsCount: splitsCount,
     isP1Player: true,
     isP2Player: !gSinglePlayer,
-    pills: pillMakers,
+    pills: pills,
     paddleP1: paddleP1,
     paddleP2: paddleP2
   });

@@ -33,11 +33,15 @@
   */
 
 function MenuConstants() {
+    // note: even with these calculations,
+    // there is still a lot of hard-coding
+    // in the various Make*Buttons() below.
     var by0 = gh(0.05);
     var bw = gw(0.2);
     var bh = gSmallFontSize*1.7;
     var bl = gw(0.5)-bw/2;
     var bs = bh * 1.3;
+    var ss = bh/2;
     var margin = { x: bw*0.2, y: bh*0.2 };
     var font_size = gSmallFontSizePt;
     return {
@@ -46,6 +50,7 @@ function MenuConstants() {
         bh,
         bl,
         bs,
+        ss,
         margin,
         font_size
     };
@@ -60,7 +65,7 @@ function MakeMenuButton({ OnClose }) {
     // than the buttons in the menu.
     var w = sx(110);
     var bmenu = new Button({
-        x: gw(0.5)-(w/2), y: gh(0.85),
+        x: gw(0.5)-(w/2), y: gh(0.80),
         width: w, height: gReducedFontSize*1.4,
         radii: 0,
         margin: {x: sx1(10), y: sy1(10)},
@@ -69,11 +74,14 @@ function MakeMenuButton({ OnClose }) {
         color: rgba255s(greyDarkSpec.regular),
         font_size: gReducedFontSizePt,
         step_fn: (bself) => {
+            let gameMode = " ";
+            if (gGameMode === kGameModeHard) { gameMode = "*"; }
+            if (gGameMode === kGameModeZen) { gameMode = "Z"; }
             bself.has_focus = false;
             bself.title = (gSinglePlayer ? "1p  " : "2pp ") +
                 (gSfxMuted ? "  " : "m ") +
                 (gMusicMuted ? " " : "o") +
-                (gHardMode ? "*" : " ");
+                gameMode;
         },
         click_fn: (bself) => {
             bself.isOpen = !bself.isOpen; // see below.
@@ -129,7 +137,7 @@ function MakePlayerButtons({constants:k, playerRadios}) {
 function MakeModeButtons({constants:k, modeRadios}) {
     return {
         bHard: new Button({
-            x: k.bl, y: k.by0 + k.bs * 2.5,
+            x: k.bl, y: k.by0 + k.bs*2 + k.ss,
             width: k.bw, height: k.bh,
             title: "HARD MODE",
             margin: k.margin,
@@ -137,19 +145,17 @@ function MakeModeButtons({constants:k, modeRadios}) {
             is_checkbox: true,
             step_fn: (bself) => {
                 var was_checked = bself.is_checked;
-                bself.is_checked = gHardMode;
+                bself.is_checked = gGameMode === kGameModeHard;
                 bself.wants_focus = bself.is_checked && !was_checked;
             },
             click_fn: (bself) => {
-                gHardMode = !gHardMode;
-                gZenMode = gHardMode ? false : gZenMode;
-                gLevelIndex = 1;
+                setGameMode(gGameMode === kGameModeHard ? kGameModeRegular : kGameModeHard);
                 modeRadios.OnSelect(bself);
             }
         }),
 
         bZen: new Button({
-            x: k.bl, y: k.by0 + k.bs * 3.5,
+            x: k.bl, y: k.by0 + k.bs*3 + k.ss,
             width: k.bw, height: k.bh,
             title: "ZEN MODE",
             margin: k.margin,
@@ -157,13 +163,11 @@ function MakeModeButtons({constants:k, modeRadios}) {
             is_checkbox: true,
             step_fn: (bself) => {
                 var was_checked = bself.is_checked;
-                bself.is_checked = gZenMode;
+                bself.is_checked = gGameMode === kGameModeZen;
                 bself.wants_focus = bself.is_checked && !was_checked;
             },
             click_fn: (bself) => {
-                gZenMode = !gZenMode;
-                gHardMode = gZenMode ? false : gHardMode;
-                gLevelIndex = kZenLevelIndex;
+                setGameMode(gGameMode === kGameModeZen ? kGameModeRegular : kGameModeZen);
                 modeRadios.OnSelect(bself);
             }
         }),
@@ -173,7 +177,7 @@ function MakeModeButtons({constants:k, modeRadios}) {
 function MakeMuteButtons({constants:k}) {
     return {
         bSfx: new Button({
-            x: k.bl, y: k.by0 + k.bs * 5,
+            x: k.bl, y: k.by0 + k.bs*4 + k.ss*2,
             width: k.bw, height: k.bh,
             title: "SFX",
             margin: k.margin,
@@ -187,7 +191,7 @@ function MakeMuteButtons({constants:k}) {
             }
         }),
         bMusic: new Button({
-            x: k.bl, y: k.by0 + k.bs * 6,
+            x: k.bl, y: k.by0 + k.bs*5 + k.ss*2,
             width: k.bw, height: k.bh,
             title: "MUSIC",
             margin: k.margin,
@@ -256,7 +260,7 @@ function MakeMainMenuButtons() {
 
 function MakeQuitButton({ constants:k, OnQuit }) {
     return new Button({
-        x: k.bl, y: k.by0 + k.bs * 2,
+        x: k.bl, y: k.by0 + k.bs*2,
         width: k.bw, height: k.bh,
         margin: k.margin,
         // leading spaces for alignment with checkboxes.

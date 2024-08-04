@@ -33,10 +33,31 @@ var gP2Wins = 0;
 var k2PWinBy = 3;
 function is2PGameOver() { return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy; }
 
-var gLevelIndex = 1; // 1-based. -1 is attract, -2 is zen. code smell!
-var gZenMode = LoadLocal(LocalStorageKeys.zenMode, false);
-if (gZenMode) { gLevelIndex = kZenLevelIndex; }
-var gHardMode = LoadLocal(LocalStorageKeys.hardMode, false);
+var gLevelIndex = 1; // 1-based. code smell: -1 is attract, -2 is zen. 
+const kAttractLevelIndex = -1;
+const kZenLevelIndex = -2;
+
+// enum, mutually exclusive.
+var kGameModeRegular = "regular";
+var kGameModeHard = "hard";
+var kGameModeZen = "zen";
+var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
+function setGameMode(mode) {
+    Assert(mode === kGameModeRegular ||
+           mode === kGameModeHard ||
+           mode === kGameModeZen,
+           mode);
+    gGameMode = mode;
+    if (gGameMode === kGameModeRegular) {
+        gLevelIndex = 1;
+    }
+    else if (gGameMode === kGameModeHard) {
+        gLevelIndex = 1;
+    }
+    else if (gGameMode === kGameModeZen) {
+        gLevelIndex = kZenLevelIndex;
+    }
+}
 
 // ----------------------------------------
 
@@ -617,10 +638,9 @@ function UpdateLocalStorage() {
     // (2) this doesn't include the unplayed music, see sound.js
 
     SaveLocal(LocalStorageKeys.singlePlayer, gSinglePlayer);
-    SaveLocal(LocalStorageKeys.hardMode, gHardMode);
+    SaveLocal(LocalStorageKeys.gameMode, gGameMode);
     SaveLocal(LocalStorageKeys.sfxMuted, gSfxMuted);
     SaveLocal(LocalStorageKeys.musicMuted, gMusicMuted);
-    SaveLocal(LocalStorageKeys.zenMode, gZenMode);
 }
 
 // ----------------------------------------
@@ -976,7 +996,7 @@ function UpdateLocalStorage() {
             DrawText(ForSide(gP1Side,"P2","P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
 
             gCx.fillStyle = RandomGreen();
-            if (!gZenMode) {
+            if (gGameMode !== kGameModeZen) {
                 DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.3), gSmallFontSizePt);
             }
             DrawText(`GET READY! ${t}`, "center", gw(0.5), gh(0.5), gBigFontSizePt);
@@ -993,7 +1013,7 @@ function UpdateLocalStorage() {
         // 2 pills in order for the first N levels;
         // 4 random pills thereafter.
         // all pills in zen mode so/but don't bother showing them here.
-        if (gZenMode) {
+        if (gGameMode === kGameModeZen) {
             return;
         }
         if (self.pillIDs.length > 0) {
@@ -1174,8 +1194,8 @@ function UpdateLocalStorage() {
         if (self.isAttract) {
             self.level = MakeAttract(self.paddleP1, self.paddleP2);
         }
-        else if (gZenMode) {
-            self.level = MakeLevel(kZenLevelIndex, self.paddleP1, self.paddleP2);
+        else if (gGameMode === kGameModeZen) {
+            self.level = MakeZen(self.paddleP1, self.paddleP2);
         }
         else {
             self.level = MakeLevel(gLevelIndex, self.paddleP1, self.paddleP2);
