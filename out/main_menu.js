@@ -218,7 +218,7 @@ function MakeMainMenuButtons() {
       },
       bHard: {
         button: bHard,
-        up: "up2",
+        up: "bp2",
         down: "bZen"
       },
       bZen: {
