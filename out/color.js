@@ -71,11 +71,11 @@ function BuildZenStyleTable() {
   var h0 = 180;
   var hsv = [h0, 100, 100];
   var rgba = Array(4).fill(1);
-  for (var o = 0; o < 360; o -= 0.5) {
-    hsv[0] = Wrap(h0 + 0, 360);
+  var s = 3;
+  for (var o = 0; o < 360 * s; o++) {
+    hsv[0] = Wrap(h0 - o / s, 360);
     hsv2rgb(hsv, rgba);
     gZenStyleStrTable.push(rgba255s(rgba));
-    console.log(hsv, rgba, gZenStyleStrTable.slice(-1));
   }
 }
 function hsv2rgb(hsv, rgb_out) {

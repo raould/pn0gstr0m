@@ -50,11 +50,11 @@ function BuildZenStyleTable() {
     const h0 = 180;
     const hsv = [h0, 100, 100];
     const rgba = Array(4).fill(1);
-    for (let o = 0; o < 360; o -= 0.5) {
-	hsv[0] = Wrap((h0 + 0), 360);
+    const s = 3;
+    for (let o = 0; o < 360*s; o++) {
+	hsv[0] = Wrap((h0 - o/s), 360);
 	hsv2rgb(hsv, rgba);
 	gZenStyleStrTable.push(rgba255s(rgba));
-	console.log(hsv, rgba, gZenStyleStrTable.slice(-1));
     }
 }
 
