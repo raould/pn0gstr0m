@@ -68,10 +68,11 @@ function GetNextZenStyleStr() {
 var gZenStyleStrTable = [];
 function BuildZenStyleTable() {
   // match: all games start with cyan pucks.
-  var hsv = [180, 100, 100];
+  var h0 = 180;
+  var hsv = [h0, 100, 100];
   var rgba = Array(4).fill(1);
-  for (var o = 0; o < 360; o += 1) {
-    hsv[0] = (hsv[0] + 1) % 360;
+  for (var o = 0; o < 360; o -= 0.5) {
+    hsv[0] = Wrap(h0 + 0, 360);
     hsv2rgb(hsv, rgba);
     gZenStyleStrTable.push(rgba255s(rgba));
     console.log(hsv, rgba, gZenStyleStrTable.slice(-1));

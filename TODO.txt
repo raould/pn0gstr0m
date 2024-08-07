@@ -1,4 +1,5 @@
 * this has quickly become an empirical big ball of mud. :-(
+* disable asserts in out/*.
 * quit should really ask ays?
 * maybe have rare 3x split into even smaller, faster pucks?
 * do i need clearFn() for gamepad buttons and joystick? or what else instead?

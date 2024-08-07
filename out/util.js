@@ -112,6 +112,19 @@ function Pow2(v) {
 function F(n) {
   return Math.floor(n * 100) / 100;
 }
+function Wrap(n, max) {
+  Assert(max >= 0);
+  if (max === 0) {
+    return 0;
+  }
+  if (n > max) {
+    return n % max;
+  }
+  if (n < 0) {
+    return max + n % max;
+  }
+  return n;
+}
 function Clip(n, min, max) {
   if (min > max) {
     var tmp = min;
