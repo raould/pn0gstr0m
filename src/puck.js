@@ -27,13 +27,9 @@ function Puck() {
         self.alive = true;
         self.ur = aub(props.ur, false);
         self.startTime = self.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
-        self.modeColor = rgba255s(props.modeColor);
-	Assert(exists(self.modeColor));
-        gLevelPuckCount++;
-        if (gLevelPuckCount % 10 === 0) {
-            NextZenHSV();
-        }
-        self.splitColor = aub(props.forced, false) ? "yellow" : "white";        
+        self.modeStyle = props.modeStyle;
+	Assert(exists(self.modeStyle) && typeof self.modeStyle === "string");
+        self.splitStyle = aub(props.forced, false) ? "yellow" : "white";        
         self.isLocked = false;
     };
 
@@ -72,7 +68,7 @@ function Puck() {
         // young pucks (from paddle splits or powerups) render another color briefly.
         var dt = GameTime01(1000, self.startTime);
         var fadeinStyle = FadeIn(1);
-        var inplayStyle = aub(fadeinStyle, (gR.RandomFloat() > dt) ? self.splitColor : self.modeColor);
+        var inplayStyle = aub(fadeinStyle, (gR.RandomFloat() > dt) ? self.splitStyle : self.modeStyle);
         var lostStyle = RandomYellow(0.7);
         var isLost = (self.x+self.width < gXInset || self.x > gw(1)-gXInset);
         var style = isLost ? lostStyle : inplayStyle;
@@ -173,12 +169,11 @@ function Puck() {
             let vy = self.vy;
             vy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
 
-	    let modeColor = self.modeColor;
+	    let modeStyle = self.modeStyle;
 	    if (gGameMode === kGameModeZen) {
-		NextZenHSV();
-		modeColor = zenRGBA;
+		modeStyle = GetNextZenStyleStr();
 	    }
-	    np = { x: self.x, y: self.y, vx: vx, vy: vy, modeColor, ur: false, forced, maxVX };
+	    np = { x: self.x, y: self.y, vx: vx, vy: vy, modeStyle, ur: false, forced, maxVX };
 
             // code smell: because SplitPuck is called during MovePucks,
             // we return the new puck to go onto the B list, whereas
@@ -192,7 +187,6 @@ function Puck() {
             self.vx * (isSuddenDeath ? 1.1 : 1),
             maxVX
         );
-        //console.log("SplitPuck: puck vx updated", F(self.vx), F(maxVX), "->", F(nvx));
         self.vx = nvx;
 
         return np;

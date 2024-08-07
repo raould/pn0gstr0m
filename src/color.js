@@ -39,15 +39,22 @@ const backgroundColorStr = "black";
 // match: backgroundColorStr, index.html
 const scanlineColorStr = "rgba(0, 0, 0, 0.15)";
 
-const zenHSV = [180, 100, 100];
-let zenRGBA = [0, 0, 0, 1]; // see: main.js
-const zenSpec = { regular: zenRGBA, strong: zenRGBA };
-
-function NextZenHSV() {
-    zenHSV[0] = (zenHSV[0] + 0.2) % 360;
-    // this is expected to not change the alpha element.
-    hsv2rgb(zenHSV, zenRGBA);
-    console.log(zenRGBA);
+var gZenStyleIndex = 0;
+function GetNextZenStyleStr() {
+    gZenStyleIndex = (gZenStyleIndex + 1) % gZenStyleStrTable.length;
+    return gZenStyleStrTable[gZenStyleIndex];
+}
+const gZenStyleStrTable = [];
+function BuildZenStyleTable() {
+    // match: all games start with cyan pucks.
+    const hsv = [180, 100, 100];
+    const rgba = Array(4).fill(1);
+    for (let o = 0; o < 360; o += 1) {
+	hsv[0] = (hsv[0] + 1) % 360;
+	hsv2rgb(hsv, rgba);
+	gZenStyleStrTable.push(rgba255s(rgba));
+	console.log(hsv, rgba, gZenStyleStrTable.slice(-1));
+    }
 }
 
 function hsv2rgb(hsv, rgb_out) {

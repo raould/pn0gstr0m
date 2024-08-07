@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = true;
+var gDebug = false;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
 
@@ -69,6 +69,7 @@ function SetGameMode(mode) {
     )();
     console.log("SetGameMode", mode, gLevelIndex);
 }
+BuildZenStyleTable();
 
 // ----------------------------------------
 
@@ -98,7 +99,6 @@ var gLevelTime = 0;
 var gLastFrameTime = gLevelTime;
 var gGameTime = 0;
 var gFrameCount = 0;
-var gLevelPuckCount = 0;
 var kMoveStep = 1; // i don't really know what the units are here at all.
 var kAIPeriod = 5;
 
@@ -1089,7 +1089,6 @@ function UpdateLocalStorage() {
 
         gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
         gLevelTime = gGameTime;
-        gLevelPuckCount = 0;
 
         gP1Score = 0;
         gP2Score = 0;
@@ -1399,10 +1398,7 @@ function UpdateLocalStorage() {
 
         var p = gPuckPool.Alloc();
 
-	// start with cyan pucks.
-	// zen mode goes rainbow thereafter.
-	zenRGBA = cyanSpec.regular; // see color.js
-	
+	// match: all games start with cyan pucks.
         p.PlacementInit({ x: gw(ForSide(gP1Side, 0.3, 0.7)),
                           y: (self.isAttract ?
                               gh(gR.RandomRange(0.4, 0.6)) :
@@ -1411,7 +1407,7 @@ function UpdateLocalStorage() {
                           vy: (self.isAttract ?
                                gR.RandomCentered(0, 2, 1) :
                                0.3),
-                          modeColor: zenRGBA,
+                          modeStyle: RandomForColor(cyanSpec, 1),
                           ur: true });
         gPucks.A.push(p);
     };
@@ -1422,7 +1418,7 @@ function UpdateLocalStorage() {
                           y: gh(gR.RandomRange(1/8, 7/8)),
                           vx: gR.RandomRange(self.maxVX*0.3, self.maxVX*0.5),
                           vy: gR.RandomCentered(1, 0.5),
-                          modeColor: zenRGBA,
+                          modeStyle: RandomForColor(cyanSpec, 1),
                           ur: true });
         gPucks.A.push(p);
     };
