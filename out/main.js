@@ -31,7 +31,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
 var kCanvasName = "canvas"; // match: index.html
@@ -1016,7 +1016,7 @@ function GetReadyState() {
       if (gGameMode !== kGameModeZen) {
         DrawText("LEVEL ".concat(gLevelIndex), "center", gw(0.5), gh(0.3), gSmallFontSizePt);
       }
-      DrawText("GET READY! ".concat(t), "center", gw(0.5), gh(0.5), gBigFontSizePt);
+      DrawText("GET READY! ".concat(t), "center", gw(0.5), gh(0.55), gBigFontSizePt);
       if (exists(zpt)) {
         gCx.fillStyle = RandomForColor(cyanSpec);
         DrawText("ZERO POINT ENERGY: ".concat(zpt), "center", gw(0.5), gh(0.9), gSmallFontSizePt);
@@ -1040,6 +1040,7 @@ function GetReadyState() {
         }
         var dx = gw() / (self.pillIDs.length + 1);
         var x0 = dx;
+        var scale = 0.7;
         for (var i = 0; i < self.pillIDs.length; ++i) {
           var pid = self.pillIDs[i];
           var _gPillInfo$pid = gPillInfo[pid],
@@ -1047,12 +1048,12 @@ function GetReadyState() {
             drawer = _gPillInfo$pid.drawer,
             wfn = _gPillInfo$pid.wfn,
             hfn = _gPillInfo$pid.hfn;
-          var width = wfn();
-          var height = hfn();
+          var width = wfn() * scale;
+          var height = hfn() * scale;
           var x = x0 + dx * i;
           var oy = Math.sin(x * 10 + gGameTime / 100) * (height / 2) * 0.1;
           drawer(gP1Side,
-          // just the least wrong choice.
+          // just the least wrong choice for side.
           {
             x: x - width / 2,
             y: ty - height / 2 - sy(40) - oy,

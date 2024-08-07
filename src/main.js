@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
 
@@ -1016,7 +1016,7 @@ function UpdateLocalStorage() {
             if (gGameMode !== kGameModeZen) {
                 DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.3), gSmallFontSizePt);
             }
-            DrawText(`GET READY! ${t}`, "center", gw(0.5), gh(0.5), gBigFontSizePt);
+            DrawText(`GET READY! ${t}`, "center", gw(0.5), gh(0.55), gBigFontSizePt);
 
             if (exists(zpt)) {
                 gCx.fillStyle = RandomForColor(cyanSpec);
@@ -1042,14 +1042,15 @@ function UpdateLocalStorage() {
                 }
                 var dx = gw() / (self.pillIDs.length+1);
                 var x0 = dx;
+		var scale = 0.7;
                 for (let i = 0; i < self.pillIDs.length; ++i) {
                     const pid = self.pillIDs[i];
                     const { name, drawer, wfn, hfn } = gPillInfo[pid];
-                    const width = wfn();
-                    const height = hfn();
+                    const width = wfn() * scale;
+                    const height = hfn() * scale;
                     const x = x0 + dx * i;
                     const oy = Math.sin((x*10) + (gGameTime/100)) * (height/2) * 0.1;
-                    drawer(gP1Side, // just the least wrong choice.
+                    drawer(gP1Side, // just the least wrong choice for side.
                            {
                                x: x - (width/2),
                                y: ty - (height/2) - sy(40) - oy,
