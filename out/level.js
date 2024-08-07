@@ -1,5 +1,11 @@
 "use strict";
 
+function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 /* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
@@ -7,16 +13,56 @@
 
 // see also: english in puck.js
 var kEnglishStep = 0.004;
+function MakeSplitsCount(gameMode, index) {
+  Assert(index !== 0, "index is 1-based");
+  // note: this is just a big bad random swag.
+  var count = 400 + index * 50;
+  // zen has one level, and it is without a zero-energy based ending.
+  return ForGameMode(count, count, undefined);
+}
+function ChoosePillIDs(index) {
+  var pids = [];
+  var i0 = index - 1;
+  // only levels 2+ have pills.
+  if (i0 > 0) {
+    // the first n levels get 2 pills in order.
+    if (i0 <= gPillIDs.length / 2) {
+      Assert(i0 > 0, "attract and level 1 should not have pills", index);
+      var i = (i0 - 1) * 2;
+      pids = gPillIDs.slice(i, i + 2);
+      console.log("ChoosePillIDsUncached by 2", index, pids, pids.map(function (i) {
+        var _gPillInfo$i;
+        return (_gPillInfo$i = gPillInfo[i]) == null ? void 0 : _gPillInfo$i.name;
+      }));
+      Assert(pids.length === 2);
+    }
+
+    // after those first n levels, 4 random pills per level.
+    // todo: make the 4 feel more random level to level,
+    // they seem to repeat too easily.
+    else {
+      var r = new Random(index);
+      var p = _toConsumableArray(gPillIDs);
+      pids = [p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0]];
+      console.log("ChoosePillIDsUncached random 4", index, pids, pids.map(function (i) {
+        var _gPillInfo$i2;
+        return (_gPillInfo$i2 = gPillInfo[i]) == null ? void 0 : _gPillInfo$i2.name;
+      }));
+      Assert(pids.length === 4);
+    }
+    Assert(pids.length > 0);
+  }
+  return pids;
+}
 
 /*class*/
 function Level(props) {
   var self = this;
   self.Init = function () {
-    self.isAttract = aub(props.isAttract, false);
     self.startTime = gGameTime;
-
-    // could be kAttractLevelIndex.
+    self.isAttract = aub(props.isAttract, false);
     self.index = props.index;
+    Assert(self.isAttract && self.index === kAttractLevelIndex || !self.isAttract && self.index >= 1);
 
     // note: some of these are allowed to be undefined,
     // ie for attract mode level. although it is sort of ugly
@@ -28,14 +74,88 @@ function Level(props) {
     self.speedupFactor = props.speedupFactor;
     self.englishFactorPlayer = 1;
     self.englishFactorCPU = 1;
-    self.splitsCount = props.splitsCount;
+    self.splitsCount = MakeSplitsCount(self.index); // TODO: argh, gGameMode!!!!!!!!!!!!!!!!!!!!!!!!
     self.isSpawning = props.isSpawning;
 
-    // todo: maybe GameState shouldn't own the paddles.
-    self.paddleP1 = props.paddleP1;
-    self.paddleP2 = props.paddleP2;
-    self.pills = props.pills;
-    self.p1Powerups = new Powerups({
+    // I think the ensuing code indicates the Paddle should perhaps
+    // at least be split up into human & ai variants. :-\ ...so confused.
+    // warning: this setup is easily confusing wrt left vs. right.
+    var lp = {
+      x: gXInset,
+      y: gh(0.5)
+    };
+    var rp = {
+      x: gWidth - gXInset - gPaddleWidth,
+      y: gh(0.5)
+    };
+
+    // show paddle labels for zen or level 1.
+    var p1label = self.isAttract || gLevelIndex > 1 ? undefined : "P1";
+    var p2label = self.isAttract || gLevelIndex > 1 ? undefined : gSinglePlayer ? "GPT" : "P2";
+    ForSide(gP1Side, function () {
+      // p1 is always a human player.
+      // p2 is either cpu or human.
+      self.paddleP1 = new Paddle({
+        isPlayer: !self.isAttract,
+        side: "left",
+        x: lp.x,
+        y: lp.y,
+        width: gPaddleWidth,
+        height: gPaddleHeight,
+        label: p1label,
+        isSplitter: !self.isAttract,
+        keyStates: gSinglePlayer ? [gP1Keys, gP2Keys] : [gP1Keys],
+        buttonState: gGamepad1Buttons,
+        stickState: gGamepad1Sticks,
+        target: gP1Target
+      });
+      self.paddleP2 = new Paddle({
+        isPlayer: !self.isAttract && !gSinglePlayer,
+        side: "right",
+        x: rp.x,
+        y: rp.y,
+        width: gPaddleWidth,
+        height: gPaddleHeight,
+        label: p2label,
+        isSplitter: !self.isAttract,
+        isPillSeeker: true,
+        keyStates: gSinglePlayer ? [gPNoneKeys] : [gP2Keys],
+        buttonState: gGamepad2Buttons,
+        stickState: gGamepad2Sticks,
+        target: gP2Target
+      });
+    }, function () {
+      self.paddleP1 = new Paddle({
+        isPlayer: !self.isAttract,
+        side: "right",
+        x: rp.x,
+        y: rp.y,
+        width: gPaddleWidth,
+        height: gPaddleHeight,
+        label: p1label,
+        isSplitter: !self.isAttract,
+        keyStates: gSinglePlayer ? [gP1Keys, gP2Keys] : [gP1Keys],
+        buttonState: gGamepad1Buttons,
+        stickState: gGamepad1Sticks,
+        target: gP1Target
+      });
+      self.paddleP2 = new Paddle({
+        isPlayer: !self.isAttract && !gSinglePlayer,
+        side: "left",
+        x: lp.x,
+        y: lp.y,
+        width: gPaddleWidth,
+        height: gPaddleHeight,
+        label: p2label,
+        isSplitter: !self.isAttract,
+        isPillSeeker: true,
+        keyStates: gSinglePlayer ? [gPNoneKeys] : [gP2Keys],
+        buttonState: gGamepad2Buttons,
+        stickState: gGamepad2Sticks,
+        target: gP2Target
+      });
+    })();
+    self.pills = ChoosePillIDs(self.index), self.p1Powerups = new Powerups({
       isPlayer: props.isP1Player,
       paddle: self.paddleP1,
       side: ForSide(gP1Side, "left", "right"),

@@ -971,7 +971,20 @@ function GetReadyState() {
     var seconds = gDebug ? 1 : self.pillIDs.length === 2 ? 5 : 3;
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
+    self.MakeLevel();
     PlayBlip();
+  };
+  self.MakeLevel = function () {
+    if (self.isAttract) {
+      self.level = MakeAttract();
+    } else if (gGameMode === kGameModeZen) {
+      self.level = MakeZen();
+    } else {
+      self.level = MakeLevel(gGameMode, gLevelIndex);
+    }
+    self.maxVX = self.level.maxVX;
+    Assert(!isBadNumber(self.maxVX) && self.maxVX > 0);
+    //logOnDelta("maxVX", self.maxVX, 1);
   };
   self.Step = function (dt) {
     self.timeout -= dt;
@@ -1057,111 +1070,26 @@ function GameState(props) {
   var self = this;
   self.Init = function () {
     // the order of everything here matters (everything is fragile).
-
-    // todo: i wish i knew a good way to pull this out, it
-    // is making the code in this class kind of a headache.
-    // also i don't like if(!self.isAttract) style due to "!"
-    // but nor would i like e.g. self.isNormal i feel.
-    self.isAttract = aub(props == null ? void 0 : props.isAttract, false);
-    gStateMuted = self.isAttract;
+    self.level = level;
+    gStateMuted = self.level.isAttract;
 
     // todo: code smell, this 'reset' business is kind of a big confused mess. :-(
     RecalculateConstants();
     ResetGlobalStorage();
     ResetInput();
-    gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
+    gMonochrome = self.level.isAttract; // todo: make gMonochrome local instead?
     gLevelTime = gGameTime;
     gP1Score = 0;
     gP2Score = 0;
-    self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelIndex];
+    self.levelHighScore = self.level.isAttract ? undefined : gLevelHighScores[gLevelIndex];
     self.pauseButtonEnabled = false;
     self.paused = false;
     self.animations = {};
     self.quit = false;
     self.stepping = false;
-    if (!self.isAttract) {
+    if (!self.level.isAttract) {
       self.theMenu = self.MakeMenu();
     }
-
-    // I think the ensuing code indicates the Paddle should perhaps
-    // at least be split up into human & ai variants. :-\ ...so confused.
-    // warning: this setup is easily confusing wrt left vs. right.
-    var lp = {
-      x: gXInset,
-      y: gh(0.5)
-    };
-    var rp = {
-      x: gWidth - gXInset - gPaddleWidth,
-      y: gh(0.5)
-    };
-
-    // show paddle labels for zen or level 1.
-    var p1label = self.isAttract || gLevelIndex > 1 ? undefined : "P1";
-    var p2label = self.isAttract || gLevelIndex > 1 ? undefined : gSinglePlayer ? "GPT" : "P2";
-    ForSide(gP1Side, function () {
-      // p1 is always a human player.
-      // p2 is either cpu or human.
-      self.paddleP1 = new Paddle({
-        isPlayer: !self.isAttract,
-        side: "left",
-        x: lp.x,
-        y: lp.y,
-        width: gPaddleWidth,
-        height: gPaddleHeight,
-        label: p1label,
-        isSplitter: !self.isAttract,
-        keyStates: gSinglePlayer ? [gP1Keys, gP2Keys] : [gP1Keys],
-        buttonState: gGamepad1Buttons,
-        stickState: gGamepad1Sticks,
-        target: gP1Target
-      });
-      self.paddleP2 = new Paddle({
-        isPlayer: !self.isAttract && !gSinglePlayer,
-        side: "right",
-        x: rp.x,
-        y: rp.y,
-        width: gPaddleWidth,
-        height: gPaddleHeight,
-        label: p2label,
-        isSplitter: !self.isAttract,
-        isPillSeeker: true,
-        keyStates: gSinglePlayer ? [gPNoneKeys] : [gP2Keys],
-        buttonState: gGamepad2Buttons,
-        stickState: gGamepad2Sticks,
-        target: gP2Target
-      });
-    }, function () {
-      self.paddleP1 = new Paddle({
-        isPlayer: !self.isAttract,
-        side: "right",
-        x: rp.x,
-        y: rp.y,
-        width: gPaddleWidth,
-        height: gPaddleHeight,
-        label: p1label,
-        isSplitter: !self.isAttract,
-        keyStates: gSinglePlayer ? [gP1Keys, gP2Keys] : [gP1Keys],
-        buttonState: gGamepad1Buttons,
-        stickState: gGamepad1Sticks,
-        target: gP1Target
-      });
-      self.paddleP2 = new Paddle({
-        isPlayer: !self.isAttract && !gSinglePlayer,
-        side: "left",
-        x: lp.x,
-        y: lp.y,
-        width: gPaddleWidth,
-        height: gPaddleHeight,
-        label: p2label,
-        isSplitter: !self.isAttract,
-        isPillSeeker: true,
-        keyStates: gSinglePlayer ? [gPNoneKeys] : [gP2Keys],
-        buttonState: gGamepad2Buttons,
-        stickState: gGamepad2Sticks,
-        target: gP2Target
-      });
-    })();
-    self.MakeLevel();
     self.CreateStartingPuck();
 
     // this countdown is a block on both player & cpu ill spawning.
@@ -1174,7 +1102,7 @@ function GameState(props) {
     // also, neither side gets too many pills before the other.
     self.isCpuPillAllowed = !gSinglePlayer;
     self.unfairPillCount = 0;
-    if (!self.isAttract) {
+    if (!self.level.isAttract) {
       self.AddAnimation(MakeGameStartAnimation());
       PlayStart();
     }
@@ -1193,20 +1121,6 @@ function GameState(props) {
         self.quit = true;
       }
     })));
-  };
-  self.MakeLevel = function () {
-    Assert(exists(self.paddleP1));
-    Assert(exists(self.paddleP2));
-    if (self.isAttract) {
-      self.level = MakeAttract(self.paddleP1, self.paddleP2);
-    } else if (gGameMode === kGameModeZen) {
-      self.level = MakeZen(self.paddleP1, self.paddleP2);
-    } else {
-      self.level = MakeLevel(gGameMode, gLevelIndex, self.paddleP1, self.paddleP2);
-    }
-    self.maxVX = self.level.maxVX;
-    Assert(!isBadNumber(self.maxVX) && self.maxVX > 0);
-    //logOnDelta("maxVX", self.maxVX, 1);
   };
   self.Pause = function () {
     // match: ProcessOneInput().
@@ -1294,7 +1208,7 @@ function GameState(props) {
   };
   self.MaybeSpawnPill = function (must, dt, prev, spawnFactor, maker) {
     var can_paused = !self.paused;
-    var can_attract = !self.isAttract;
+    var can_attract = !self.level.isAttract;
     var can_factor = gR.RandomBool(spawnFactor);
     var can_empty = isU(prev);
     if (must || can_paused && can_attract && can_factor && can_empty) {
@@ -1303,7 +1217,7 @@ function GameState(props) {
     return undefined;
   };
   self.StepNextState = function () {
-    if (self.isAttract) {
+    if (self.level.isAttract) {
       if (gPucks.A.length === 0) {
         // attract never ends until dismissed.
         self.CreateStartingPuck();
@@ -1319,7 +1233,7 @@ function GameState(props) {
   };
   self.CheckLevelOver = function () {
     var nextState;
-    if (!self.isAttract && gPucks.A.length == 0) {
+    if (!self.level.isAttract && gPucks.A.length == 0) {
       if (gSinglePlayer) {
         nextState = gP1Score < gP2Score ? kGameOver : kLevelFin;
       } else {
@@ -1358,9 +1272,9 @@ function GameState(props) {
     // match: all games start with cyan pucks.
     p.PlacementInit({
       x: gw(ForSide(gP1Side, 0.3, 0.7)),
-      y: self.isAttract ? gh(gR.RandomRange(0.4, 0.6)) : gh(0.3),
+      y: self.level.isAttract ? gh(gR.RandomRange(0.4, 0.6)) : gh(0.3),
       vx: sign * self.maxVX * 0.2,
-      vy: self.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
+      vy: self.level.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
       ur: true
     });
     gPucks.A.push(p);
@@ -1378,7 +1292,7 @@ function GameState(props) {
   };
   self.ProcessAllInput = function () {
     // todo: figure out right way to deal with not/clearing inputs.
-    if (!self.isAttract) {
+    if (!self.level.isAttract) {
       gEventQueue.forEach(function (event, i) {
         var cmds = {};
         event.updateFn(cmds);
@@ -1483,7 +1397,7 @@ function GameState(props) {
       p.Step(dt, self.maxVX, kMaxVY);
       Assert(!isNaN(p.x), p);
       Assert(!isNaN(p.y), p);
-      if (!self.isAttract && !p.alive) {
+      if (!self.level.isAttract && !p.alive) {
         self.UpdateScore(p);
       }
       if (p.alive) {
@@ -1493,7 +1407,7 @@ function GameState(props) {
         self.level.OnPuckSplits(splits);
 
         // note: splits are pushed before parent, match: Draw()'s revEach() z order.
-        if (!self.isAttract) {
+        if (!self.level.isAttract) {
           for (var _i = 0; (_ref3 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref3 : 0; ++_i) {
             var _ref3;
             var s = gPuckPool.Alloc();
@@ -1553,10 +1467,10 @@ function GameState(props) {
     if (alpha == undefined) {
       alpha = 1;
     }
-    return alpha * (self.isAttract ? 0.2 : 1);
+    return alpha * (self.level.isAttract ? 0.2 : 1);
   };
   self.DrawMidLine = function () {
-    if (!self.isAttract) {
+    if (!self.level.isAttract) {
       Cxdo(function () {
         gCx.beginPath();
         var dashStep = (gHeight - 2 * gYInset) / (gMidLineDashCount * 2);
@@ -1571,7 +1485,7 @@ function GameState(props) {
     }
   };
   self.DrawCRTOutline = function () {
-    if (!self.isAttract) {
+    if (!self.level.isAttract) {
       DrawCRTOutline();
     }
   };
@@ -1582,12 +1496,12 @@ function GameState(props) {
       var style = RandomMagenta(self.Alpha(isEndScreenshot ? 1 : 0.4));
       var p2 = gSinglePlayer ? "GPT: " : "P2: ";
       var hiMsg = gGameMode === kGameModeZen ? "HI: " : "LVL HI: ";
-      ForSide(self.isAttract ? "right" : gP1Side, function () {
+      ForSide(self.level.isAttract ? "right" : gP1Side, function () {
         gCx.fillStyle = style;
         if (exists(self.levelHighScore)) {
           DrawText(hiMsg + self.levelHighScore, "left", gw(0.2), gh(0.12), gSmallerFontSizePt);
         }
-        if (!self.isAttract) {
+        if (!self.level.isAttract) {
           DrawText(p2 + gP2Score, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
           DrawText("P1: " + gP1Score, "left", gw(0.2), gh(0.22), gRegularFontSizePt);
         }
@@ -1596,7 +1510,7 @@ function GameState(props) {
         if (exists(self.levelHighScore)) {
           DrawText(hiMsg + self.levelHighScore, "right", gw(0.8), gh(0.12), gSmallerFontSizePt);
         }
-        if (!self.isAttract) {
+        if (!self.level.isAttract) {
           DrawText(p2 + gP2Score, "left", gw(0.2), gh(0.22), gRegularFontSizePt);
           DrawText("P1: " + gP1Score, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
         }
@@ -1611,7 +1525,7 @@ function GameState(props) {
     // making this pointer color == crt outline color to be less obvi.
     var side = target.side;
     var moveTargetY = (_target$position = target.position) == null ? void 0 : _target$position.y;
-    if (exists(side) && exists(moveTargetY) && !self.isAttract) {
+    if (exists(side) && exists(moveTargetY) && !self.level.isAttract) {
       var xsize = syi(12);
       var ysize = syi(7);
       var xoff = xyNudge(moveTargetY, ysize, 12, gP1Side);
@@ -1643,7 +1557,7 @@ function GameState(props) {
     }
   };
   self.DrawPauseButton = function () {
-    if (!self.isAttract && isAnyPointerEnabled()) {
+    if (!self.level.isAttract && isAnyPointerEnabled()) {
       self.pauseButtonEnabled = true;
       var cx = gPauseCenterX;
       var cy = gPauseCenterY;
@@ -1668,7 +1582,7 @@ function GameState(props) {
     });
   };
   self.Draw = function (props) {
-    if (!self.isAttract) {
+    if (!self.level.isAttract) {
       ClearScreen();
     }
     if (!gResizing) {
