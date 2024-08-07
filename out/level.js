@@ -50,10 +50,11 @@ function Level(props) {
     self.p2Pill = undefined;
   };
   self.OnPuckSplits = function (splits) {
+    var _splits$length;
+    var count = (_splits$length = splits == null ? void 0 : splits.length) != null ? _splits$length : 0;
     if (self.isSpawning) {
-      var _splits$length;
-      Assert(((_splits$length = splits == null ? void 0 : splits.length) != null ? _splits$length : 0) <= 1, splits == null ? void 0 : splits.length);
-      if (splits.length > 0 && exists(self.splitsCount)) {
+      Assert(count <= 1, count);
+      if (count > 0 && exists(self.splitsCount)) {
         self.splitsCount = Math.max(0, self.splitsCount - count);
         self.isSpawning = self.splitsCount > 0;
       }

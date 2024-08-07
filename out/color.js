@@ -60,57 +60,62 @@ var crtOutlineColorStr = "rgb(16, 64, 16)";
 var backgroundColorStr = "black";
 // match: backgroundColorStr, index.html
 var scanlineColorStr = "rgba(0, 0, 0, 0.15)";
-var zenHSV = [180, 255, 255];
-var zenRGB = [0, 0, 0];
+var zenHSV = [180, 100, 100];
+var zenRGBA = [0, 0, 0, 1]; // see: main.js
 var zenSpec = {
-  regular: zenRGB,
-  strong: zenRGB
+  regular: zenRGBA,
+  strong: zenRGBA
 };
-hsv2rgb(zenHSV, zenRGB);
 function NextZenHSV() {
-  zenHSV[0] = (zenHSV[0] + 1) % 255;
-  hsv2rgb(zenHSV, zenRGB);
+  zenHSV[0] = (zenHSV[0] + 0.2) % 360;
+  // this is expected to not change the alpha element.
+  hsv2rgb(zenHSV, zenRGBA);
+  console.log(zenRGBA);
 }
-function hsv2rgb(hsv, rgb) {
-  var h = hsv[0];
-  var s = hsv[1];
-  var v = hsv[2];
-  if (s === 0) {
-    rgb[0] = v;
-    rgb[1] = v;
-    rgb[2] = v;
-    return;
+function hsv2rgb(hsv, rgb_out) {
+  var h = hsv[0] / 60;
+  var s = hsv[1] / 100;
+  var v = hsv[2] / 100;
+  var hi = Math.floor(h) % 6;
+  var f = h - Math.floor(h);
+  var p = 255 * v * (1 - s);
+  var q = 255 * v * (1 - s * f);
+  var t = 255 * v * (1 - s * (1 - f));
+  v *= 255;
+  switch (hi) {
+    case 0:
+      rgb_out[0] = Math.round(Clip(0, 255, v));
+      rgb_out[1] = Math.round(Clip(0, 255, t));
+      rgb_out[2] = Math.round(Clip(0, 255, p));
+      break;
+    case 1:
+      rgb_out[0] = Math.round(Clip(0, 255, q));
+      rgb_out[1] = Math.round(Clip(0, 255, v));
+      rgb_out[2] = Math.round(Clip(0, 255, p));
+      break;
+    case 2:
+      rgb_out[0] = Math.round(Clip(0, 255, p));
+      rgb_out[1] = Math.round(Clip(0, 255, v));
+      rgb_out[2] = Math.round(Clip(0, 255, t));
+      break;
+    case 3:
+      rgb_out[0] = Math.round(Clip(0, 255, p));
+      rgb_out[1] = Math.round(Clip(0, 255, q));
+      rgb_out[2] = Math.round(Clip(0, 255, v));
+      break;
+    case 4:
+      rgb_out[0] = Math.round(Clip(0, 255, t));
+      rgb_out[1] = Math.round(Clip(0, 255, p));
+      rgb_out[2] = Math.round(Clip(0, 255, v));
+      break;
+    default:
+    case 5:
+      rgb_out[0] = Math.round(Clip(0, 255, v));
+      rgb_out[1] = Math.round(Clip(0, 255, p));
+      rgb_out[2] = Math.round(Clip(0, 255, q));
+      break;
   }
-  var h05 = Math.floor(h / 43);
-  var hr = (h - h05 * 43) * 6;
-  var p = Math.floor(v * (255 - s) >> 8);
-  var q = Math.floor(v * (255 - (s * hr >> 8)) >> 8);
-  var t = Math.floor(v * (255 - (s * (255 - hr) >> 8)) >> 8);
-  if (h05 === 0) {
-    rgb[0] = v;
-    rgb[1] = t;
-    rgb[2] = p;
-  } else if (h05 === 1) {
-    rgb[0] = q;
-    rgb[1] = v;
-    rgb[2] = p;
-  } else if (h05 === 2) {
-    rgb[0] = p;
-    rgb[1] = v;
-    rgb[2] = t;
-  } else if (h05 === 3) {
-    rgb[0] = p;
-    rgb[1] = q;
-    rgb[2] = v;
-  } else if (h05 === 4) {
-    rgb[0] = t;
-    rgb[1] = p;
-    rgb[2] = v;
-  } else {
-    rgb[0] = v;
-    rgb[1] = p;
-    rgb[2] = q;
-  }
+  return rgb_out;
 }
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
@@ -121,6 +126,9 @@ function rgba255s(array, alpha) {
   _tc[0] = array[0];
   _tc[1] = array[1];
   _tc[2] = array[2];
+
+  // alpha is, in order of highest precedence:
+  // array[4], or the 'alpha' argument, or the default value of 1.
   _tc[3] = alpha != null ? alpha : 1;
   if (array.length == 4) {
     _tc[3] = array[3];

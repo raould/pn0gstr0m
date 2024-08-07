@@ -1398,6 +1398,11 @@ function UpdateLocalStorage() {
         var sign = ForSide(gP1Side, 1, -1);
 
         var p = gPuckPool.Alloc();
+
+	// start with cyan pucks.
+	// zen mode goes rainbow thereafter.
+	zenRGBA = cyanSpec.regular; // see color.js
+	
         p.PlacementInit({ x: gw(ForSide(gP1Side, 0.3, 0.7)),
                           y: (self.isAttract ?
                               gh(gR.RandomRange(0.4, 0.6)) :
@@ -1406,7 +1411,7 @@ function UpdateLocalStorage() {
                           vy: (self.isAttract ?
                                gR.RandomCentered(0, 2, 1) :
                                0.3),
-                          modeColor: rgba255s(cyanSpec.regular, 1),
+                          modeColor: zenRGBA,
                           ur: true });
         gPucks.A.push(p);
     };
@@ -1417,6 +1422,7 @@ function UpdateLocalStorage() {
                           y: gh(gR.RandomRange(1/8, 7/8)),
                           vx: gR.RandomRange(self.maxVX*0.3, self.maxVX*0.5),
                           vy: gR.RandomCentered(1, 0.5),
+                          modeColor: zenRGBA,
                           ur: true });
         gPucks.A.push(p);
     };

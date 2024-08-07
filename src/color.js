@@ -39,52 +39,63 @@ const backgroundColorStr = "black";
 // match: backgroundColorStr, index.html
 const scanlineColorStr = "rgba(0, 0, 0, 0.15)";
 
-const zenHSV = [180, 255, 255];
-const zenRGB = [0, 0, 0];
-const zenSpec = { regular: zenRGB, strong: zenRGB };
-hsv2rgb(zenHSV, zenRGB);
+const zenHSV = [180, 100, 100];
+let zenRGBA = [0, 0, 0, 1]; // see: main.js
+const zenSpec = { regular: zenRGBA, strong: zenRGBA };
 
 function NextZenHSV() {
-    zenHSV[0] = (zenHSV[0] + 1) % 255;
-    hsv2rgb(zenHSV, zenRGB);
+    zenHSV[0] = (zenHSV[0] + 0.2) % 360;
+    // this is expected to not change the alpha element.
+    hsv2rgb(zenHSV, zenRGBA);
+    console.log(zenRGBA);
 }
 
-function hsv2rgb(hsv, rgb) {
-    var h = hsv[0];
-    var s = hsv[1];
-    var v = hsv[2];
+function hsv2rgb(hsv, rgb_out) {
+    const h = hsv[0] / 60;
+    const s = hsv[1] / 100;
+    let v = hsv[2] / 100;
+    const hi = Math.floor(h) % 6;
 
-    if (s === 0) {
-        rgb[0] = v;
-        rgb[1] = v;
-        rgb[2] = v;
-        return;
-    }
+    const f = h - Math.floor(h);
+    const p = 255 * v * (1 - s);
+    const q = 255 * v * (1 - (s * f));
+    const t = 255 * v * (1 - (s * (1 - f)));
+    v *= 255;
 
-    var h05 = Math.floor(h / 43);
-    var hr = (h - h05*43) * 6;
-    var p = Math.floor((v * (255-s)) >> 8);
-    var q = Math.floor((v * (255-((s*hr) >> 8))) >> 8);
-    var t = Math.floor((v * (255-((s*(255-hr)) >> 8))) >> 8);
-
-    if (h05 === 0) {
-        rgb[0] = v; rgb[1] = t; rgb[2] = p;
+    switch (hi) {
+    case 0:
+	rgb_out[0] = Math.round(Clip(0, 255, v));
+	rgb_out[1] = Math.round(Clip(0, 255, t));
+	rgb_out[2] = Math.round(Clip(0, 255, p));
+	break;
+    case 1:
+	rgb_out[0] = Math.round(Clip(0, 255, q));
+	rgb_out[1] = Math.round(Clip(0, 255, v));
+	rgb_out[2] = Math.round(Clip(0, 255, p));
+	break;
+    case 2:
+	rgb_out[0] = Math.round(Clip(0, 255, p));
+	rgb_out[1] = Math.round(Clip(0, 255, v));
+	rgb_out[2] = Math.round(Clip(0, 255, t));
+	break;
+    case 3:
+	rgb_out[0] = Math.round(Clip(0, 255, p));
+	rgb_out[1] = Math.round(Clip(0, 255, q));
+	rgb_out[2] = Math.round(Clip(0, 255, v));
+	break;
+    case 4:
+	rgb_out[0] = Math.round(Clip(0, 255, t));
+	rgb_out[1] = Math.round(Clip(0, 255, p));
+	rgb_out[2] = Math.round(Clip(0, 255, v));
+	break;
+    default:
+    case 5:
+	rgb_out[0] = Math.round(Clip(0, 255, v));
+	rgb_out[1] = Math.round(Clip(0, 255, p));
+	rgb_out[2] = Math.round(Clip(0, 255, q));
+	break;
     }
-    else if (h05 === 1) {
-        rgb[0] = q; rgb[1] = v; rgb[2] = p;
-    }
-    else if (h05 === 2) {
-        rgb[0] = p; rgb[1] = v; rgb[2] = t;
-    }
-    else if (h05 === 3) {
-        rgb[0] = p; rgb[1] = q; rgb[2] = v;
-    }
-    else if (h05 === 4) {
-        rgb[0] = t; rgb[1] = p; rgb[2] = v;
-    }
-    else {
-        rgb[0] = v; rgb[1] = p; rgb[2] = q;
-    }
+    return rgb_out;
 }
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
@@ -92,13 +103,18 @@ const _tc = Array(4);
 function rgba255s(array, alpha) {
     // detect any old style code that called this function.
     Assert(Array.isArray(array), "expected array as first parameter");
+
     _tc[0] = array[0];
     _tc[1] = array[1];
     _tc[2] = array[2];
+
+    // alpha is, in order of highest precedence:
+    // array[4], or the 'alpha' argument, or the default value of 1.
     _tc[3] = alpha ?? 1;
     if (array.length == 4) {
         _tc[3] = array[3];
     }
+
     const joined = _tc.map((ch,i) => ((i < 3) ? Clip255(ch) : ch)).join(",");
     const str = ((array.length == 4 || exists(alpha)) ? "rgba(" : "rgb(") + joined + ")";
     return  str;

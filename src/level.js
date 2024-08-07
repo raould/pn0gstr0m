@@ -54,9 +54,10 @@ const kEnglishStep = 0.004;
     };
 
     self.OnPuckSplits = function(splits) {
+	var count = splits?.length ?? 0;
         if (self.isSpawning) {
-            Assert((splits?.length ?? 0) <= 1, splits?.length);
-            if (splits.length > 0 && exists(self.splitsCount)) {
+            Assert(count <= 1, count);
+            if (count > 0 && exists(self.splitsCount)) {
                 self.splitsCount = Math.max(0, self.splitsCount - count);
                 self.isSpawning = self.splitsCount > 0;
             }

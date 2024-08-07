@@ -27,13 +27,8 @@ function Puck() {
         self.alive = true;
         self.ur = aub(props.ur, false);
         self.startTime = self.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
-        self.modeColor = aub(props.modeColor,
-                             ForGameMode(
-                                 RandomForColor(cyanSpec),
-                                 RandomForColor(cyanSpec),
-                                 RandomForColor(zenSpec))
-                            );
-        console.log("modeColor", props.modeColor, self.modeColor);
+        self.modeColor = rgba255s(props.modeColor);
+	Assert(exists(self.modeColor));
         gLevelPuckCount++;
         if (gLevelPuckCount % 10 === 0) {
             NextZenHSV();
@@ -177,12 +172,18 @@ function Puck() {
             const vx = self.vx * (slow ? gR.RandomRange(0.8, 0.9) : gR.RandomRange(1.01, 1.1));
             let vy = self.vy;
             vy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
-            np = { x: self.x, y: self.y, vx: vx, vy: vy, ur: false, forced, maxVX };
-            PlayExplosion();
+
+	    let modeColor = self.modeColor;
+	    if (gGameMode === kGameModeZen) {
+		NextZenHSV();
+		modeColor = zenRGBA;
+	    }
+	    np = { x: self.x, y: self.y, vx: vx, vy: vy, modeColor, ur: false, forced, maxVX };
 
             // code smell: because SplitPuck is called during MovePucks,
             // we return the new puck to go onto the B list, whereas
             // MoveSparks happens after so it goes onto the A list.
+            PlayExplosion();
             AddSparks({ x:self.x, y:self.y, vx:sx(1), vy:sy(0.5), count: 3, rx:sx(1), ry:sy(1) });
         }
 
