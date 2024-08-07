@@ -469,7 +469,7 @@ function MakeSplitProps(maker) {
             targets.forEach(p => {
                 var maxVX = gameState.level.maxVX;
                 var split = p.SplitPuck({ forced: true, maxVX });
-                gameState.level.OnPuckSplit(1);
+                gameState.level.OnPuckSplits(1);
                 var p = gPuckPool.Alloc();
                 p.PlacementInit(split);
                 gPucks.A.push(p);

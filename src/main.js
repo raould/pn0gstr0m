@@ -40,11 +40,7 @@ var kGameModeRegular = "regular";
 var kGameModeHard = "hard";
 var kGameModeZen = "zen";
 var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
-// code smell: sentinel values, -1 is attract, -2 is zen. 
-const kAttractLevelIndex = -1;
-const kZenLevelIndex = -2;
-// levels are 1-based. 
-var gLevelIndex = (gGameMode === kGameModeZen) ? kZenLevelIndex : 1;
+
 function ForGameMode(regular, hard, zen) {
     if (gGameMode === kGameModeRegular) {
         return regular;
@@ -56,19 +52,12 @@ function ForGameMode(regular, hard, zen) {
         return zen;
     }
 }
-function SetGameMode(mode) {
-    Assert(mode === kGameModeRegular ||
-           mode === kGameModeHard ||
-           mode === kGameModeZen,
-           mode);
-    gGameMode = mode;
-    ForGameMode(
-        () => gLevelIndex = 1,
-        () => gLevelIndex = 1,
-        () => gLevelIndex = kZenLevelIndex
-    )();
-    console.log("SetGameMode", mode, gLevelIndex);
-}
+
+// code smell: sentinel values.
+const kZenLevelIndex = -2;
+const kAttractLevelIndex = -1;
+// regular levels are 1-based.
+var gLevelIndex = 1;
 
 // ----------------------------------------
 
@@ -89,9 +78,8 @@ var kAlphaFadeInMsec = 700;
 // now that we have levels that start scores at 0:0.
 var gLevelHighScores = LoadLocal(LocalStorageKeys.highScores, {});
 
-// note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
-// although i did try to compensate in the run loop.
-var kFPS = 35;
+// todo: empirically the time step size changes how fast things move. :-(
+var kFPS = 30;
 var kTimeStep = 1000/kFPS;
 var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
 var gLevelTime = 0;
@@ -643,15 +631,11 @@ function DrawDebugList() {
 
 function UpdateLocalStorage() {
     // todo: ugly that this only works "because globals".
-
     // note:
-
     // (1) this doesn't update the level high score dict
     // since that requires deep-equals testing. so that is
     // left to be done hard-coded elsewhere.
-
     // (2) this doesn't include the unplayed music, see sound.js
-
     SaveLocal(LocalStorageKeys.singlePlayer, gSinglePlayer);
     SaveLocal(LocalStorageKeys.gameMode, gGameMode);
     SaveLocal(LocalStorageKeys.sfxMuted, gSfxMuted);
@@ -979,10 +963,10 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        var seconds = ChoosePillIDs(gLevelIndex).length === 2 ? 5 : 3;
+        self.pillIDs = ChoosePillIDs(gGameMode, gLevelIndex);
+        var seconds = gDebug ? 1 : (self.pillIDs.length === 2 ? 5 : 3);
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
-        self.pillIDs = ChoosePillIDs(gLevelIndex);
         PlayBlip();
     };
 
@@ -1005,7 +989,7 @@ function UpdateLocalStorage() {
 
     self.DrawText = function() {
         var t = Math.ceil(self.timeout/1000);
-        var zpt = MakeSplitsCount(gLevelIndex);
+        var zpt = MakeSplitsCount(gGameMode, gLevelIndex);
         Cxdo(() => {
             // match: GameState.DrawScoreHeader() et. al.
             gCx.fillStyle = RandomGreen(0.3);
@@ -1222,10 +1206,10 @@ function UpdateLocalStorage() {
             self.level = MakeZen(self.paddleP1, self.paddleP2);
         }
         else {
-            self.level = MakeLevel(gLevelIndex, self.paddleP1, self.paddleP2);
+            self.level = MakeLevel(gGameMode, gLevelIndex, self.paddleP1, self.paddleP2);
         }
         self.maxVX = self.level.maxVX;
-        Assert(exists(self.maxVX));
+        Assert(!isBadNumber(self.maxVX) && self.maxVX > 0);
         //logOnDelta("maxVX", self.maxVX, 1);
     };
 
@@ -1254,19 +1238,17 @@ function UpdateLocalStorage() {
         self.ProcessAllInput();
         if (self.quit) {
             SaveEndScreenshot(self);
-            return gDebug ? kLevelFin : kTitle;
+            return (gDebug && gGameMode !== kGameModeZen) ? kLevelFin : kTitle;
         }
         if (self.stepping) {
             dt = kTimeStep;
         }
-
         if (!self.paused || self.stepping) {
             self.paddleP1.Step( dt, self );
             self.paddleP2.Step( dt, self );
             self.StepMoveables( dt );
             self.StepAnimations( dt );
         }
-
         var nextState = self.StepNextState();
         self.stepping = false;
         return nextState;
@@ -1389,7 +1371,7 @@ function UpdateLocalStorage() {
     };
 
     self.CreateStartingPuck = function() {
-        Assert(exists(self.maxVX) && self.maxVX > 0);
+        Assert(!isBadNumber(self.maxVX) && self.maxVX > 0);
 
         // i am crying into my drink.
         // single player: puck goes towards gpu.
@@ -1397,13 +1379,12 @@ function UpdateLocalStorage() {
         var sign = ForSide(gP1Side, 1, -1);
 
         var p = gPuckPool.Alloc();
-
 	// match: all games start with cyan pucks.
         p.PlacementInit({ x: gw(ForSide(gP1Side, 0.3, 0.7)),
                           y: (self.isAttract ?
                               gh(gR.RandomRange(0.4, 0.6)) :
                               gh(0.3)),
-                          vx: sign * self.maxVX*0.2,
+                          vx: sign * self.maxVX * 0.2,
                           vy: (self.isAttract ?
                                gR.RandomCentered(0, 2, 1) :
                                0.3),

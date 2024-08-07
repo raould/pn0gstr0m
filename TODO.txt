@@ -1,6 +1,9 @@
 * this has quickly become an empirical big ball of mud. :-(
 * disable asserts in out/*.
 * quit should really ask ays?
+* attract/level/zen bool vs. index int is all horribly bad inconsistent muddy stuff.
+* gLevelIndex should instead be a Level instance, with all that entails.
+* should probably specify first puck speed explicitly.
 * maybe have rare 3x split into even smaller, faster pucks?
 * do i need clearFn() for gamepad buttons and joystick? or what else instead?
 * check that the gamepad buttons & sticks non/repeat is sane/right.

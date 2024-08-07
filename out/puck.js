@@ -125,7 +125,7 @@ function Puck() {
     }
   };
 
-  // anybody calling this should also eventually follow up with level.OnPuckSplit() for bookkeeping.
+  // warning; anybody calling this should also eventually follow up with level.OnPuckSplits() for bookkeeping. :-(
   self.SplitPuck = function (_ref) {
     var _ref$forced = _ref.forced,
       forced = _ref$forced === void 0 ? false : _ref$forced,

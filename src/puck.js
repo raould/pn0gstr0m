@@ -133,7 +133,7 @@ function Puck() {
         }
     };
 
-    // anybody calling this should also eventually follow up with level.OnPuckSplit() for bookkeeping.
+    // warning; anybody calling this should also eventually follow up with level.OnPuckSplits() for bookkeeping. :-(
     self.SplitPuck = function({ forced=false, isSuddenDeath=false, maxVX }) {
         Assert(exists(maxVX));
         let np = undefined;

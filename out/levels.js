@@ -27,13 +27,14 @@ function MakeAttract(paddleP1, paddleP2) {
   });
 }
 function MakeZen(paddleP1, paddleP2) {
-  var pills = ChoosePillIDs(kZenLevelIndex).map(function (pid) {
+  var pills = ChoosePillIDs(kGameModeZen, kZenLevelIndex).map(function (pid) {
     return gPillInfo[pid].maker;
   });
   return new Level({
     index: kZenLevelIndex,
     isSpawning: true,
-    maxVX: sxi(18),
+    maxVX: sxi(15),
+    speedupFactor: 0.00001,
     isP1Player: true,
     isP2Player: !gSinglePlayer,
     pills: pills,
@@ -44,17 +45,18 @@ function MakeZen(paddleP1, paddleP2) {
 
 // level is one-based.
 // zen mode means only one level!
-function MakeLevel(index, paddleP1, paddleP2) {
+function MakeLevel(gGameMode, index, paddleP1, paddleP2) {
   Assert(index !== 0, "index is 1-based");
+  Assert(gGameMode !== kGameModeZen, "MakeLevel is not MakeZen");
   var splitsCount = MakeSplitsCount(index);
-  var pills = ChoosePillIDs(index).map(function (pid) {
+  var pills = ChoosePillIDs(gGameMode, index).map(function (pid) {
     return gPillInfo[pid].maker;
   });
   var level = new Level({
     index: index,
     isSpawning: true,
     // maxVX is allowed to grow after there are no more splits.
-    maxVX: sxi(12 + index),
+    maxVX: sxi(15 + index),
     speedupFactor: 0.0001,
     splitsCount: splitsCount,
     isP1Player: true,
@@ -65,33 +67,35 @@ function MakeLevel(index, paddleP1, paddleP2) {
   });
   return level;
 }
-function MakeSplitsCount(index) {
+function MakeSplitsCount(gameMode, index) {
   Assert(index !== 0, "index is 1-based");
-  if (index === kZenLevelIndex) {
-    return undefined;
-  }
   // note: this is just a big bad random swag.
-  return 400 + index * 50;
+  var count = 400 + index * 50;
+  // zen has one level, and it is without a zero-energy based ending.
+  return ForGameMode(count, count, undefined);
 }
 var gChosenPillIDsCache;
-function ChoosePillIDs(index) {
-  var _gChosenPillIDsCache;
+function ChoosePillIDs(gameMode, index) {
   Assert(index != kAttractLevelIndex);
-  if (index === kZenLevelIndex) {
+  if (gameMode === kGameModeZen) {
     return _toConsumableArray(gPillIDs);
+  } else {
+    var _gChosenPillIDsCache;
+    var i0 = index - 1;
+    if (((_gChosenPillIDsCache = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache.index) === index) {
+      var _gChosenPillIDsCache2;
+      return (_gChosenPillIDsCache2 = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache2.pids;
+    } else {
+      var pids = ChoosePillIDsUncached(index);
+      console.log("Pids", index, pids);
+      gChosenPillIDsCache = {
+        index: index,
+        pids: pids
+      };
+      return pids;
+    }
   }
-  var i0 = index - 1;
-  if (((_gChosenPillIDsCache = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache.index) === index) {
-    var _gChosenPillIDsCache2;
-    return (_gChosenPillIDsCache2 = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache2.pids;
-  }
-  var pids = ChoosePillIDsUncached(index);
-  console.log("Pids", index, pids);
-  gChosenPillIDsCache = {
-    index: index,
-    pids: pids
-  };
-  return pids;
+  Assert(false);
 }
 function ChoosePillIDsUncached(index) {
   var pids = [];

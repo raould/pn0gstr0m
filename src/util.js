@@ -6,6 +6,10 @@
 var k2Pi = Math.PI*2;
 var kPi2 = Math.PI/2;
 
+function isBadNumber(n) {
+    return n == undefined || isNaN(n);
+}    
+
 function isU(u) {
     return u == undefined;
 }
