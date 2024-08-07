@@ -28,8 +28,6 @@ function Puck() {
     self.alive = true;
     self.ur = aub(props.ur, false);
     self.startTime = self.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
-    self.modeStyle = props.modeStyle;
-    Assert(exists(self.modeStyle) && typeof self.modeStyle === "string");
     self.splitStyle = aub(props.forced, false) ? "yellow" : "white";
     self.isLocked = false;
   };
@@ -66,7 +64,7 @@ function Puck() {
     // young pucks (from paddle splits or powerups) render another color briefly.
     var dt = GameTime01(1000, self.startTime);
     var fadeinStyle = FadeIn(1);
-    var inplayStyle = aub(fadeinStyle, gR.RandomFloat() > dt ? self.splitStyle : self.modeStyle);
+    var inplayStyle = aub(fadeinStyle, gR.RandomFloat() > dt ? self.splitStyle : puckColorStr);
     var lostStyle = RandomYellow(0.7);
     var isLost = self.x + self.width < gXInset || self.x > gw(1) - gXInset;
     var style = isLost ? lostStyle : inplayStyle;
@@ -164,16 +162,11 @@ function Puck() {
       var vx = self.vx * (slow ? gR.RandomRange(0.8, 0.9) : gR.RandomRange(1.01, 1.1));
       var vy = self.vy;
       vy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
-      var modeStyle = self.modeStyle;
-      if (gGameMode === kGameModeZen) {
-        modeStyle = GetNextZenStyleStr();
-      }
       np = {
         x: self.x,
         y: self.y,
         vx: vx,
         vy: vy,
-        modeStyle: modeStyle,
         ur: false,
         forced: forced,
         maxVX: maxVX

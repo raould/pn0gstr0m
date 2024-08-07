@@ -80,7 +80,6 @@ function SetGameMode(mode) {
   })();
   console.log("SetGameMode", mode, gLevelIndex);
 }
-BuildZenStyleTable();
 
 // ----------------------------------------
 
@@ -1378,7 +1377,6 @@ function GameState(props) {
       y: self.isAttract ? gh(gR.RandomRange(0.4, 0.6)) : gh(0.3),
       vx: sign * self.maxVX * 0.2,
       vy: self.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
-      modeStyle: RandomForColor(cyanSpec, 1),
       ur: true
     });
     gPucks.A.push(p);
@@ -1390,7 +1388,6 @@ function GameState(props) {
       y: gh(gR.RandomRange(1 / 8, 7 / 8)),
       vx: gR.RandomRange(self.maxVX * 0.3, self.maxVX * 0.5),
       vy: gR.RandomCentered(1, 0.5),
-      modeStyle: RandomForColor(cyanSpec, 1),
       ur: true
     });
     gPucks.A.push(p);

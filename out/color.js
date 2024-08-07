@@ -60,69 +60,7 @@ var crtOutlineColorStr = "rgb(16, 64, 16)";
 var backgroundColorStr = "black";
 // match: backgroundColorStr, index.html
 var scanlineColorStr = "rgba(0, 0, 0, 0.15)";
-var gZenStyleIndex = 0;
-function GetNextZenStyleStr() {
-  gZenStyleIndex = (gZenStyleIndex + 1) % gZenStyleStrTable.length;
-  return gZenStyleStrTable[gZenStyleIndex];
-}
-var gZenStyleStrTable = [];
-function BuildZenStyleTable() {
-  // match: all games start with cyan pucks.
-  var h0 = 180;
-  var hsv = [h0, 100, 100];
-  var rgba = Array(4).fill(1);
-  var s = 3;
-  for (var o = 0; o < 360 * s; o++) {
-    hsv[0] = Wrap(h0 - o / s, 360);
-    hsv2rgb(hsv, rgba);
-    gZenStyleStrTable.push(rgba255s(rgba));
-  }
-}
-function hsv2rgb(hsv, rgb_out) {
-  var h = hsv[0] / 60;
-  var s = hsv[1] / 100;
-  var v = hsv[2] / 100;
-  var hi = Math.floor(h) % 6;
-  var f = h - Math.floor(h);
-  var p = 255 * v * (1 - s);
-  var q = 255 * v * (1 - s * f);
-  var t = 255 * v * (1 - s * (1 - f));
-  v *= 255;
-  switch (hi) {
-    case 0:
-      rgb_out[0] = Math.round(Clip(0, 255, v));
-      rgb_out[1] = Math.round(Clip(0, 255, t));
-      rgb_out[2] = Math.round(Clip(0, 255, p));
-      break;
-    case 1:
-      rgb_out[0] = Math.round(Clip(0, 255, q));
-      rgb_out[1] = Math.round(Clip(0, 255, v));
-      rgb_out[2] = Math.round(Clip(0, 255, p));
-      break;
-    case 2:
-      rgb_out[0] = Math.round(Clip(0, 255, p));
-      rgb_out[1] = Math.round(Clip(0, 255, v));
-      rgb_out[2] = Math.round(Clip(0, 255, t));
-      break;
-    case 3:
-      rgb_out[0] = Math.round(Clip(0, 255, p));
-      rgb_out[1] = Math.round(Clip(0, 255, q));
-      rgb_out[2] = Math.round(Clip(0, 255, v));
-      break;
-    case 4:
-      rgb_out[0] = Math.round(Clip(0, 255, t));
-      rgb_out[1] = Math.round(Clip(0, 255, p));
-      rgb_out[2] = Math.round(Clip(0, 255, v));
-      break;
-    default:
-    case 5:
-      rgb_out[0] = Math.round(Clip(0, 255, v));
-      rgb_out[1] = Math.round(Clip(0, 255, p));
-      rgb_out[2] = Math.round(Clip(0, 255, q));
-      break;
-  }
-  return rgb_out;
-}
+var puckColorStr = "cyan";
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 var _tc = Array(4);
