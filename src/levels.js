@@ -5,39 +5,3 @@
 
 // yes this is really hard to playtest.
 
-function MakeAttract() {
-    return new Level({
-        index: kAttractLevelIndex,
-        isAttract: true,
-        isSpawning: false,
-        maxVX: sxi(14),
-        isP1Player: false,
-        isP2Player: false,
-    });
-}
-
-function MakeZen() {
-    return new Level({
-        index: kZenLevelIndex,
-        isSpawning: true,
-        maxVX: sxi(15),
-        speedupFactor: 0.00001,
-        isP1Player: true,
-        isP2Player: !gSinglePlayer,
-    });
-}
-
-function MakeLevel(gGameMode, index, paddleP1, paddleP2) {
-    Assert(index !== 0, "index is 1-based");
-    Assert(gGameMode !== kGameModeZen, "MakeLevel is not MakeZen");
-    const level = new Level({
-        index,
-        isSpawning: true,
-        // maxVX is allowed to grow after there are no more splits.
-        maxVX: sxi(15 + index),
-        speedupFactor: 0.0001,
-        isP1Player: true,
-        isP2Player: !gSinglePlayer,
-    });
-    return level;
-}

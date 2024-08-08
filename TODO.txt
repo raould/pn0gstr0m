@@ -3,6 +3,7 @@
 * quit should really ask ays?
 * attract/level/zen bool vs. index int is all horribly bad inconsistent muddy stuff.
 * the Level instance should be created in GetReadyState.
+* figure out ux for per-game high-score.
 * should probably specify first puck speed explicitly.
 * maybe have rare 3x split into even smaller, faster pucks?
 * do i need clearFn() for gamepad buttons and joystick? or what else instead?

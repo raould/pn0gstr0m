@@ -17,6 +17,10 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
+// todo: fix up the globals to be more of a database, at least a hierarchical map.
+// then pass the db explicitly rather than havng spooky globals being used.
+// unfortunately, that would be a large time sink refactoring.
+
 var gDebug = true;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
@@ -35,6 +39,8 @@ function is2PGameOver() { return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy; }
 
 // todo: the game mode stuff is a big ball of mud within
 // the larger death star of mud that is all of this code.
+// game mode is something that effects all played levels.
+// for zen there's admittedly only one level.
 // enum, mutually exclusive.
 var kGameModeRegular = "regular";
 var kGameModeHard = "hard";
@@ -56,8 +62,8 @@ function ForGameMode(regular, hard, zen) {
 // code smell: sentinel values.
 const kZenLevelIndex = -2;
 const kAttractLevelIndex = -1;
-// regular levels are 1-based.
-var gLevelIndex = 1;
+// levels are 1-based.
+var gLevel;
 
 // ----------------------------------------
 
@@ -363,7 +369,7 @@ var kDebug = -2;
 var kRoot = -1;
 var kWarning = 0; // audio permission via user interaction effing eff.
 var kTitle = 1;
-var kGetReady = 2; // includes 'level splash' for levels 2+.
+var kGetReady = 2; // also ashows level splash powerups for levels 2+.
 var kGame = 3;
 var kLevelFin = 4;
 var kGameOver = 5;
@@ -813,7 +819,9 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         ResetP1Side();
-        self.attract = new GameState({ isAttract: true });
+        self.attract = new GameState({
+	    level: MakeAttract()
+	});
         self.timeout = gDebug ? 1 : (1000 * 1.5);
         self.started = gGameTime;
         self.done = false;
@@ -963,11 +971,10 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        self.pillIDs = ChoosePillIDs(gGameMode, gLevelIndex);
+        self.MakeLevel();
         var seconds = gDebug ? 1 : (self.pillIDs.length === 2 ? 5 : 3);
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
-        self.MakeLevel();
         PlayBlip();
     };
 
@@ -1073,15 +1080,15 @@ function UpdateLocalStorage() {
 
     self.Init = function() {
         // the order of everything here matters (everything is fragile).
-	self.level = level;
-        gStateMuted = self.level.isAttract;
+	self.level = props.level;
+	Assert(exists(self.level));
 
-        // todo: code smell, this 'reset' business is kind of a big confused mess. :-(
-        RecalculateConstants();
+        gStateMuted = self.level.isAttract;
+	// ugh, all reset, recalculate business is confusing.
+        RecalculateConstants(); 
         ResetGlobalStorage();
         ResetInput();
-
-        gMonochrome = self.level.isAttract; // todo: make gMonochrome local instead?
+        gMonochrome = self.level.isAttract;
         gLevelTime = gGameTime;
 
         gP1Score = 0;

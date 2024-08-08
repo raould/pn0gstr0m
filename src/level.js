@@ -6,11 +6,48 @@
 // see also: english in puck.js
 const kEnglishStep = 0.004;
 
-function MakeSplitsCount(gameMode, index) {
+function MakeAttract() {
+    return new Level({
+        index: kAttractLevelIndex,
+        isSpawning: false,
+        maxVX: sxi(14),
+        isP1Player: false,
+        isP2Player: false,
+    });
+}
+
+function MakeZen() {
+    return new Level({
+        index: kZenLevelIndex,
+        isSpawning: true,
+        maxVX: sxi(15),
+        speedupFactor: 0.00001,
+        isP1Player: true,
+        isP2Player: !gSinglePlayer,
+    });
+}
+
+function MakeLevel(gameMode, index, paddleP1, paddleP2) {
+    Assert(index !== 0, "index is 1-based");
+    Assert(gameMode !== kGameModeZen, "MakeLevel is not MakeZen, duh");
+    const level = new Level({
+        index,
+        isSpawning: true,
+        // maxVX is allowed to grow with speedupFactor
+	// after there are no more splits.
+        maxVX: sxi(15 + index),
+        speedupFactor: 0.0001,
+        isP1Player: true,
+        isP2Player: !gSinglePlayer,
+    });
+    return level;
+}
+
+function MakeSplitsCount(index) {
     Assert(index !== 0, "index is 1-based");
     // note: this is just a big bad random swag.
     var count = 400 + index * 50;
-    // zen has one level, and it is without a zero-energy based ending.
+    // zen has one level, and it is without any zero-energy-based ending.
     return ForGameMode(count, count, undefined);
 }
 
@@ -57,11 +94,9 @@ function ChoosePillIDs(index) {
     self.Init = function() {
         self.startTime = gGameTime;
 
-        self.isAttract = aub(props.isAttract, false);
         self.index = props.index;
-	Assert(
-	    (self.isAttract && self.index === kAttractLevelIndex) ||
-		(!self.isAttract && self.index >= 1));
+	self.isAttract = self.index === kAttractLevelIndex;
+	self.isZen = self.index === kZenLevelIndex;
 
         // note: some of these are allowed to be undefined,
         // ie for attract mode level. although it is sort of ugly
@@ -75,7 +110,7 @@ function ChoosePillIDs(index) {
         self.englishFactorPlayer = 1;
         self.englishFactorCPU = 1;
 
-        self.splitsCount = MakeSplitsCount(self.index); // TODO: argh, gGameMode!!!!!!!!!!!!!!!!!!!!!!!!
+        self.splitsCount = MakeSplitsCount(self.index);
         self.isSpawning = props.isSpawning;
 
         // I think the ensuing code indicates the Paddle should perhaps
@@ -84,9 +119,8 @@ function ChoosePillIDs(index) {
         var lp = { x: gXInset, y: gh(0.5) };
         var rp = { x: gWidth-gXInset-gPaddleWidth, y: gh(0.5) };
 
-        // show paddle labels for zen or level 1.
-        var p1label = (self.isAttract || gLevelIndex > 1) ? undefined : "P1";
-        var p2label = (self.isAttract || gLevelIndex > 1) ? undefined : (gSinglePlayer ? "GPT" : "P2");
+        // only show paddle labels for zen and level 1.
+        var [p1label, p2Label] = (self.isZen || self.index === 1) ? ["P1", "P2"] : [undefined, undefined];
 
         ForSide(gP1Side,
                 () => {
