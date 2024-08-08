@@ -385,6 +385,8 @@ var gGamepad2;
 var kJoystickDeadZone = 0.5;
 var gR = new Random( 0x1BADB002 );
 
+var gAnimations = {};
+
 // ----------------------------------------
 
 function GameTime01(period, start=gLevelTime) {
@@ -667,6 +669,10 @@ function UpdateLocalStorage() {
         self.stop = true;
     };
 
+    self.IsPaused = function() {
+        return aub(self.handler.IsPaused?.(), false);
+    };
+    
     self.RunLoop = function() {
         if (self.stop) {
             return;
@@ -690,8 +696,7 @@ function UpdateLocalStorage() {
             // b) updating the screen even when paused & thus delta time is 0.
 
             self.lastTime = now;
-            var paused = aub(self.handler.GetIsPaused?.(), false);
-            gGameTime += paused ? 0 : clockDiff;
+            gGameTime += self.IsPaused() ? 0 : clockDiff;
             var fdt = gGameTime - gLastFrameTime;
 
             if (fdt < kTimeStep && !paused) {
@@ -706,8 +711,9 @@ function UpdateLocalStorage() {
 
                 // even when paused, must Step to handle input.
                 // also call Draw to keep the screen in sync.
-                paused = aub(self.handler.GetIsPaused?.(), false);
-                var next = self.handler.Step(paused ? 0 : fdt);
+		var pdt = self.IsPaused() ? 0 : fdt;
+
+                var next = self.handler.Step(pdt);
                 self.handler.Draw();
 
                 if( exists(next) && next !== self.state ) {
@@ -720,6 +726,7 @@ function UpdateLocalStorage() {
                 gLastFrameTime = gGameTime;
                 ++gFrameCount;
 
+		self.StepAnimations(pdt);
                 self.DrawCRTScanlines();
                 DrawDebugList();
                 if (gShowToasts) { StepToasts(); }
@@ -1098,7 +1105,6 @@ function UpdateLocalStorage() {
 
         self.pauseButtonEnabled = false;
         self.paused = false;
-        self.animations = {};
         self.quit = false;
         self.stepping = false;
 
@@ -1120,7 +1126,7 @@ function UpdateLocalStorage() {
         self.unfairPillCount = 0;
 
         if (!self.level.isAttract) {
-            self.AddAnimation(MakeGameStartAnimation());
+            AddAnimation(MakeGameStartAnimation());
             PlayStart();
         }
     };
@@ -1153,7 +1159,7 @@ function UpdateLocalStorage() {
         }
     };
 
-    self.GetIsPaused = function() {
+    self.IsPaused = function() {
         return self.paused;
     };
 
@@ -1173,7 +1179,6 @@ function UpdateLocalStorage() {
         }
         if (!self.paused || self.stepping) {
             self.StepMoveables( dt );
-            self.StepAnimations( dt );
         }
         var nextState = self.StepNextState();
         self.stepping = false;

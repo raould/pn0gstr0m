@@ -429,6 +429,7 @@ var gGamepad1;
 var gGamepad2;
 var kJoystickDeadZone = 0.5;
 var gR = new Random(0x1BADB002);
+var gAnimations = {};
 
 // ----------------------------------------
 
@@ -702,6 +703,10 @@ function Lifecycle(handlerMap) {
   self.Quit = function () {
     self.stop = true;
   };
+  self.IsPaused = function () {
+    var _self$handler$IsPause, _self$handler;
+    return aub((_self$handler$IsPause = (_self$handler = self.handler).IsPaused) == null ? void 0 : _self$handler$IsPause.call(_self$handler), false);
+  };
   self.RunLoop = function () {
     if (self.stop) {
       return;
@@ -716,7 +721,6 @@ function Lifecycle(handlerMap) {
     if (clockDiff >= kMaybeWasPausedInTheDangedDebuggerMsec) {
       self.lastTime = now;
     } else {
-      var _self$handler$GetIsPa, _self$handler;
       Gamepads.poll();
 
       // this got complicated quickly, trying to handle time:
@@ -724,13 +728,11 @@ function Lifecycle(handlerMap) {
       // b) updating the screen even when paused & thus delta time is 0.
 
       self.lastTime = now;
-      var paused = aub((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false);
-      gGameTime += paused ? 0 : clockDiff;
+      gGameTime += self.IsPaused() ? 0 : clockDiff;
       var fdt = gGameTime - gLastFrameTime;
       if (fdt < kTimeStep && !paused) {
         remainder = kTimeStep - fdt;
       } else {
-        var _self$handler$GetIsPa2, _self$handler2;
         Assert(exists(self.handler), "RunLoop");
         if (self.transitioned) {
           self.handler = self.handlerMap[self.state]();
@@ -739,8 +741,8 @@ function Lifecycle(handlerMap) {
 
         // even when paused, must Step to handle input.
         // also call Draw to keep the screen in sync.
-        paused = aub((_self$handler$GetIsPa2 = (_self$handler2 = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa2.call(_self$handler2), false);
-        var next = self.handler.Step(paused ? 0 : fdt);
+        var pdt = self.IsPaused() ? 0 : fdt;
+        var next = self.handler.Step(pdt);
         self.handler.Draw();
         if (exists(next) && next !== self.state) {
           console.log("transitioned from ".concat(self.state, " to ").concat(next));
@@ -750,6 +752,7 @@ function Lifecycle(handlerMap) {
         }
         gLastFrameTime = gGameTime;
         ++gFrameCount;
+        self.StepAnimations(pdt);
         self.DrawCRTScanlines();
         DrawDebugList();
         if (gShowToasts) {
@@ -1090,7 +1093,6 @@ function GameState(props) {
     self.levelHighScore = self.level.isAttract ? undefined : gLevelHighScores[gLevelIndex];
     self.pauseButtonEnabled = false;
     self.paused = false;
-    self.animations = {};
     self.quit = false;
     self.stepping = false;
     if (!self.level.isAttract) {
@@ -1109,7 +1111,7 @@ function GameState(props) {
     self.isCpuPillAllowed = !gSinglePlayer;
     self.unfairPillCount = 0;
     if (!self.level.isAttract) {
-      self.AddAnimation(MakeGameStartAnimation());
+      AddAnimation(MakeGameStartAnimation());
       PlayStart();
     }
   };
@@ -1140,7 +1142,7 @@ function GameState(props) {
       }
     }
   };
-  self.GetIsPaused = function () {
+  self.IsPaused = function () {
     return self.paused;
   };
   self.Step = function (dt) {
@@ -1159,7 +1161,6 @@ function GameState(props) {
     }
     if (!self.paused || self.stepping) {
       self.StepMoveables(dt);
-      self.StepAnimations(dt);
     }
     var nextState = self.StepNextState();
     self.stepping = false;
