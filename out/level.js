@@ -1,5 +1,9 @@
 "use strict";
 
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
@@ -13,11 +17,45 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 
 // see also: english in puck.js
 var kEnglishStep = 0.004;
-function MakeSplitsCount(gameMode, index) {
+function MakeAttract() {
+  return new Level({
+    index: kAttractLevelIndex,
+    isSpawning: false,
+    maxVX: sxi(14),
+    isP1Player: false,
+    isP2Player: false
+  });
+}
+function MakeZen() {
+  return new Level({
+    index: kZenLevelIndex,
+    isSpawning: true,
+    maxVX: sxi(15),
+    speedupFactor: 0.00001,
+    isP1Player: true,
+    isP2Player: !gSinglePlayer
+  });
+}
+function MakeLevel(gameMode, index, paddleP1, paddleP2) {
+  Assert(index !== 0, "index is 1-based");
+  Assert(gameMode !== kGameModeZen, "MakeLevel is not MakeZen, duh");
+  var level = new Level({
+    index: index,
+    isSpawning: true,
+    // maxVX is allowed to grow with speedupFactor
+    // after there are no more splits.
+    maxVX: sxi(15 + index),
+    speedupFactor: 0.0001,
+    isP1Player: true,
+    isP2Player: !gSinglePlayer
+  });
+  return level;
+}
+function MakeSplitsCount(index) {
   Assert(index !== 0, "index is 1-based");
   // note: this is just a big bad random swag.
   var count = 400 + index * 50;
-  // zen has one level, and it is without a zero-energy based ending.
+  // zen has one level, and it is without any zero-energy-based ending.
   return ForGameMode(count, count, undefined);
 }
 function ChoosePillIDs(index) {
@@ -60,9 +98,9 @@ function Level(props) {
   var self = this;
   self.Init = function () {
     self.startTime = gGameTime;
-    self.isAttract = aub(props.isAttract, false);
     self.index = props.index;
-    Assert(self.isAttract && self.index === kAttractLevelIndex || !self.isAttract && self.index >= 1);
+    self.isAttract = self.index === kAttractLevelIndex;
+    self.isZen = self.index === kZenLevelIndex;
 
     // note: some of these are allowed to be undefined,
     // ie for attract mode level. although it is sort of ugly
@@ -74,7 +112,7 @@ function Level(props) {
     self.speedupFactor = props.speedupFactor;
     self.englishFactorPlayer = 1;
     self.englishFactorCPU = 1;
-    self.splitsCount = MakeSplitsCount(self.index); // TODO: argh, gGameMode!!!!!!!!!!!!!!!!!!!!!!!!
+    self.splitsCount = MakeSplitsCount(self.index);
     self.isSpawning = props.isSpawning;
 
     // I think the ensuing code indicates the Paddle should perhaps
@@ -89,9 +127,11 @@ function Level(props) {
       y: gh(0.5)
     };
 
-    // show paddle labels for zen or level 1.
-    var p1label = self.isAttract || gLevelIndex > 1 ? undefined : "P1";
-    var p2label = self.isAttract || gLevelIndex > 1 ? undefined : gSinglePlayer ? "GPT" : "P2";
+    // only show paddle labels for zen and level 1.
+    var _ref = self.isZen || self.index === 1 ? ["P1", "P2"] : [undefined, undefined],
+      _ref2 = _slicedToArray(_ref, 2),
+      p1label = _ref2[0],
+      p2label = _ref2[1];
     ForSide(gP1Side, function () {
       // p1 is always a human player.
       // p2 is either cpu or human.
@@ -182,6 +222,8 @@ function Level(props) {
     }
   };
   self.Step = function (dt) {
+    self.paddleP1.Step(dt, self);
+    self.paddleP2.Step(dt, self);
     if (!self.isSpawning && exists(self.speedupFactor)) {
       // allow future spawned pucks to go faster, up to a hard limit.
       self.maxVX = MinSigned(self.maxVX + self.speedupFactor * dt / kTimeStep, kMaxVX);
@@ -207,9 +249,9 @@ function Level(props) {
   self.IsSuddenDeath = function () {
     return exists(self.splitsCount) && self.splitsCount <= 0;
   };
-  self.Draw = function (_ref) {
-    var alpha = _ref.alpha,
-      isEndScreenshot = _ref.isEndScreenshot;
+  self.Draw = function (_ref3) {
+    var alpha = _ref3.alpha,
+      isEndScreenshot = _ref3.isEndScreenshot;
     if (!isEndScreenshot) {
       self.DrawPills(alpha);
       self.DrawNoMorePucks();

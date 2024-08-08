@@ -3,6 +3,8 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+// todo: maybe have a Side that owns the Paddle and the various Powerups.
+
 function Paddle(props) {
     /* props is {
        isPlayer,

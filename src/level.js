@@ -120,7 +120,7 @@ function ChoosePillIDs(index) {
         var rp = { x: gWidth-gXInset-gPaddleWidth, y: gh(0.5) };
 
         // only show paddle labels for zen and level 1.
-        var [p1label, p2Label] = (self.isZen || self.index === 1) ? ["P1", "P2"] : [undefined, undefined];
+        var [p1label, p2label] = (self.isZen || self.index === 1) ? ["P1", "P2"] : [undefined, undefined];
 
         ForSide(gP1Side,
                 () => {
@@ -211,6 +211,9 @@ function ChoosePillIDs(index) {
     };
 
     self.Step = function( dt ) {
+        self.paddleP1.Step( dt, self );
+        self.paddleP2.Step( dt, self );
+
         if (!self.isSpawning && exists(self.speedupFactor)) {
             // allow future spawned pucks to go faster, up to a hard limit.
             self.maxVX = MinSigned(

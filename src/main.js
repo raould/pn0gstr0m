@@ -1082,6 +1082,7 @@ function UpdateLocalStorage() {
         // the order of everything here matters (everything is fragile).
 	self.level = props.level;
 	Assert(exists(self.level));
+        self.maxVX = self.level.maxVX;
 
         gStateMuted = self.level.isAttract;
 	// ugh, all reset, recalculate business is confusing.
@@ -1159,8 +1160,7 @@ function UpdateLocalStorage() {
     self.Step = function( dt ) {
         self.theMenu?.Step(); // fyi this doesn't process menu inputs, that is below.
         self.level.Step( dt );
-        self.maxVX = self.level.maxVX; // todo: code smell global.
-        //logOnDelta("maxVX", self.maxVX, 1);
+        self.maxVX = self.level.maxVX;
         self.MaybeSpawnPills( dt );
 
         self.ProcessAllInput();
@@ -1172,8 +1172,6 @@ function UpdateLocalStorage() {
             dt = kTimeStep;
         }
         if (!self.paused || self.stepping) {
-            self.paddleP1.Step( dt, self );
-            self.paddleP2.Step( dt, self );
             self.StepMoveables( dt );
             self.StepAnimations( dt );
         }

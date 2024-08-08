@@ -31,6 +31,10 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
+// todo: fix up the globals to be more of a database, at least a hierarchical map.
+// then pass the db explicitly rather than havng spooky globals being used.
+// unfortunately, that would be a large time sink refactoring.
+
 var gDebug = true;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
@@ -49,6 +53,8 @@ function is2PGameOver() {
 
 // todo: the game mode stuff is a big ball of mud within
 // the larger death star of mud that is all of this code.
+// game mode is something that effects all played levels.
+// for zen there's admittedly only one level.
 // enum, mutually exclusive.
 var kGameModeRegular = "regular";
 var kGameModeHard = "hard";
@@ -67,8 +73,8 @@ function ForGameMode(regular, hard, zen) {
 // code smell: sentinel values.
 var kZenLevelIndex = -2;
 var kAttractLevelIndex = -1;
-// regular levels are 1-based.
-var gLevelIndex = 1;
+// levels are 1-based.
+var gLevel;
 
 // ----------------------------------------
 
@@ -409,7 +415,7 @@ var kDebug = -2;
 var kRoot = -1;
 var kWarning = 0; // audio permission via user interaction effing eff.
 var kTitle = 1;
-var kGetReady = 2; // includes 'level splash' for levels 2+.
+var kGetReady = 2; // also ashows level splash powerups for levels 2+.
 var kGame = 3;
 var kLevelFin = 4;
 var kGameOver = 5;
@@ -838,7 +844,7 @@ function TitleState() {
     ResetInput();
     ResetP1Side();
     self.attract = new GameState({
-      isAttract: true
+      level: MakeAttract()
     });
     self.timeout = gDebug ? 1 : 1000 * 1.5;
     self.started = gGameTime;
@@ -967,11 +973,10 @@ function GetReadyState() {
   self.Init = function () {
     ResetInput();
     gStateMuted = false;
-    self.pillIDs = ChoosePillIDs(gGameMode, gLevelIndex);
+    self.MakeLevel();
     var seconds = gDebug ? 1 : self.pillIDs.length === 2 ? 5 : 3;
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
-    self.MakeLevel();
     PlayBlip();
   };
   self.MakeLevel = function () {
@@ -1070,14 +1075,15 @@ function GameState(props) {
   var self = this;
   self.Init = function () {
     // the order of everything here matters (everything is fragile).
-    self.level = level;
+    self.level = props.level;
+    Assert(exists(self.level));
+    self.maxVX = self.level.maxVX;
     gStateMuted = self.level.isAttract;
-
-    // todo: code smell, this 'reset' business is kind of a big confused mess. :-(
+    // ugh, all reset, recalculate business is confusing.
     RecalculateConstants();
     ResetGlobalStorage();
     ResetInput();
-    gMonochrome = self.level.isAttract; // todo: make gMonochrome local instead?
+    gMonochrome = self.level.isAttract;
     gLevelTime = gGameTime;
     gP1Score = 0;
     gP2Score = 0;
@@ -1141,8 +1147,7 @@ function GameState(props) {
     var _self$theMenu3;
     (_self$theMenu3 = self.theMenu) == null || _self$theMenu3.Step(); // fyi this doesn't process menu inputs, that is below.
     self.level.Step(dt);
-    self.maxVX = self.level.maxVX; // todo: code smell global.
-    //logOnDelta("maxVX", self.maxVX, 1);
+    self.maxVX = self.level.maxVX;
     self.MaybeSpawnPills(dt);
     self.ProcessAllInput();
     if (self.quit) {
@@ -1153,8 +1158,6 @@ function GameState(props) {
       dt = kTimeStep;
     }
     if (!self.paused || self.stepping) {
-      self.paddleP1.Step(dt, self);
-      self.paddleP2.Step(dt, self);
       self.StepMoveables(dt);
       self.StepAnimations(dt);
     }
