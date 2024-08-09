@@ -59,21 +59,19 @@ var kAttractLevelIndex = -1;
 var kZenLevelIndex = -2;
 // levels are 1-based. 
 var gLevelIndex = gGameMode === kGameModeZen ? kZenLevelIndex : 1;
-function ForGameMode(regular, hard, zen) {
+function ForGameMode(regular, other1, other2) {
   if (gGameMode === kGameModeRegular) {
     return regular;
   } else if (gGameMode === kGameModeHard) {
-    return hard;
+    return exists(other2) ? other1 : regular;
   } else if (gGameMode === kGameModeZen) {
-    return zen;
+    return exists(other2) ? other2 : other1;
   }
 }
 function SetGameMode(mode) {
   Assert(mode === kGameModeRegular || mode === kGameModeHard || mode === kGameModeZen, mode);
   gGameMode = mode;
   ForGameMode(function () {
-    return gLevelIndex = 1;
-  }, function () {
     return gLevelIndex = 1;
   }, function () {
     return gLevelIndex = kZenLevelIndex;
@@ -983,7 +981,7 @@ function GetReadyState() {
   self.Init = function () {
     ResetInput();
     gStateMuted = false;
-    var seconds = ChoosePillIDs(gLevelIndex).length === 2 ? 5 : 3;
+    var seconds = gDebug ? 1 : ChoosePillIDs(gLevelIndex).length === 2 ? 5 : 3;
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.pillIDs = ChoosePillIDs(gLevelIndex);
@@ -1250,7 +1248,7 @@ function GameState(props) {
     self.ProcessAllInput();
     if (self.quit) {
       SaveEndScreenshot(self);
-      return gDebug ? kLevelFin : kTitle;
+      return ForGameMode(gDebug ? kLevelFin : kTitle, kTitle);
     }
     if (self.stepping) {
       dt = kTimeStep;
