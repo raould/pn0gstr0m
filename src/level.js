@@ -23,6 +23,7 @@ const kEnglishStep = 0.004;
         // coding is hard please let me just go online shopping.
 
         self.maxVX = props.maxVX;
+	Assert(!isBadNumber(self.maxVX));
 
         self.speedupFactor = props.speedupFactor;
         self.englishFactorPlayer = 1;

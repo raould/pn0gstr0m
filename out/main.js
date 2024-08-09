@@ -1221,7 +1221,7 @@ function GameState(props) {
       self.level = MakeLevel(gLevelIndex, self.paddleP1, self.paddleP2);
     }
     self.maxVX = self.level.maxVX;
-    Assert(exists(self.maxVX));
+    Assert(!isBadNumber(self.maxVX));
     //logOnDelta("maxVX", self.maxVX, 1);
   };
   self.Pause = function () {
@@ -1364,7 +1364,7 @@ function GameState(props) {
     });
   };
   self.CreateStartingPuck = function () {
-    Assert(exists(self.maxVX) && self.maxVX > 0);
+    Assert(!isBadNumber(self.maxVX) && self.maxVX > 0);
 
     // i am crying into my drink.
     // single player: puck goes towards gpu.
@@ -1498,8 +1498,8 @@ function GameState(props) {
     gPucks.A.forEach(function (p, i) {
       Assert(exists(p));
       p.Step(dt, self.maxVX, kMaxVY);
-      Assert(!isNaN(p.x), p);
-      Assert(!isNaN(p.y), p);
+      Assert(!isBadNumber(p.x), p);
+      Assert(!isBadNumber(p.y), p);
       if (!self.isAttract && !p.alive) {
         self.UpdateScore(p);
       }
@@ -1795,7 +1795,7 @@ function LevelFinState() {
         self.isNewHighScore = true;
       }
     }
-    Assert(exists(self.highScore));
+    Assert(!isBadNumber(self.highScore));
     self.hiMsg = self.isNewHighScore ? "NEW LEVEL HI: ".concat(self.highScore) : undefined;
     console.log(self.highScore, self.isNewHighScore, gLevelIndex, gLevelHighScores);
     self.goOn = false;

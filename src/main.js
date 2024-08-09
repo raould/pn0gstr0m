@@ -1225,7 +1225,7 @@ function UpdateLocalStorage() {
             self.level = MakeLevel(gLevelIndex, self.paddleP1, self.paddleP2);
         }
         self.maxVX = self.level.maxVX;
-        Assert(exists(self.maxVX));
+        Assert(!isBadNumber(self.maxVX));
         //logOnDelta("maxVX", self.maxVX, 1);
     };
 
@@ -1389,7 +1389,7 @@ function UpdateLocalStorage() {
     };
 
     self.CreateStartingPuck = function() {
-        Assert(exists(self.maxVX) && self.maxVX > 0);
+        Assert(!isBadNumber(self.maxVX) && self.maxVX > 0);
 
         // i am crying into my drink.
         // single player: puck goes towards gpu.
@@ -1522,8 +1522,8 @@ function UpdateLocalStorage() {
         gPucks.A.forEach((p, i) => {
             Assert(exists(p));
             p.Step(dt, self.maxVX, kMaxVY);
-            Assert(!isNaN(p.x), p);
-            Assert(!isNaN(p.y), p);
+            Assert(!isBadNumber(p.x), p);
+            Assert(!isBadNumber(p.y), p);
             if (!self.isAttract && !p.alive) {
                 self.UpdateScore(p);
             }
@@ -1841,7 +1841,7 @@ function UpdateLocalStorage() {
                 self.isNewHighScore = true;
             }
         }
-        Assert(exists(self.highScore));
+        Assert(!isBadNumber(self.highScore));
         self.hiMsg = self.isNewHighScore ? `NEW LEVEL HI: ${self.highScore}` : undefined;
         console.log(self.highScore, self.isNewHighScore, gLevelIndex, gLevelHighScores);
 
