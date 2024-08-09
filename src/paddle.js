@@ -247,14 +247,16 @@ function Paddle(props) {
             var wy = WY(self.y);
 
 	    if (exists(s01)) {
-		gCx.beginPath(); // outline.
+		// outline. not drawn for attract mode.
+		gCx.beginPath();
 		gCx.rect( wx, wy, self.width, self.height );
-		gCx.lineWidth = sxi(1);
+		gCx.lineWidth = sxi(2);
 		gCx.strokeStyle = RandomGreen(alpha);
 		gCx.stroke();
 	    }
 
-	    gCx.beginPath(); // insides.
+	    // insides. gets more empty as the split count s01 goes down.
+	    gCx.beginPath();
 	    gCx.rect( wx, wy, self.width, self.height );
 	    gCx.fillStyle = exists(s01) ?
 		RandomForColorFadeIn(cyanSpec, alpha * Math.max(0.1, s01)) :
