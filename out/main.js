@@ -1016,7 +1016,8 @@ function GetReadyState() {
       if (gGameMode !== kGameModeZen) {
         DrawText("LEVEL ".concat(gLevelIndex), "center", gw(0.5), gh(0.3), gSmallFontSizePt);
       }
-      DrawText("GET READY! ".concat(t), "center", gw(0.5), gh(0.55), gBigFontSizePt);
+      var y = self.pillIDs.length === 0 ? gh(0.55) : gh(0.52);
+      DrawText("GET READY! ".concat(t), "center", gw(0.5), y, gBigFontSizePt);
       if (exists(zpt)) {
         gCx.fillStyle = RandomForColor(cyanSpec);
         DrawText("ZERO POINT ENERGY: ".concat(zpt), "center", gw(0.5), gh(0.9), gSmallFontSizePt);
@@ -1040,7 +1041,7 @@ function GetReadyState() {
         }
         var dx = gw() / (self.pillIDs.length + 1);
         var x0 = dx;
-        var scale = 0.7;
+        var scale = 1;
         for (var i = 0; i < self.pillIDs.length; ++i) {
           var pid = self.pillIDs[i];
           var _gPillInfo$pid = gPillInfo[pid],
@@ -1051,7 +1052,7 @@ function GetReadyState() {
           var width = wfn() * scale;
           var height = hfn() * scale;
           var x = x0 + dx * i;
-          var oy = Math.sin(x * 10 + gGameTime / 100) * (height / 2) * 0.1;
+          var oy = Math.sin(x * 10 + gGameTime / 100) * (height / 2) * 0.2;
           drawer(gP1Side,
           // just the least wrong choice for side.
           {
@@ -1851,7 +1852,7 @@ function LevelFinState() {
       ClearScreen();
       gCx.drawImage(gCanvas2, 0, 0);
       gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
-      DrawText("LEVEL ".concat(self.levelIndex, " WON!"), "center", gw(0.5), gh(0.5), gBigFontSizePt);
+      DrawText("LEVEL ".concat(self.levelIndex, " WON!"), "center", gw(0.5), gh(0.55), gBigFontSizePt);
       if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
         DrawText("NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
@@ -1926,7 +1927,7 @@ function GameOverState() {
       ClearScreen();
       gCx.drawImage(gCanvas2, 0, 0);
       gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
-      DrawText("GAME OVER", "center", gw(0.5), gh(0.5), gBigFontSizePt);
+      DrawText("GAME OVER", "center", gw(0.5), gh(0.55), gBigFontSizePt);
       if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
         DrawText("NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt);

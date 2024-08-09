@@ -1016,7 +1016,8 @@ function UpdateLocalStorage() {
             if (gGameMode !== kGameModeZen) {
                 DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.3), gSmallFontSizePt);
             }
-            DrawText(`GET READY! ${t}`, "center", gw(0.5), gh(0.55), gBigFontSizePt);
+            var y = (self.pillIDs.length === 0) ? gh(0.55) : gh(0.52);
+            DrawText(`GET READY! ${t}`, "center", gw(0.5), y, gBigFontSizePt);
 
             if (exists(zpt)) {
                 gCx.fillStyle = RandomForColor(cyanSpec);
@@ -1042,14 +1043,14 @@ function UpdateLocalStorage() {
                 }
                 var dx = gw() / (self.pillIDs.length+1);
                 var x0 = dx;
-		var scale = 0.7;
+		var scale = 1;
                 for (let i = 0; i < self.pillIDs.length; ++i) {
                     const pid = self.pillIDs[i];
                     const { name, drawer, wfn, hfn } = gPillInfo[pid];
                     const width = wfn() * scale;
                     const height = hfn() * scale;
                     const x = x0 + dx * i;
-                    const oy = Math.sin((x*10) + (gGameTime/100)) * (height/2) * 0.1;
+                    const oy = Math.sin((x*10) + (gGameTime/100)) * (height/2) * 0.2;
                     drawer(gP1Side, // just the least wrong choice for side.
                            {
                                x: x - (width/2),
@@ -1909,7 +1910,7 @@ function UpdateLocalStorage() {
                 `LEVEL ${self.levelIndex} WON!`,
                 "center",
                 gw(0.5),
-                gh(0.5),
+                gh(0.55),
                 gBigFontSizePt,
             );
 
@@ -2030,7 +2031,7 @@ function UpdateLocalStorage() {
                 "GAME OVER",
                 "center",
                 gw(0.5),
-                gh(0.5),
+                gh(0.55),
                 gBigFontSizePt,
             );
             if (self.goOn) {
