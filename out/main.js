@@ -609,6 +609,7 @@ function DrawBounds() {
     return;
   }
   Cxdo(function () {
+    // the scaled bounds.
     gCx.beginPath();
     gCx.rect(gXInset, gYInset, gWidth - gXInset * 2, gHeight - gYInset * 2);
     gCx.lineWidth = 1;
@@ -616,26 +617,41 @@ function DrawBounds() {
     gCx.stroke();
   });
   Cxdo(function () {
+    // the scaled x.
     gCx.beginPath();
-    gCx.moveTo(WX(0), WY(0));
-    gCx.lineTo(WX(gWidth), WY(gHeight));
-    gCx.moveTo(WX(gWidth), WY(0));
-    gCx.lineTo(WX(0), WY(gHeight));
+    gCx.moveTo(0, 0);
+    gCx.lineTo(gWidth, gHeight);
+    gCx.moveTo(gWidth, 0);
+    gCx.lineTo(0, gHeight);
     gCx.strokeStyle = rgba255s(white, alpha / 2);
     gCx.lineWidth = 10;
     gCx.stroke();
     gCx.strokeRect(5, 5, gWidth - 10, gHeight - 10);
   });
   Cxdo(function () {
+    // the full canvas x.
     gCx.beginPath();
-    gCx.moveTo(WX(0), WY(0));
-    gCx.lineTo(WX(gCanvas.width), WY(gCanvas.height));
-    gCx.moveTo(WX(gCanvas.width), WY(0));
-    gCx.lineTo(WX(0), WY(gCanvas.height));
+    gCx.moveTo(0, 0);
+    gCx.lineTo(gCanvas.width, gCanvas.height);
+    gCx.moveTo(gCanvas.width, 0);
+    gCx.lineTo(0, gCanvas.height);
     gCx.strokeStyle = rgba255s(magentaSpec.regular, alpha);
     gCx.lineWidth = 2;
     gCx.stroke();
     gCx.strokeRect(5, 5, gWidth - 10, gHeight - 10);
+  });
+  Cxdo(function () {
+    // scaled grid.
+    gCx.beginPath();
+    gCx.moveTo(0, gh(1 / 3));
+    gCx.lineTo(gw(1), gh(1 / 3));
+    gCx.moveTo(0, gh(1 / 2));
+    gCx.lineTo(gw(1), gh(1 / 2));
+    gCx.moveTo(0, gh(2 / 3));
+    gCx.lineTo(gw(1), gh(2 / 3));
+    gCx.strokeStyle = "pink";
+    gCx.lineWidth = 1;
+    gCx.stroke();
   });
 }
 function CreateCRTOutlinePath() {
@@ -760,6 +776,9 @@ function Lifecycle(handlerMap) {
         ++gFrameCount;
         self.DrawCRTScanlines();
         DrawDebugList();
+        if (gDebug) {
+          DrawBounds(0.2);
+        }
         if (gShowToasts) {
           StepToasts();
         }
@@ -1747,7 +1766,6 @@ function GameState(props) {
     if (!gDebug) {
       return;
     }
-    DrawBounds(0.2);
     self.paddleP1.DrawDebug();
     self.paddleP2.DrawDebug();
     gP1Target.DrawDebug();
