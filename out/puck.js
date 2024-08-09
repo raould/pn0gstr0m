@@ -269,11 +269,14 @@ function Puck() {
     return newprops;
   };
   self.AllPaddlesCollision = function (paddles, isSuddenDeath, maxVX) {
-    var spawned = [];
+    var spawned;
     if (self.alive && !self.isLocked) {
       paddles.forEach(function (paddle) {
         var newprops = self.PaddleCollision(paddle, isSuddenDeath, maxVX);
         if (exists(newprops)) {
+          if (isU(spawned)) {
+            spawned = [];
+          }
           spawned.push(newprops);
         }
       });

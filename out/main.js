@@ -1196,7 +1196,7 @@ function GameState(props) {
       });
     })();
     self.MakeLevel();
-    self.CreateStartingPuck();
+    self.CreateStartingPuck(self.level.vx0);
 
     // this countdown is a block on both player & cpu ill spawning.
     // first wait is longer before the very first pill.
@@ -1340,7 +1340,7 @@ function GameState(props) {
     if (self.isAttract) {
       if (gPucks.A.length === 0) {
         // attract never ends until dismissed.
-        self.CreateStartingPuck();
+        self.CreateStartingPuck(self.level.vx0);
       }
       return undefined;
     } else {
@@ -1381,9 +1381,7 @@ function GameState(props) {
       }
     });
   };
-  self.CreateStartingPuck = function () {
-    Assert(!isBadNumber(self.maxVX) && self.maxVX > 0);
-
+  self.CreateStartingPuck = function (vx) {
     // i am crying into my drink.
     // single player: puck goes towards gpu.
     // two player: puck goes toward p2.
@@ -1394,7 +1392,7 @@ function GameState(props) {
     p.PlacementInit({
       x: gw(ForSide(gP1Side, 0.3, 0.7)),
       y: self.isAttract ? gh(gR.RandomRange(0.4, 0.6)) : gh(0.3),
-      vx: sign * self.maxVX * 0.2,
+      vx: sign * vx,
       vy: self.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
       ur: true
     });
@@ -1528,7 +1526,7 @@ function GameState(props) {
         self.level.OnPuckSplits(splits);
 
         // note: splits are pushed before parent, match: Draw()'s revEach() z order.
-        if (!self.isAttract) {
+        if (self.level.isSpawning) {
           for (var _i = 0; (_ref3 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref3 : 0; ++_i) {
             var _ref3;
             var s = gPuckPool.Alloc();

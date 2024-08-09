@@ -23,6 +23,7 @@ function Level(props) {
     // and dangerous that way, vs. an explicit isAttract bool?
     // coding is hard please let me just go online shopping.
 
+    self.vx0 = props.vx0;
     self.maxVX = props.maxVX;
     Assert(!isBadNumber(self.maxVX));
     self.speedupFactor = props.speedupFactor;

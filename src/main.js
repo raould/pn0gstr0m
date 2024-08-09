@@ -1193,7 +1193,7 @@ function UpdateLocalStorage() {
 
         self.MakeLevel();
 
-        self.CreateStartingPuck();
+        self.CreateStartingPuck(self.level.vx0);
 
         // this countdown is a block on both player & cpu ill spawning.
         // first wait is longer before the very first pill.
@@ -1363,7 +1363,7 @@ function UpdateLocalStorage() {
         if (self.isAttract) {
             if (gPucks.A.length === 0) {
                 // attract never ends until dismissed.
-                self.CreateStartingPuck();
+                self.CreateStartingPuck(self.level.vx0);
             }
             return undefined;
         }
@@ -1408,9 +1408,7 @@ function UpdateLocalStorage() {
         });
     };
 
-    self.CreateStartingPuck = function() {
-        Assert(!isBadNumber(self.maxVX) && self.maxVX > 0);
-
+    self.CreateStartingPuck = function(vx) {
         // i am crying into my drink.
         // single player: puck goes towards gpu.
         // two player: puck goes toward p2.
@@ -1423,7 +1421,7 @@ function UpdateLocalStorage() {
                           y: (self.isAttract ?
                               gh(gR.RandomRange(0.4, 0.6)) :
                               gh(0.3)),
-                          vx: sign * self.maxVX*0.2,
+                          vx: sign * vx,
                           vy: (self.isAttract ?
                                gR.RandomCentered(0, 2, 1) :
                                0.3),
@@ -1558,7 +1556,7 @@ function UpdateLocalStorage() {
                 self.level.OnPuckSplits(splits);
                 
                 // note: splits are pushed before parent, match: Draw()'s revEach() z order.
-                if( !self.isAttract ) {
+                if(self.level.isSpawning) {
                     for (let i = 0; i < splits?.length ?? 0; ++i) {
                         var s = gPuckPool.Alloc();
                         if (exists(s)) {

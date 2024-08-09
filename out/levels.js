@@ -18,6 +18,7 @@ function MakeAttract(paddleP1, paddleP2) {
     index: kAttractLevelIndex,
     isAttract: true,
     isSpawning: false,
+    vx0: sxi(3),
     maxVX: sxi(14),
     isP1Player: false,
     isP2Player: false,
@@ -33,6 +34,7 @@ function MakeZen(paddleP1, paddleP2) {
   return new Level({
     index: kZenLevelIndex,
     isSpawning: true,
+    vx0: sxi(3),
     maxVX: sxi(18),
     isP1Player: true,
     isP2Player: !gSinglePlayer,
@@ -53,6 +55,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
   var level = new Level({
     index: index,
     isSpawning: true,
+    vx0: sxi(3),
     // maxVX is allowed to grow after there are no more splits.
     maxVX: sxi(12 + index),
     speedupFactor: 0.0001,
@@ -67,6 +70,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
 }
 function MakeSplitsCount(index) {
   Assert(index !== 0, "index is 1-based");
+  return 3;
   if (index === kZenLevelIndex) {
     return undefined;
   }
