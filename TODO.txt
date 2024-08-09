@@ -3,6 +3,7 @@
 * gLevelIndex is a code smell, but is a nightmare to fix. i tried.
 * figure out per-game high score ui ux.
 * need to specify first puck speed specifically rather than ratio?
+* better safe color for low hp on xtra and barrier?
 * quit should really ask ays?
 * maybe have rare 3x split into even smaller, faster pucks?
 * do i need clearFn() for gamepad buttons and joystick? or what else instead?

@@ -128,14 +128,6 @@ function Wrap(n, max) {
   }
   return n;
 }
-function Clip(n, min, max) {
-  if (min > max) {
-    var tmp = min;
-    min = max;
-    max = tmp;
-  }
-  return Math.min(max, Math.max(min, n));
-}
 function MinSigned(n, max) {
   var fm = Math.min(Math.abs(n), Math.abs(max));
   return Sign(n) * fm;
@@ -143,6 +135,14 @@ function MinSigned(n, max) {
 function MaxSigned(n, max) {
   var fm = Math.max(Math.abs(n), Math.abs(max));
   return Sign(n) * fm;
+}
+function Clip(n, min, max) {
+  if (min > max) {
+    var tmp = min;
+    min = max;
+    max = tmp;
+  }
+  return Math.min(max, Math.max(min, n));
 }
 function Clip01(n) {
   return Clip(n, 0, 1);

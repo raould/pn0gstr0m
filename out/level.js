@@ -29,7 +29,8 @@ function Level(props) {
     self.speedupFactor = props.speedupFactor;
     self.englishFactorPlayer = 1;
     self.englishFactorCPU = 1;
-    self.splitsCount = props.splitsCount;
+    self.splitsAllowed = props.splitsCount;
+    self.splitsRemaining = self.splitsAllowed;
     self.isSpawning = props.isSpawning;
 
     // todo: maybe GameState shouldn't own the paddles.
@@ -56,9 +57,9 @@ function Level(props) {
     var count = (_splits$length = splits == null ? void 0 : splits.length) != null ? _splits$length : 0;
     if (self.isSpawning) {
       Assert(count <= 1, count);
-      if (count > 0 && exists(self.splitsCount)) {
-        self.splitsCount = Math.max(0, self.splitsCount - count);
-        self.isSpawning = self.splitsCount > 0;
+      if (count > 0 && exists(self.splitsRemaining)) {
+        self.splitsRemaining = Math.max(0, self.splitsRemaining - count);
+        self.isSpawning = self.splitsRemaining > 0;
       }
     }
   };
@@ -83,10 +84,10 @@ function Level(props) {
     }
   };
   self.IsLastOfThePucks = function () {
-    return exists(self.splitsCount) && self.splitsCount <= 200;
+    return exists(self.splitsRemaining) && self.splitsRemaining <= 200;
   };
   self.IsSuddenDeath = function () {
-    return exists(self.splitsCount) && self.splitsCount <= 0;
+    return exists(self.splitsRemaining) && self.splitsRemaining <= 0;
   };
   self.Draw = function (_ref) {
     var alpha = _ref.alpha,
@@ -115,7 +116,7 @@ function Level(props) {
     // todo: not actually sure how best to represent this to players in the ui. :-\
     var msg = undefined;
     if (self.IsLastOfThePucks()) {
-      msg = "ZERO POINT ENERGY: ".concat(self.splitsCount);
+      msg = "ZERO POINT ENERGY: ".concat(self.splitsRemaining);
     }
     if (self.IsSuddenDeath()) {
       msg = "EL FIN";

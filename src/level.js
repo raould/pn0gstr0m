@@ -30,7 +30,8 @@ const kEnglishStep = 0.004;
         self.englishFactorPlayer = 1;
         self.englishFactorCPU = 1;
 
-        self.splitsCount = props.splitsCount;
+        self.splitsAllowed = props.splitsCount;
+        self.splitsRemaining = self.splitsAllowed;
         self.isSpawning = props.isSpawning;
 
         // todo: maybe GameState shouldn't own the paddles.
@@ -59,9 +60,9 @@ const kEnglishStep = 0.004;
 	var count = splits?.length ?? 0;
         if (self.isSpawning) {
             Assert(count <= 1, count);
-            if (count > 0 && exists(self.splitsCount)) {
-                self.splitsCount = Math.max(0, self.splitsCount - count);
-                self.isSpawning = self.splitsCount > 0;
+            if (count > 0 && exists(self.splitsRemaining)) {
+                self.splitsRemaining = Math.max(0, self.splitsRemaining - count);
+                self.isSpawning = self.splitsRemaining > 0;
             }
         }
     };
@@ -92,11 +93,11 @@ const kEnglishStep = 0.004;
     };
 
     self.IsLastOfThePucks = function() {
-        return exists(self.splitsCount) && self.splitsCount <= 200;
+        return exists(self.splitsRemaining) && self.splitsRemaining <= 200;
     };
 
     self.IsSuddenDeath = function() {
-        return exists(self.splitsCount) && self.splitsCount <= 0;
+        return exists(self.splitsRemaining) && self.splitsRemaining <= 0;
     };
 
     self.Draw = function({ alpha, isEndScreenshot }) {
@@ -126,7 +127,7 @@ const kEnglishStep = 0.004;
         // todo: not actually sure how best to represent this to players in the ui. :-\
         var msg = undefined;
         if (self.IsLastOfThePucks()) {
-            msg = `ZERO POINT ENERGY: ${self.splitsCount}`;
+            msg = `ZERO POINT ENERGY: ${self.splitsRemaining}`;
         }            
         if (self.IsSuddenDeath()) {
             msg = "EL FIN";

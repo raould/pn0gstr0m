@@ -192,8 +192,7 @@ function Paddle(props) {
   self.getVY = function () {
     return (self.y - self.prevY) / kTimeStep;
   };
-  self.Draw = function (alpha, gameState) {
-    var hp01 = exists(self.hp) ? self.hp / self.hp0 : 1;
+  self.Draw = function (alpha, gameState, s01) {
     self.barriers.A.forEach(function (b) {
       b.Draw(alpha);
     });
@@ -203,23 +202,40 @@ function Paddle(props) {
     if (exists(self.neo)) {
       self.neo.Draw(alpha, gameState);
     }
-    self.DrawPaddle(alpha, hp01);
+    if (exists(self.hp)) {
+      self.DrawAsXtra(alpha, self.hp / self.hp0);
+    } else {
+      self.DrawAsPlayer(alpha, s01);
+    }
   };
-  self.DrawPaddle = function (alpha, hp01) {
+  self.DrawAsXtra = function (alpha, hp01) {
     Cxdo(function () {
-      var hpw = isU(self.hp) ? self.width : Math.max(sx1(2), ii(self.width * hp01));
+      var hpw = Math.max(sx1(2), ii(self.width * hp01));
       var wx = WX(self.x + (self.width - hpw) / 2);
       var wy = WY(self.y);
-      gCx.beginPath(); // outline.
-      var o = sx1(1);
-      var o2 = o * 2;
-      gCx.rect(wx - o, wy - o, hpw + o2, self.height + o2);
-      gCx.fillStyle = RandomGreen(0.4 * alpha);
-      gCx.fill();
-      gCx.beginPath(); // insides.
+      gCx.beginPath();
       gCx.rect(wx, wy, hpw, self.height);
-      // match: barrier inflection point.
+      // match: barrier hp inflection point.
       gCx.fillStyle = RandomForColorFadeIn(hp01 > 0.2 ? greenSpec : yellowSpec, alpha);
+      gCx.fill();
+    });
+  };
+  self.DrawAsPlayer = function (alpha, s01) {
+    // todo: way too much complectification here of xtra vs. attract vs. playing paddles.
+    // e.g. s01 == undefined implies attract mode player paddle.
+    Cxdo(function () {
+      var wx = WX(self.x);
+      var wy = WY(self.y);
+      if (exists(s01)) {
+        gCx.beginPath(); // outline.
+        gCx.rect(wx, wy, self.width, self.height);
+        gCx.lineWidth = sxi(1);
+        gCx.strokeStyle = RandomGreen(alpha);
+        gCx.stroke();
+      }
+      gCx.beginPath(); // insides.
+      gCx.rect(wx, wy, self.width, self.height);
+      gCx.fillStyle = exists(s01) ? RandomForColorFadeIn(cyanSpec, alpha * Math.max(0.1, s01)) : RandomGreen(alpha);
       gCx.fill();
       if (exists(self.label)) {
         // label lives longer so newbies can notice it.

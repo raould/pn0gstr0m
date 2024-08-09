@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = true;
+var gDebug = false;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
 
@@ -1763,8 +1763,9 @@ function UpdateLocalStorage() {
             self.level.Draw({ alpha: self.Alpha(), isEndScreenshot });
 
             // draw paddles under pucks, at least so i can visually debug collisions.
-            self.paddleP1.Draw( self.Alpha(), self );
-            self.paddleP2.Draw( self.Alpha(), self );
+	    const s01 = exists(self.level.splitsRemaining) ? Clip01(self.level.splitsRemaining / self.level.splitsAllowed) : undefined;
+            self.paddleP1.Draw( self.Alpha(), self, s01 );
+            self.paddleP2.Draw( self.Alpha(), self, s01 );
 
             // match: pucks revEach so splits show up on top, z order.
             // pucks going away from (single) player.

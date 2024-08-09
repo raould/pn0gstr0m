@@ -31,7 +31,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = true;
+var gDebug = false;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
 var kCanvasName = "canvas"; // match: index.html
@@ -1719,8 +1719,9 @@ function GameState(props) {
       });
 
       // draw paddles under pucks, at least so i can visually debug collisions.
-      self.paddleP1.Draw(self.Alpha(), self);
-      self.paddleP2.Draw(self.Alpha(), self);
+      var s01 = exists(self.level.splitsRemaining) ? Clip01(self.level.splitsRemaining / self.level.splitsAllowed) : undefined;
+      self.paddleP1.Draw(self.Alpha(), self, s01);
+      self.paddleP2.Draw(self.Alpha(), self, s01);
 
       // match: pucks revEach so splits show up on top, z order.
       // pucks going away from (single) player.
