@@ -12,7 +12,7 @@ var kEnglishStep = 0.004;
 function Level(props) {
   var self = this;
   self.Init = function () {
-    self.isAttract = props.isAttract;
+    self.isAttract = aub(props.isAttract, false);
     self.startTime = gGameTime;
 
     // could be kAttractLevelIndex.
@@ -23,13 +23,15 @@ function Level(props) {
     // and dangerous that way, vs. an explicit isAttract bool?
     // coding is hard please let me just go online shopping.
 
+    self.vx0 = props.vx0;
     self.maxVX = props.maxVX;
+    Assert(!isBadNumber(self.maxVX));
     self.speedupFactor = props.speedupFactor;
     self.englishFactorPlayer = 1;
     self.englishFactorCPU = 1;
-    self.initPuckCount = props.splitsCount;
-    self.splitsCount = props.splitsCount;
-    self.isSpawning = exists(self.splitsCount);
+    self.splitsAllowed = props.splitsCount;
+    self.splitsRemaining = self.splitsAllowed;
+    self.isSpawning = props.isSpawning;
 
     // todo: maybe GameState shouldn't own the paddles.
     self.paddleP1 = props.paddleP1;
@@ -50,21 +52,35 @@ function Level(props) {
     });
     self.p2Pill = undefined;
   };
-  self.OnPuckSplit = function (count) {
-    if (self.isSpawning && count > 0) {
-      Assert(exists(self.splitsCount));
-      self.splitsCount = Math.max(0, self.splitsCount - count);
-      self.isSpawning = self.splitsCount > 0;
+  self.EnergyFactor = function () {
+    if (isU(self.splitsRemaining)) {
+      return undefined;
+    } else {
+      return self.splitsRemaining / self.splitsAllowed;
+    }
+  };
+  self.OnPuckSplits = function (splits) {
+    var _splits$length;
+    var count = (_splits$length = splits == null ? void 0 : splits.length) != null ? _splits$length : 0;
+    if (self.isSpawning) {
+      Assert(count <= 1, count);
+      if (count > 0 && exists(self.splitsRemaining)) {
+        self.splitsRemaining = Math.max(0, self.splitsRemaining - count);
+        self.isSpawning = self.splitsRemaining > 0;
+      }
     }
   };
   self.Step = function (dt) {
     if (!self.isSpawning && exists(self.speedupFactor)) {
-      // allow pucks to go faster, up to a hard limit.
+      Assert(gGameMode !== kGameModeZen);
+
+      // allow future spawned pucks to go faster, up to a hard limit.
       self.maxVX = MinSigned(self.maxVX + self.speedupFactor * dt / kTimeStep, kMaxVX);
 
-      // heuristic: go even more crazy on the english at the very end of the level.
+      // heuristics to increase english, all fairly arbitrary hacky values.
+      // boost english at the very end of the level.
       var englishBoost = gPucks.A.length < 5 ? 10 : 1;
-      // english gets more crazy over time, even more so for the player.
+      // increase over time, more so for the player.
       self.englishFactorPlayer += dt / kTimeStep * kEnglishStep * englishBoost;
       // the cpu doesn't get as much english because if they are the
       // first one to hit a puck with a lot of english it looks like cheating.
@@ -78,20 +94,33 @@ function Level(props) {
     }
   };
   self.IsLastOfThePucks = function () {
-    return exists(self.initPuckCount) && exists(self.splitsCount) && self.splitsCount <= 201;
+    return exists(self.splitsRemaining) && self.splitsRemaining <= 200;
   };
   self.IsSuddenDeath = function () {
-    return exists(self.splitsCount) && self.splitsCount <= 0;
+    return exists(self.splitsRemaining) && self.splitsRemaining <= 0;
   };
   self.Draw = function (_ref) {
     var alpha = _ref.alpha,
       isEndScreenshot = _ref.isEndScreenshot;
     if (!isEndScreenshot) {
+      self.DrawEnergy(alpha);
       self.DrawPills(alpha);
-      self.DrawNoMorePucks();
       // todo: you'd maybe kind of expect lots of
       // other things like paddles and pucks to be
       // drawn by the level too, huh? ...
+    }
+  };
+  self.DrawEnergy = function (alpha) {
+    if (exists(self.splitsRemaining)) {
+      Cxdo(function () {
+        gCx.beginPath();
+        gCx.fillStyle = RandomForColor(cyanSpec, alpha);
+        if (self.splitsRemaining > 0) {
+          DrawText(self.splitsRemaining, "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
+        } else {
+          DrawText("ZERO", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
+        }
+      });
     }
   };
   self.DrawPills = function (alpha) {
@@ -100,33 +129,6 @@ function Level(props) {
     }
     if (exists(self.p2Pill)) {
       self.DrawPill(alpha, self.p2Pill, OtherSide(gP1Side), RandomGrey(alpha));
-    }
-  };
-  self.DrawNoMorePucks = function () {
-    if (self.isAttract) {
-      return;
-    }
-
-    // todo: not actually sure how best to represent this to players in the ui. :-\
-    var msg = undefined;
-    if (self.IsLastOfThePucks()) {
-      msg = "ZERO POINT ENERGY: ".concat(self.splitsCount);
-    }
-    if (self.IsSuddenDeath()) {
-      msg = "EL FIN";
-    }
-    if (exists(msg)) {
-      Cxdo(function () {
-        // remove dotted center line.
-        gCx.fillStyle = backgroundColorStr;
-        var cx = gw(0.5);
-        var cy = gh(0.9);
-        var ox = sx(65);
-        var oy = sy(13);
-        gCx.fillRect(cx - ox, cy - oy * 1.45, ox * 2, oy * 2);
-        gCx.fillStyle = RandomCyan(0.8);
-        DrawText(msg, "center", cx, cy, gSmallFontSizePt);
-      });
     }
   };
   self.DrawPill = function (alpha, pill, side, color) {

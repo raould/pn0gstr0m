@@ -55,7 +55,7 @@ function Pill(props) {
     return self.alive ? self : undefined;
   };
   self.Move = function (dt) {
-    dt = kMoveStep * (dt / kTimeStep);
+    dt = dt * kPhysicsStepScale;
     self.prevX = self.x;
     self.prevY = self.y;
     self.x += self.vx * dt;

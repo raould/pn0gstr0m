@@ -13,13 +13,13 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 
 // yes this is really hard to playtest.
 
-var kAttractLevelIndex = -1;
 function MakeAttract(paddleP1, paddleP2) {
   return new Level({
     index: kAttractLevelIndex,
     isAttract: true,
+    isSpawning: false,
+    vx0: sxi(3),
     maxVX: sxi(14),
-    splitsCount: undefined,
     isP1Player: false,
     isP2Player: false,
     pills: [],
@@ -27,37 +27,69 @@ function MakeAttract(paddleP1, paddleP2) {
     paddleP2: paddleP2
   });
 }
+function MakeZen(paddleP1, paddleP2) {
+  var pills = ChoosePillIDs(kZenLevelIndex).map(function (pid) {
+    return gPillInfo[pid].maker;
+  });
+  return new Level({
+    index: kZenLevelIndex,
+    isSpawning: true,
+    vx0: sxi(3),
+    maxVX: sxi(18),
+    isP1Player: true,
+    isP2Player: !gSinglePlayer,
+    pills: pills,
+    paddleP1: paddleP1,
+    paddleP2: paddleP2
+  });
+}
 
 // level is one-based.
+// zen mode means only one level!
 function MakeLevel(index, paddleP1, paddleP2) {
-  Assert(index > 0, "index is 1-based");
-  var pillMakers = ChoosePillIDs(index).map(function (pid) {
+  Assert(index !== 0, "index is 1-based");
+  var splitsCount = MakeSplitsCount(index);
+  var pills = ChoosePillIDs(index).map(function (pid) {
     return gPillInfo[pid].maker;
   });
   var level = new Level({
     index: index,
-    isAttract: false,
+    isSpawning: true,
+    vx0: sxi(3),
     // maxVX is allowed to grow after there are no more splits.
     maxVX: sxi(12 + index),
     speedupFactor: 0.0001,
-    splitsCount: MakeSplitsCount(index),
+    splitsCount: splitsCount,
     isP1Player: true,
     isP2Player: !gSinglePlayer,
-    pills: pillMakers,
+    pills: pills,
     paddleP1: paddleP1,
     paddleP2: paddleP2
   });
   return level;
 }
 function MakeSplitsCount(index) {
-  Assert(index > 0, "index is 1-based");
-  // note: this is just a big bad random swag.
-  return 400 + index * 50;
+  Assert(index !== 0, "index is 1-based");
+  if (index === kAttractLevelIndex) {
+    return 0;
+  } else if (index === kZenLevelIndex) {
+    return undefined;
+  } else if (index === 1) {
+    return 100;
+  } else {
+    // level 2 is 200.
+    // note: this is just a big bad random swag.
+    var extra = Math.max(0, index - 2) * 50;
+    return 200 + extra;
+  }
 }
 var gChosenPillIDsCache;
 function ChoosePillIDs(index) {
   var _gChosenPillIDsCache;
   Assert(index != kAttractLevelIndex);
+  if (index === kZenLevelIndex) {
+    return _toConsumableArray(gPillIDs);
+  }
   var i0 = index - 1;
   if (((_gChosenPillIDsCache = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache.index) === index) {
     var _gChosenPillIDsCache2;

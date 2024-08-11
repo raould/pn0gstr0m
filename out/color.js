@@ -60,6 +60,7 @@ var crtOutlineColorStr = "rgb(16, 64, 16)";
 var backgroundColorStr = "black";
 // match: backgroundColorStr, index.html
 var scanlineColorStr = "rgba(0, 0, 0, 0.15)";
+var puckColorStr = "cyan";
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 var _tc = Array(4);
@@ -69,6 +70,9 @@ function rgba255s(array, alpha) {
   _tc[0] = array[0];
   _tc[1] = array[1];
   _tc[2] = array[2];
+
+  // alpha is, in order of highest precedence:
+  // array[4], or the 'alpha' argument, or the default value of 1.
   _tc[3] = alpha != null ? alpha : 1;
   if (array.length == 4) {
     _tc[3] = array[3];
@@ -89,32 +93,40 @@ function RandomForColor(spec, alpha) {
   if (gR.RandomBool(0.05)) {
     return rgba255s(spec.strong, alpha);
   } else {
-    // NTSC.
+    // "NTSC" ha ha.
     return rgba255s(spec.regular.map(function (ch) {
       return gR.RandomCentered(ch, 16);
     }), alpha);
   }
 }
-
-// evil globals herein.
-// everything starts off all green to harken back to pongy games,
-// even if they weren't actually all on green screens, hah, 
-// then gradually flickers into the given color. 
-function RandomForColorFadeIn(color, alpha) {
-  if (alpha == undefined) {
-    alpha = 1;
-  }
+function FadeIn(alpha) {
   if (gMonochrome) {
     // i.e. attract mode.
     return rgba255s(greenSpec.strong, alpha);
   } else if (gR.RandomFloat() > GameTime01(kGreenFadeInMsec)) {
     // gradully go from green to color at game start.
     return rgba255s(greenSpec.strong, alpha);
-  } else {
-    // even more fading in, to go along with MakeGameStartAnimation.
-    alpha = Math.min(alpha, Clip01(GameTime01(kAlphaFadeInMsec)));
-    return RandomForColor(color, alpha);
   }
+  return undefined;
+}
+
+// evil globals herein.
+// everything starts off all green to harken back to pongy games,
+// even if they weren't actually all on green screens, hah, 
+// then gradually flickers into the given color. 
+function RandomForColorFadeIn(spec) {
+  var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+  var faded = FadeIn(alpha);
+  if (exists(faded)) {
+    return faded;
+  } else {
+    // even more with the fading in, see MakeGameStartAnimation.
+    alpha = Math.min(alpha, Clip01(GameTime01(kAlphaFadeInMsec)));
+    return RandomForColor(spec, alpha);
+  }
+}
+function RandomZen(alpha) {
+  return RandomForColorFadeIn(zenSpec, alpha);
 }
 function RandomGreySolid() {
   return RandomForColorFadeIn(greySpec, 1);

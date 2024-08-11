@@ -7,8 +7,8 @@
 // though i do partially blame the utterly asinine canvas string based api.
 // there really needs to be a cleanup of all this, like how spec.dark works.
 
-var black = [0x0, 0x0, 0x0];
-var white = [0xFF, 0xFF, 0xFF];
+const black = [0x0, 0x0, 0x0];
+const white = [0xFF, 0xFF, 0xFF];
 
 function MakeDark(spec) {
     return {
@@ -17,42 +17,48 @@ function MakeDark(spec) {
     };
 }
 
-var greySpec = { regular: [0xA0, 0xA0, 0xA0], strong: [0xA0, 0xA0, 0xA0] };
-var greyDarkSpec = MakeDark(greySpec);
-var greenSpec = { regular: [0x10, 0xE0, 0x00], strong: [0x00, 0xFF, 0x00] };
-var greenDarkSpec = MakeDark(greenSpec);
-var blueSpec = { regular: [0x05, 0x71, 0xB0], strong: [0x00, 0x00, 0xFF] };
-var blueDarkSpec = MakeDark(blueSpec);
-var redSpec = { regular: [0xB5, 0x19, 0x19], strong: [0xFF, 0x00, 0x00] };
-var redDarkSpec = MakeDark(redSpec);
-var cyanSpec = { regular: [0x57, 0xC4, 0xAD], strong: [0x00, 0xFF, 0xFF] };
-var cyanDarkSpec = MakeDark(cyanSpec);
-var yellowSpec = { regular: [0xED, 0xA2, 0x47], strong: [0xFF, 0xFF, 0x00] };
-var yellowDarkSpec = MakeDark(yellowSpec);
-var magentaSpec = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF] };
-var magentaDarkSpec = MakeDark(magentaSpec);
+const greySpec = { regular: [0xA0, 0xA0, 0xA0], strong: [0xA0, 0xA0, 0xA0] };
+const greyDarkSpec = MakeDark(greySpec);
+const greenSpec = { regular: [0x10, 0xE0, 0x00], strong: [0x00, 0xFF, 0x00] };
+const greenDarkSpec = MakeDark(greenSpec);
+const blueSpec = { regular: [0x05, 0x71, 0xB0], strong: [0x00, 0x00, 0xFF] };
+const blueDarkSpec = MakeDark(blueSpec);
+const redSpec = { regular: [0xB5, 0x19, 0x19], strong: [0xFF, 0x00, 0x00] };
+const redDarkSpec = MakeDark(redSpec);
+const cyanSpec = { regular: [0x57, 0xC4, 0xAD], strong: [0x00, 0xFF, 0xFF] };
+const cyanDarkSpec = MakeDark(cyanSpec);
+const yellowSpec = { regular: [0xED, 0xA2, 0x47], strong: [0xFF, 0xFF, 0x00] };
+const yellowDarkSpec = MakeDark(yellowSpec);
+const magentaSpec = { regular: [0xFF, 0x00, 0xFF], strong: [0xFF, 0x00, 0xFF] };
+const magentaDarkSpec = MakeDark(magentaSpec);
 
-var warningColorStr = "white";
-var crtOutlineColorStr = "rgb(16, 64, 16)";
+const warningColorStr = "white";
+const crtOutlineColorStr = "rgb(16, 64, 16)";
 // match: index.html.
-var backgroundColorStr = "black";
+const backgroundColorStr = "black";
 // match: backgroundColorStr, index.html
-var scanlineColorStr = "rgba(0, 0, 0, 0.15)";
+const scanlineColorStr = "rgba(0, 0, 0, 0.15)";
+const puckColorStr = "cyan";
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
-var _tc = Array(4);
+const _tc = Array(4);
 function rgba255s(array, alpha) {
     // detect any old style code that called this function.
     Assert(Array.isArray(array), "expected array as first parameter");
+
     _tc[0] = array[0];
     _tc[1] = array[1];
     _tc[2] = array[2];
+
+    // alpha is, in order of highest precedence:
+    // array[4], or the 'alpha' argument, or the default value of 1.
     _tc[3] = alpha ?? 1;
     if (array.length == 4) {
         _tc[3] = array[3];
     }
-    var joined = _tc.map((ch,i) => ((i < 3) ? Clip255(ch) : ch)).join(",");
-    var str = ((array.length == 4 || exists(alpha)) ? "rgba(" : "rgb(") + joined + ")";
+
+    const joined = _tc.map((ch,i) => ((i < 3) ? Clip255(ch) : ch)).join(",");
+    const str = ((array.length == 4 || exists(alpha)) ? "rgba(" : "rgb(") + joined + ")";
     return  str;
 }
 
@@ -73,7 +79,7 @@ function RandomForColor(spec, alpha) {
         return rgba255s(spec.strong, alpha);
     }
     else {
-        // NTSC.
+        // "NTSC" ha ha.
         return rgba255s(
             spec.regular.map(ch => gR.RandomCentered(ch, 16)),
             alpha
@@ -81,12 +87,7 @@ function RandomForColor(spec, alpha) {
     }
 }
 
-// evil globals herein.
-// everything starts off all green to harken back to pongy games,
-// even if they weren't actually all on green screens, hah, 
-// then gradually flickers into the given color. 
-function RandomForColorFadeIn(color, alpha) {
-    if (alpha == undefined) { alpha = 1; }
+function FadeIn(alpha) {
     if (gMonochrome) {
         // i.e. attract mode.
         return rgba255s(greenSpec.strong, alpha);
@@ -95,14 +96,30 @@ function RandomForColorFadeIn(color, alpha) {
         // gradully go from green to color at game start.
         return rgba255s(greenSpec.strong, alpha);
     }
+    return undefined;
+}
+
+// evil globals herein.
+// everything starts off all green to harken back to pongy games,
+// even if they weren't actually all on green screens, hah, 
+// then gradually flickers into the given color. 
+function RandomForColorFadeIn(spec, alpha=1) {
+    var faded = FadeIn(alpha);
+    if (exists(faded)) {
+        return faded;
+    }
     else {
-        // even more fading in, to go along with MakeGameStartAnimation.
+        // even more with the fading in, see MakeGameStartAnimation.
         alpha = Math.min(
             alpha,
             Clip01(GameTime01(kAlphaFadeInMsec))
         );
-        return RandomForColor(color, alpha);
+        return RandomForColor(spec, alpha);
     }
+}
+
+function RandomZen(alpha) {
+    return RandomForColorFadeIn(zenSpec, alpha);
 }
 
 function RandomGreySolid() {
