@@ -344,7 +344,7 @@ function Paddle(props) {
   self.StepTarget = function (dt) {
     var targety = self.target.position.y;
     if (exists(targety)) {
-      var limit = gYInset + gPaddleHeight / 2;
+      var limit = gYInset + gPaddleHeight / 3;
       targety = Clip(targety, limit, gHeight - limit);
       if (targety < self.GetMidY()) {
         self.MoveUp(dt);
