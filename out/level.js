@@ -118,7 +118,7 @@ function Level(props) {
         if (self.splitsRemaining > 0) {
           DrawText(self.splitsRemaining, "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
         } else {
-          DrawText("ZERO", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
+          DrawText("NIL", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
         }
       });
     }
