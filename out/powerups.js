@@ -524,7 +524,7 @@ function MakeSplitProps(maker) {
           forced: true,
           maxVX: maxVX
         });
-        gameState.level.OnPuckSplit(1);
+        gameState.level.OnPuckSplits(1);
         var p = gPuckPool.Alloc();
         p.PlacementInit(split);
         gPucks.A.push(p);
