@@ -31,7 +31,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = true;
+var gDebug = false;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
 var kCanvasName = "canvas"; // match: index.html
@@ -43,7 +43,7 @@ var gP2Score = 0;
 var gP1Wins = 0;
 var gP2Wins = 0;
 var k2PWinBy = 3;
-function is2PGameOver() {
+function Is2PlayerGameOver() {
   return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy;
 }
 
@@ -875,6 +875,10 @@ function TitleState() {
     ResetInput();
     ResetP1Side();
     SetGameMode(gGameMode);
+    gP1Score = 0;
+    gP2Score = 0;
+    gP1Wins = 0;
+    gP2Winw = 0;
     self.attract = new GameState({
       isAttract: true
     });
@@ -1110,8 +1114,6 @@ function GameState(props) {
     ResetInput();
     gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
     gLevelTime = gGameTime;
-    gP1Score = 0;
-    gP2Score = 0;
     self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelIndex];
     self.pauseButtonEnabled = false;
     self.paused = false;
@@ -1370,7 +1372,7 @@ function GameState(props) {
         } else {
           gP2Wins += 1;
         }
-        nextState = is2PGameOver() ? kGameOver : kLevelFin;
+        nextState = Is2PlayerGameOver() ? kGameOver : kLevelFin;
       }
     }
     return nextState;
@@ -1857,7 +1859,7 @@ function LevelFinState() {
         if (gSinglePlayer) {
           return kGetReady;
         } else {
-          return is2PGameOver() ? kGameOverSummary : kGetReady;
+          return Is2PlayerGameOver() ? kGameOverSummary : kGetReady;
         }
       }
     }
@@ -1973,6 +1975,7 @@ function GameOverSummaryState() {
     self.timeoutMsg = 1000;
     self.timeoutEnd = 1000 * 10;
     self.started = gGameTime;
+    self.relevant = true; // todo: fix this.
   };
   self.Step = function () {
     if (self.relevant) {
@@ -2039,11 +2042,13 @@ function GameOverSummaryState() {
     Cxdo(function () {
       // todo: new high score message like single player.
 
-      gCx.fillStyle = RandomMagenta();
+      gCx.fillStyle = RandomBlue();
       DrawText("*** FINAL CHAMPION ***", "center", gw(0.5), gh(0.5) - gBigFontSize, gReducedFontSizePt);
+      gCx.fillStyle = RandomMagenta();
       DrawText("PLAYER ".concat(gP1Wins > gP2Wins ? "ONE" : "TWO", "!"), "center", gw(0.5), gh(0.5), gBigFontSizePt);
       var leftMsg = ForSide(gP1Side, "P1: ".concat(gP1Wins, " WINS"), "P2: ".concat(gP2Wins, " WINS"));
       var rightMsg = ForOtherSide(gP1Side, "P1: ".concat(gP1Wins, " WINS"), "P2: ".concat(gP2Wins, " WINS"));
+      gCx.fillStyle = RandomGreen();
       DrawText(leftMsg, "left", gw(0.2), gh(0.6), gSmallFontSizePt);
       DrawText(rightMsg, "right", gw(0.8), gh(0.6), gSmallFontSizePt);
       if (self.goOn) {
