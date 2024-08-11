@@ -131,7 +131,7 @@ const kEnglishStep = 0.004;
 		    DrawText(self.splitsRemaining, "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
 		}
 		else {
-		    DrawText("ZERO", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
+		    DrawText("NIL", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
 		}
 	    });
 	}
