@@ -854,7 +854,7 @@ function UpdateLocalStorage() {
 	gP1Score = 0;
 	gP2Score = 0;
 	gP1Wins = 0;
-	gP2Winw = 0;
+	gP2Wins = 0;
 
         self.attract = new GameState({ isAttract: true });
         self.timeout = gDebug ? 1 : (1000 * 1.5);
