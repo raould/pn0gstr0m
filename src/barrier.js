@@ -60,7 +60,7 @@ function Barrier( props /*x, y, height, width, hp, side*/) {
                     gCx.closePath();
                 }
             )();
-            // match: paddle inflection point.
+            // match: paddle hp inflection point.
             gCx.fillStyle = RandomForColor((hp01 > 0.2) ? blueSpec : yellowSpec, alpha*0.5);
             gCx.fill();
         });

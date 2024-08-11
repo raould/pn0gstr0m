@@ -32,8 +32,42 @@ var gP1Wins = 0;
 var gP2Wins = 0;
 var k2PWinBy = 3;
 function is2PGameOver() { return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy; }
-var gLevelIndex = 1; // 1-based.
-var gHardMode = LoadLocal(LocalStorageKeys.hardMode, false);
+
+// todo: the game mode stuff is a big ball of mud within
+// the larger death star of mud that is all of this code.
+// enum, mutually exclusive.
+var kGameModeRegular = "regular";
+var kGameModeHard = "hard";
+var kGameModeZen = "zen";
+var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
+// code smell: sentinel values, -1 is attract, -2 is zen. 
+const kAttractLevelIndex = -1;
+const kZenLevelIndex = -2;
+// levels are 1-based. 
+var gLevelIndex = (gGameMode === kGameModeZen) ? kZenLevelIndex : 1;
+function ForGameMode(regular, other1, other2) {
+    if (gGameMode === kGameModeRegular) {
+        return regular;
+    }
+    else if (gGameMode === kGameModeHard) {
+	return exists(other2) ? other1 : regular;
+    }
+    else if (gGameMode === kGameModeZen) {
+	return exists(other2) ? other2 : other1;
+    }
+}
+function SetGameMode(mode) {
+    Assert(mode === kGameModeRegular ||
+           mode === kGameModeHard ||
+           mode === kGameModeZen,
+           mode);
+    gGameMode = mode;
+    ForGameMode(
+        () => gLevelIndex = 1,
+        () => gLevelIndex = kZenLevelIndex
+    )();
+    console.log("SetGameMode", mode, gLevelIndex);
+}
 
 // ----------------------------------------
 
@@ -56,14 +90,14 @@ var gLevelHighScores = LoadLocal(LocalStorageKeys.highScores, {});
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
 // although i did try to compensate in the run loop.
-var kFPS = 35;
+var kFPS = 30;
 var kTimeStep = 1000/kFPS;
 var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
-var gStartTime = 0;
+var gLevelTime = 0;
+var gLastFrameTime = gLevelTime;
 var gGameTime = 0;
-var gLastFrameTime = gStartTime;
 var gFrameCount = 0;
-var kMoveStep = 1; // i don't really know what the units are here at all.
+var kPhysicsStepScale = 0.04;
 var kAIPeriod = 5;
 
 var gMidLineDashCount;
@@ -142,8 +176,12 @@ var kSparkPoolSize = 500;
 var kBarriersArrayInitialSize = 4;
 var kXtrasArrayInitialSize = 6;
 
-// prevent pills from showing up too often, or too early... but not too late.
-var kPillSpawnCooldown = 1000 * 5;
+// prevent pills from showing up too often, or too early - but not too late.
+var PillSpawnCooldownFn = () => ForGameMode(
+    () => 1000 * 5,
+    () => 1000 * 10,
+    () => 1000 * 20,
+)();
 var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
@@ -354,7 +392,7 @@ var gR = new Random( 0x1BADB002 );
 
 // ----------------------------------------
 
-function GameTime01(period, start=gStartTime) {
+function GameTime01(period, start=gLevelTime) {
     var diff = gGameTime - start;
     period = Math.max(1, period);
     var t = T01nl(diff, period);
@@ -519,6 +557,7 @@ function DrawLandscape() {
 function DrawBounds( alpha=0.5 ) {
     if (!gDebug) { return; }
     Cxdo(() => {
+	// the scaled bounds.
         gCx.beginPath();
         gCx.rect(gXInset, gYInset, gWidth-gXInset*2, gHeight-gYInset*2);
         gCx.lineWidth = 1;
@@ -526,26 +565,43 @@ function DrawBounds( alpha=0.5 ) {
         gCx.stroke();
     });
     Cxdo(() => {
+	// the scaled x.
         gCx.beginPath();
-        gCx.moveTo(WX(0), WY(0));
-        gCx.lineTo(WX(gWidth), WY(gHeight));
-        gCx.moveTo(WX(gWidth), WY(0));
-        gCx.lineTo(WX(0), WY(gHeight));
+        gCx.moveTo(0, 0);
+        gCx.lineTo(gWidth, gHeight);
+        gCx.moveTo(gWidth, 0);
+        gCx.lineTo(0, gHeight);
         gCx.strokeStyle = rgba255s(white, alpha/2);
         gCx.lineWidth = 10;
         gCx.stroke();
         gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
     });
     Cxdo(() => {
+	// the full canvas x.
         gCx.beginPath();
-        gCx.moveTo(WX(0), WY(0));
-        gCx.lineTo(WX(gCanvas.width), WY(gCanvas.height));
-        gCx.moveTo(WX(gCanvas.width), WY(0));
-        gCx.lineTo(WX(0), WY(gCanvas.height));
+        gCx.moveTo(0, 0);
+        gCx.lineTo(gCanvas.width, gCanvas.height);
+        gCx.moveTo(gCanvas.width, 0);
+        gCx.lineTo(0, gCanvas.height);
         gCx.strokeStyle = rgba255s(magentaSpec.regular, alpha);
         gCx.lineWidth = 2;
         gCx.stroke();
         gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
+    });
+    Cxdo(() => {
+	// scaled grid.
+	gCx.beginPath();
+	gCx.moveTo(0, gh(1/3));
+	gCx.lineTo(gw(1), gh(1/3));
+	gCx.moveTo(0, gh(1/2));
+	gCx.lineTo(gw(1), gh(1/2));
+	gCx.moveTo(0, gh(2/3));
+	gCx.lineTo(gw(1), gh(2/3));
+	gCx.moveTo(gw(0.5), 0);
+	gCx.lineTo(gw(0.5), gh(1));
+	gCx.strokeStyle = "pink";
+	gCx.lineWidth = 1;
+	gCx.stroke();
     });
 }
 
@@ -614,7 +670,7 @@ function UpdateLocalStorage() {
     // (2) this doesn't include the unplayed music, see sound.js
 
     SaveLocal(LocalStorageKeys.singlePlayer, gSinglePlayer);
-    SaveLocal(LocalStorageKeys.hardMode, gHardMode);
+    SaveLocal(LocalStorageKeys.gameMode, gGameMode);
     SaveLocal(LocalStorageKeys.sfxMuted, gSfxMuted);
     SaveLocal(LocalStorageKeys.musicMuted, gMusicMuted);
 }
@@ -678,7 +734,8 @@ function UpdateLocalStorage() {
                 // even when paused, must Step to handle input.
                 // also call Draw to keep the screen in sync.
                 paused = aub(self.handler.GetIsPaused?.(), false);
-                var next = self.handler.Step(paused ? 0 : fdt);
+		var rdt = paused ? 0 : fdt;
+		var next = self.handler.Step(rdt);
                 self.handler.Draw();
 
                 if( exists(next) && next !== self.state ) {
@@ -693,6 +750,7 @@ function UpdateLocalStorage() {
 
                 self.DrawCRTScanlines();
                 DrawDebugList();
+		if (gDebug) { DrawBounds(0.2); }
                 if (gShowToasts) { StepToasts(); }
                 UpdateLocalStorage();
 
@@ -800,10 +858,12 @@ function UpdateLocalStorage() {
     };
 
     self.MakeMenu = function() {
-        return new MenuBehavior({
+        return new Menu({
             isHidden: false,
             OnClose: () => {
                 ResetP1Side();
+                // forget any extra in-menu state
+                // like which button is default selected.
                 self.theMenu = self.MakeMenu();
             },
             ...MakeMainMenuButtons(),
@@ -862,7 +922,7 @@ function UpdateLocalStorage() {
             return undefined;
         }
         if (isAnyMenuPressed(cmds)) {
-            self.theMenu.bmenu.Click();
+            self.theMenu.bMenu.Click();
             clearAnyMenuPressed(); // todo: code smell.
             return undefined;
         }
@@ -938,7 +998,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        var seconds = ChoosePillIDs(gLevelIndex).length === 2 ? 5 : 3;
+        var seconds = gDebug ? 1 : (ChoosePillIDs(gLevelIndex).length === 2 ? 5 : 3);
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.pillIDs = ChoosePillIDs(gLevelIndex);
@@ -972,11 +1032,16 @@ function UpdateLocalStorage() {
             DrawText(ForSide(gP1Side,"P2","P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
 
             gCx.fillStyle = RandomGreen();
-            DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.3), gSmallFontSizePt);
-            DrawText(`GET READY! ${t}`, "center", gw(0.5), gh(0.5), gBigFontSizePt);
+            if (gGameMode !== kGameModeZen) {
+                DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.3), gSmallFontSizePt);
+            }
+            var y = (self.pillIDs.length === 0) ? gh(0.55) : gh(0.52);
+            DrawText(`GET READY! ${t}`, "center", gw(0.5), y, gBigFontSizePt);
 
-            gCx.fillStyle = RandomForColor(cyanSpec);
-            DrawText(`ZERO POINT ENERGY: ${zpt}`, "center", gw(0.5), gh(0.9), gSmallFontSizePt);
+            if (exists(zpt)) {
+                gCx.fillStyle = RandomForColor(cyanSpec);
+                DrawText(`ZERO POINT ENERGY: ${zpt}`, "center", gw(0.5), gh(0.9), gSmallFontSizePt);
+            }
         });
     };
 
@@ -984,8 +1049,12 @@ function UpdateLocalStorage() {
         // 0 pills on attract and level 1;
         // 2 pills in order for the first N levels;
         // 4 random pills thereafter.
-        var ty = gh(0.8);
+        // all pills in zen mode so/but don't bother showing them here.
+        if (gGameMode === kGameModeZen) {
+            return;
+        }
         if (self.pillIDs.length > 0) {
+            var ty = gh(0.8);
             Cxdo(() => {
                 gCx.fillStyle = RandomGreen();
                 if (self.pillIDs.length <= 2) {
@@ -993,14 +1062,15 @@ function UpdateLocalStorage() {
                 }
                 var dx = gw() / (self.pillIDs.length+1);
                 var x0 = dx;
+		var scale = 1;
                 for (let i = 0; i < self.pillIDs.length; ++i) {
                     const pid = self.pillIDs[i];
                     const { name, drawer, wfn, hfn } = gPillInfo[pid];
-                    const width = wfn();
-                    const height = hfn();
+                    const width = wfn() * scale;
+                    const height = hfn() * scale;
                     const x = x0 + dx * i;
-                    const oy = Math.sin((x*10) + (gGameTime/100)) * (height/2) * 0.1;
-                    drawer(gP1Side, // just the least wrong choice.
+                    const oy = Math.sin((x*10) + (gGameTime/150)) * (height/2) * 0.2;
+                    drawer(gP1Side, // just the least wrong choice for side.
                            {
                                x: x - (width/2),
                                y: ty - (height/2) - sy(40) - oy,
@@ -1038,11 +1108,11 @@ function UpdateLocalStorage() {
         ResetInput();
 
         gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
-        gStartTime = gGameTime;
+        gLevelTime = gGameTime;
 
         gP1Score = 0;
         gP2Score = 0;
-        self.levelHighScore = gLevelHighScores[gLevelIndex];
+        self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelIndex];
 
         self.pauseButtonEnabled = false;
         self.paused = false;
@@ -1059,8 +1129,11 @@ function UpdateLocalStorage() {
         // warning: this setup is easily confusing wrt left vs. right.
         var lp = { x: gXInset, y: gh(0.5) };
         var rp = { x: gWidth-gXInset-gPaddleWidth, y: gh(0.5) };
+
+        // show paddle labels for zen or level 1.
         var p1label = (self.isAttract || gLevelIndex > 1) ? undefined : "P1";
         var p2label = (self.isAttract || gLevelIndex > 1) ? undefined : (gSinglePlayer ? "GPT" : "P2");
+
         ForSide(gP1Side, 
                 () => {
                     // p1 is always a human player.
@@ -1123,13 +1196,13 @@ function UpdateLocalStorage() {
 
         self.MakeLevel();
 
-        self.CreateStartingPuck();
+        self.CreateStartingPuck(self.level.vx0);
 
         // this countdown is a block on both player & cpu ill spawning.
         // first wait is longer before the very first pill.
         // also see the 'must' check later on.
-        self.pillP1SpawnCountdown = kPillSpawnCooldown;
-        self.pillP2SpawnCountdown = kPillSpawnCooldown;
+        self.pillP1SpawnCountdown = PillSpawnCooldownFn();
+        self.pillP2SpawnCountdown = PillSpawnCooldownFn();
         // make sure the cpu doesn't get one first, that looks too mean/unfair,
         // however, allow a 2nd player to get one first!
         // also, neither side gets too many pills before the other.
@@ -1143,10 +1216,13 @@ function UpdateLocalStorage() {
     };
 
     self.MakeMenu = function() {
-        return new MenuBehavior({
+        return new Menu({
             isHidden: true,
             OnClose: () => {
                 self.paused = false;
+                // forget any extra in-menu state
+                // like which button is default seleted.
+                self.theMenu = self.MakeMenu();
             },
             ...MakeGameMenuButtons({
                 OnQuit: () => {
@@ -1162,11 +1238,14 @@ function UpdateLocalStorage() {
         if (self.isAttract) {
             self.level = MakeAttract(self.paddleP1, self.paddleP2);
         }
+        else if (gGameMode === kGameModeZen) {
+            self.level = MakeZen(self.paddleP1, self.paddleP2);
+        }
         else {
             self.level = MakeLevel(gLevelIndex, self.paddleP1, self.paddleP2);
         }
         self.maxVX = self.level.maxVX;
-        Assert(exists(self.maxVX));
+        Assert(!isBadNumber(self.maxVX));
         //logOnDelta("maxVX", self.maxVX, 1);
     };
 
@@ -1175,7 +1254,7 @@ function UpdateLocalStorage() {
         self.paused = true;
         if (exists(self.theMenu)) {
             if (!self.theMenu?.isOpen()) {
-                self.theMenu?.bmenu.Click(); // sure hope this stays in sync.
+                self.theMenu?.bMenu.Click(); // sure hope this stays in sync.
                 clearAnyMenuPressed(); // todo: code smell.
             }
         }
@@ -1195,7 +1274,10 @@ function UpdateLocalStorage() {
         self.ProcessAllInput();
         if (self.quit) {
             SaveEndScreenshot(self);
-            return gDebug ? kLevelFin : kTitle;
+            return ForGameMode(
+		gDebug ? kLevelFin : kTitle,
+		kTitle
+	    );
         }
         if (self.stepping) {
             dt = kTimeStep;
@@ -1226,11 +1308,11 @@ function UpdateLocalStorage() {
             self.pillP1SpawnCountdown <= 0 &&
             self.unfairPillCount < kDiffMax) {
             self.level.p1Pill = self.MaybeSpawnPill(
-                self.pillP1SpawnCooldown < kPillSpawnCooldown * 2,
+                self.pillP1SpawnCooldown < PillSpawnCooldownFn() * 2,
                 dt, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups
             );
             if (exists(self.level.p1Pill)) {
-                self.pillP1SpawnCountdown = kPillSpawnCooldown;
+                self.pillP1SpawnCountdown = PillSpawnCooldownFn();
                 self.unfairPillCount++;
                 self.isCpuPillAllowed = true;
                 AddSparks({x: self.level.p1Pill.x,
@@ -1250,11 +1332,11 @@ function UpdateLocalStorage() {
             // bias powerup creation toward the single player.
             const factor = kSpawnPlayerPillFactor * (gSinglePlayer ? 0.7 : 1 );
             self.level.p2Pill = self.MaybeSpawnPill(
-                self.pillP2SpawnCooldown < kPillSpawnCooldown * 2,
+                self.pillP2SpawnCooldown < PillSpawnCooldownFn() * 2,
                 dt, self.level.p2Pill, factor, self.level.p2Powerups
             );
             if (exists(self.level.p2Pill)) {
-                self.pillP2SpawnCountdown = kPillSpawnCooldown;
+                self.pillP2SpawnCountdown = PillSpawnCooldownFn();
                 self.unfairPillCount--;
                 AddSparks({x: self.level.p2Pill.x,
                            y: self.level.p2Pill.y,
@@ -1283,10 +1365,8 @@ function UpdateLocalStorage() {
     self.StepNextState = function() {
         if (self.isAttract) {
             if (gPucks.A.length === 0) {
-                gPucks.A.push(
-                    // attract never ends until dismissed.
-                    self.CreateStartingPuck()
-                );
+                // attract never ends until dismissed.
+                self.CreateStartingPuck(self.level.vx0);
             }
             return undefined;
         }
@@ -1331,20 +1411,20 @@ function UpdateLocalStorage() {
         });
     };
 
-    self.CreateStartingPuck = function() {
-        Assert(exists(self.maxVX) && self.maxVX > 0);
-
+    self.CreateStartingPuck = function(vx) {
         // i am crying into my drink.
         // single player: puck goes towards gpu.
         // two player: puck goes toward p2.
         var sign = ForSide(gP1Side, 1, -1);
 
         var p = gPuckPool.Alloc();
+
+	// match: all games start with cyan pucks.
         p.PlacementInit({ x: gw(ForSide(gP1Side, 0.3, 0.7)),
                           y: (self.isAttract ?
                               gh(gR.RandomRange(0.4, 0.6)) :
                               gh(0.3)),
-                          vx: sign * self.maxVX*0.2,
+                          vx: sign * vx,
                           vy: (self.isAttract ?
                                gR.RandomCentered(0, 2, 1) :
                                0.3),
@@ -1426,7 +1506,7 @@ function UpdateLocalStorage() {
         if (isAnyMenuPressed(cmds) || cmds.pause || pbp) {
             // match: Pause().
             self.paused = !self.paused;
-            self.theMenu?.bmenu.Click(); // sure hope this stays in sync.
+            self.theMenu?.bMenu.Click(); // sure hope this stays in sync.
             clearAnyMenuPressed(); // todo: code smell.
         }
     };
@@ -1461,9 +1541,10 @@ function UpdateLocalStorage() {
         let pmaxvx = -Number.MAX_SAFE_INTEGER;
         gPucks.B.clear();
         gPucks.A.forEach((p, i) => {
-            p.Step( dt, self.maxVX, kMaxVY );
-            Assert(!isNaN(p.x), p);
-            Assert(!isNaN(p.y), p);
+            Assert(exists(p));
+            p.Step(dt, self.maxVX, kMaxVY);
+            Assert(!isBadNumber(p.x), p);
+            Assert(!isBadNumber(p.y), p);
             if (!self.isAttract && !p.alive) {
                 self.UpdateScore(p);
             }
@@ -1475,22 +1556,19 @@ function UpdateLocalStorage() {
                     self.level.IsSuddenDeath(),
                     self.maxVX
                 );
-                if (self.level.isSpawning) {
-                    Assert((splits?.length ?? 0) <= 1, splits?.length);
-                    self.level.OnPuckSplit(splits.length);
-                    // note: splits are pushed before parent, match: Draw()'s revEach() z order.
-                    if( !self.isAttract ) {
-                        for (let i = 0; i < splits?.length ?? 0; ++i) {
-                            var s = gPuckPool.Alloc();
-                            // enforcing hard limit on puck allocations.
-                            if (exists(s)) {
-                                s.PlacementInit(splits[i]);
-                                gPucks.B.push(s);
-                            }
+                self.level.OnPuckSplits(splits);
+                
+                // note: splits are pushed before parent, match: Draw()'s revEach() z order.
+                if(self.level.isSpawning) {
+                    for (let i = 0; i < splits?.length ?? 0; ++i) {
+                        var s = gPuckPool.Alloc();
+                        if (exists(s)) {
+                            s.PlacementInit(splits[i]);
+                            gPucks.B.push(s);
                         }
                     }
                 }
-                p.WallsCollision( self.maxVX );
+                p.WallsCollision(self.maxVX);
                 p.BarriersCollision(self.paddleP1.barriers.A);
                 p.BarriersCollision(self.paddleP2.barriers.A);
                 p.XtrasCollision(self.paddleP1.xtras.A);
@@ -1548,21 +1626,27 @@ function UpdateLocalStorage() {
         return alpha * (self.isAttract ? 0.2 : 1);
     };
 
+    // note: this really has to be z-under everything.
     self.DrawMidLine = function() {
         if (!self.isAttract) {
-            Cxdo(() => {
-                gCx.beginPath();
-                var dashStep = (gHeight - 2*gYInset)/(gMidLineDashCount*2);
-                var x = gw(0.5) - ii(gMidLineDashWidth/2);
-                for( var y = gYInset + dashStep/2; y < gHeight-gYInset; y += dashStep*2 ) {
-                    var ox = gR.RandomCentered(0, 0.5);
-                    gCx.rect( x+ox, y, gMidLineDashWidth, dashStep );
-                }
-                gCx.fillStyle = RandomGreen(0.6);
-                gCx.fill();
-            });
-        }
-    };
+	    var dashStep = (gh() - 2*gYInset) / (gMidLineDashCount*2);
+	    var top = gYInset + dashStep/2;
+	    var txo = gSmallFontSize;
+	    var bottom = gh() - gYInset - txo;
+	    var range = bottom - top;
+	    var e = (self.level.EnergyFactor() ?? 0) * range;
+	    Cxdo(() => {
+		gCx.beginPath();
+		for( var y = top; y < bottom; y += dashStep*2 ) {
+		    var ox = 0;//gR.RandomCentered(0, 0.5);
+		    var width = y-top >= (range-e) ? gMidLineDashWidth*2 : gMidLineDashWidth;
+		    gCx.rect( gw(0.5)+ ox -(width/2), y, width, dashStep );
+		}
+		gCx.fillStyle = RandomGreen(0.6);
+		gCx.fill();
+	    });
+	}
+    }
 
     self.DrawCRTOutline = function() {
         if (!self.isAttract) {
@@ -1573,13 +1657,14 @@ function UpdateLocalStorage() {
     // match: GetReady.Draw() et. al.
     self.DrawScoreHeader = function( isEndScreenshot ) {
         Cxdo(() => {
-            var style = RandomMagenta(self.Alpha(isEndScreenshot ? 1 : 0.4));
-            var p2 = (gSinglePlayer ? "GPT: " : "P2: ");
+            const style = RandomMagenta(self.Alpha(isEndScreenshot ? 1 : 0.4));
+            const p2 = (gSinglePlayer ? "GPT: " : "P2: ");
+            const hiMsg = (gGameMode === kGameModeZen) ? "HIGH: " : "LVL HI: ";
             ForSide(self.isAttract ? "right" : gP1Side, 
                 () => {
                     gCx.fillStyle = style;
                     if (exists(self.levelHighScore)) {
-                        DrawText("LVL HI: " + self.levelHighScore, "left", gw(0.2), gh(0.12), gSmallerFontSizePt);
+                        DrawText(hiMsg + self.levelHighScore, "left", gw(0.2), gh(0.12), gSmallerFontSizePt);
                     }
                     if (!self.isAttract) {
                         DrawText( p2 + gP2Score, "right", gw(0.8), gh(0.22), gRegularFontSizePt );
@@ -1589,7 +1674,7 @@ function UpdateLocalStorage() {
                 () => {
                     gCx.fillStyle = style;
                     if (exists(self.levelHighScore)) {
-                        DrawText("LVL HI: " + self.levelHighScore, "right", gw(0.8), gh(0.12), gSmallerFontSizePt);
+                        DrawText(hiMsg + self.levelHighScore, "right", gw(0.8), gh(0.12), gSmallerFontSizePt);
                     }
                     if (!self.isAttract) {
                         DrawText( p2 + gP2Score, "left", gw(0.2), gh(0.22), gRegularFontSizePt );
@@ -1687,8 +1772,9 @@ function UpdateLocalStorage() {
             self.level.Draw({ alpha: self.Alpha(), isEndScreenshot });
 
             // draw paddles under pucks, at least so i can visually debug collisions.
-            self.paddleP1.Draw( self.Alpha(), self );
-            self.paddleP2.Draw( self.Alpha(), self );
+	    const s01 = exists(self.level.splitsRemaining) ? Clip01(self.level.splitsRemaining / self.level.splitsAllowed) : undefined;
+            self.paddleP1.Draw( self.Alpha(), self, s01 );
+            self.paddleP2.Draw( self.Alpha(), self, s01 );
 
             // match: pucks revEach so splits show up on top, z order.
             // pucks going away from (single) player.
@@ -1733,7 +1819,6 @@ function UpdateLocalStorage() {
     // call this last so it is the top z layer.
     self.DrawDebug = function() {
         if( ! gDebug ) { return; }
-        DrawBounds(0.2);
         self.paddleP1.DrawDebug();
         self.paddleP2.DrawDebug();
         gP1Target.DrawDebug();
@@ -1783,8 +1868,8 @@ function UpdateLocalStorage() {
                 self.isNewHighScore = true;
             }
         }
-        Assert(exists(self.highScore));
-        self.hiMsg = self.isNewHighScore ? `NEW LEVEL HI: ${self.highScore}` : undefined;
+        Assert(!isBadNumber(self.highScore));
+        self.hiMsg = self.isNewHighScore ? `NEW LEVEL HIGH: ${self.highScore}` : undefined;
         console.log(self.highScore, self.isNewHighScore, gLevelIndex, gLevelHighScores);
 
         self.goOn = false;
@@ -1837,7 +1922,7 @@ function UpdateLocalStorage() {
         if (self.hiMsg) {
             Cxdo(() => {
                 gCx.fillStyle = RandomGreen();
-                DrawText(self.hiMsg, "center", gw(0.5), gh(0.6), gReducedFontSizePt);
+                DrawText(self.hiMsg, "center", gw(0.5), gh(0.65), gReducedFontSizePt);
             });
         }
     };
@@ -1851,7 +1936,7 @@ function UpdateLocalStorage() {
                 `LEVEL ${self.levelIndex} WON!`,
                 "center",
                 gw(0.5),
-                gh(0.5),
+                gh(0.55),
                 gBigFontSizePt,
             );
 
@@ -1972,7 +2057,7 @@ function UpdateLocalStorage() {
                 "GAME OVER",
                 "center",
                 gw(0.5),
-                gh(0.5),
+                gh(0.55),
                 gBigFontSizePt,
             );
             if (self.goOn) {

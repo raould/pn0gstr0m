@@ -1,21 +1,25 @@
+* all the todo's noted in code comments.
 * this has quickly become an empirical big ball of mud. :-(
+* disable asserts in out/*.
+* gLevelIndex is a code smell, but is a nightmare to fix. i tried.
+* the ownership graph is heck even if done right.
+* figure out per-game high score ui ux.
+* need to specify first puck speed specifically rather than ratio?
+* better (yet safe) color for low hp on xtra and barrier?
 * quit should really ask ays?
 * maybe have rare 3x split into even smaller, faster pucks?
 * do i need clearFn() for gamepad buttons and joystick? or what else instead?
 * check that the gamepad buttons & sticks non/repeat is sane/right.
 * really test all the possible inputs!
-* hm, original pucks must also speed up at the end of the level.
-* ugh, really need Level to own Paddle, Pucks, etc. for last puck(s) changes.
+* hm, original pucks must also speed up at the end of the level?
 * playtest all the speedup/timeout/english factors, sheesh.
-* maybe rainbow hsv/hsl coloring of puck generations?
 * animate the menu opening/closing?
 * my other metal band name really is The Wrong Abstractions. :-(
-* all the todo's noted in code comments.
 * deperately need to refactor so many globals away (re: events, below).
 * what the heck is the difference of Step() vs. Draw() vs. Process*().
-  * especially since they seem different for buttons vs. *States.
+  * especially since they seem different for buttons vs. *States. :-(
 * also nice how Process*Input don't all have the same signature.
-* (aside: debugging dx is just industrially wide horrible if you ask me.)
+* (aside: debugging dx is just horrible industrially-wide if you ask me.)
 * confusing how i have activate key & gamepad, but esc key vs. option gamepad button.
 * needing clearFn() for events hints i should push the keys through eventqueue only, never globals.
 * (esc) shouldn't disappear after staring via touch.
@@ -64,3 +68,10 @@ i frankly kinda hate javascript at times like these, perf is entirely too unclea
 * at lest in v8 apparently don't use delete on {}'s, set the value to undefined or false, because performance.
   * is deleting required to avoid memory leaking? i feel like logically it should be.
 * is {...nocmds} better than {} and setting entries to true/false? no idea, no way to know.
+
+----------------------------------------
+
+zen mode hell:
+* local storage for menu.
+* high score is different.
+* ugh even more of lots of conditionals now.

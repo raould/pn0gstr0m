@@ -61,6 +61,7 @@ function ReuseArray(initialCapacity) {
     return undefined;
   };
   self.push = function (v) {
+    Assert(exists(v));
     if (self.length < self.array.length) {
       self.array[self.length] = v;
     } else {

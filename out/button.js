@@ -50,7 +50,9 @@ function Button(props) {
       height: self.height
     };
     self.title = props.title;
-    self.align = aub(props.align, "center"); // but does not affect checkboxes! :-\
+    // warning: note: todo: anything other than "left" alignment is probably buggy.
+    // note: checkboxes override self.align.
+    self.align = aub(props.align, "left");
     self.color = props.color;
     self.font_size = props.font_size;
     self.click_fn = aub(props.click_fn,
@@ -110,22 +112,24 @@ function Button(props) {
       gCx.stroke();
       var cx = wx + self.width * 0.5;
       var lx = wx + self.width * 0.1;
-      var rx = wx + self.width * 0.9;
+      var rx = wx + self.width * 0.8;
       // bounty: come up with a perfect heursitic for this for all button, text, and screen sizes.
       var ty = wy + self.height * 0.74;
       var c = self.is_checkbox && self.is_checked ? "c" : self.is_checkbox ? " " : undefined;
+
+      // warning: note: todo: anything other than "left" alignment is probably buggy.
+
+      var x = cx;
+      if (self.align == "left") {
+        x = lx;
+      }
+      if (self.align == "right") {
+        x = rx;
+      }
       if (exists(c)) {
-        // checkboxes are always left aligned so they don't look too ugly.
         DrawText(c, "left", lx, wy + self.height * 0.75, self.font_size);
-        DrawText(self.title, "left", lx + self.width * 0.1, ty, self.font_size);
+        DrawText(self.title, self.align, x + self.width * 0.1, ty, self.font_size);
       } else {
-        var x = cx;
-        if (self.align == "left") {
-          x = lx;
-        }
-        if (self.align == "right") {
-          x = rx;
-        }
         DrawText(self.title, self.align, x, ty, self.font_size);
       }
       if (gDebug) {

@@ -25,8 +25,9 @@ function Puck() {
         self.vx = gR.RandomCentered(props.vx, props.vx/10);
         self.vy = AvoidZero(props.vy, 0.1);
         self.alive = true;
-        self.startTime = !!props.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
-        self.splitColor = aub(props.forced, false) ? "yellow" : "white";
+        self.ur = aub(props.ur, false);
+        self.startTime = self.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
+        self.splitStyle = aub(props.forced, false) ? "yellow" : "white";        
         self.isLocked = false;
     };
 
@@ -64,10 +65,11 @@ function Puck() {
 
         // young pucks (from paddle splits or powerups) render another color briefly.
         var dt = GameTime01(1000, self.startTime);
-        var regularStyle = (gR.RandomFloat() > dt) ? self.splitColor : RandomCyan();
+        var fadeinStyle = FadeIn(1);
+        var inplayStyle = aub(fadeinStyle, (gR.RandomFloat() > dt) ? self.splitStyle : puckColorStr);
         var lostStyle = RandomYellow(0.7);
         var isLost = (self.x+self.width < gXInset || self.x > gw(1)-gXInset);
-        var style = isLost ? lostStyle : regularStyle;
+        var style = isLost ? lostStyle : inplayStyle;
 
         Cxdo(() => {
             // a thin outline keeps things crisp when there are lots of pucks.
@@ -84,19 +86,29 @@ function Puck() {
             gCx.fill();
 
             if (gDebug) {
+                // tail to show direction of movement.
+                // different y for opposite vx.
                 gCx.beginPath();
                 var oy = self.vx > 0 ? -1 : self.height+1;
                 gCx.strokeStyle = self.vx > 0 ? "magenta" : "pink";
                 gCx.moveTo(self.prevX+self.width/2, self.prevY+oy);
                 gCx.lineTo(self.midX, self.y+oy);
                 gCx.stroke();
+
+                // highlight the ur pucks.
+                if (self.ur) {
+                    gCx.beginPath();
+                    gCx.rect(wx, wy, width, height);
+                    gCx.strokeStyle = "red";
+                    gCx.stroke();
+                }
             }
         });
     };
 
     self.Step = function( dt, maxVX, maxVY ) {
         if( self.alive && !self.isLocked ) {
-            dt = kMoveStep * (dt/kTimeStep);
+	    dt = dt * kPhysicsStepScale;
             self.prevX = self.x;
             self.prevY = self.y;
             self.x += (self.vx * dt);
@@ -128,6 +140,10 @@ function Puck() {
         const count = gPucks.A.length;
         const dosplit = forced || (count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && gR.RandomBool(1.05-Clip01(Math.abs(self.vx/maxVX)))));
 
+        // I'M SURE THE HEURISTICS BELOW ARE CLEARLY GENIUS.
+        // BUT I SORT OF NO LONGER HAVE ANY IDEA
+	// WHAT/WHY THEY DO WHAT THEY DO. HA HA. 
+
         // sometimes force ejection to avoid too many pucks.
         // if there are already too many pucks to allow for a split-spawned-puck,
         // then we also want to sometimes eject the existing 'self' puck
@@ -138,29 +154,32 @@ function Puck() {
         const doejectCount = (count > kEjectCountThreshold) && (r < 0.1);
         const doejectSpeed = (self.vx > maxVX*0.9) && (r < ejectCountFactor);
         const doeject = doejectCount || doejectSpeed;
-
-        if (!forced && !dosplit) { // i cry here.
+        if (!(forced || dosplit)) {
             if (doeject) {
                 self.vy *= 1.1;
             }
             PlayBlip();
         }
         else {
-            // i'm sure this set of heuristics is clearly genius.
-            // but i no longer have any idea what/why they do what they do.
-            const slowCountFactor = Math.pow(countFactor, 1.5);
-            // keep a few of the fast ones around?
+            const slowCountFactor = ForGameMode(Math.pow(countFactor, 1.5), countFactor);
+            // keep a few of the fast ones around.
             const slow = !doejectSpeed && (self.vx > maxVX*0.7) && (gR.RandomFloat() < slowCountFactor);
-            const vx = self.vx * (slow ? gR.RandomRange(0.8, 0.9) : gR.RandomRange(1.01, 1.1));
+	    const slowF = gR.RandomRange(0.8, 0.9);
+	    const fastF = gR.RandomRange(1.005, 1.05);
+	    const zenF = gR.RandomRange(1.001, 1.01);
+	    const scaleF = ForGameMode(slow?slowF:fastF, zenF);
+            const vx = self.vx * scaleF;
+
             let vy = self.vy;
             vy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
-            np = { x: self.x, y: self.y, vx: vx, vy: vy, ur: false, forced, maxVX };
-            PlayExplosion();
 
             // code smell: because SplitPuck is called during MovePucks,
-            // we return the new puck to go onto the B list, whereas
-            // MoveSparks happens after so it goes onto the A list.
+            // we return the new puck to go onto gPucks.B, whereas
+            // MoveSparks happens after so it goes onto gSparks.A.
+	    np = { x: self.x, y: self.y, vx: vx, vy: vy, ur: false, forced, maxVX };
             AddSparks({ x:self.x, y:self.y, vx:sx(1), vy:sy(0.5), count: 3, rx:sx(1), ry:sy(1) });
+
+            PlayExplosion();
         }
 
         // try to hurry up when the level has no more pucks.
@@ -168,7 +187,6 @@ function Puck() {
             self.vx * (isSuddenDeath ? 1.1 : 1),
             maxVX
         );
-        //console.log("SplitPuck: puck vx updated", F(self.vx), F(maxVX), "->", F(nvx));
         self.vx = nvx;
 
         return np;
@@ -257,11 +275,12 @@ function Puck() {
     };
 
     self.AllPaddlesCollision = function(paddles, isSuddenDeath, maxVX ) {
-        var spawned = [];
+        var spawned;
         if (self.alive && !self.isLocked) {
             paddles.forEach( paddle => {
                 var newprops = self.PaddleCollision(paddle, isSuddenDeath, maxVX);
                 if( exists(newprops) ) {
+		    if (isU(spawned)) { spawned = []; }
                     spawned.push( newprops );
                 }
             } );

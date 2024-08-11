@@ -13,6 +13,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 var k2Pi = Math.PI * 2;
 var kPi2 = Math.PI / 2;
+function isBadNumber(n) {
+  return n === undefined || isNaN(n);
+}
 function isU(u) {
   return u == undefined;
 }
@@ -112,13 +115,18 @@ function Pow2(v) {
 function F(n) {
   return Math.floor(n * 100) / 100;
 }
-function Clip(n, min, max) {
-  if (min > max) {
-    var tmp = min;
-    min = max;
-    max = tmp;
+function Wrap(n, max) {
+  Assert(max >= 0);
+  if (max === 0) {
+    return 0;
   }
-  return Math.min(max, Math.max(min, n));
+  if (n > max) {
+    return n % max;
+  }
+  if (n < 0) {
+    return max + n % max;
+  }
+  return n;
 }
 function MinSigned(n, max) {
   var fm = Math.min(Math.abs(n), Math.abs(max));
@@ -127,6 +135,14 @@ function MinSigned(n, max) {
 function MaxSigned(n, max) {
   var fm = Math.max(Math.abs(n), Math.abs(max));
   return Sign(n) * fm;
+}
+function Clip(n, min, max) {
+  if (min > max) {
+    var tmp = min;
+    min = max;
+    max = tmp;
+  }
+  return Math.min(max, Math.max(min, n));
 }
 function Clip01(n) {
   return Clip(n, 0, 1);
@@ -137,12 +153,16 @@ function Clip255(n) {
 }
 
 // v expected to go from 0 to max.
+// v = 0 -> return = 1.
+// v = max -> return = 0.
 function T10(v, max) {
   max = max == 0 ? 1 : max;
   return Clip01(1 - v / max);
 }
 
 // v expected to go from 0 to max.
+// v = 0 -> return = 0.
+// v = max -> return = 1.
 function T01(v, max) {
   max = max == 0 ? 1 : max;
   return Clip01(v / max);

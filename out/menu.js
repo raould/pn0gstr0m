@@ -7,52 +7,33 @@
 
 /*
 
- this is kind of complected because it is handling
- both the menu and the game states. :-\ software kinda
- sucks, coding is hard, there's just too much variation.
- also, because some of the keyboard input first gets
- handled in the *State in main.
- also, all the button positions are sorta hard-coded.
- also-also, there's too many things that need to refer
- to each other, and special cases, like how the esc button
- can never have keyboard focus, or the menu needs to know
- when it closes, to reset the focusId.
+  this is kind of complected because it is handling
+  both the menu and the game states. :-\ software kinda
+  sucks, coding is hard, there's just too much variation.
+  also, because some of the keyboard input first gets
+  handled in the *State in main.
+  also, all the button positions are sorta hard-coded.
+  also-also, there's too many things that need to refer
+  to each other, and special cases, like how the esc button
+  can never have keyboard focus, or the menu needs to know
+  when it closes, to reset the focusId.
 
- * on title screen, the esc button is not hidden and can
-   be clicked by pointer or via esc key.
- * in-game, the esc button should be hidden, so the menu
-   can only be opened via esc / pause keys / gamepad buttons,
-   or by clicking/tapping on the pause icon. blimey.
- * in the menu, clicking/tapping on a button both focuses
-   and immediately activates it, whereas with the keyboard
-   or gamepad you navigate to a button and then have to
-   seperately activate it.
+  also? this code just kinda sucks by now, sorry.
 
- * (todo: combine stick and button states into a parent gamepad wrapper?)
- 
- */
+  * on title screen, the esc button is not hidden and can
+  be clicked by pointer or via esc key.
+  * in-game, the esc button should be hidden, so the menu
+  can only be opened via esc / pause keys / gamepad buttons,
+  or by clicking/tapping on the pause icon. blimey.
+  * in the menu, clicking/tapping on a button both focuses
+  and immediately activates it, whereas with the keyboard
+  or gamepad you navigate to a button and then have to
+  seperately activate it.
 
-function MenuConstants() {
-  var by0 = gh(0.05);
-  var bw = gw(0.2);
-  var bh = gSmallFontSize * 1.7;
-  var bl = gw(0.5) - bw / 2;
-  var bs = bh * 1.5;
-  var margin = {
-    x: bw * 0.2,
-    y: bh * 0.2
-  };
-  var font_size = gSmallFontSizePt;
-  return {
-    by0: by0,
-    bw: bw,
-    bh: bh,
-    bl: bl,
-    bs: bs,
-    margin: margin,
-    font_size: font_size
-  };
-}
+  * (todo: combine stick and button states into a parent gamepad wrapper?)
+  
+  */
+
 function MakeMenuButton(_ref) {
   var OnClose = _ref.OnClose;
   // esc button cannot ever have focus
@@ -62,9 +43,9 @@ function MakeMenuButton(_ref) {
   // also, purposefully has a different look
   // than the buttons in the menu.
   var w = sx(110);
-  var bmenu = new Button({
+  var bMenu = new Button({
     x: gw(0.5) - w / 2,
-    y: gh(0.8),
+    y: gh(0.80),
     width: w,
     height: gReducedFontSize * 1.4,
     radii: 0,
@@ -77,8 +58,15 @@ function MakeMenuButton(_ref) {
     color: rgba255s(greyDarkSpec.regular),
     font_size: gReducedFontSizePt,
     step_fn: function step_fn(bself) {
+      var gameMode = " ";
+      if (gGameMode === kGameModeHard) {
+        gameMode = "*";
+      }
+      if (gGameMode === kGameModeZen) {
+        gameMode = "Z";
+      }
       bself.has_focus = false;
-      bself.title = (gSinglePlayer ? "1p  " : "2pp ") + (gSfxMuted ? "  " : "m ") + (gMusicMuted ? " " : "o") + (gHardMode ? "*" : " ");
+      bself.title = (gSinglePlayer ? "1p  " : "2pp ") + (gSfxMuted ? "  " : "m ") + (gMusicMuted ? " " : "o") + gameMode;
     },
     click_fn: function click_fn(bself) {
       bself.isOpen = !bself.isOpen; // see below.
@@ -87,224 +75,34 @@ function MakeMenuButton(_ref) {
       }
     }
   });
-  bmenu.isOpen = false; // see above.
-  return bmenu;
+  bMenu.isOpen = false; // see above.
+  return bMenu;
 }
-function MakeGameplayButtons(_ref2) {
-  var k = _ref2.constants,
-    playerRadios = _ref2.playerRadios;
-  return {
-    bp1: new Button({
-      x: k.bl,
-      y: k.by0,
-      width: k.bw,
-      height: k.bh,
-      margin: k.margin,
-      title: "1 PLAYER",
-      font_size: k.font_size,
-      is_checkbox: true,
-      step_fn: function step_fn(bself) {
-        var was_checked = bself.is_checked;
-        bself.is_checked = gSinglePlayer;
-        bself.wants_focus = bself.is_checked && !was_checked;
-      },
-      click_fn: function click_fn(bself) {
-        gSinglePlayer = true;
-        playerRadios.OnSelect(bself);
-      }
-    }),
-    bp2: new Button({
-      x: k.bl,
-      y: k.by0 + k.bs,
-      width: k.bw,
-      height: k.bh,
-      title: "2 PLAYERS",
-      margin: k.margin,
-      font_size: k.font_size,
-      is_checkbox: true,
-      step_fn: function step_fn(bself) {
-        var was_checked = bself.is_checked;
-        bself.is_checked = !gSinglePlayer;
-        bself.wants_focus = bself.is_checked && !was_checked;
-      },
-      click_fn: function click_fn(bself) {
-        gSinglePlayer = false;
-        playerRadios.OnSelect(bself);
-      }
-    }),
-    bpH: new Button({
-      x: k.bl,
-      y: k.by0 + 2 * k.bs,
-      width: k.bw,
-      height: k.bh,
-      title: "HARD MODE",
-      margin: k.margin,
-      font_size: k.font_size,
-      is_checkbox: true,
-      step_fn: function step_fn(bself) {
-        bself.is_checked = gHardMode;
-      },
-      click_fn: function click_fn(bself) {
-        gHardMode = !gHardMode;
-      }
-    })
-  };
-}
-function MakeMuteButtons(_ref3) {
-  var k = _ref3.constants;
-  return {
-    bsfx: new Button({
-      x: k.bl,
-      y: k.by0 + k.bs * 3.5,
-      width: k.bw,
-      height: k.bh,
-      title: "SFX",
-      margin: k.margin,
-      font_size: k.font_size,
-      is_checkbox: true,
-      step_fn: function step_fn(bself) {
-        bself.is_checked = !gSfxMuted;
-      },
-      click_fn: function click_fn(bself) {
-        gSfxMuted = !gSfxMuted;
-      }
-    }),
-    bmusic: new Button({
-      x: k.bl,
-      y: k.by0 + k.bs * 4.5,
-      width: k.bw,
-      height: k.bh,
-      title: "MUSIC",
-      margin: k.margin,
-      font_size: k.font_size,
-      is_checkbox: true,
-      step_fn: function step_fn(bself) {
-        bself.is_checked = !gMusicMuted;
-      },
-      click_fn: function click_fn(bself) {
-        gMusicMuted = !gMusicMuted;
-        gMusicMuted ? StopAudio() : BeginMusic();
-      }
-    })
-  };
-}
-function MakeMainMenuButtons() {
-  var constants = new MenuConstants();
-  var playerRadios = new Radios();
-  var _MakeGameplayButtons = MakeGameplayButtons({
-      constants: constants,
-      playerRadios: playerRadios
-    }),
-    bp1 = _MakeGameplayButtons.bp1,
-    bp2 = _MakeGameplayButtons.bp2,
-    bpH = _MakeGameplayButtons.bpH;
-  var _MakeMuteButtons = MakeMuteButtons({
-      constants: constants
-    }),
-    bmusic = _MakeMuteButtons.bmusic,
-    bsfx = _MakeMuteButtons.bsfx;
-  playerRadios.AddButton(bp1);
-  playerRadios.AddButton(bp2);
-  return {
-    focusId: gSinglePlayer ? "bp1" : "bp2",
-    navigation: {
-      bp1: {
-        button: bp1,
-        down: "bp2"
-      },
-      bp2: {
-        button: bp2,
-        up: "bp1",
-        down: "bpH"
-      },
-      bpH: {
-        button: bpH,
-        up: "up2",
-        down: "bsfx"
-      },
-      bsfx: {
-        button: bsfx,
-        up: "bp2",
-        down: "bmusic"
-      },
-      bmusic: {
-        button: bmusic,
-        up: "bsfx"
-      }
-    }
-  };
-}
-function MakeQuitButton(_ref4) {
-  var k = _ref4.constants,
-    OnQuit = _ref4.OnQuit;
-  return new Button({
-    x: k.bl,
-    y: k.by0 + k.bs * 2,
-    width: k.bw,
-    height: k.bh,
-    margin: k.margin,
-    // leading spaces for alignment with checkboxes.
-    title: "  QUIT",
-    align: "left",
-    font_size: k.font_size,
-    is_checkbox: false,
-    click_fn: function click_fn(bself) {
-      OnQuit();
-    }
-  });
-}
-function MakeGameMenuButtons(_ref5) {
-  var OnQuit = _ref5.OnQuit;
-  var constants = new MenuConstants();
-  var _MakeMuteButtons2 = MakeMuteButtons({
-      constants: constants
-    }),
-    bsfx = _MakeMuteButtons2.bsfx;
-  var bquit = MakeQuitButton({
-    constants: constants,
-    OnQuit: OnQuit
-  });
-  return {
-    focusId: "bsfx",
-    navigation: {
-      bquit: {
-        button: bquit,
-        down: "bsfx"
-      },
-      bsfx: {
-        button: bsfx,
-        up: "bquit"
-      }
-    }
-  };
-}
-;
 
 /*class*/
-function MenuBehavior(_ref6) {
-  var isHidden = _ref6.isHidden,
-    OnClose = _ref6.OnClose,
-    navigation = _ref6.navigation,
-    focusId = _ref6.focusId;
+function Menu(_ref2) {
+  var isHidden = _ref2.isHidden,
+    OnClose = _ref2.OnClose,
+    navigation = _ref2.navigation,
+    focusId = _ref2.focusId;
   var self = this;
   self.Init = function () {
     var _self$navigation$self;
     self.isHidden = isHidden;
-    self.bmenu = MakeMenuButton({
+    self.bMenu = MakeMenuButton({
       OnClose: OnClose
     });
     self.navigation = navigation;
     self.focusId = focusId;
     var fb = (_self$navigation$self = self.navigation[self.focusId]) == null ? void 0 : _self$navigation$self.button;
-    if (exists(fb)) {
-      fb.has_focus = true;
-    }
+    Assert(exists(fb), "must have an initial focus, for keyboard nagivation");
+    fb.has_focus = true;
   };
   self.isOpen = function () {
-    return self.bmenu.isOpen;
+    return self.bMenu.isOpen;
   };
   self.Step = function () {
-    if (self.bmenu.isOpen) {
+    if (self.bMenu.isOpen) {
       var wants_focusId = undefined;
       Object.entries(self.navigation).forEach(function (e) {
         var bid = e[0];
@@ -317,8 +115,8 @@ function MenuBehavior(_ref6) {
         }
       });
     }
-    if (self.bmenu.isOpen || !self.isHidden) {
-      self.bmenu.Step();
+    if (self.bMenu.isOpen || !self.isHidden) {
+      self.bMenu.Step();
     }
     if (exists(wants_focusId) && wants_focusId != self.focusId) {
       self.Focus(wants_focusId);
@@ -343,11 +141,11 @@ function MenuBehavior(_ref6) {
   };
   self.ProcessOneInput = function (cmds) {
     var n, a, p1, p2;
-    if (self.bmenu.isOpen) {
+    if (self.bMenu.isOpen) {
       n = self.ProcessNavigation();
       a = self.ProcessAccept(cmds);
     }
-    if (self.bmenu.isOpen || !self.isHidden) {
+    if (self.bMenu.isOpen || !self.isHidden) {
       p1 = self.ProcessTarget(gP1Target);
       p2 = self.ProcessTarget(gP2Target);
     }
@@ -377,7 +175,7 @@ function MenuBehavior(_ref6) {
     }
   };
   self.ProcessAccept = function (cmds) {
-    if (isAnyActivatePressed(cmds) && self.bmenu.isOpen) {
+    if (isAnyActivatePressed(cmds) && self.bMenu.isOpen) {
       var bspec = self.navigation[self.focusId];
       if (exists(bspec)) {
         bspec.button.Click();
@@ -391,12 +189,12 @@ function MenuBehavior(_ref6) {
     var hit = false;
     if (target.isDown()) {
       // menu.
-      if (self.bmenu.isOpen) {
+      if (self.bMenu.isOpen) {
         var found = Object.entries(self.navigation).find(function (e) {
           return e[1].button.ProcessTarget(target);
         });
         if (exists(found)) {
-          if (found != self.bmenu) {
+          if (found != self.bMenu) {
             self.Focus(found[0]);
           }
           found[1].button.Click();
@@ -405,16 +203,16 @@ function MenuBehavior(_ref6) {
 
         // touching outside the menu closes it.
         if (!hit) {
-          self.bmenu.Click();
+          self.bMenu.Click();
           target.ClearPointer();
           hit = true;
         }
       }
       // esc.
-      if (!hit && (self.bmenu.isOpen || !self.isHidden)) {
-        hit = self.bmenu.ProcessTarget(target);
+      if (!hit && (self.bMenu.isOpen || !self.isHidden)) {
+        hit = self.bMenu.ProcessTarget(target);
         if (hit) {
-          self.bmenu.Click();
+          self.bMenu.Click();
         }
       }
     }
@@ -422,7 +220,7 @@ function MenuBehavior(_ref6) {
   };
   self.Draw = function () {
     // menu.
-    if (self.bmenu.isOpen) {
+    if (self.bMenu.isOpen) {
       Cxdo(function () {
         if (gDebug) {
           // fade buttons so i can watch stepping the game.
@@ -439,8 +237,8 @@ function MenuBehavior(_ref6) {
       });
     }
     // esc.
-    if (self.bmenu.isOpen || !self.isHidden) {
-      self.bmenu.Draw();
+    if (self.bMenu.isOpen || !self.isHidden) {
+      self.bMenu.Draw();
     }
   };
   self.Init();
