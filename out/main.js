@@ -2045,7 +2045,7 @@ function GameOverSummaryState() {
       // todo: new high score message like single player.
 
       gCx.fillStyle = RandomBlue();
-      DrawText("*** FINAL CHAMPION ***", "center", gw(0.5), gh(0.5) - gBigFontSize, gReducedFontSizePt);
+      DrawText("*** FINAL CHAMPION ***", "center", gw(0.5), gh(0.32), gReducedFontSizePt);
       gCx.fillStyle = RandomMagenta();
       DrawText("PLAYER ".concat(gP1Wins > gP2Wins ? "ONE" : "TWO", "!"), "center", gw(0.5), gh(0.5), gBigFontSizePt);
       var leftMsg = ForSide(gP1Side, "P1: ".concat(gP1Wins, " WINS"), "P2: ".concat(gP2Wins, " WINS"));

@@ -2173,7 +2173,7 @@ function UpdateLocalStorage() {
             DrawText(
                 "*** FINAL CHAMPION ***",
                 "center",
-                gw(0.5), gh(0.5) - gBigFontSize,
+                gw(0.5), gh(0.32),
                 gReducedFontSizePt
             );
 
