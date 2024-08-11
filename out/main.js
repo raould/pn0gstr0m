@@ -1975,7 +1975,7 @@ function GameOverSummaryState() {
     self.timeoutMsg = 1000;
     self.timeoutEnd = 1000 * 10;
     self.started = gGameTime;
-    self.relevant = true; // todo: fix this.
+    self.relevant = !gSinglePlayer; // todo: fix this.
   };
   self.Step = function () {
     if (self.relevant) {
@@ -2020,6 +2020,8 @@ function GameOverSummaryState() {
       gSinglePlayer ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
     }
   };
+
+  // todo: given the way levels and scoring works right now, this doesn't make sense.
   self.DrawSinglePlayer = function () {
     ClearScreen();
     var x = gw(0.5);
