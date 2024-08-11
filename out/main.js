@@ -31,7 +31,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
 var kCanvasName = "canvas"; // match: index.html
@@ -57,7 +57,8 @@ var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
 // code smell: sentinel values, -1 is attract, -2 is zen. 
 var kAttractLevelIndex = -1;
 var kZenLevelIndex = -2;
-// levels are 1-based. 
+// levels are 1-based.
+// todo: gLevelIndex is an overloaded mess.
 var gLevelIndex = gGameMode === kGameModeZen ? kZenLevelIndex : 1;
 function ForGameMode(regular, other1, other2) {
   if (gGameMode === kGameModeRegular) {
@@ -873,6 +874,7 @@ function TitleState() {
   self.Init = function () {
     ResetInput();
     ResetP1Side();
+    SetGameMode(gGameMode);
     self.attract = new GameState({
       isAttract: true
     });
