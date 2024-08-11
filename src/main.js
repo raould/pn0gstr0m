@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = true;
+var gDebug = false;
 var gDebugDrawList = [];
 var gShowToasts = gDebug;
 
@@ -31,7 +31,7 @@ var gP2Score = 0;
 var gP1Wins = 0;
 var gP2Wins = 0;
 var k2PWinBy = 3;
-function is2PGameOver() { return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy; }
+function Is2PlayerGameOver() { return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy; }
 
 // todo: the game mode stuff is a big ball of mud within
 // the larger death star of mud that is all of this code.
@@ -849,7 +849,13 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         ResetP1Side();
+
 	SetGameMode(gGameMode);
+	gP1Score = 0;
+	gP2Score = 0;
+	gP1Wins = 0;
+	gP2Winw = 0;
+
         self.attract = new GameState({ isAttract: true });
         self.timeout = gDebug ? 1 : (1000 * 1.5);
         self.started = gGameTime;
@@ -1112,8 +1118,6 @@ function UpdateLocalStorage() {
         gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
         gLevelTime = gGameTime;
 
-        gP1Score = 0;
-        gP2Score = 0;
         self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelIndex];
 
         self.pauseButtonEnabled = false;
@@ -1398,7 +1402,7 @@ function UpdateLocalStorage() {
                 else {
                     gP2Wins += 1;
                 }
-                nextState = is2PGameOver() ? kGameOver : kLevelFin;
+                nextState = Is2PlayerGameOver() ? kGameOver : kLevelFin;
             }
         }
         return nextState;
@@ -1908,7 +1912,7 @@ function UpdateLocalStorage() {
                     return kGetReady;
                 }
                 else {
-                    return is2PGameOver() ? kGameOverSummary : kGetReady;
+                    return Is2PlayerGameOver() ? kGameOverSummary : kGetReady;
                 }
             }
         }
@@ -2086,6 +2090,7 @@ function UpdateLocalStorage() {
         self.timeoutMsg = 1000;
         self.timeoutEnd = 1000 * 10;
         self.started = gGameTime;
+	self.relevant = true; // todo: fix this.
     };
 
     self.Step = function() {
@@ -2163,7 +2168,7 @@ function UpdateLocalStorage() {
         Cxdo(() => {
             // todo: new high score message like single player.
 
-            gCx.fillStyle = RandomMagenta();
+            gCx.fillStyle = RandomBlue();
             DrawText(
                 "*** FINAL CHAMPION ***",
                 "center",
@@ -2171,12 +2176,14 @@ function UpdateLocalStorage() {
                 gReducedFontSizePt
             );
 
+            gCx.fillStyle = RandomMagenta();
             DrawText(
                 `PLAYER ${gP1Wins>gP2Wins?"ONE":"TWO"}!`,
                 "center",
                 gw(0.5), gh(0.5),
                 gBigFontSizePt
             );
+
             const leftMsg = ForSide(gP1Side,
                                     `P1: ${gP1Wins} WINS`,
                                     `P2: ${gP2Wins} WINS`,
@@ -2185,6 +2192,7 @@ function UpdateLocalStorage() {
                                           `P1: ${gP1Wins} WINS`,
                                           `P2: ${gP2Wins} WINS`,
                                          );
+            gCx.fillStyle = RandomGreen();
             DrawText(
                 leftMsg,
                 "left",
