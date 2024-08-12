@@ -2035,7 +2035,7 @@ function UpdateLocalStorage() {
             );
 
 	    gCx.fillStyle = RandomForColor(cyanSpec);
-	    let winMsg = `WIN BY ${k2PWinBy}`;
+	    let winMsg = `WIN BY ${k2PWinBy} RULE`;
 	    if (IsMatchPoint()) { winMsg = "MATCH POINT!"; }
 	    if (Is2PlayerGameOver()) { winMsg = "GAME OVER!"; }
 	    DrawText(winMsg, "center", gw(0.5), gh(0.6) , gSmallerFontSizePt);

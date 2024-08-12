@@ -1949,7 +1949,7 @@ function LevelFinState() {
       DrawText(leftMsg, "left", gw(0.2), gh(0.6), gSmallFontSizePt);
       DrawText(rightMsg, "right", gw(0.8), gh(0.6), gSmallFontSizePt);
       gCx.fillStyle = RandomForColor(cyanSpec);
-      var winMsg = "WIN BY ".concat(k2PWinBy);
+      var winMsg = "WIN BY ".concat(k2PWinBy, " RULE");
       if (IsMatchPoint()) {
         winMsg = "MATCH POINT!";
       }
