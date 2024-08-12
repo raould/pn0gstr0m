@@ -1402,7 +1402,7 @@ function UpdateLocalStorage() {
                 else {
                     gP2Wins += 1;
                 }
-                nextState = Is2PlayerGameOver() ? kGameOver : kLevelFin;
+                nextState = kLevelFin;
             }
         }
         return nextState;
