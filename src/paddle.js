@@ -207,7 +207,8 @@ function Paddle(props) {
         return (self.y - self.prevY) / kTimeStep;
     };
 
-    self.Draw = function( alpha, gameState, s01 ) {
+    self.Draw = function( alpha, gameState, s01, isEndScreenshot ) {
+	Assert(exists(isEndScreenshot));
         self.barriers.A.forEach(b => {
             b.Draw( alpha );
         });
@@ -222,7 +223,7 @@ function Paddle(props) {
 	    self.DrawAsXtra(alpha, (self.hp/self.hp0));
 	}
 	else {
-            self.DrawAsPlayer(alpha, s01);
+            self.DrawAsPlayer(alpha, s01, isEndScreenshot);
 	}
     };
 
@@ -239,7 +240,7 @@ function Paddle(props) {
 	});
     };
     
-    self.DrawAsPlayer = function( alpha, s01 ) {
+    self.DrawAsPlayer = function( alpha, s01, isEndScreenshot ) {
 	// todo: way too much complectification here of xtra vs. attract vs. playing paddles.
 	// e.g. s01 == undefined implies attract mode player paddle.
 	Cxdo(() => {
@@ -263,7 +264,7 @@ function Paddle(props) {
 		RandomGreen(alpha);
 	    gCx.fill();
 
-	    if (exists(self.label)) {
+	    if (exists(self.label) && !isEndScreenshot) {
                 // label lives longer so newbies can notice it.
                 var fadeInMsec = kGreenFadeInMsec * 3;
                 var gt01 = GameTime01(fadeInMsec);

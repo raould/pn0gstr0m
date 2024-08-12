@@ -29,6 +29,7 @@ var kScoreIncrement = 1;
 var gP1Score = 0;
 var gP2Score = 0;
 var gPWins = []; // records '0' for tie, '1' for p1, '2' for p2, per level completed.
+var k2PWinBy = 3;
 function P1Wins() { return gPWins.reduce((t,s) => t+(s==1?1:0), 0); }
 function P2Wins() { return gPWins.reduce((t,s) => t+(s==2?1:0), 0); }
 function ForLastWinner(p1, p2) {
@@ -37,12 +38,17 @@ function ForLastWinner(p1, p2) {
     var last = gPWins[gPWins.length-1];
     return last === 1 ? p1 : p2;
 }
-var k2PWinBy = 3;
+function IsMatchPoint() {
+    var p1 = P1Wins();
+    var p2 = P2Wins();
+    return Math.abs(p1 - p2) == k2PWinBy-1;
+}
 function Is2PlayerGameOver() {
     var p1 = P1Wins();
     var p2 = P2Wins();
-    console.log("Is2PlayerGameOver", p1, p2, k2PWinBy, gPWins);
-    return Math.abs(p1 - p2) >= k2PWinBy;
+    var diff = Math.abs(p1 - p2);
+    var over = diff >= k2PWinBy;
+    return over;
 }
 
 // todo: the game mode stuff is a big ball of mud within
@@ -1805,8 +1811,8 @@ function UpdateLocalStorage() {
 
             // draw paddles under pucks, at least so i can visually debug collisions.
 	    const s01 = exists(self.level.splitsRemaining) ? Clip01(self.level.splitsRemaining / self.level.splitsAllowed) : undefined;
-            self.paddleP1.Draw( self.Alpha(), self, s01 );
-            self.paddleP2.Draw( self.Alpha(), self, s01 );
+            self.paddleP1.Draw( self.Alpha(), self, s01, isEndScreenshot );
+            self.paddleP2.Draw( self.Alpha(), self, s01, isEndScreenshot );
 
             // match: pucks revEach so splits show up on top, z order.
             // pucks going away from (single) player.
@@ -1953,7 +1959,7 @@ function UpdateLocalStorage() {
         if (self.hiMsg) {
             Cxdo(() => {
                 gCx.fillStyle = RandomMagenta();
-                DrawText(self.hiMsg, "center", gw(0.5), gh(0.65), gSmallFontSizePt);
+                DrawText(self.hiMsg, "center", gw(0.5), gh(0.68), gSmallFontSizePt);
             });
         }
     };
@@ -1990,7 +1996,7 @@ function UpdateLocalStorage() {
             gCx.globalAlpha = 0.5;
             gCx.drawImage(gCanvas2, 0, 0);
             gCx.globalAlpha = 1;
-            gCx.fillStyle = RandomGreen();
+            gCx.fillStyle = RandomForColor(greenSpec);
             let msg = "TIE!";
             if (gP1Score != gP2Score) {
                 if (gP1Score > gP2Score) {
@@ -2028,8 +2034,14 @@ function UpdateLocalStorage() {
                 gSmallFontSizePt
             );
 
+	    gCx.fillStyle = RandomForColor(cyanSpec);
+	    let winMsg = `WIN BY ${k2PWinBy}`;
+	    if (IsMatchPoint()) { winMsg = "MATCH POINT!"; }
+	    if (Is2PlayerGameOver()) { winMsg = "GAME OVER!"; }
+	    DrawText(winMsg, "center", gw(0.5), gh(0.6) , gSmallerFontSizePt);
+
             if (self.goOn) {
-                gCx.fillStyle = RandomYellowSolid();
+                gCx.fillStyle = RandomForColor(yellowSpec);
                 DrawText(
                     "NEXT",
                     "center",
