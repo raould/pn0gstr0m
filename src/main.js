@@ -28,7 +28,7 @@ var gSinglePlayer = LoadLocal(LocalStorageKeys.singlePlayer, true);
 var kScoreIncrement = 1;
 var gP1Score = 0;
 var gP2Score = 0;
-var gPWins = []; // records '0' for tie, '1' for p1, '2' for p2, per level completed.
+var gPWins = []; // records 0 for tie, 1 for p1, 2 for p2, per level completed.
 var k2PWinBy = 3;
 function P1Wins() { return gPWins.reduce((t,s) => t+(s==1?1:0), 0); }
 function P2Wins() { return gPWins.reduce((t,s) => t+(s==2?1:0), 0); }
