@@ -851,8 +851,6 @@ function UpdateLocalStorage() {
         ResetP1Side();
 
 	SetGameMode(gGameMode);
-	gP1Score = 0;
-	gP2Score = 0;
 	gP1Wins = 0;
 	gP2Wins = 0;
 
@@ -1118,6 +1116,8 @@ function UpdateLocalStorage() {
         gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
         gLevelTime = gGameTime;
 
+	gP1Score = 0;
+	gP2Score = 0;
         self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelIndex];
 
         self.pauseButtonEnabled = false;
@@ -1927,8 +1927,8 @@ function UpdateLocalStorage() {
     self.DrawLevelHighScore = function() {
         if (self.hiMsg) {
             Cxdo(() => {
-                gCx.fillStyle = RandomGreen();
-                DrawText(self.hiMsg, "center", gw(0.5), gh(0.65), gReducedFontSizePt);
+                gCx.fillStyle = RandomMagenta();
+                DrawText(self.hiMsg, "center", gw(0.5), gh(0.65), gSmallFontSizePt);
             });
         }
     };
