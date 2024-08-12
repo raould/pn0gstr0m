@@ -52,6 +52,7 @@ function P2Wins() {
   }, 0);
 }
 function ForLastWinner(p1, p2) {
+  Assert(gPWins.length > 0);
   if (gPWins.length === 0) {
     return undefined;
   }
@@ -60,7 +61,10 @@ function ForLastWinner(p1, p2) {
 }
 var k2PWinBy = 3;
 function Is2PlayerGameOver() {
-  return Math.abs(P1Wins() - P2Wins()) >= k2PWinBy;
+  var p1 = P1Wins();
+  var p2 = P2Wins();
+  console.log("Is2PlayerGameOver", p1, p2, k2PWinBy, gPWins);
+  return Math.abs(p1 - p2) >= k2PWinBy;
 }
 
 // todo: the game mode stuff is a big ball of mud within
@@ -1416,6 +1420,7 @@ function GameState(props) {
       x = _ForSide2[0];
       sign = _ForSide2[1];
     } else {
+      Assert(self.level.index > 1);
       // todo: in 2 player, level 2+ goes toward the last level loser.
       var _ForLastWinner = ForLastWinner(ForSide(gP1Side, toRight, toLeft), ForSide(gP2Side, toRight, toLeft));
       var _ForLastWinner2 = _slicedToArray(_ForLastWinner, 2);
@@ -1855,7 +1860,6 @@ function LevelFinState() {
     }
     Assert(!isBadNumber(self.highScore));
     self.hiMsg = self.isNewHighScore ? "NEW LEVEL HIGH: ".concat(self.highScore) : undefined;
-    console.log(self.highScore, self.isNewHighScore, gLevelIndex, gLevelHighScores);
     self.goOn = false;
     PlayGameOver();
     if (self.isNewHighScore) {
