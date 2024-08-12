@@ -40,11 +40,27 @@ var gSinglePlayer = LoadLocal(LocalStorageKeys.singlePlayer, true);
 var kScoreIncrement = 1;
 var gP1Score = 0;
 var gP2Score = 0;
-var gP1Wins = 0;
-var gP2Wins = 0;
+var gPWins = []; // records '0' for tie, '1' for p1, '2' for p2, per level completed.
+function P1Wins() {
+  return gPWins.reduce(function (t, s) {
+    return t + (s == 1 ? 1 : 0);
+  }, 0);
+}
+function P2Wins() {
+  return gPWins.reduce(function (t, s) {
+    return t + (s == 2 ? 1 : 0);
+  }, 0);
+}
+function ForLastWinner(p1, p2) {
+  if (gPWins.length === 0) {
+    return undefined;
+  }
+  var last = gPWins[gPWins.length - 1];
+  return last === 1 ? p1 : p2;
+}
 var k2PWinBy = 3;
 function Is2PlayerGameOver() {
-  return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy;
+  return Math.abs(P1Wins() - P2Wins()) >= k2PWinBy;
 }
 
 // todo: the game mode stuff is a big ball of mud within
@@ -875,8 +891,7 @@ function TitleState() {
     ResetInput();
     ResetP1Side();
     SetGameMode(gGameMode);
-    gP1Wins = 0;
-    gP2Wins = 0;
+    gPWins = [];
     self.attract = new GameState({
       isAttract: true
     });
@@ -1364,13 +1379,12 @@ function GameState(props) {
       if (gSinglePlayer) {
         nextState = gP1Score < gP2Score ? kGameOver : kLevelFin;
       } else {
-        // in a tie, nobody records a 'win'.
         if (gP1Score == gP2Score) {
-          nextState = kLevelFin;
+          gPWins.push(0);
         } else if (gP1Score > gP2Score) {
-          gP1Wins += 1;
+          gPWins.push(1);
         } else {
-          gP2Wins += 1;
+          gPWins.push(2);
         }
         nextState = kLevelFin;
       }
@@ -1389,15 +1403,28 @@ function GameState(props) {
     });
   };
   self.CreateStartingPuck = function (vx) {
-    // i am crying into my drink.
-    // single player: puck goes towards gpu.
-    // two player: puck goes toward p2.
-    var sign = ForSide(gP1Side, 1, -1);
-    var p = gPuckPool.Alloc();
+    var x;
+    var sign;
+    var toLeft = [gw(0.7), -1];
+    var toRight = [gw(0.3), 1];
 
-    // match: all games start with cyan pucks.
+    // single player: puck goes towards gpu.
+    // two player: puck goes toward p2 on level 1,
+    if (gSinglePlayer || self.level.index <= 1) {
+      var _ForSide = ForSide(gP1Side, toRight, toLeft);
+      var _ForSide2 = _slicedToArray(_ForSide, 2);
+      x = _ForSide2[0];
+      sign = _ForSide2[1];
+    } else {
+      // todo: in 2 player, level 2+ goes toward the last level loser.
+      var _ForLastWinner = ForLastWinner(ForSide(gP1Side, toRight, toLeft), ForSide(gP2Side, toRight, toLeft));
+      var _ForLastWinner2 = _slicedToArray(_ForLastWinner, 2);
+      x = _ForLastWinner2[0];
+      sign = _ForLastWinner2[1];
+    }
+    var p = gPuckPool.Alloc();
     p.PlacementInit({
-      x: gw(ForSide(gP1Side, 0.3, 0.7)),
+      x: x,
       y: self.isAttract ? gh(gR.RandomRange(0.4, 0.6)) : gh(0.3),
       vx: sign * vx,
       vy: self.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
@@ -1895,7 +1922,7 @@ function LevelFinState() {
       gCx.globalAlpha = 0.5;
       gCx.drawImage(gCanvas2, 0, 0);
       gCx.globalAlpha = 1;
-      gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
+      gCx.fillStyle = RandomGreen();
       var msg = "TIE!";
       if (gP1Score != gP2Score) {
         if (gP1Score > gP2Score) {
@@ -1905,8 +1932,10 @@ function LevelFinState() {
         }
       }
       DrawText(msg, "center", gw(0.5), gh(0.5), gBigFontSizePt);
-      var leftMsg = ForSide(gP1Side, "P1: ".concat(gP1Wins, " WINS"), "P2: ".concat(gP2Wins, " WINS"));
-      var rightMsg = ForOtherSide(gP1Side, "P1: ".concat(gP1Wins, " WINS"), "P2: ".concat(gP2Wins, " WINS"));
+
+      // match: GameOverSummaryState.
+      var leftMsg = ForSide(gP1Side, "P1: ".concat(P1Wins(), " ").concat(FNP(P1Wins(), "WIN", "WINS")), "P2: ".concat(P2Wins(), " ").concat(FNP(P2Wins(), "WIN", "WINS")));
+      var rightMsg = ForOtherSide(gP1Side, "P1: ".concat(P1Wins(), " ").concat(FNP(P1Wins(), "WIN", "WINS")), "P2: ".concat(P2Wins(), " ").concat(FNP(P2Wins(), "WIN", "WINS")));
       DrawText(leftMsg, "left", gw(0.2), gh(0.6), gSmallFontSizePt);
       DrawText(rightMsg, "right", gw(0.8), gh(0.6), gSmallFontSizePt);
       if (self.goOn) {
@@ -2039,17 +2068,18 @@ function GameOverSummaryState() {
     return nextState;
   };
   self.DrawTwoPlayer = function () {
-    ClearScreen();
     var nextState;
     Cxdo(function () {
       // todo: new high score message like single player.
-
+      ClearScreen();
       gCx.fillStyle = RandomBlue();
       DrawText("*** FINAL CHAMPION ***", "center", gw(0.5), gh(0.32), gReducedFontSizePt);
       gCx.fillStyle = RandomMagenta();
-      DrawText("PLAYER ".concat(gP1Wins > gP2Wins ? "ONE" : "TWO", "!"), "center", gw(0.5), gh(0.5), gBigFontSizePt);
-      var leftMsg = ForSide(gP1Side, "P1: ".concat(gP1Wins, " WINS"), "P2: ".concat(gP2Wins, " WINS"));
-      var rightMsg = ForOtherSide(gP1Side, "P1: ".concat(gP1Wins, " WINS"), "P2: ".concat(gP2Wins, " WINS"));
+      DrawText("PLAYER ".concat(P1Wins() > P2Wins() ? "ONE" : "TWO", "!"), "center", gw(0.5), gh(0.5), gBigFontSizePt);
+
+      // match: LevelFinState.
+      var leftMsg = ForSide(gP1Side, "P1: ".concat(P1Wins(), " ").concat(FNP(P1Wins(), "WIN", "WINS")), "P2: ".concat(P2Wins(), " ").concat(FNP(P2Wins(), "WIN", "WINS")));
+      var rightMsg = ForOtherSide(gP1Side, "P1: ".concat(P1Wins(), " ").concat(FNP(P1Wins(), "WIN", "WINS")), "P2: ".concat(P2Wins(), " ").concat(FNP(P2Wins(), "WIN", "WINS")));
       gCx.fillStyle = RandomGreen();
       DrawText(leftMsg, "left", gw(0.2), gh(0.6), gSmallFontSizePt);
       DrawText(rightMsg, "right", gw(0.8), gh(0.6), gSmallFontSizePt);
