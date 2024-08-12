@@ -124,6 +124,11 @@ function F(n) {
     return Math.floor(n*100)/100;
 }
 
+function FNP(n, singular, plural) {
+    if (n === 1) { return singular; }
+    return plural;
+}
+
 function Wrap(n, max) {
     Assert(max >= 0);
     if (max === 0) { return 0; }

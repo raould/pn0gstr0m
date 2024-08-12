@@ -28,10 +28,16 @@ var gSinglePlayer = LoadLocal(LocalStorageKeys.singlePlayer, true);
 var kScoreIncrement = 1;
 var gP1Score = 0;
 var gP2Score = 0;
-var gP1Wins = 0;
-var gP2Wins = 0;
+var gPWins = []; // records '0' for tie, '1' for p1, '2' for p2, per level completed.
+function P1Wins() { return gPWins.reduce((t,s) => t+(s==1?1:0), 0); }
+function P2Wins() { return gPWins.reduce((t,s) => t+(s==2?1:0), 0); }
+function ForLastWinner(p1, p2) {
+    if (gPWins.length === 0) { return undefined; }
+    var last = gPWins[gPWins.length-1];
+    return last === 1 ? p1 : p2;
+}
 var k2PWinBy = 3;
-function Is2PlayerGameOver() { return Math.abs(gP1Wins - gP2Wins) >= k2PWinBy; }
+function Is2PlayerGameOver() { return Math.abs(P1Wins() - P2Wins()) >= k2PWinBy; }
 
 // todo: the game mode stuff is a big ball of mud within
 // the larger death star of mud that is all of this code.
@@ -851,8 +857,7 @@ function UpdateLocalStorage() {
         ResetP1Side();
 
 	SetGameMode(gGameMode);
-	gP1Wins = 0;
-	gP2Wins = 0;
+	gPWins = [];
 
         self.attract = new GameState({ isAttract: true });
         self.timeout = gDebug ? 1 : (1000 * 1.5);
@@ -1392,15 +1397,14 @@ function UpdateLocalStorage() {
                 nextState = gP1Score < gP2Score ? kGameOver : kLevelFin;
             }
             else {
-                // in a tie, nobody records a 'win'.
                 if (gP1Score == gP2Score) {
-                    nextState = kLevelFin;
+		    gPWins.push(0);
                 }
                 else if (gP1Score > gP2Score) {
-                    gP1Wins += 1;
+                    gPWins.push(1);
                 }
                 else {
-                    gP2Wins += 1;
+		    gPWins.push(2);
                 }
                 nextState = kLevelFin;
             }
@@ -1418,15 +1422,30 @@ function UpdateLocalStorage() {
     };
 
     self.CreateStartingPuck = function(vx) {
-        // i am crying into my drink.
+	var x;
+	var sign;
+	var toLeft = [gw(0.7), -1];
+	var toRight = [gw(0.3), 1];
+
         // single player: puck goes towards gpu.
-        // two player: puck goes toward p2.
-        var sign = ForSide(gP1Side, 1, -1);
+        // two player: puck goes toward p2 on level 1,
+	if (gSinglePlayer || self.level.index <= 1) {
+            [x, sign] = ForSide(
+		gP1Side,
+		toRight,
+		toLeft
+	    );
+	}
+	else {
+	    // todo: in 2 player, level 2+ goes toward the last level loser.
+	    [x, sign] = ForLastWinner(
+		ForSide(gP1Side, toRight, toLeft),
+		ForSide(gP2Side, toRight, toLeft)
+	    );
+	}
 
         var p = gPuckPool.Alloc();
-
-	// match: all games start with cyan pucks.
-        p.PlacementInit({ x: gw(ForSide(gP1Side, 0.3, 0.7)),
+        p.PlacementInit({ x,
                           y: (self.isAttract ?
                               gh(gR.RandomRange(0.4, 0.6)) :
                               gh(0.3)),
@@ -1965,7 +1984,7 @@ function UpdateLocalStorage() {
             gCx.globalAlpha = 0.5;
             gCx.drawImage(gCanvas2, 0, 0);
             gCx.globalAlpha = 1;
-            gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
+            gCx.fillStyle = RandomGreen();
             let msg = "TIE!";
             if (gP1Score != gP2Score) {
                 if (gP1Score > gP2Score) {
@@ -1980,13 +1999,15 @@ function UpdateLocalStorage() {
                 gw(0.5), gh(0.5),
                 gBigFontSizePt,
             );
+
+	    // match: GameOverSummaryState.
             const leftMsg = ForSide(gP1Side,
-                                    `P1: ${gP1Wins} WINS`,
-                                    `P2: ${gP2Wins} WINS`,
+                                    `P1: ${P1Wins()} ${FNP(P1Wins(), "WIN", "WINS")}`,
+                                    `P2: ${P2Wins()} ${FNP(P2Wins(), "WIN", "WINS")}`,
                                    );
             const rightMsg = ForOtherSide(gP1Side,
-                                          `P1: ${gP1Wins} WINS`,
-                                          `P2: ${gP2Wins} WINS`,
+					  `P1: ${P1Wins()} ${FNP(P1Wins(), "WIN", "WINS")}`,
+					  `P2: ${P2Wins()} ${FNP(P2Wins(), "WIN", "WINS")}`,
                                          );
             DrawText(
                 leftMsg,
@@ -2164,11 +2185,10 @@ function UpdateLocalStorage() {
     };
 
     self.DrawTwoPlayer = function() {
-        ClearScreen();
         var nextState;
         Cxdo(() => {
             // todo: new high score message like single player.
-
+            ClearScreen();
             gCx.fillStyle = RandomBlue();
             DrawText(
                 "*** FINAL CHAMPION ***",
@@ -2179,19 +2199,20 @@ function UpdateLocalStorage() {
 
             gCx.fillStyle = RandomMagenta();
             DrawText(
-                `PLAYER ${gP1Wins>gP2Wins?"ONE":"TWO"}!`,
+                `PLAYER ${P1Wins()>P2Wins()?"ONE":"TWO"}!`,
                 "center",
                 gw(0.5), gh(0.5),
                 gBigFontSizePt
             );
 
+	    // match: LevelFinState.
             const leftMsg = ForSide(gP1Side,
-                                    `P1: ${gP1Wins} WINS`,
-                                    `P2: ${gP2Wins} WINS`,
+				    `P1: ${P1Wins()} ${FNP(P1Wins(), "WIN", "WINS")}`,
+				    `P2: ${P2Wins()} ${FNP(P2Wins(), "WIN", "WINS")}`,
                                    );
             const rightMsg = ForOtherSide(gP1Side,
-                                          `P1: ${gP1Wins} WINS`,
-                                          `P2: ${gP2Wins} WINS`,
+					  `P1: ${P1Wins()} ${FNP(P1Wins(), "WIN", "WINS")}`,
+					  `P2: ${P2Wins()} ${FNP(P2Wins(), "WIN", "WINS")}`,
                                          );
             gCx.fillStyle = RandomGreen();
             DrawText(
