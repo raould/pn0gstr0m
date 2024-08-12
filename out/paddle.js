@@ -192,7 +192,8 @@ function Paddle(props) {
   self.getVY = function () {
     return (self.y - self.prevY) / kTimeStep;
   };
-  self.Draw = function (alpha, gameState, s01) {
+  self.Draw = function (alpha, gameState, s01, isEndScreenshot) {
+    Assert(exists(isEndScreenshot));
     self.barriers.A.forEach(function (b) {
       b.Draw(alpha);
     });
@@ -205,7 +206,7 @@ function Paddle(props) {
     if (exists(self.hp)) {
       self.DrawAsXtra(alpha, self.hp / self.hp0);
     } else {
-      self.DrawAsPlayer(alpha, s01);
+      self.DrawAsPlayer(alpha, s01, isEndScreenshot);
     }
   };
   self.DrawAsXtra = function (alpha, hp01) {
@@ -220,7 +221,7 @@ function Paddle(props) {
       gCx.fill();
     });
   };
-  self.DrawAsPlayer = function (alpha, s01) {
+  self.DrawAsPlayer = function (alpha, s01, isEndScreenshot) {
     // todo: way too much complectification here of xtra vs. attract vs. playing paddles.
     // e.g. s01 == undefined implies attract mode player paddle.
     Cxdo(function () {
@@ -240,7 +241,7 @@ function Paddle(props) {
       gCx.rect(wx, wy, self.width, self.height);
       gCx.fillStyle = exists(s01) ? RandomForColorFadeIn(cyanSpec, alpha * Math.max(0.1, s01)) : RandomGreen(alpha);
       gCx.fill();
-      if (exists(self.label)) {
+      if (exists(self.label) && !isEndScreenshot) {
         // label lives longer so newbies can notice it.
         var fadeInMsec = kGreenFadeInMsec * 3;
         var gt01 = GameTime01(fadeInMsec);
