@@ -44,7 +44,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
     const level = new Level({
         index,
         isSpawning: true,
-	vx0: sxi(3),
+	vx0: sxi(2),
         // maxVX is allowed to grow after there are no more splits.
         maxVX: sxi(12 + index),
         speedupFactor: 0.0001,
@@ -89,9 +89,11 @@ function ChoosePillIDs(index) {
     if (gChosenPillIDsCache?.index === index) {
         return gChosenPillIDsCache?.pids;
     }
+
     const pids = ChoosePillIDsUncached(index);
     console.log("Pids", index, pids);
     gChosenPillIDsCache = { index, pids };
+
     return pids;
 }
 
@@ -110,11 +112,8 @@ function ChoosePillIDsUncached(index) {
             console.log("ChoosePillIDsUncached by 2", index, pids, pids.map(i => gPillInfo[i]?.name));
             Assert(pids.length === 2);
         }
-
-        // after those first n levels, 4 random pills per level.
-        // todo: make the 4 feel more random level to level,
-        // they seem to repeat too easily.
-        else {
+        // after those first n levels, for another n levels, 4 random pills per level.
+        else if (i0 <= gPillIDs.length) {
             const r = new Random(index);
             const p = [...gPillIDs];
             pids = [
@@ -126,6 +125,10 @@ function ChoosePillIDsUncached(index) {
             console.log("ChoosePillIDsUncached random 4", index, pids, pids.map(i => gPillInfo[i]?.name));
             Assert(pids.length === 4);
         }
+	// after all that, dump in all powerups!
+	else {
+	    pids = [...gPillIDs];
+	}
         Assert(pids.length > 0);
     }
 

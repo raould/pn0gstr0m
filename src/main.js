@@ -109,7 +109,7 @@ var gLevelHighScores = LoadLocal(LocalStorageKeys.highScores, {});
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
 // although i did try to compensate in the run loop.
-var kFPS = 30;
+var kFPS = 45;
 var kTimeStep = 1000/kFPS;
 var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
 var gLevelTime = 0;
@@ -161,9 +161,9 @@ function RecalculateConstants() {
     gYInset = sxi(20);
     gPaddleHeight = gh(0.11);
     gPaddleWidth = sxi(6);
-    gPaddleStepSize = gPaddleHeight * 0.2;
+    gPaddleStepSize = gPaddleHeight * 0.15;
     gPuckHeight = gPuckWidth = gh(0.012);
-    gPauseCenterX = gw(0.54);
+    gPauseCenterX = gw(0.58);
     gPauseCenterY = gh(0.1);
     gPauseRadius = sxi(12);
     gSparkWidth = sxi(3);
@@ -1021,7 +1021,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        var seconds = gDebug ? 1 : (ChoosePillIDs(gLevelIndex).length === 2 ? 5 : 3);
+        var seconds = gDebug ? 1 : (ChoosePillIDs(gLevelIndex).length > 0 ? 5 : 3);
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.pillIDs = ChoosePillIDs(gLevelIndex);
@@ -1665,12 +1665,14 @@ function UpdateLocalStorage() {
     };
 
     // note: this really has to be z-under everything.
+    // match: level.Draw().
     self.DrawMidLine = function() {
         if (!self.isAttract) {
-	    var dashStep = (gh() - 2*gYInset) / (gMidLineDashCount*2);
-	    var top = gYInset + dashStep/2;
+	    // note: constants have been tweaked to 'look good'.
+	    var dashStep = gh() / (gMidLineDashCount*2);
+	    var top = gYInset*1.5 + dashStep/2;
 	    var txo = gSmallFontSize;
-	    var bottom = gh() - gYInset - txo;
+	    var bottom = gh() - gYInset*1.05 - txo;
 	    var range = bottom - top;
 	    var e = (self.level.EnergyFactor() ?? 0) * range;
 	    Cxdo(() => {
@@ -1684,7 +1686,7 @@ function UpdateLocalStorage() {
 		gCx.fill();
 	    });
 	}
-    }
+    };
 
     self.DrawCRTOutline = function() {
         if (!self.isAttract) {

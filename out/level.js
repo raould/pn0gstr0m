@@ -99,15 +99,26 @@ function Level(props) {
   self.IsSuddenDeath = function () {
     return exists(self.splitsRemaining) && self.splitsRemaining <= 0;
   };
+
+  // match: main.GameState,Draw().
   self.Draw = function (_ref) {
     var alpha = _ref.alpha,
       isEndScreenshot = _ref.isEndScreenshot;
     if (!isEndScreenshot) {
+      self.DrawTitle(alpha);
       self.DrawEnergy(alpha);
       self.DrawPills(alpha);
       // todo: you'd maybe kind of expect lots of
       // other things like paddles and pucks to be
       // drawn by the level too, huh? ...
+    }
+  };
+  self.DrawTitle = function (alpha) {
+    if (self.index != kAttractLevelIndex) {
+      Cxdo(function () {
+        gCx.fillStyle = RandomForColor(cyanSpec, alpha);
+        DrawText("LVL".concat(self.index), "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
+      });
     }
   };
   self.DrawEnergy = function (alpha) {

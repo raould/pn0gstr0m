@@ -55,7 +55,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
   var level = new Level({
     index: index,
     isSpawning: true,
-    vx0: sxi(3),
+    vx0: sxi(2),
     // maxVX is allowed to grow after there are no more splits.
     maxVX: sxi(12 + index),
     speedupFactor: 0.0001,
@@ -120,11 +120,8 @@ function ChoosePillIDsUncached(index) {
       }));
       Assert(pids.length === 2);
     }
-
-    // after those first n levels, 4 random pills per level.
-    // todo: make the 4 feel more random level to level,
-    // they seem to repeat too easily.
-    else {
+    // after those first n levels, for another n levels, 4 random pills per level.
+    else if (i0 <= gPillIDs.length) {
       var r = new Random(index);
       var p = _toConsumableArray(gPillIDs);
       pids = [p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0]];
@@ -133,6 +130,10 @@ function ChoosePillIDsUncached(index) {
         return (_gPillInfo$i2 = gPillInfo[i]) == null ? void 0 : _gPillInfo$i2.name;
       }));
       Assert(pids.length === 4);
+    }
+    // after all that, dump in all powerups!
+    else {
+      pids = _toConsumableArray(gPillIDs);
     }
     Assert(pids.length > 0);
   }
