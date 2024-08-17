@@ -200,3 +200,26 @@ function easeOutExpo(n) {
   n = Clip01(n);
   return n >= 1 ? 1 : 1 - Math.pow(2, -10 * n);
 }
+
+/*class*/
+function TimedElements(_ref) {
+  var elements = _ref.elements,
+    duration = _ref.duration;
+  var self = this;
+  self.Init = function () {
+    self.elements = elements;
+    self.duration = duration;
+    self.lastTime = gGameTime;
+    self.index = 0;
+  };
+  self.Current = function () {
+    // todo: this probably doesn't respect pause.
+    var diff = gGameTime - self.lastTime;
+    if (diff > self.duration) {
+      self.index = (self.index + 1) % self.elements.length;
+      self.lastTime = gGameTime;
+    }
+    return self.elements[self.index];
+  };
+  self.Init();
+}

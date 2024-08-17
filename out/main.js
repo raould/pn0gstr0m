@@ -1736,10 +1736,10 @@ function GameState(props) {
       var cx = gPauseCenterX;
       var cy = gPauseCenterY;
       Cxdo(function () {
-        gCx.fillStyle = gCx.strokeStyle = RandomGrey(0.3);
+        gCx.fillStyle = gCx.strokeStyle = RandomForColor(greySpec, 0.3);
         DrawText("ESC", "center", cx, cy + gSmallestFontSize * 0.4, gSmallestFontSizePt);
         gCx.beginPath();
-        gCx.arc(cx, cy, gPauseRadius, 0, k2Pi, true);
+        gCx.roundRect(cx - gPauseRadius, cy - gPauseRadius, gPauseRadius * 2, gPauseRadius * 2, 8);
         gCx.lineWidth = sx1(1.5);
         gCx.stroke();
         if (gDebug) {
