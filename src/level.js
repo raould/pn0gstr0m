@@ -112,14 +112,25 @@ const kEnglishStep = 0.004;
         return exists(self.splitsRemaining) && self.splitsRemaining <= 0;
     };
 
+    // match: main.GameState,Draw().
     self.Draw = function({ alpha, isEndScreenshot }) {
         if (!isEndScreenshot) {
+	    self.DrawTitle( alpha );
 	    self.DrawEnergy( alpha );
             self.DrawPills( alpha );
             // todo: you'd maybe kind of expect lots of
             // other things like paddles and pucks to be
             // drawn by the level too, huh? ...
         }
+    };
+
+    self.DrawTitle = function( alpha ) {
+	if (self.index != kAttractLevelIndex) {
+	    Cxdo(() => {
+		gCx.fillStyle = RandomForColor( cyanSpec, alpha );
+		DrawText(`LVL${self.index}`, "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
+	    });
+	}
     };
 
     self.DrawEnergy = function( alpha ) {

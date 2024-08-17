@@ -494,14 +494,14 @@ function MakeDefendProps(maker) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            return maker.paddle.barriers.A.length == 0 && (gDebug || gPucks.A.length > 25);
+            return maker.paddle.barriers.A.length == 0 && gPucks.A.length > 10;
         },
         canSkip: true,
         drawFn: (self, alpha) => DrawDefendPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var n = 4; // match: kBarriersArrayInitialSize.
-            var hp = 30;
+            var hp = ForGameMode(15, 30);
             var width = sx1(hp/3);
             var height = (gHeight-gYInset*2) / n;
             var x = gw(ForSide(maker.side, 0.1, 0.9));
