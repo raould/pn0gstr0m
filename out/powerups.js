@@ -269,7 +269,7 @@ function DrawDecimatePill(side, xywh, alpha) {
     gCx.lineTo(wx, my);
     gCx.closePath();
     gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-    gCx.lineWidth = sx1(2);
+    gCx.lineWidth = sx1(3);
     gCx.stroke();
   });
 }
@@ -306,9 +306,9 @@ function DrawDefendPill(side, xywh, alpha) {
     var wy = WY(xywh.y);
     gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
     gCx.beginPath();
-    gCx.RoundRect(wx, wy, xywh.width, xywh.height, 10);
+    gCx.RoundRect(wx, wy, xywh.width, xywh.height, 14);
     gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-    gCx.lineWidth = sx1(2);
+    gCx.lineWidth = sx1(4);
     gCx.stroke();
   });
 }
@@ -319,7 +319,7 @@ function DrawXtraPill(side, xywh, alpha) {
     var wy = WY(xywh.y);
     gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
     gCx.beginPath();
-    gCx.RoundRect(wx, wy, xywh.width, xywh.height, 10);
+    gCx.RoundRect(wx, wy, xywh.width, xywh.height, 14);
     gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
     gCx.lineWidth = sx1(2);
     gCx.stroke();
