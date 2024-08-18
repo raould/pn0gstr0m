@@ -1021,7 +1021,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        var seconds = gDebug ? 1 : (ChoosePillIDs(gLevelIndex).length > 0 ? 5 : 3);
+        var seconds = gDebug ? 1 : ((gLevelIndex >= 1 && ChoosePillIDs(gLevelIndex).length > 0) ? 5 : 3);
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.pillIDs = ChoosePillIDs(gLevelIndex);
@@ -1668,11 +1668,11 @@ function UpdateLocalStorage() {
     // match: level.Draw().
     self.DrawMidLine = function() {
         if (!self.isAttract) {
-	    // note: constants have been tweaked to 'look good'.
+	    // note: this is all a tweaky hacky heuristic mess.
 	    var dashStep = gh() / (gMidLineDashCount*2);
-	    var top = gYInset*1.5 + dashStep/2;
+	    var top = ForGameMode(gYInset*1.5, gYInset) + dashStep/2;
 	    var txo = gSmallFontSize;
-	    var bottom = gh() - gYInset*1.05 - txo;
+	    var bottom = ForGameMode(gh() - gYInset*1.05 - txo, gh()-gYInset);
 	    var range = bottom - top;
 	    var e = (self.level.EnergyFactor() ?? 0) * range;
 	    Cxdo(() => {

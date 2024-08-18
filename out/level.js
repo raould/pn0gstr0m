@@ -114,7 +114,7 @@ function Level(props) {
     }
   };
   self.DrawTitle = function (alpha) {
-    if (self.index != kAttractLevelIndex) {
+    if (self.index >= 1) {
       Cxdo(function () {
         gCx.fillStyle = RandomForColor(cyanSpec, alpha);
         DrawText("LVL".concat(self.index), "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
