@@ -188,10 +188,10 @@ function RecalculateConstants() {
 
 var kFontName = "noyb2Regular";
 var kMaxSparkFrame = 10;
-var kEjectCountThreshold = 100;
-var kEjectSpeedCountThreshold = 90;
-var kPuckPoolSize = 500;
-var kSparkPoolSize = 500;
+var kEjectCountThreshold = 400;
+var kEjectSpeedCountThreshold = 300;
+var kPuckPoolSize = 700;
+var kSparkPoolSize = 200;
 var kBarriersArrayInitialSize = 4;
 var kXtrasArrayInitialSize = 6;
 
@@ -199,7 +199,7 @@ var kXtrasArrayInitialSize = 6;
 var PillSpawnCooldownFn = () => ForGameMode(
     () => 1000 * 5,
     () => 1000 * 10,
-    () => 1000 * 20,
+    () => 1000 * 10,
 )();
 var kSpawnPlayerPillFactor = 0.003;
 
