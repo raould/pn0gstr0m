@@ -57,9 +57,9 @@ const gPillIDs = [
     kForcePushPill,
     kDecimatePill,
     kEngorgePill,
-    kSplitPill,
-    kDefendPill,
     kChaosPill,
+    kDefendPill,
+    kSplitPill,
     kXtraPill,
     kNeoPill,
 ];
