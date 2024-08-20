@@ -213,7 +213,7 @@ function Paddle(props) {
             b.Draw( alpha );
         });
         self.xtras.A.forEach(x => {
-            x.Draw( alpha, gameState );
+            x.Draw( alpha, gameState, 1, isEndScreenshot );
         });
         if (exists(self.neo)) {
             self.neo.Draw( alpha, gameState );

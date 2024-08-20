@@ -16,7 +16,8 @@ function Pool(size, allocDeadFn) {
   };
   self.Alloc = function () {
     return self.array.find(function (e) {
-      return isU(e) || !e.alive;
+      Assert(exists(e));
+      return !e.alive;
     });
   };
 
