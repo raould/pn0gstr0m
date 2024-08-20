@@ -518,16 +518,18 @@ function MakeSplitProps(maker) {
       var targets = gPucks.A.filter(function (p, i) {
         return i < 1 ? true : gR.RandomBool(r);
       });
-      targets.forEach(function (p) {
+      targets.forEach(function (t) {
         var maxVX = gameState.level.maxVX;
-        var split = p.SplitPuck({
+        var split = t.SplitPuck({
           forced: true,
           maxVX: maxVX
         });
         gameState.level.OnPuckSplits(1);
         var p = gPuckPool.Alloc();
-        p.PlacementInit(split);
-        gPucks.A.push(p);
+        if (exists(p)) {
+          p.PlacementInit(split);
+          gPucks.A.push(p);
+        }
       });
       gameState.AddAnimation(MakeSplitAnimation({
         lifespan: 250,

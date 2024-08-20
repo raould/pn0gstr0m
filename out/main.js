@@ -127,11 +127,11 @@ var gLevelHighScores = LoadLocal(LocalStorageKeys.highScores, {});
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
 // although i did try to compensate in the run loop.
-var kFPS = 45;
+var kFPS = 50;
 var kTimeStep = 1000 / kFPS;
+var kTimeStepThreshold = kTimeStep * 0.7;
 var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
 var gLevelTime = 0;
-var gLastFrameTime = gLevelTime;
 var gGameTime = 0;
 var gFrameCount = 0;
 var kPhysicsStepScale = 0.04;
@@ -206,8 +206,8 @@ var kFontName = "noyb2Regular";
 var kMaxSparkFrame = 10;
 var kEjectCountThreshold = 400;
 var kEjectSpeedCountThreshold = 300;
-var kPuckPoolSize = 700;
-var kSparkPoolSize = 200;
+var kPuckPoolSize = 500;
+var kSparkPoolSize = 50;
 var kBarriersArrayInitialSize = 4;
 var kXtrasArrayInitialSize = 6;
 
@@ -549,13 +549,15 @@ function AddSparks(props) {
     var svx = vx * gR.RandomCentered(0, rx, rx / 3);
     var svy = vy * gR.RandomCentered(0, ry, ry / 3);
     var s = gSparkPool.Alloc();
-    s.PlacementInit({
-      x: x,
-      y: y,
-      vx: svx,
-      vy: svy
-    });
-    gSparks.A.push(s);
+    if (exists(s)) {
+      s.PlacementInit({
+        x: x,
+        y: y,
+        vx: svx,
+        vy: svy
+      });
+      gSparks.A.push(s);
+    }
   }
 }
 function StepToasts() {
@@ -750,7 +752,7 @@ function Lifecycle(handlerMap) {
     self.handler = handlerMap[self.state]();
     self.stop = false;
     self.transitioned = false;
-    self.lastTime = Date.now();
+    self.lastGameTime = 0; // to Step() and Draw() at desired fps.
   };
   self.Quit = function () {
     self.stop = true;
@@ -759,64 +761,46 @@ function Lifecycle(handlerMap) {
     if (self.stop) {
       return;
     }
-    var remainder = kTimeStep;
-    var now = Date.now();
-    var clockDiff = now - self.lastTime;
-
-    // oy veh oh brother sheesh barf,
-    // trying to not progress time
-    // if we were stopped in the debugger.
-    if (clockDiff >= kMaybeWasPausedInTheDangedDebuggerMsec) {
-      self.lastTime = now;
-    } else {
-      var _self$handler$GetIsPa, _self$handler;
-      Gamepads.poll();
-
-      // this got complicated quickly, trying to handle time:
-      // a) only stepping if enough time has really passed.
-      // b) updating the screen even when paused & thus delta time is 0.
-
-      self.lastTime = now;
-      var paused = aub((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false);
-      gGameTime += paused ? 0 : clockDiff;
-      var fdt = gGameTime - gLastFrameTime;
-      if (fdt < kTimeStep && !paused) {
-        remainder = kTimeStep - fdt;
-      } else {
-        var _self$handler$GetIsPa2, _self$handler2;
-        Assert(exists(self.handler), "RunLoop");
-        if (self.transitioned) {
-          self.handler = self.handlerMap[self.state]();
-          self.transitioned = false;
-        }
-
-        // even when paused, must Step to handle input.
-        // also call Draw to keep the screen in sync.
-        paused = aub((_self$handler$GetIsPa2 = (_self$handler2 = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa2.call(_self$handler2), false);
-        var rdt = paused ? 0 : fdt;
-        var next = self.handler.Step(rdt);
-        self.handler.Draw();
-        if (exists(next) && next !== self.state) {
-          console.log("transitioned from ".concat(self.state, " to ").concat(next));
-          self.transitioned = true;
-          self.state = next;
-          cancelPointing();
-        }
-        gLastFrameTime = gGameTime;
-        ++gFrameCount;
-        self.DrawCRTScanlines();
-        DrawDebugList();
-        if (gDebug) {
-          DrawBounds(0.2);
-        }
-        if (gShowToasts) {
-          StepToasts();
-        }
-        UpdateLocalStorage();
-        remainder = kTimeStep - (fdt - kTimeStep);
-      }
+    // TODO: restore the old nuance, was:
+    // this got complicated quickly, trying to handle time:
+    // a) only stepping if enough time has really passed.
+    // b) updating the screen even when paused & thus delta time is 0.
+    gGameTime = Date.now();
+    var dt = gGameTime - self.lastGameTime;
+    if (dt >= kTimeStepThreshold) {
+      self.StepFrame(dt);
+      self.lastGameTime = gGameTime;
+      gFrameCount++;
     }
-    setTimeout(self.RunLoop, Math.max(1, remainder));
+    requestAnimationFrame(self.RunLoop);
+  };
+  self.StepFrame = function (dt) {
+    var _self$handler$GetIsPa, _self$handler;
+    Gamepads.poll();
+    Assert(exists(self.handler), "RunLoop.handler");
+    if (self.transitioned) {
+      self.handler = self.handlerMap[self.state]();
+      self.transitioned = false;
+    }
+    var paused = aub((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false);
+    var rdt = paused ? 0 : dt;
+    var next = self.handler.Step(rdt);
+    self.handler.Draw();
+    if (exists(next) && next !== self.state) {
+      console.log("transitioned from ".concat(self.state, " to ").concat(next));
+      self.transitioned = true;
+      self.state = next;
+      cancelPointing();
+    }
+    self.DrawCRTScanlines();
+    DrawDebugList();
+    if (gDebug) {
+      DrawBounds(0.2);
+    }
+    if (gShowToasts) {
+      StepToasts();
+    }
+    UpdateLocalStorage();
   };
   self.DrawCRTScanlines = function () {
     if (self.state != kRoot && self.state != kWarning) {
@@ -1061,10 +1045,11 @@ function GetReadyState() {
       gCx.fillStyle = RandomGreen(0.3);
       DrawText(ForSide(gP1Side, "P1", "P2"), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
       DrawText(ForSide(gP1Side, "P2", "P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
-      gCx.fillStyle = RandomGreen();
       if (gGameMode !== kGameModeZen) {
+        gCx.fillStyle = RandomForColor(cyanSpec);
         DrawText("LEVEL ".concat(gLevelIndex), "center", gw(0.5), gh(0.3), gSmallFontSizePt);
       }
+      gCx.fillStyle = RandomGreen();
       var y = self.pillIDs.length === 0 ? gh(0.55) : gh(0.52);
       DrawText("GET READY! ".concat(t), "center", gw(0.5), y, gBigFontSizePt);
       if (exists(zpt)) {
@@ -1434,6 +1419,7 @@ function GameState(props) {
       sign = _ForLastWinner2[1];
     }
     var p = gPuckPool.Alloc();
+    Assert(exists(p), "CreateStartingPuck");
     p.PlacementInit({
       x: x,
       y: self.isAttract ? gh(gR.RandomRange(0.4, 0.6)) : gh(0.3),
@@ -1445,14 +1431,16 @@ function GameState(props) {
   };
   self.CreateRandomPuck = function () {
     var p = gPuckPool.Alloc();
-    p.PlacementInit({
-      x: gw(gR.RandomRange(1 / 8, 7 / 8)),
-      y: gh(gR.RandomRange(1 / 8, 7 / 8)),
-      vx: gR.RandomRange(self.maxVX * 0.3, self.maxVX * 0.5),
-      vy: gR.RandomCentered(1, 0.5),
-      ur: true
-    });
-    gPucks.A.push(p);
+    if (exists(p)) {
+      p.PlacementInit({
+        x: gw(gR.RandomRange(1 / 8, 7 / 8)),
+        y: gh(gR.RandomRange(1 / 8, 7 / 8)),
+        vx: gR.RandomRange(self.maxVX * 0.3, self.maxVX * 0.5),
+        vy: gR.RandomCentered(1, 0.5),
+        ur: true
+      });
+      gPucks.A.push(p);
+    }
   };
   self.ProcessAllInput = function () {
     // todo: figure out right way to deal with not/clearing inputs.
@@ -1494,7 +1482,7 @@ function GameState(props) {
     }
     if (cmds.addPuck) {
       if (self.paused) {
-        ForCount(10, function () {
+        ForCount(50, function () {
           self.CreateRandomPuck();
         });
       }
@@ -1574,10 +1562,10 @@ function GameState(props) {
         if (self.level.isSpawning) {
           for (var _i = 0; (_ref3 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref3 : 0; ++_i) {
             var _ref3;
-            var s = gPuckPool.Alloc();
-            if (exists(s)) {
-              s.PlacementInit(splits[_i]);
-              gPucks.B.push(s);
+            var _p = gPuckPool.Alloc();
+            if (exists(_p)) {
+              _p.PlacementInit(splits[_i]);
+              gPucks.B.push(_p);
             }
           }
         }
