@@ -67,7 +67,7 @@ var kChaosPill = 7;
 
 // levels are 1-based, and level 1 has no powerups.
 // levels with powerup pills have 2 types of pill.
-var gPillIDs = [kForcePushPill, kDecimatePill, kEngorgePill, kSplitPill, kDefendPill, kChaosPill, kXtraPill, kNeoPill];
+var gPillIDs = [kForcePushPill, kDecimatePill, kEngorgePill, kChaosPill, kDefendPill, kSplitPill, kXtraPill, kNeoPill];
 // there should be 2 per level
 // for the first n levels.
 Assert(gPillIDs.length % 2 === 0);
