@@ -24,7 +24,7 @@ function LoadLocalStorageCache() {
       delete gLocalStorageCache[key];
     }
   });
-  console.log("LoadCache", gLocalStorageCache);
+  console.log("LoadLocalStorageCache", gLocalStorageCache);
 }
 LoadLocalStorageCache();
 
