@@ -2016,17 +2016,12 @@ function GameOverSummaryState() {
     self.timeoutMsg = 2000;
     self.timeoutEnd = 1000 * 10;
     self.started = gGameTime;
-    self.relevant = gP1Score - gP2Score !== 0;
   };
   self.Step = function (dt) {
-    if (!self.relevant) {
-      return kTitle;
-    } else {
-      var nextState;
-      self.goOn = gGameTime - self.started > self.timeoutMsg;
-      nextState = self.ProcessAllInput();
-      return nextState;
-    }
+    var nextState;
+    self.goOn = gGameTime - self.started > self.timeoutMsg;
+    nextState = self.ProcessAllInput();
+    return nextState;
   };
   self.ProcessAllInput = function () {
     var nextState;
@@ -2090,11 +2085,11 @@ function GameOverSummaryState() {
       var p2x = ForSide(gP2Side, gw(0.2), gw(0.8));
       DrawText("P2: " + gP2Score, p2a, p2x, gh(0.22), gRegularFontSizePt);
       gCx.fillStyle = RandomBlue();
-      DrawText("*** WINNER ***", "center", gw(0.5), gh(0.32), gReducedFontSizePt);
+      DrawText("*** WINNER ***", "center", gw(0.5), gh(0.4), gReducedFontSizePt);
       gCx.fillStyle = ColorCycle();
       DrawText(
       // leading space to visually center player 1.
-      gP1Score > gP2Score ? " PLAYER 1" : "PLAYER 2", "center", gw(0.5), gh(0.6), gBigFontSizePt);
+      gP1Score === gP2Score ? "TIE!" : gP1Score > gP2Score ? " PLAYER 1" : "PLAYER 2", "center", gw(0.5), gh(0.6), gBigFontSizePt);
     });
   };
   self.Init();
