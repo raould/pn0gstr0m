@@ -134,7 +134,7 @@ function Puck() {
       _ref$isSuddenDeath = _ref.isSuddenDeath,
       isSuddenDeath = _ref$isSuddenDeath === void 0 ? false : _ref$isSuddenDeath,
       maxVX = _ref.maxVX;
-    if (self.impotentTime > 0) {
+    if (!forced && self.impotentTime > 0) {
       return;
     }
     Assert(exists(maxVX));

@@ -137,7 +137,7 @@ function Puck() {
 
     // anybody calling this should also eventually follow up with level.OnPuckSplit() for bookkeeping.
     self.SplitPuck = function({ forced=false, isSuddenDeath=false, maxVX }) {
-        if (self.impotentTime > 0) {
+        if (!forced && self.impotentTime > 0) {
             return;
         }
 
