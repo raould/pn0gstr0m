@@ -21,7 +21,7 @@ function Puck() {
         self.height = gPuckHeight;
         self.midX = self.x + self.width/2;
         self.midY = self.y + self.height/2;
-        self.vx = Math.max(sx(1.5), props.vx);
+        self.vx = MaxSigned(props.vx, sx(1.5));
         self.vy = AvoidZero(props.vy, 0.1);
         self.alive = true;
         self.ur = aub(props.ur, false);
@@ -174,15 +174,15 @@ function Puck() {
 	    const fastF = gR.RandomRange(1.005, 1.05);
 	    const zenF = gR.RandomRange(1.001, 1.01);
 	    const scaleF = ForGameMode(gSinglePlayer, gGameMode, {regular: slow?slowF:fastF, zen: zenF});
-            const vx = gR.RandomCentered(self.vx * scaleF, sx(0.1));
-
+            const vxf = self.vx * scaleF;
+            const vx = gR.RandomCentered(vxf, vxf/10);
             let vy = self.vy;
             vy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
 
             // code smell: because SplitPuck is called during MovePucks,
             // we return the new puck to go onto gPucks.B, whereas
             // MoveSparks happens after so it goes onto gSparks.A.
-	    np = { x: self.x, y: self.y, vx: vx, vy: vy, ur: false, forced, maxVX };
+	    np = { x: self.x, y: self.y, vx, vy, ur: false, forced, maxVX };
             AddSparks({ x:self.x, y:self.y, vx:sx(0.5), vy:sy(1), count: 3, rx:sx(1), ry:sy(1) });
 
             PlayExplosion();
