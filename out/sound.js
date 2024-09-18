@@ -136,6 +136,8 @@ function StopAudio() {
 }
 function PlayMusic(name) {
   if (!gMusicMuted) {
+    var _gAudio$name2meta$nam;
+    console.log("PlayMusic", (_gAudio$name2meta$nam = gAudio.name2meta[name]) == null ? void 0 : _gAudio$name2meta$nam.basename);
     return PlaySound(name);
   }
   return undefined;
