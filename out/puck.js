@@ -22,7 +22,7 @@ function Puck() {
     self.height = gPuckHeight;
     self.midX = self.x + self.width / 2;
     self.midY = self.y + self.height / 2;
-    self.vx = props.vx;
+    self.vx = Math.max(sx(1.5), props.vx);
     self.vy = AvoidZero(props.vy, 0.1);
     self.alive = true;
     self.ur = aub(props.ur, false);
@@ -169,7 +169,7 @@ function Puck() {
         regular: slow ? slowF : fastF,
         zen: zenF
       });
-      var vx = self.vx * scaleF;
+      var vx = gR.RandomCentered(self.vx * scaleF, sx(0.1));
       var vy = self.vy;
       vy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
 

@@ -21,7 +21,7 @@ function Puck() {
         self.height = gPuckHeight;
         self.midX = self.x + self.width/2;
         self.midY = self.y + self.height/2;
-        self.vx = props.vx;
+        self.vx = Math.max(sx(1.5), props.vx);
         self.vy = AvoidZero(props.vy, 0.1);
         self.alive = true;
         self.ur = aub(props.ur, false);
@@ -167,7 +167,7 @@ function Puck() {
 	    const fastF = gR.RandomRange(1.005, 1.05);
 	    const zenF = gR.RandomRange(1.001, 1.01);
 	    const scaleF = ForGameMode(gSinglePlayer, gGameMode, {regular: slow?slowF:fastF, zen: zenF});
-            const vx = self.vx * scaleF;
+            const vx = gR.RandomCentered(self.vx * scaleF, sx(0.1));
 
             let vy = self.vy;
             vy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
