@@ -2091,19 +2091,13 @@ function UpdateLocalStorage() {
         self.timeoutMsg = 2000;
         self.timeoutEnd = 1000 * 10;
         self.started = gGameTime;
-        self.relevant = gP1Score - gP2Score !== 0;
     };
 
     self.Step = function( dt ) {
-        if (!self.relevant) {
-            return kTitle;
-        }
-        else {
-            var nextState;
-            self.goOn = (gGameTime - self.started) > self.timeoutMsg;
-            nextState = self.ProcessAllInput();
-            return nextState;
-        }
+        var nextState;
+        self.goOn = (gGameTime - self.started) > self.timeoutMsg;
+        nextState = self.ProcessAllInput();
+        return nextState;
     };
 
     self.ProcessAllInput = function() {
@@ -2179,14 +2173,15 @@ function UpdateLocalStorage() {
             DrawText(
                 "*** WINNER ***",
                 "center",
-                gw(0.5), gh(0.32),
+                gw(0.5), gh(0.4),
                 gReducedFontSizePt
             );
 
             gCx.fillStyle = ColorCycle();
             DrawText(
                 // leading space to visually center player 1.
-                gP1Score > gP2Score ? " PLAYER 1" : "PLAYER 2",
+                gP1Score === gP2Score ? "TIE!" :
+                    (gP1Score > gP2Score ? " PLAYER 1" : "PLAYER 2"),
                 "center",
                 gw(0.5), gh(0.6),
                 gBigFontSizePt
