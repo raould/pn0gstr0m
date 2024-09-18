@@ -64,24 +64,33 @@ function Button(props) {
     self.is_checkbox = props.is_checkbox;
     self.is_checked = aub(props.is_checked, false);
     self.has_focus = aub(props.has_focus, false);
+    self.hidden = false;
     self.wants_focus = false;
   };
   self.Step = function () {
     self.step_fn(self);
   };
   self.Click = function () {
-    self.click_fn(self);
+    if (!self.hidden) {
+      self.click_fn(self);
+    }
   };
   self.ProcessTarget = function (target) {
-    var hit = target.isDown() ? isPointInRect(target.position, self.rect, self.margin) : false;
-    if (hit) {
-      target.ClearPointer();
+    if (self.hidden) {
+      return false;
+    } else {
+      var hit = target.isDown() ? isPointInRect(target.position, self.rect, self.margin) : false;
+      if (hit) {
+        target.ClearPointer();
+      }
+      return hit;
     }
-    return hit;
   };
   self.Focus = function () {
-    self.has_focus = true;
-    self.wants_focus = false;
+    if (!self.hidden) {
+      self.has_focus = true;
+      self.wants_focus = false;
+    }
   };
   self.Defocus = function () {
     self.has_focus = false;
@@ -98,6 +107,9 @@ function Button(props) {
     gCx.strokeStyle = gCx.fillStyle = color;
   };
   self.Draw = function () {
+    if (self.hidden) {
+      return;
+    }
     Cxdo(function () {
       var wx = WX(self.x);
       var wy = WY(self.y);

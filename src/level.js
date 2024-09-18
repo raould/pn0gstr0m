@@ -30,8 +30,8 @@ const kEnglishStep = 0.004;
         self.englishFactorPlayer = 1;
         self.englishFactorCPU = 1;
 
-        self.splitsAllowed = props.splitsCount;
-        self.splitsRemaining = self.splitsAllowed;
+        self.splitsMax = props.splitsCount;
+        self.splitsRemaining = self.splitsMax;
         self.isSpawning = props.isSpawning;
 
         // todo: maybe GameState shouldn't own the paddles.
@@ -61,7 +61,7 @@ const kEnglishStep = 0.004;
 	    return undefined;
 	}
 	else {
-	    return self.splitsRemaining / self.splitsAllowed;
+	    return self.splitsRemaining / self.splitsMax;
 	}
     };
 

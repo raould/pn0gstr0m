@@ -24,8 +24,8 @@ function MakeZen(paddleP1, paddleP2) {
     const pills = ChoosePillIDs(kZenLevelIndex).map(pid => gPillInfo[pid].maker);
     return new Level({
         index: kZenLevelIndex,
-        isSpawning: true,
-	vx0: sxi(3),
+        isSpawning: true, // but no limit on how many.
+	vx0: sxi(2.5),
         maxVX: sxi(18),
         isP1Player: true,
         isP2Player: !gSinglePlayer,
@@ -38,13 +38,13 @@ function MakeZen(paddleP1, paddleP2) {
 // level is one-based.
 // zen mode means only one level!
 function MakeLevel(index, paddleP1, paddleP2) {
-    Assert(index !== 0, "index is 1-based");
+    Assert(index > 0, "index is 1-based");
     const splitsCount = MakeSplitsCount(index);
     const pills = ChoosePillIDs(index).map(pid => gPillInfo[pid].maker);
     const level = new Level({
         index,
         isSpawning: true,
-	vx0: sxi(2),
+	vx0: sxi(ForGameMode(gSinglePlayer, gGameMode, {regular: 2.5, hard: 3.5})),
         // maxVX is allowed to grow after there are no more splits.
         maxVX: sxi(12 + index),
         speedupFactor: 0.0001,

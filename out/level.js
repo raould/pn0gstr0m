@@ -29,8 +29,8 @@ function Level(props) {
     self.speedupFactor = props.speedupFactor;
     self.englishFactorPlayer = 1;
     self.englishFactorCPU = 1;
-    self.splitsAllowed = props.splitsCount;
-    self.splitsRemaining = self.splitsAllowed;
+    self.splitsMax = props.splitsCount;
+    self.splitsRemaining = self.splitsMax;
     self.isSpawning = props.isSpawning;
 
     // todo: maybe GameState shouldn't own the paddles.
@@ -56,7 +56,7 @@ function Level(props) {
     if (isU(self.splitsRemaining)) {
       return undefined;
     } else {
-      return self.splitsRemaining / self.splitsAllowed;
+      return self.splitsRemaining / self.splitsMax;
     }
   };
   self.OnPuckSplits = function (splits) {

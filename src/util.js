@@ -170,7 +170,7 @@ function T10(v, max) {
     return Clip01(1 - v/max);
 }
 
-// v expected to go from 0 to max.
+// v expected to be in range [0, max].
 // v = 0 -> return = 0.
 // v = max -> return = 1.
 function T01(v, max) {
@@ -178,11 +178,11 @@ function T01(v, max) {
     return Clip01(v/max);
 }
 
-// v expected to go from 0 to max.
+// aesthetically "non linear".
+// v expected to be in range [0, max].
 function T01nl(v, max) {
     max = max == 0 ? 1 : max;
     return Clip01(
-        // aesthetically non linear hah.
         Math.pow(
             v/max,
             3

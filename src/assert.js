@@ -9,3 +9,14 @@ function Assert(result, msg) {
         debugger;
     }
 }
+
+function AssertNonNaN(...args) {
+    args.forEach(arg => {
+        if (Array.isArray(arg)) {
+            arg.forEach(e => { AssertNonNaN(e); });
+        }
+        else {
+            Assert(!isNaN(arg));
+        }
+    });
+}

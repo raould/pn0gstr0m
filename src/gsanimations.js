@@ -212,7 +212,7 @@ function MakeTargetsLightningAnimation(props) {
                     x1: paddle.GetMidX(),
                     y1: paddle.GetMidY(),
                     steps: 10,
-                    range: sx1(15),
+                    range: aub(props.range, sx1(15)),
                 });
             });
         },

@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 var gDebug = false;
-var gDebugDrawList = [];
+var gDebug_DrawList = [];
 var gShowToasts = gDebug;
 
 var kCanvasName = "canvas"; // match: index.html
@@ -26,36 +26,17 @@ var gLifecycle;
 
 var gSinglePlayer = LoadLocal(LocalStorageKeys.singlePlayer, true);
 var kScoreIncrement = 1;
+// note: see GameState.Init().
 var gP1Score = 0;
 var gP2Score = 0;
-var gPWins = []; // records 0 for tie, 1 for p1, 2 for p2, per level completed.
-var k2PWinBy = 3;
-function P1Wins() { return gPWins.reduce((t,s) => t+(s==1?1:0), 0); }
-function P2Wins() { return gPWins.reduce((t,s) => t+(s==2?1:0), 0); }
-function ForLastWinner(p1, p2) {
-    Assert(gPWins.length > 0);
-    if (gPWins.length === 0) { return undefined; }
-    var last = gPWins[gPWins.length-1];
-    return last === 1 ? p1 : p2;
-}
-function IsMatchPoint() {
-    var p1 = P1Wins();
-    var p2 = P2Wins();
-    return Math.abs(p1 - p2) == k2PWinBy-1;
-}
-function Is2PlayerGameOver() {
-    var p1 = P1Wins();
-    var p2 = P2Wins();
-    var diff = Math.abs(p1 - p2);
-    var over = diff >= k2PWinBy;
-    return over;
-}
 
 // todo: the game mode stuff is a big ball of mud within
-// the larger death star of mud that is all of this code.
-// enum, mutually exclusive.
+// the larger death star of mud that is all of this code;
+// {single player, game mode, game level} need refactoring.
+// see also: gSinglePlayer usage, oh no.
 var kGameModeRegular = "regular";
 var kGameModeHard = "hard";
+// note: zen is also how 2 player is done, but that's never very explicit.
 var kGameModeZen = "zen";
 var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
 // code smell: sentinel values, -1 is attract, -2 is zen. 
@@ -64,27 +45,40 @@ const kZenLevelIndex = -2;
 // levels are 1-based.
 // todo: gLevelIndex is an overloaded mess.
 var gLevelIndex = (gGameMode === kGameModeZen) ? kZenLevelIndex : 1;
-function ForGameMode(regular, other1, other2) {
-    if (gGameMode === kGameModeRegular) {
+// it is awful how these overlap and interact, so confusing.
+// this doesn't even handle attract-mode levels.
+function ForGameMode(singlePlayer, gameMode, {regular, hard, zen}) {
+    Assert(exists(regular));
+    // two player mode is always zen mode.
+    if (!singlePlayer) {
+        gameMode = kGameModeZen;
+    }
+    if (gameMode === kGameModeRegular) {
         return regular;
     }
-    else if (gGameMode === kGameModeHard) {
-	return exists(other2) ? other1 : regular;
+    else if (gameMode === kGameModeHard) {
+        return exists(hard) ? hard : regular;
     }
-    else if (gGameMode === kGameModeZen) {
-	return exists(other2) ? other2 : other1;
+    else if (gameMode === kGameModeZen) {
+        return exists(zen) ? zen : regular;
     }
 }
-function SetGameMode(mode) {
+// note: calling this with no arguments is a hack
+// to try to clean up state as the 1 vs. 2 player etc.
+// choices change in the menu.
+// todo: clean up all the globals and confusing
+// inter-related state of 1 vs. 2 player vs. game mode
+// vs. level type and index.
+function SetGameMode(mode=gGameMode) {
     Assert(mode === kGameModeRegular ||
            mode === kGameModeHard ||
            mode === kGameModeZen,
            mode);
     gGameMode = mode;
-    ForGameMode(
-        () => gLevelIndex = 1,
-        () => gLevelIndex = kZenLevelIndex
-    )();
+    ForGameMode(gSinglePlayer, gGameMode, {
+        regular: () => gLevelIndex = 1,
+        zen: () => gLevelIndex = kZenLevelIndex
+    })();
     console.log("SetGameMode", mode, gLevelIndex);
 }
 
@@ -187,20 +181,20 @@ function RecalculateConstants() {
 // gWidth or gHeight must got up into RecalculateConstants().
 
 var kFontName = "noyb2Regular";
-var kMaxSparkFrame = 10;
+var kAvgSparkFrame = 20;
 var kEjectCountThreshold = 400;
 var kEjectSpeedCountThreshold = 300;
 var kPuckPoolSize = 500;
-var kSparkPoolSize = 50;
+var kSparkPoolSize = 300;
 var kBarriersArrayInitialSize = 4;
 var kXtrasArrayInitialSize = 6;
 
 // prevent pills from showing up too often, or too early - but not too late.
-var PillSpawnCooldownFn = () => ForGameMode(
-    () => 1000 * 5,
-    () => 1000 * 10,
-    () => 1000 * 10,
-)();
+var PillSpawnCooldownFn = () => ForGameMode(gSinglePlayer, gGameMode, {
+    regular: () => 1000 * 5,
+    hard: () => 1000 * 10,
+    zen: () => 1000 * 20,
+})();
 var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
@@ -411,6 +405,9 @@ var gR = new Random( 0x1BADB002 );
 
 // ----------------------------------------
 
+// return 0 to 1 during the given time period
+// from the start of the game.
+// return > 1 after the period.
 function GameTime01(period, start=gLevelTime) {
     var diff = gGameTime - start;
     period = Math.max(1, period);
@@ -488,17 +485,31 @@ function DrawText( data, align, x, y, size, wiggle, font ) {
 }
 
 function AddSparks(props) {
-    var {x, y, vx, vy, count, rx, ry} = props;
-    for( var s = 0; s < count; s++ )
+    var {x, y, vx, vy, count, rx, ry, colorSpec} = props;
+    for( var i = 0; i < count; i++ )
     {
-        var svx = vx * gR.RandomCentered( 0, rx, rx/3 );
-        var svy = vy * gR.RandomCentered( 0, ry, ry/3 );
+        var sxf = gR.RandomCentered(0, rx, Math.max(sx(1), rx/10));
+        var syf = gR.RandomCentered(0, ry, Math.max(sy(1), rx/10));
+        var svx = vx * sxf;
+        var svy = vy * syf;
         var s = gSparkPool.Alloc();
-	if (exists(s)) {
-            s.PlacementInit({ x, y, vx: svx, vy: svy });
+        if (exists(s)) {
+            s.PlacementInit({ x, y, vx: svx, vy: svy, colorSpec });
             gSparks.A.push(s);
-	}
+        }
+        else {
+            console.log("AddSparks: no spark available");
+        }
     }
+}
+
+function StepSparks(dt) {
+    gSparks.B.clear();
+    gSparks.A.forEach(s => {
+        s.Step( dt );
+        s.alive && gSparks.B.push( s );
+    } );
+    SwapBuffers(gSparks);
 }
 
 function StepToasts() {
@@ -540,16 +551,19 @@ function DrawResizing() {
     });
 }
 
-var gDrawTitleLatch = new RandomLatch( 0.01, 250 );
+var gDrawTitleLatch = new RandomLatch( 0.005, 250 );
 function DrawTitle(flicker=true) {
     Cxdo(() => {
         gCx.fillStyle = flicker ?
-            RandomForColor(cyanSpec, 0.8) :
+            ColorCycle() :
             rgba255s(cyanDarkSpec.regular);
         DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
+
+        gCx.fillStyle = rgba255s(cyanDarkSpec.regular);
         var msg = "ETERNAL BETA";
         if (flicker && gDrawTitleLatch.MaybeLatch(gGameTime)) { msg = "ETERNAL BUGS"; }
         DrawText( msg, "right", gw(0.876), gh(0.45), gSmallestFontSizePt, flicker );
+
     });
 }
 
@@ -578,7 +592,7 @@ function DrawLandscape() {
 function DrawBounds( alpha=0.5 ) {
     if (!gDebug) { return; }
     Cxdo(() => {
-	// the scaled bounds.
+        // the scaled bounds.
         gCx.beginPath();
         gCx.rect(gXInset, gYInset, gWidth-gXInset*2, gHeight-gYInset*2);
         gCx.lineWidth = 1;
@@ -586,43 +600,43 @@ function DrawBounds( alpha=0.5 ) {
         gCx.stroke();
     });
     Cxdo(() => {
-	// the scaled x.
+        // the scaled x.
         gCx.beginPath();
         gCx.moveTo(0, 0);
         gCx.lineTo(gWidth, gHeight);
         gCx.moveTo(gWidth, 0);
         gCx.lineTo(0, gHeight);
-        gCx.strokeStyle = rgba255s(white, alpha/2);
+        gCx.strokeStyle = rgba255s(white, alpha/3);
         gCx.lineWidth = 10;
         gCx.stroke();
         gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
     });
     Cxdo(() => {
-	// the full canvas x.
+        // the full canvas x.
         gCx.beginPath();
         gCx.moveTo(0, 0);
         gCx.lineTo(gCanvas.width, gCanvas.height);
         gCx.moveTo(gCanvas.width, 0);
         gCx.lineTo(0, gCanvas.height);
-        gCx.strokeStyle = rgba255s(magentaSpec.regular, alpha);
-        gCx.lineWidth = 2;
+        gCx.strokeStyle = rgba255s(greenSpec.regular, alpha);
+        gCx.lineWidth = 1;
         gCx.stroke();
         gCx.strokeRect(5, 5, gWidth-10, gHeight-10);
     });
     Cxdo(() => {
-	// scaled grid.
-	gCx.beginPath();
-	gCx.moveTo(0, gh(1/3));
-	gCx.lineTo(gw(1), gh(1/3));
-	gCx.moveTo(0, gh(1/2));
-	gCx.lineTo(gw(1), gh(1/2));
-	gCx.moveTo(0, gh(2/3));
-	gCx.lineTo(gw(1), gh(2/3));
-	gCx.moveTo(gw(0.5), 0);
-	gCx.lineTo(gw(0.5), gh(1));
-	gCx.strokeStyle = "pink";
-	gCx.lineWidth = 1;
-	gCx.stroke();
+        // scaled grid.
+        gCx.beginPath();
+        gCx.moveTo(0, gh(1/3));
+        gCx.lineTo(gw(1), gh(1/3));
+        gCx.moveTo(0, gh(1/2));
+        gCx.lineTo(gw(1), gh(1/2));
+        gCx.moveTo(0, gh(2/3));
+        gCx.lineTo(gw(1), gh(2/3));
+        gCx.moveTo(gw(0.5), 0);
+        gCx.lineTo(gw(0.5), gh(1));
+        gCx.strokeStyle = rgba255s(greenSpec.regular, alpha);
+        gCx.lineWidth = 1;
+        gCx.stroke();
     });
 }
 
@@ -670,26 +684,28 @@ function ResetClipping() {
 
 function DrawDebugList() {
     if (gDebug) {
+        var dl2 = [];
         Cxdo(() => {
-            for (let i = 0; i < gDebugDrawList.length; ++i) {
-                gDebugDrawList[i]();
+            for (let i = 0; i < gDebug_DrawList.length; ++i) {
+                var e = gDebug_DrawList[i];
+                e.fn();
+                if (exists(e.frames) && e.frames > 0) {
+                    dl2.push(e);
+                    e.frames--;
+                }
             }
         });
-        gDebugDrawList = [];
+        gDebug_DrawList = dl2;
     }
 }
 
 function UpdateLocalStorage() {
     // todo: ugly that this only works "because globals".
-
     // note:
-
     // (1) this doesn't update the level high score dict
     // since that requires deep-equals testing. so that is
     // left to be done hard-coded elsewhere.
-
     // (2) this doesn't include the unplayed music, see sound.js
-
     SaveLocal(LocalStorageKeys.singlePlayer, gSinglePlayer);
     SaveLocal(LocalStorageKeys.gameMode, gGameMode);
     SaveLocal(LocalStorageKeys.sfxMuted, gSfxMuted);
@@ -708,7 +724,7 @@ function UpdateLocalStorage() {
         self.handler = handlerMap[self.state]();
         self.stop = false;
         self.transitioned = false;
-	self.lastGameTime = 0; // to Step() and Draw() at desired fps.
+        self.lastGameTime = 0; // to Step() and Draw() at desired fps.
     };
 
     self.Quit = function() {
@@ -719,17 +735,16 @@ function UpdateLocalStorage() {
         if (self.stop) {
             return;
         }
-        // TODO: restore the old nuance, was:
-	// this got complicated quickly, trying to handle time:
+        // this got complicated quickly, trying to handle time:
         // a) only stepping if enough time has really passed.
         // b) updating the screen even when paused & thus delta time is 0.
-	gGameTime = Date.now();
-	var dt = gGameTime - self.lastGameTime;
-	if (dt >= kTimeStepThreshold) {
-	    self.StepFrame(dt);
-	    self.lastGameTime = gGameTime;
-	    gFrameCount++;
-	}
+        gGameTime = Date.now();
+        var dt = gGameTime - self.lastGameTime;
+        if (dt >= kTimeStepThreshold) {
+            self.StepFrame(dt);
+            self.lastGameTime = gGameTime;
+            gFrameCount++;
+        }
         requestAnimationFrame( self.RunLoop );
     };
 
@@ -741,10 +756,12 @@ function UpdateLocalStorage() {
             self.transitioned = false;
         }
         var paused = aub(self.handler.GetIsPaused?.(), false);
-	var rdt = paused ? 0 : dt;
-	var next = self.handler.Step(rdt);
-        self.handler.Draw();
-        if (exists(next) && next !== self.state)  {
+        var rdt = paused ? 0 : dt;
+        var next = self.handler.Step(rdt);
+        if (isU(next) || next == self.state) {
+            self.handler.Draw();
+        }
+        else {
             console.log(`transitioned from ${self.state} to ${next}`);
             self.transitioned = true;
             self.state = next;
@@ -752,7 +769,7 @@ function UpdateLocalStorage() {
         }
         self.DrawCRTScanlines();
         DrawDebugList();
-	if (gDebug) { DrawBounds(0.2); }
+        if (gDebug) { DrawBounds(0.3); }
         if (gShowToasts) { StepToasts(); }
         UpdateLocalStorage();
     };
@@ -800,16 +817,21 @@ function UpdateLocalStorage() {
     };
 
     self.Step = function() {
-        var nextState;
-        gEventQueue.forEach((event, i) => {
-            var cmds = {};
-            event.updateFn(cmds);
-            if (isU(nextState)) {
-                nextState = self.ProcessOneInput(cmds);
-            }
-        });
-        gEventQueue = [];
-        return nextState;
+        if (gDebug) { // skip it!
+            return kTitle;
+        }
+        else {
+            var nextState;
+            gEventQueue.forEach((event, i) => {
+                var cmds = {};
+                event.updateFn(cmds);
+                if (isU(nextState)) {
+                    nextState = self.ProcessOneInput(cmds);
+                }
+            });
+            gEventQueue = [];
+            return nextState;
+        }
     };
 
     self.ProcessOneInput = function(cmds) {
@@ -845,9 +867,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         ResetP1Side();
-
-	SetGameMode(gGameMode);
-	gPWins = [];
+        SetGameMode(gGameMode);
 
         self.attract = new GameState({ isAttract: true });
         self.timeout = gDebug ? 1 : (1000 * 1.5);
@@ -856,6 +876,7 @@ function UpdateLocalStorage() {
         // at one point i guess it felt nicer to not start music immediately?
         self.musicTimer = setTimeout( BeginMusic, 1000 );
         self.theMenu = self.MakeMenu();
+        console.log("TitleState", gSinglePlayer, gGameMode);
     };
 
     self.MakeMenu = function() {
@@ -867,7 +888,7 @@ function UpdateLocalStorage() {
                 // like which button is default selected.
                 self.theMenu = self.MakeMenu();
             },
-            ...MakeMainMenuButtons(),
+            ...MakeTitleMenuButtons(),
         });
     };
 
@@ -905,12 +926,16 @@ function UpdateLocalStorage() {
 
     self.ProcessOneInput = function(cmds) {
         if (cmds.singlePlayer) {
+            // match: title_menu.bp1.click
             gSinglePlayer = true;
+            SetGameMode(kGameModeRegular);
             return undefined;
         }
 
         if (cmds.doublePlayer) {
+            // match: title_menu.bp2.click
             gSinglePlayer = false;
+            SetGameMode(kGameModeZen);
             return undefined;
         }
 
@@ -1004,6 +1029,7 @@ function UpdateLocalStorage() {
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.pillIDs = ChoosePillIDs(gLevelIndex);
         PlayBlip();
+        console.log("GetReadyState", gSinglePlayer, gGameMode);
     };
 
     self.Step = function( dt ) {
@@ -1032,10 +1058,13 @@ function UpdateLocalStorage() {
             DrawText(ForSide(gP1Side,"P1","P2"), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
             DrawText(ForSide(gP1Side,"P2","P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
 
-            if (gGameMode !== kGameModeZen) {
-		gCx.fillStyle = RandomForColor(cyanSpec);
-                DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.3), gSmallFontSizePt);
-            }
+            ForGameMode(gSinglePlayer, gGameMode, {
+                regular: () => {
+                    gCx.fillStyle = RandomForColor(cyanSpec);
+                    DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.3), gSmallFontSizePt);
+                },
+                zen: () => {},
+            })();
 
             gCx.fillStyle = RandomGreen();
             var y = (self.pillIDs.length === 0) ? gh(0.55) : gh(0.52);
@@ -1053,9 +1082,14 @@ function UpdateLocalStorage() {
         // 2 pills in order for the first N levels;
         // 4 random pills thereafter.
         // all pills in zen mode so/but don't bother showing them here.
-        if (gGameMode === kGameModeZen) {
+        var skip = ForGameMode(gSinglePlayer, gGameMode, {
+            regular: false,
+            zen: true,
+        });
+        if (skip) {
             return;
         }
+
         if (self.pillIDs.length > 0) {
             var ty = gh(0.8);
             Cxdo(() => {
@@ -1065,7 +1099,7 @@ function UpdateLocalStorage() {
                 }
                 var dx = gw() / (self.pillIDs.length+1);
                 var x0 = dx;
-		var scale = 1;
+                var scale = 1;
                 for (let i = 0; i < self.pillIDs.length; ++i) {
                     const pid = self.pillIDs[i];
                     const { name, drawer, wfn, hfn } = gPillInfo[pid];
@@ -1109,14 +1143,13 @@ function UpdateLocalStorage() {
         RecalculateConstants();
         ResetGlobalStorage();
         ResetInput();
+        gP1Score = 0;
+        gP2Score = 0;
 
         gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
         gLevelTime = gGameTime;
 
-	gP1Score = 0;
-	gP2Score = 0;
         self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelIndex];
-
         self.pauseButtonEnabled = false;
         self.paused = false;
         self.animations = {};
@@ -1241,10 +1274,11 @@ function UpdateLocalStorage() {
         if (self.isAttract) {
             self.level = MakeAttract(self.paddleP1, self.paddleP2);
         }
-        else if (gGameMode === kGameModeZen) {
+        else if (gGameMode === kGameModeZen || !gSinglePlayer) {
             self.level = MakeZen(self.paddleP1, self.paddleP2);
         }
         else {
+            Assert(gLevelIndex > 0);
             self.level = MakeLevel(gLevelIndex, self.paddleP1, self.paddleP2);
         }
         self.maxVX = self.level.maxVX;
@@ -1277,10 +1311,10 @@ function UpdateLocalStorage() {
         self.ProcessAllInput();
         if (self.quit) {
             SaveEndScreenshot(self);
-            return ForGameMode(
-		gDebug ? kLevelFin : kTitle,
-		kTitle
-	    );
+            return ForGameMode(gSinglePlayer, gGameMode, {
+                regular: gDebug ? kLevelFin : kGameOver,
+                zen: kGameOver,
+            });
         }
         if (self.stepping) {
             dt = kTimeStep;
@@ -1298,7 +1332,18 @@ function UpdateLocalStorage() {
         return nextState;
     };
 
-    self.MaybeSpawnPills = function( dt ) {
+    self.AddPillSparks = function(x, y) {
+        AddSparks({x,
+                   y,
+                   count: 50,
+                   vx: gR.RandomFloat()*0.8,
+                   vy: gR.RandomFloat()*0.8,
+                   rx: sx1(10),
+                   ry: sy1(10),
+                   colorSpec: cyanSpec});
+    };
+
+    self.MaybeSpawnPills = function( dt, forced=false ) {
         if (self.level.pills.length == 0) {
             return;
         }
@@ -1307,47 +1352,38 @@ function UpdateLocalStorage() {
         self.pillP2SpawnCountdown -= dt;
         var kDiffMax = 2;
 
-        if (isU(self.level.p1Pill) &&
-            self.pillP1SpawnCountdown <= 0 &&
-            self.unfairPillCount < kDiffMax) {
+        if (forced ||
+            (isU(self.level.p1Pill) &&
+             self.pillP1SpawnCountdown <= 0 &&
+             self.unfairPillCount < kDiffMax)) {
+            var must = forced || (self.pillP1SpawnCooldown < PillSpawnCooldownFn() * 2);
             self.level.p1Pill = self.MaybeSpawnPill(
-                self.pillP1SpawnCooldown < PillSpawnCooldownFn() * 2,
-                dt, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups
+                must, dt, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups
             );
             if (exists(self.level.p1Pill)) {
                 self.pillP1SpawnCountdown = PillSpawnCooldownFn();
                 self.unfairPillCount++;
                 self.isCpuPillAllowed = true;
-                AddSparks({x: self.level.p1Pill.x,
-                           y: self.level.p1Pill.y,
-                           count: 50,
-                           vx: gR.RandomCentered(0, 2, 1),
-                           vy: gR.RandomCentered(0, 2, 1),
-                           rx: 10,
-                           ry: 10});
+                self.AddPillSparks(self.level.p1Pill.x, self.level.p1Pill.y);
             }
         }
 
-        if (isU(self.level.p2Pill) &&
-            self.pillP2SpawnCountdown <= 0 &&
-            self.isCpuPillAllowed &&
-            self.unfairPillCount > -kDiffMax) {
+        // sorry this is so much a dupe of the above.
+        if (forced ||
+            (isU(self.level.p2Pill) &&
+             self.pillP2SpawnCountdown <= 0 &&
+             self.isCpuPillAllowed &&
+             self.unfairPillCount > -kDiffMax)) {
             // bias powerup creation toward the single player.
             const factor = kSpawnPlayerPillFactor * (gSinglePlayer ? 0.7 : 1 );
+            var must = forced || (self.pillP2SpawnCooldown < PillSpawnCooldownFn() * 2);
             self.level.p2Pill = self.MaybeSpawnPill(
-                self.pillP2SpawnCooldown < PillSpawnCooldownFn() * 2,
-                dt, self.level.p2Pill, factor, self.level.p2Powerups
+                must, dt, self.level.p2Pill, factor, self.level.p2Powerups
             );
             if (exists(self.level.p2Pill)) {
                 self.pillP2SpawnCountdown = PillSpawnCooldownFn();
                 self.unfairPillCount--;
-                AddSparks({x: self.level.p2Pill.x,
-                           y: self.level.p2Pill.y,
-                           count: 50,
-                           vx: gR.RandomCentered(0, 2, 1),
-                           vy: gR.RandomCentered(0, 2, 1),
-                           rx: 10,
-                           ry: 10});
+                self.AddPillSparks(self.level.p2Pill.x, self.level.p2Pill.y);
             }
         }
 
@@ -1385,21 +1421,10 @@ function UpdateLocalStorage() {
     self.CheckLevelOver = function() {
         let nextState;
         if (!self.isAttract && gPucks.A.length == 0) {
-            if (gSinglePlayer) {
-                nextState = gP1Score < gP2Score ? kGameOver : kLevelFin;
-            }
-            else {
-                if (gP1Score == gP2Score) {
-		    gPWins.push(0);
-                }
-                else if (gP1Score > gP2Score) {
-                    gPWins.push(1);
-                }
-                else {
-		    gPWins.push(2);
-                }
-                nextState = kLevelFin;
-            }
+            nextState = ForGameMode(gSinglePlayer, gGameMode, {
+                regular: gSinglePlayer ? (gP1Score < gP2Score ? kGameOver : kLevelFin) : kGameOver,
+                zen: kGameOver,
+            });
         }
         return nextState;
     };
@@ -1414,31 +1439,19 @@ function UpdateLocalStorage() {
     };
 
     self.CreateStartingPuck = function(vx) {
-	var x;
-	var sign;
-	var toLeft = [gw(0.7), -1];
-	var toRight = [gw(0.3), 1];
-
-        // single player: puck goes towards gpu.
-        // two player: puck goes toward p2 on level 1,
-	if (gSinglePlayer || self.level.index <= 1) {
-            [x, sign] = ForSide(
-		gP1Side,
-		toRight,
-		toLeft
-	    );
-	}
-	else {
-	    Assert(self.level.index > 1);
-	    // todo: in 2 player, level 2+ goes toward the last level loser.
-	    [x, sign] = ForLastWinner(
-		ForSide(gP1Side, toRight, toLeft),
-		ForSide(gP2Side, toRight, toLeft)
-	    );
-	}
+        var x;
+        var sign;
+        var toLeft = [gw(0.7), -1];
+        var toRight = [gw(0.3), 1];
+        [x, sign] = ForSide(
+            gP1Side,
+            toRight,
+            toLeft
+        );
 
         var p = gPuckPool.Alloc();
-	Assert(exists(p), "CreateStartingPuck");
+        Assert(exists(p), "CreateStartingPuck");
+        console.log("CreateStartingPuck", vx);
         p.PlacementInit({ x,
                           y: (self.isAttract ?
                               gh(gR.RandomRange(0.4, 0.6)) :
@@ -1453,14 +1466,14 @@ function UpdateLocalStorage() {
 
     self.CreateRandomPuck = function() {
         var p = gPuckPool.Alloc();
-	if (exists(p)) {
+        if (exists(p)) {
             p.PlacementInit({ x: gw(gR.RandomRange(1/8, 7/8)),
                               y: gh(gR.RandomRange(1/8, 7/8)),
                               vx: gR.RandomRange(self.maxVX*0.3, self.maxVX*0.5),
                               vy: gR.RandomCentered(1, 0.5),
                               ur: true });
             gPucks.A.push(p);
-	}
+        }
     };
 
     self.ProcessAllInput = function() {
@@ -1490,8 +1503,7 @@ function UpdateLocalStorage() {
         if (cmds.spawnPill) {
             if (self.paused) {
                 // todo: move more of the pill code to the Level.
-                self.level.p1Pill = self.level.p1Powerups.MakeRandomPill(self);
-                self.level.p2Pill = self.level.p2Powerups.MakeRandomPill(self);
+                self.MaybeSpawnPills(0, true);
             }
         }
         if (cmds.clearHighScore) {
@@ -1538,7 +1550,7 @@ function UpdateLocalStorage() {
 
     self.StepMoveables = function( dt ) {
         self.MovePucks( dt );
-        self.MoveSparks( dt );
+        StepSparks( dt );
         self.MovePills( dt );
     };
 
@@ -1610,15 +1622,6 @@ function UpdateLocalStorage() {
         SwapBuffers(gPucks);
     };
 
-    self.MoveSparks = function( dt ) {
-        gSparks.B.clear();
-        gSparks.A.forEach(s => {
-            s.Step( dt );
-            s.alive && gSparks.B.push( s );
-        } );
-        SwapBuffers(gSparks);
-    };
-
     self.MovePills = function( dt ) {
         self.MovePlayerPill( dt );
         self.MoveCPUPill( dt );
@@ -1651,24 +1654,24 @@ function UpdateLocalStorage() {
     // match: level.Draw().
     self.DrawMidLine = function() {
         if (!self.isAttract) {
-	    // note: this is all a tweaky hacky heuristic mess.
-	    var dashStep = gh() / (gMidLineDashCount*2);
-	    var top = ForGameMode(gYInset*1.5, gYInset) + dashStep/2;
-	    var txo = gSmallFontSize;
-	    var bottom = ForGameMode(gh() - gYInset*1.05 - txo, gh()-gYInset);
-	    var range = bottom - top;
-	    var e = (self.level.EnergyFactor() ?? 0) * range;
-	    Cxdo(() => {
-		gCx.beginPath();
-		for( var y = top; y < bottom; y += dashStep*2 ) {
-		    var ox = 0;//gR.RandomCentered(0, 0.5);
-		    var width = y-top >= (range-e) ? gMidLineDashWidth*2 : gMidLineDashWidth;
-		    gCx.rect( gw(0.5)+ ox -(width/2), y, width, dashStep );
-		}
-		gCx.fillStyle = RandomGreen(0.6);
-		gCx.fill();
-	    });
-	}
+            // note: this is all a tweaky hacky heuristic mess.
+            var dashStep = gh() / (gMidLineDashCount*2);
+            var top = ForGameMode(gSinglePlayer, gGameMode, {regular: gYInset*1.5, zen: gYInset}) + dashStep/2;
+            var txo = gSmallFontSize;
+            var bottom = ForGameMode(gSinglePlayer, gGameMode, {regular: gh() - gYInset*1.05 - txo, zen: gh()-gYInset});
+            var range = bottom - top;
+            var e = (self.level.EnergyFactor() ?? 0) * range;
+            Cxdo(() => {
+                gCx.beginPath();
+                for( var y = top; y < bottom; y += dashStep*2 ) {
+                    var ox = 0;//gR.RandomCentered(0, 0.5);
+                    var width = y-top >= (range-e) ? gMidLineDashWidth*2 : gMidLineDashWidth;
+                    gCx.rect( gw(0.5)+ ox -(width/2), y, width, dashStep );
+                }
+                gCx.fillStyle = RandomGreen(0.6);
+                gCx.fill();
+            });
+        }
     };
 
     self.DrawCRTOutline = function() {
@@ -1677,7 +1680,7 @@ function UpdateLocalStorage() {
         }
     };
 
-    // match: GetReady.Draw() et. al.
+    // match: GameState.DrawScoreHeader() et. al.
     self.DrawScoreHeader = function( isEndScreenshot ) {
         Cxdo(() => {
             const style = RandomMagenta(self.Alpha(isEndScreenshot ? 1 : 0.4));
@@ -1759,9 +1762,9 @@ function UpdateLocalStorage() {
                 gCx.fillStyle = gCx.strokeStyle = RandomForColor(greySpec, 0.3);
                 DrawText("ESC", "center", cx, cy + gSmallestFontSize*0.4, gSmallestFontSizePt);
                 gCx.beginPath();
-		gCx.roundRect(cx-gPauseRadius, cy-gPauseRadius,
-			      gPauseRadius*2, gPauseRadius*2,
-			      8);
+                gCx.roundRect(cx-gPauseRadius, cy-gPauseRadius,
+                              gPauseRadius*2, gPauseRadius*2,
+                              8);
                 gCx.lineWidth = sx1(1.5);
                 gCx.stroke();
                 if (gDebug) {
@@ -1794,7 +1797,9 @@ function UpdateLocalStorage() {
             self.level.Draw({ alpha: self.Alpha(), isEndScreenshot });
 
             // draw paddles under pucks, at least so i can visually debug collisions.
-	    const s01 = exists(self.level.splitsRemaining) ? Clip01(self.level.splitsRemaining / self.level.splitsAllowed) : undefined;
+            const s01 = exists(self.level.splitsRemaining) ?
+                  T01(self.level.splitsRemaining, self.level.splitsMax) :
+                  undefined;
             self.paddleP1.Draw( self.Alpha(), self, s01, isEndScreenshot );
             self.paddleP2.Draw( self.Alpha(), self, s01, isEndScreenshot );
 
@@ -1927,7 +1932,7 @@ function UpdateLocalStorage() {
                     return kGetReady;
                 }
                 else {
-                    return Is2PlayerGameOver() ? kGameOverSummary : kGetReady;
+                    return kGameOverSummary;
                 }
             }
         }
@@ -1995,35 +2000,6 @@ function UpdateLocalStorage() {
                 gw(0.5), gh(0.5),
                 gBigFontSizePt,
             );
-
-	    // match: GameOverSummaryState.
-            const leftMsg = ForSide(gP1Side,
-                                    `P1: ${P1Wins()} ${FNP(P1Wins(), "WIN", "WINS")}`,
-                                    `P2: ${P2Wins()} ${FNP(P2Wins(), "WIN", "WINS")}`,
-                                   );
-            const rightMsg = ForOtherSide(gP1Side,
-					  `P1: ${P1Wins()} ${FNP(P1Wins(), "WIN", "WINS")}`,
-					  `P2: ${P2Wins()} ${FNP(P2Wins(), "WIN", "WINS")}`,
-                                         );
-            DrawText(
-                leftMsg,
-                "left",
-                gw(0.2), gh(0.6),
-                gSmallFontSizePt
-            );
-            DrawText(
-                rightMsg,
-                "right",
-                gw(0.8), gh(0.6),
-                gSmallFontSizePt
-            );
-
-	    gCx.fillStyle = RandomForColor(cyanSpec);
-	    let winMsg = `WIN BY ${k2PWinBy} RULE`;
-	    if (IsMatchPoint()) { winMsg = "MATCH POINT!"; }
-	    if (Is2PlayerGameOver()) { winMsg = "GAME OVER!"; }
-	    DrawText(winMsg, "center", gw(0.5), gh(0.6) , gSmallerFontSizePt);
-
             if (self.goOn) {
                 gCx.fillStyle = RandomForColor(yellowSpec);
                 DrawText(
@@ -2071,6 +2047,7 @@ function UpdateLocalStorage() {
             var ap = isAnyActivatePressed(cmds);
             var apd = isAnyPointerDown();
             if (ud || ap || apd) {
+                // note: this next state might immediately terminate itself.
                 return kGameOverSummary;
             }
         }
@@ -2081,7 +2058,7 @@ function UpdateLocalStorage() {
         Cxdo(() => {
             ClearScreen();
             gCx.drawImage(gCanvas2, 0, 0);
-            gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
+            gCx.fillStyle = RandomForColor(redSpec);
             DrawText(
                 "GAME OVER",
                 "center",
@@ -2090,7 +2067,7 @@ function UpdateLocalStorage() {
                 gBigFontSizePt,
             );
             if (self.goOn) {
-                gCx.fillStyle = RandomYellowSolid();
+                gCx.fillStyle = RandomForColor(yellowSpec);
                 DrawText(
                     "NEXT",
                     "center",
@@ -2108,23 +2085,24 @@ function UpdateLocalStorage() {
 /*class*/ function GameOverSummaryState() {
     var self = this;
 
+    // todo: support game high score.
     self.Init = function() {
         ResetInput();
-        self.timeoutMsg = 1000;
+        self.timeoutMsg = 2000;
         self.timeoutEnd = 1000 * 10;
         self.started = gGameTime;
-	self.relevant = !gSinglePlayer; // todo: fix this.
+        self.relevant = gP1Score - gP2Score !== 0;
     };
 
-    self.Step = function() {
-        if (self.relevant) {
+    self.Step = function( dt ) {
+        if (!self.relevant) {
+            return kTitle;
+        }
+        else {
             var nextState;
             self.goOn = (gGameTime - self.started) > self.timeoutMsg;
             nextState = self.ProcessAllInput();
             return nextState;
-        }
-        else {
-            return kTitle;
         }
     };
 
@@ -2161,82 +2139,59 @@ function UpdateLocalStorage() {
     };
     
     self.Draw = function() {
-        if (self.relevant) {
-            gSinglePlayer ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
-        }
+        gSinglePlayer ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
+        self.DrawGoOn();
     };
 
-    // todo: given the way levels and scoring works right now, this doesn't make sense.
+    self.DrawGoOn = function() {
+        if (self.goOn) {
+            gCx.fillStyle = RandomForColor(yellowSpec);
+            DrawText( "RETURN", "center", gw(0.5), gh(0.8), gRegularFontSizePt );
+        }
+    };        
+
     self.DrawSinglePlayer = function() {
         ClearScreen();
+        var finalScore = gP1Score - gP2Score;
         var x = gw(0.5);
         var y = gh(0.5) - 20;
-        var nextState;
         Cxdo(() => {
-            gCx.fillStyle = RandomMagentaSolid();
-            var msg = `FINAL SCORE: ${gP1Score} - ${gP2Score} = ${self.finalScore}`;
+            gCx.fillStyle = RandomForColor(magentaSpec);
+            var msg = `FINAL SCORE: ${gP1Score} - ${gP2Score} = ${finalScore}`;
             DrawText( msg, "center", x, y, gRegularFontSizePt );
-
-            if (self.goOn) {
-                gCx.fillStyle = RandomYellowSolid();
-                DrawText( "NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt );
-            }
         });
-
-        return nextState;
     };
 
     self.DrawTwoPlayer = function() {
-        var nextState;
         Cxdo(() => {
-            // todo: new high score message like single player.
             ClearScreen();
+
+            // match: GameState.DrawScoreHeader() et. al.
+            gCx.fillStyle = RandomGreen(0.3);
+            var p1a = ForSide(gP1Side, "left", "right");
+            var p1x = ForSide(gP1Side, gw(0.2), gw(0.8));
+            DrawText( "P1: " + gP1Score, p1a, p1x, gh(0.22), gRegularFontSizePt );
+            var p2a = ForSide(gP2Side, "left", "right");
+            var p2x = ForSide(gP2Side, gw(0.2), gw(0.8));
+            DrawText( "P2: " + gP2Score, p2a, p2x, gh(0.22), gRegularFontSizePt );
+
             gCx.fillStyle = RandomBlue();
             DrawText(
-                "*** FINAL CHAMPION ***",
+                "*** WINNER ***",
                 "center",
                 gw(0.5), gh(0.32),
                 gReducedFontSizePt
             );
 
-            gCx.fillStyle = RandomMagenta();
+            gCx.fillStyle = ColorCycle();
             DrawText(
-                `PLAYER ${P1Wins()>P2Wins()?"ONE":"TWO"}!`,
+                // leading space to visually center player 1.
+                gP1Score > gP2Score ? " PLAYER 1" : "PLAYER 2",
                 "center",
-                gw(0.5), gh(0.5),
+                gw(0.5), gh(0.6),
                 gBigFontSizePt
             );
-
-	    // match: LevelFinState.
-            const leftMsg = ForSide(gP1Side,
-				    `P1: ${P1Wins()} ${FNP(P1Wins(), "WIN", "WINS")}`,
-				    `P2: ${P2Wins()} ${FNP(P2Wins(), "WIN", "WINS")}`,
-                                   );
-            const rightMsg = ForOtherSide(gP1Side,
-					  `P1: ${P1Wins()} ${FNP(P1Wins(), "WIN", "WINS")}`,
-					  `P2: ${P2Wins()} ${FNP(P2Wins(), "WIN", "WINS")}`,
-                                         );
-            gCx.fillStyle = RandomGreen();
-            DrawText(
-                leftMsg,
-                "left",
-                gw(0.2), gh(0.6),
-                gSmallFontSizePt
-            );
-            DrawText(
-                rightMsg,
-                "right",
-                gw(0.8), gh(0.6),
-                gSmallFontSizePt
-            );
-
-            if (self.goOn) {
-                gCx.fillStyle = RandomYellow();
-                DrawText( "RETURN", "center", gw(0.5), gh(0.8), gReducedFontSizePt );
-            }
         });
-
-        return nextState;
     };
 
     self.Init();
@@ -2959,7 +2914,7 @@ function InitEvents() {
             gEventQueue.push({
                 type: kEventKeyUp,
                 updateFn: (cmds) => {
-                    if (gDebug) {  cmds.gameOver = false; }
+                    if (gDebug) { cmds.gameOver = false; }
                 }
             });
         }

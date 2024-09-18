@@ -22,8 +22,7 @@ function Puck() {
     self.height = gPuckHeight;
     self.midX = self.x + self.width / 2;
     self.midY = self.y + self.height / 2;
-    // tweak max vx a tad to avoid everything being too visually lock-step.
-    self.vx = gR.RandomCentered(props.vx, props.vx / 10);
+    self.vx = props.vx;
     self.vy = AvoidZero(props.vy, 0.1);
     self.alive = true;
     self.ur = aub(props.ur, false);
@@ -157,13 +156,19 @@ function Puck() {
       }
       PlayBlip();
     } else {
-      var slowCountFactor = ForGameMode(Math.pow(countFactor, 1.5), countFactor);
+      var slowCountFactor = ForGameMode(gSinglePlayer, gGameMode, {
+        regular: Math.pow(countFactor, 1.5),
+        zen: countFactor
+      });
       // keep a few of the fast ones around.
       var slow = !doejectSpeed && self.vx > maxVX * 0.7 && gR.RandomFloat() < slowCountFactor;
       var slowF = gR.RandomRange(0.8, 0.9);
       var fastF = gR.RandomRange(1.005, 1.05);
       var zenF = gR.RandomRange(1.001, 1.01);
-      var scaleF = ForGameMode(slow ? slowF : fastF, zenF);
+      var scaleF = ForGameMode(gSinglePlayer, gGameMode, {
+        regular: slow ? slowF : fastF,
+        zen: zenF
+      });
       var vx = self.vx * scaleF;
       var vy = self.vy;
       vy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
@@ -183,8 +188,8 @@ function Puck() {
       AddSparks({
         x: self.x,
         y: self.y,
-        vx: sx(1),
-        vy: sy(0.5),
+        vx: sx(0.5),
+        vy: sy(1),
         count: 3,
         rx: sx(1),
         ry: sy(1)
@@ -233,26 +238,48 @@ function Puck() {
     self.vx *= -1;
   };
   self.ApplyEnglish = function (paddle) {
-    // see also: english in level.js
+    // see also: level.js (!) that updates paddle.englishFactor (!)
+
     // smallest bit of vertical english.
     // too much means you never get to 'streaming'.
     // too little means you maybe crash the machine :-)
+    // (but see also: SplitPuck()'s algorithm for culling.)
     // note that englishFactor increases as level ends.
     var dy = self.midY - paddle.GetMidY();
-    var mody = gR.RandomFloat() * 0.02 * Math.abs(dy) * paddle.englishFactor;
+    var mody = gR.RandomFloat() * 0.03 * Math.abs(dy) * paddle.englishFactor;
 
-    // try to avoid getting boringly stuck at top or bottom.
-    // but don't want to utterly lose 'streaming'.
-    var oy = 1;
-    if (gR.RandomBool(0.1)) {
-      var t01 = T01(Math.abs(self.x - gh(0.5)), gh(0.5));
-      var ty = Math.pow(t01, 3);
-      oy = 1 + ty * 1;
+    // try to avoid getting boringly stuck at top or bottom, especially in zen.
+    // but, don't want to utterly lose 'streaming'.
+    // note: this isn't really working all that well.
+    var calc_fy = function calc_fy(y) {
+      var dy = Math.abs(y - gh(0.5));
+      var t01 = T01(dy, gh(0.5));
+      var fy = Math.pow(t01, 2);
+      return fy;
+    };
+    /*
+    if (gDebug) {
+        gDebug_DrawList.push({
+    	fn: () => {
+    	    gCx.fillStyle = rgba255s(white);
+    	    var step = gh(0.1);
+    	    for (var y = 0; y < gh(); y += step) {
+    		var my = y+step/2;
+    		var fy = calc_fy(my);
+    		DrawText(F(fy), "right", gw(0.4), my, gSmallestFontSizePt);
+    	    }
+    	}
+        });
+    }
+    */
+    var rf = Math.pow(T01(gPucks.A.length, kEjectCountThreshold / 2), 1.5);
+    if (gR.RandomBool(rf)) {
+      mody *= calc_fy(self.y);
     }
     if (self.midY < paddle.GetMidY()) {
-      self.vy -= mody * oy;
+      self.vy -= mody;
     } else if (self.midY > paddle.GetMidY()) {
-      self.vy += mody * oy;
+      self.vy += mody;
     }
   };
   self.PaddleCollision = function (paddle, isSuddenDeath, maxVX) {
