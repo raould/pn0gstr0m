@@ -554,7 +554,7 @@ function MakeDefendProps(maker) {
     lifespan: kPillLifespan,
     isUrgent: true,
     testFn: function testFn(gameState) {
-      return maker.paddle.barriers.A.length == 0 && gPucks.A.length > 10;
+      return true; //maker.paddle.barriers.A.length == 0 && gPucks.A.length > 10;
     },
     canSkip: true,
     drawFn: function drawFn(self, alpha) {
@@ -563,7 +563,15 @@ function MakeDefendProps(maker) {
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();
       var n = 4; // match: kBarriersArrayInitialSize.
-      var hp = ForGameMode(15, 30);
+      var drawScale = ForGameMode(gSinglePlayer, gGameMode, {
+        regular: maker.side,
+        hard: 1,
+        zen: 0.5
+      });
+      var hp = ForGameMode(gSinglePlayer, gGameMode, {
+        regular: 15,
+        zen: 45
+      });
       var width = sx1(hp / 3);
       var height = (gHeight - gYInset * 2) / n;
       var x = gw(ForSide(maker.side, 0.1, 0.9));
@@ -577,6 +585,7 @@ function MakeDefendProps(maker) {
           width: width,
           height: height,
           hp: hp,
+          drawScale: drawScale,
           side: maker.side
         });
         targets.push({
@@ -587,7 +596,8 @@ function MakeDefendProps(maker) {
       gameState.AddAnimation(MakeTargetsLightningAnimation({
         lifespan: 150,
         targets: targets,
-        paddle: maker.paddle
+        paddle: maker.paddle,
+        range: sx1(5)
       }));
     }
   };

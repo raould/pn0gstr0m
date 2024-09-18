@@ -11,3 +11,17 @@ function Assert(result, msg) {
     debugger;
   }
 }
+function AssertNonNaN() {
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+  args.forEach(function (arg) {
+    if (Array.isArray(arg)) {
+      arg.forEach(function (e) {
+        AssertNonNaN(e);
+      });
+    } else {
+      Assert(!isNaN(arg));
+    }
+  });
+}

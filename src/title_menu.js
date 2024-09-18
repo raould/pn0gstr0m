@@ -7,7 +7,15 @@
 // there is still a lot of hard-coding
 // in the various Make*Buttons() below.
 
-function MainMenuConstants() {
+// todo: the interaction of 1 vs. 2 player and
+// all the game modes regular, hard, zen, is
+// very complected and stateful and easily buggy.
+// e.g. if you were in 2 player and go to
+// 1 player mode, what should happen to the
+// optional zen & hard settings?
+// make that less so somehow.
+
+function TitleMenuConstants() {
     var bw = gw(0.2);
     var bh = gSmallFontSize*1.7;
     var bs = bh * 1.3;
@@ -57,7 +65,9 @@ function MakePlayerButtons({constants:k, playerRadios}) {
                 bself.wants_focus = bself.is_checked && !was_checked;
             },
             click_fn: (bself) => {
+                // match: TitleState.ProcessOneInput singlePlayer.
                 gSinglePlayer = true;
+                SetGameMode(kGameModeRegular);
                 playerRadios.OnSelect(bself);
             }
         }),
@@ -77,7 +87,9 @@ function MakePlayerButtons({constants:k, playerRadios}) {
                 bself.wants_focus = bself.is_checked && !was_checked;
             },
             click_fn: (bself) => {
+                // match: TitleState.ProcessOneInput doublePlayer.
                 gSinglePlayer = false;
+                SetGameMode(kGameModeZen);
                 playerRadios.OnSelect(bself);
             }
         }),
@@ -96,9 +108,16 @@ function MakeModeButtons({constants:k, modeRadios}) {
             is_checkbox: true,
             is_checked: gGameMode === kGameModeHard,
             step_fn: (bself) => {
-                var was_checked = bself.is_checked;
-                bself.is_checked = gGameMode === kGameModeHard;
-                bself.wants_focus = bself.is_checked && !was_checked;
+                if (gSinglePlayer) {
+                    var was_checked = bself.is_checked;
+                    bself.is_checked = gGameMode === kGameModeHard;
+                    bself.wants_focus = bself.is_checked && !was_checked;
+                    bself.hidden = false;
+                }
+                else {
+                    bself.wants_focus = false;
+                    bself.hidden = true;
+                }
             },
             click_fn: (bself) => {
                 SetGameMode(gGameMode === kGameModeHard ? kGameModeRegular : kGameModeHard);
@@ -116,9 +135,16 @@ function MakeModeButtons({constants:k, modeRadios}) {
             is_checkbox: true,
             is_checked: gGameMode === kGameModeZen,
             step_fn: (bself) => {
-                var was_checked = bself.is_checked;
-                bself.is_checked = gGameMode === kGameModeZen;
-                bself.wants_focus = bself.is_checked && !was_checked;
+		if (gSinglePlayer) {
+                    var was_checked = bself.is_checked;
+                    bself.is_checked = gGameMode === kGameModeZen;
+                    bself.wants_focus = bself.is_checked && !was_checked;
+		    bself.hidden = false;
+		}
+		else {
+		    bself.wants_focus = false;
+		    bself.hidden = true;
+		}
             },
             click_fn: (bself) => {
                 SetGameMode(gGameMode === kGameModeZen ? kGameModeRegular : kGameModeZen);
@@ -166,8 +192,8 @@ function MakeMuteButtons({constants:k}) {
     };
 }
 
-function MakeMainMenuButtons() {
-    var constants = new MainMenuConstants();
+function MakeTitleMenuButtons() {
+    var constants = new TitleMenuConstants();
     var playerRadios = new Radios();
     var modeRadios = new Radios();
     var {bp1, bp2} = MakePlayerButtons({

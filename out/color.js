@@ -10,7 +10,15 @@
 // there really needs to be a cleanup of all this, like how spec.dark works.
 
 var black = [0x0, 0x0, 0x0];
+var blackSpec = {
+  regular: black,
+  strong: black
+};
 var white = [0xFF, 0xFF, 0xFF];
+var whiteSpec = {
+  regular: [0xAA, 0xAA, 0xAA],
+  strong: white
+};
 function MakeDark(spec) {
   return {
     strong: spec.regular,
@@ -54,6 +62,24 @@ var magentaSpec = {
   strong: [0xFF, 0x00, 0xFF]
 };
 var magentaDarkSpec = MakeDark(magentaSpec);
+var randomSpec = {
+  get regular() {
+    return [gR.RandomRangeInt(0, 255), gR.RandomRangeInt(0, 255), gR.RandomRangeInt(0, 255)];
+  },
+  get strong() {
+    return [gR.RandomRangeInt(128, 255), gR.RandomRangeInt(128, 255), gR.RandomRangeInt(128, 255)];
+  }
+};
+function makeRandomSpec() {
+  var r = [gR.RandomRangeInt(0, 255), gR.RandomRangeInt(0, 255), gR.RandomRangeInt(0, 255)];
+  var bump = 255 - Math.max(r[0], r[1], r[2]);
+  var s = [r[0] + bump, r[1] + bump, r[2] + bump];
+  return {
+    regular: r,
+    strong: s
+  };
+}
+;
 var warningColorStr = "white";
 var crtOutlineColorStr = "rgb(16, 64, 16)";
 // match: index.html.
@@ -83,19 +109,28 @@ function rgba255s(array, alpha) {
   var str = (array.length == 4 || exists(alpha) ? "rgba(" : "rgb(") + joined + ")";
   return str;
 }
-function RandomColor(alpha) {
-  return rgba255s([gR.RandomRangeInt(0, 255), gR.RandomRangeInt(0, 255), gR.RandomRangeInt(0, 255), alpha != null ? alpha : 1]);
-}
-function RandomForColor(spec, alpha) {
-  if (alpha == undefined) {
-    alpha = 1;
+function ColorCycle() {
+  var alpha = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+  var r = Math.sin(gGameTime * 3 / 7000);
+  var g = Math.sin(gGameTime * 11 / 7000);
+  var b = Math.sin(gGameTime * 31 / 7000);
+  if (r + g + b < 0.2) {
+    g = 0.4;
   }
+  return rgba255s([Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)], alpha);
+}
+function RandomColor() {
+  var alpha = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+  return rgba255s([gR.RandomRangeInt(0, 255), gR.RandomRangeInt(0, 255), gR.RandomRangeInt(0, 255), alpha]);
+}
+function RandomForColor(spec) {
+  var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
   if (gR.RandomBool(0.05)) {
     return rgba255s(spec.strong, alpha);
   } else {
     // "NTSC" ha ha.
     return rgba255s(spec.regular.map(function (ch) {
-      return gR.RandomCentered(ch, 16);
+      return Clip(gR.RandomCentered(ch, 16), 0, 255);
     }), alpha);
   }
 }

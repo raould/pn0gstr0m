@@ -44,7 +44,9 @@ function SaveLocal(key, value, forced=false) {
 }
 
 function LoadLocal(key, fallback) {
-    return gLocalStorageCache[key] ?? fallback;
+    var v = gLocalStorageCache[key];
+    console.log("LoadLocal", key, v, fallback);
+    return v ?? fallback;
 }
 
 function DeleteLocal(key) {

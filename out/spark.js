@@ -20,18 +20,21 @@ function Spark() {
     self.height = gSparkHeight;
     self.vx = props.vx;
     self.vy = props.vy;
-    // randomize lifespan a little for visual variety.
-    self.frameCount = gR.RandomRange(0, 5);
+    self.frameCount = Math.ceil(gR.RandomCentered(kAvgSparkFrame, kAvgSparkFrame / 4));
     self.alive = true;
+    var r = gR.RandomFloat();
+    self.colorSpec = r < 0.1 ? whiteSpec : r < 0.2 ? yellowSpec : aub(props.colorSpec, redSpec);
+    AssertNonNaN(self.x, self.y, self.width, self.height, self.vx, self.vy);
   };
-  self.Draw = function (alpha) {
+  self.Draw = function () {
+    var alpha = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
     Cxdo(function () {
+      var a = T01(self.frameCount, kAvgSparkFrame * (1 + 1 / 4));
       gCx.beginPath();
       gCx.rect(self.x, self.y, self.width, self.height);
-      gCx.fillStyle = RandomRed(alpha);
+      gCx.fillStyle = RandomForColor(self.colorSpec, a * alpha);
       gCx.fill();
     });
-    self.frameCount++;
   };
   self.Step = function (dt) {
     if (self.alive) {
@@ -40,7 +43,9 @@ function Spark() {
       self.prevY = self.y;
       self.x += self.vx * dt;
       self.y += self.vy * dt;
-      self.alive = self.frameCount < kMaxSparkFrame;
+      self.alive = self.frameCount > 0;
+      self.frameCount--;
+      AssertNonNaN(self.x, self.y, self.prevX, self.prevY, self.width, self.height, self.vx, self.vy);
     }
   };
   self.Init();

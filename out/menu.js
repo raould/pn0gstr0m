@@ -59,11 +59,18 @@ function MakeMenuButton(_ref) {
     font_size: gReducedFontSizePt,
     step_fn: function step_fn(bself) {
       var gameMode = " ";
-      if (gGameMode === kGameModeHard) {
-        gameMode = "*";
-      }
-      if (gGameMode === kGameModeZen) {
-        gameMode = "Z";
+      // theoretically in 2 player mode it cannot be
+      // extra hard, and is secretly forced-zen behind the scenes.
+      if (gSinglePlayer) {
+        if (gGameMode === kGameModeHard) {
+          gameMode = "*";
+        }
+        if (gGameMode === kGameModeZen) {
+          gameMode = "Z";
+        }
+      } else {
+        Assert(gGameMode === kGameModeZen);
+        Assert(gGameMode !== kGameModeHard);
       }
       bself.has_focus = false;
       bself.title = (gSinglePlayer ? "1p  " : "2pp ") + (gSfxMuted ? "  " : "m ") + (gMusicMuted ? " " : "o") + gameMode;
@@ -87,16 +94,23 @@ function Menu(_ref2) {
     focusId = _ref2.focusId;
   var self = this;
   self.Init = function () {
-    var _self$navigation$self;
+    var _self$Focused;
     self.isHidden = isHidden;
     self.bMenu = MakeMenuButton({
       OnClose: OnClose
     });
     self.navigation = navigation;
     self.focusId = focusId;
-    var fb = (_self$navigation$self = self.navigation[self.focusId]) == null ? void 0 : _self$navigation$self.button;
+    var fb = (_self$Focused = self.Focused()) == null ? void 0 : _self$Focused.button;
     Assert(exists(fb), "must have an initial focus, for keyboard nagivation");
     fb.has_focus = true;
+  };
+  self.Spec = function (bId) {
+    Assert(exists(self.navigation));
+    return self.navigation[bId];
+  };
+  self.Focused = function () {
+    return self.Spec(self.focusId);
   };
   self.isOpen = function () {
     return self.bMenu.isOpen;
@@ -123,20 +137,18 @@ function Menu(_ref2) {
     }
   };
   self.Defocus = function () {
-    var bspec = self.navigation[self.focusId];
+    var bspec = self.Focused();
     if (exists(bspec)) {
       bspec.button.Defocus();
     }
     self.focusId = undefined;
   };
   self.Focus = function (focusId) {
-    self.Defocus();
-    self.focusId = focusId;
-    if (exists(self.focusId)) {
-      var bspec = self.navigation[self.focusId];
-      if (exists(bspec)) {
-        bspec.button.Focus();
-      }
+    var bspec = self.Spec(focusId);
+    if (exists(bspec)) {
+      self.Defocus();
+      bspec.button.Focus();
+      self.focusId = focusId;
     }
   };
   self.ProcessOneInput = function (cmds) {
@@ -163,20 +175,25 @@ function Menu(_ref2) {
     return false;
   };
   self.FocusDirection = function (dkey) {
-    var bspec = self.navigation[self.focusId];
-    if (exists(bspec)) {
-      var fId = bspec[dkey];
-      if (exists(fId)) {
-        if (self.focusId != fId) {
-          PlayBlip();
-        }
-        self.Focus(fId);
+    PlayBlip();
+    var fId = self.FocusDirectionUnhidden(self.Focused(), dkey);
+    self.Focus(fId);
+  };
+
+  // todo: fix going up from first entry bug.
+  self.FocusDirectionUnhidden = function (cspec, dkey) {
+    if (exists(cspec)) {
+      var nid = cspec[dkey];
+      var nspec = self.Spec(nid);
+      if (exists(nspec)) {
+        Assert(exists(nspec.button));
+        return nspec.button.hidden ? self.FocusDirectionUnhidden(nspec, dkey) : nid;
       }
     }
   };
   self.ProcessAccept = function (cmds) {
     if (isAnyActivatePressed(cmds) && self.bMenu.isOpen) {
-      var bspec = self.navigation[self.focusId];
+      var bspec = self.Focused();
       if (exists(bspec)) {
         bspec.button.Click();
         return true;

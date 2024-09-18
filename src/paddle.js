@@ -100,10 +100,10 @@ function Paddle(props) {
             bounds = self;
         }
         if (gDebug) {
-            gDebugDrawList.push(() => {
+            gDebug_DrawList.push({ fn: () => {
                 gCx.strokeStyle = "yellow";
                 gCx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
-            });
+            }});
         }
         return bounds;
     };
@@ -422,6 +422,7 @@ function Paddle(props) {
     };
 
     self.StepAI = function( dt, gameState ) {
+	Assert(!self.isPlayer);
         if (isU(self.aiPuck) || !self.aiPuck.alive) { self.aiPuck = undefined; }
         if (isU(self.aiPill) || !self.aiPill.alive) { self.aiPill = undefined; }
         self.AISeek( dt, gameState.level.index );
@@ -443,14 +444,14 @@ function Paddle(props) {
         var levelScale = (levelIndex-1) * 0.02;
 
         // both zen and hard modes get faster ai paddle movement.
-        var scale = ForGameMode(0.4, 1.1, 1.1) + levelScale;
+        var scale = ForGameMode(gSinglePlayer, gGameMode, {regular: 0.4, hard: 1.1, zen: 1.1}) + levelScale;
         scale = Clip(scale, 0.1, 1.2);
 
         if (gDebug) {
-            gDebugDrawList.push(() => {
+            gDebug_DrawList.push({ fn: () => {
                 gCx.fillStyle = "blue";
                 DrawText(F(scale), "center", gw(0.8), gh(0.6), gSmallestFontSizePt);
-            });
+            }});
         }
 
         if (PS && exists(self.aiPill) && self.aiPill.isUrgent) {
