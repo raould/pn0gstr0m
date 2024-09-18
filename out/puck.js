@@ -29,6 +29,8 @@ function Puck() {
     self.startTime = self.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
     self.splitStyle = aub(props.forced, false) ? "yellow" : "white";
     self.isLocked = false;
+    // avoid buggy case of one puck spawn then spawning immediately etc.
+    self.impotentTime = 1000;
   };
   self.Draw = function (alpha) {
     // scal size: more total pucks -> smaller size.
@@ -101,6 +103,7 @@ function Puck() {
   };
   self.Step = function (dt, maxVX, maxVY) {
     if (self.alive && !self.isLocked) {
+      self.impotentTime -= dt;
       dt = dt * kPhysicsStepScale;
       self.prevX = self.x;
       self.prevY = self.y;
@@ -131,6 +134,9 @@ function Puck() {
       _ref$isSuddenDeath = _ref.isSuddenDeath,
       isSuddenDeath = _ref$isSuddenDeath === void 0 ? false : _ref$isSuddenDeath,
       maxVX = _ref.maxVX;
+    if (self.impotentTime > 0) {
+      return;
+    }
     Assert(exists(maxVX));
     var np = undefined;
     var count = gPucks.A.length;

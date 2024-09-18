@@ -28,6 +28,8 @@ function Puck() {
         self.startTime = self.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
         self.splitStyle = aub(props.forced, false) ? "yellow" : "white";        
         self.isLocked = false;
+        // avoid buggy case of one puck spawn then spawning immediately etc.
+        self.impotentTime = 1000;
     };
 
     self.Draw = function( alpha ) {
@@ -107,6 +109,7 @@ function Puck() {
 
     self.Step = function( dt, maxVX, maxVY ) {
         if( self.alive && !self.isLocked ) {
+            self.impotentTime -= dt;
 	    dt = dt * kPhysicsStepScale;
             self.prevX = self.x;
             self.prevY = self.y;
@@ -134,6 +137,10 @@ function Puck() {
 
     // anybody calling this should also eventually follow up with level.OnPuckSplit() for bookkeeping.
     self.SplitPuck = function({ forced=false, isSuddenDeath=false, maxVX }) {
+        if (self.impotentTime > 0) {
+            return;
+        }
+
         Assert(exists(maxVX));
         let np = undefined;
         const count = gPucks.A.length;
