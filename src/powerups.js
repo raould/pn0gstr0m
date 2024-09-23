@@ -496,7 +496,7 @@ function MakeDefendProps(maker) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            return true;//maker.paddle.barriers.A.length == 0 && gPucks.A.length > 10;
+            return maker.paddle.barriers.A.length == 0 && gPucks.A.length > 10;
         },
         canSkip: true,
         drawFn: (self, alpha) => DrawDefendPill(maker.side, self, alpha),
