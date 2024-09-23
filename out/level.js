@@ -54,8 +54,8 @@ function Level(props) {
   };
   self.IsMidGame = function () {
     var isMidGame = true;
-    if (exists(gameState.level.splitsRemaining)) {
-      isMidGame = gameState.level.splitsRemaining > 10;
+    if (exists(self.splitsRemaining)) {
+      isMidGame = self.splitsRemaining > 10;
     }
     return isMidGame;
   };
