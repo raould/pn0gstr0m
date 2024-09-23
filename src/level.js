@@ -56,6 +56,14 @@ const kEnglishStep = 0.004;
         self.p2Pill = undefined;
     };
 
+    self.IsMidGame = function() {
+        var isMidGame = true;
+        if (exists(gameState.level.splitsRemaining)) {
+            isMidGame = gameState.level.splitsRemaining > 10;
+        }
+        return isMidGame;
+    }
+
     self.EnergyFactor = function() {
 	if (isU(self.splitsRemaining)) {
 	    return undefined;

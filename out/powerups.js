@@ -554,11 +554,7 @@ function MakeDefendProps(maker) {
     lifespan: kPillLifespan,
     isUrgent: true,
     testFn: function testFn(gameState) {
-      var isMidGame = true; // not-end-game.
-      if (exists(gameState.level.splitsRemaining)) {
-        isMidGame = gameState.level.splitsRemaining > 10;
-      }
-      return isMidGame && maker.paddle.barriers.A.length == 0 && gPucks.A.length > 10;
+      return gameState.level.IsMidGame() && maker.paddle.barriers.A.length == 0 && (gDebug || gPucks.A.length > 10);
     },
     canSkip: true,
     drawFn: function drawFn(self, alpha) {
@@ -621,7 +617,7 @@ function MakeXtraProps(maker) {
     lifespan: kPillLifespan,
     isUrgent: true,
     testFn: function testFn(gameState) {
-      return maker.paddle.xtras.A.length == 0 && (gDebug || gPucks.A.length > 20);
+      return gameState.level.IsMidGame() && maker.paddle.xtras.A.length == 0 && (gDebug || gPucks.A.length > 20);
     },
     canSkip: true,
     drawFn: function drawFn(self, alpha) {
@@ -668,8 +664,9 @@ function MakeNeoProps(maker) {
     lifespan: kPillLifespan,
     isUrgent: true,
     testFn: function testFn(gameState) {
-      // todo: in some playtesting this was being spawned too often, maybe each props needs a spawn weight too?
-      return (gDebug || gPucks.A.length > kEjectCountThreshold / 2) && isU(maker.paddle.neo);
+      // todo: in some playtesting this was being spawned too often,
+      // maybe each props needs a spawn weight too?
+      return gameState.level.IsMidGame() && (gDebug || gPucks.A.length > kEjectCountThreshold / 2) && isU(maker.paddle.neo);
     },
     canSkip: true,
     drawFn: function drawFn(self, alpha) {
