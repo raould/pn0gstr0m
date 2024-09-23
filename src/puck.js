@@ -111,12 +111,13 @@ function Puck() {
         if( self.alive && !self.isLocked ) {
             self.impotentTime -= dt;
 	    dt = dt * kPhysicsStepScale;
+            Assert(!isNaN(dt));
+            Assert(!isNaN(self.x), [dt, self]);
+            Assert(!isNaN(self.y), [dt, self]);
             self.prevX = self.x;
             self.prevY = self.y;
             self.x += (self.vx * dt);
             self.y += (self.vy * dt);
-            Assert(!isNaN(self.prevX), [dt, self]);
-            Assert(!isNaN(self.prevY), [dt, self]);
             Assert(!isNaN(self.x), [dt, self]);
             Assert(!isNaN(self.y), [dt, self]);
 
