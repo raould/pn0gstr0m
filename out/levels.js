@@ -90,7 +90,6 @@ function MakeSplitsCount(index) {
 var gChosenPillIDsCache;
 function ChoosePillIDs(index) {
   var _gChosenPillIDsCache;
-  return [kDefendPill, kSplitPill];
   Assert(index != kAttractLevelIndex);
   if (index === kZenLevelIndex) {
     return _toConsumableArray(gPillIDs);
