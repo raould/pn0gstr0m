@@ -62,7 +62,7 @@ const kEnglishStep = 0.004;
             isMidGame = gameState.level.splitsRemaining > 10;
         }
         return isMidGame;
-    }
+    };
 
     self.EnergyFactor = function() {
 	if (isU(self.splitsRemaining)) {
