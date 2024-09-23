@@ -29,7 +29,7 @@ function Level(props) {
     self.speedupFactor = props.speedupFactor;
     self.englishFactorPlayer = 1;
     self.englishFactorCPU = 1;
-    self.splitsMax = props.splitsCount;
+    self.splitsMax = props.splitsCount; // undefined means unlimited.
     self.splitsRemaining = self.splitsMax;
     self.isSpawning = props.isSpawning;
 

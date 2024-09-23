@@ -496,7 +496,13 @@ function MakeDefendProps(maker) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            return maker.paddle.barriers.A.length == 0 && gPucks.A.length > 10;
+            var isMidGame = true; // not-end-game.
+            if (exists(gameState.level.splitsRemaining)) {
+                isMidGame = gameState.level.splitsRemaining > 10;
+            }
+            return isMidGame &&
+                maker.paddle.barriers.A.length == 0 &&
+                gPucks.A.length > 10;
         },
         canSkip: true,
         drawFn: (self, alpha) => DrawDefendPill(maker.side, self, alpha),
