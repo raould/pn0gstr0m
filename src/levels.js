@@ -79,6 +79,9 @@ function MakeSplitsCount(index) {
 
 let gChosenPillIDsCache;
 function ChoosePillIDs(index) {
+    return [    kDefendPill,
+                kSplitPill,
+           ];
     Assert(index != kAttractLevelIndex);
 
     if (index === kZenLevelIndex) {

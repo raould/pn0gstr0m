@@ -563,14 +563,15 @@ function MakeDefendProps(maker) {
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();
       var n = 4; // match: kBarriersArrayInitialSize.
-      var drawScale = ForGameMode(gSinglePlayer, gGameMode, {
-        regular: maker.side,
-        hard: 1,
-        zen: 0.5
-      });
+      // zen is more crazy so upping the hp and thus also scaling drawing so they aren't too wide.
       var hp = ForGameMode(gSinglePlayer, gGameMode, {
         regular: 15,
         zen: 45
+      });
+      var drawScale = ForGameMode(gSinglePlayer, gGameMode, {
+        regular: 1,
+        hard: 1,
+        zen: 0.5
       });
       var width = sx1(hp / 3);
       var height = (gHeight - gYInset * 2) / n;
