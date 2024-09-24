@@ -34,6 +34,9 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 var gDebug = false;
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
+
+// screens auto-advance after this long.
+var kUITimeout = 1000 * (gDebug ? 5 : 20);
 var kCanvasName = "canvas"; // match: index.html
 var gLifecycle;
 var gSinglePlayer = LoadLocal(LocalStorageKeys.singlePlayer, true);
@@ -1892,17 +1895,19 @@ function LevelFinState() {
     return nextState;
   };
   self.ProcessOneInput = function (cmds) {
-    if (self.goOn) {
+    var advance = gGameTime - self.started > kUITimeout;
+    if (!advance && self.goOn) {
       var ud = isAnyUpOrDownPressed();
       var ap = isAnyActivatePressed(cmds);
       var apd = isAnyPointerDown();
-      if (ud || ap || apd) {
-        gLevelIndex += 1;
-        if (gSinglePlayer) {
-          return kGetReady;
-        } else {
-          return kGameOverSummary;
-        }
+      advance = ud || ap || apd;
+    }
+    if (advance) {
+      gLevelIndex += 1;
+      if (gSinglePlayer) {
+        return kGetReady;
+      } else {
+        return kGameOverSummary;
       }
     }
     return undefined;
@@ -1980,16 +1985,15 @@ function GameOverState() {
     return nextState;
   };
   self.ProcessOneInput = function (cmds) {
-    if (self.goOn) {
+    var advance = gGameTime - self.started > kUITimeout;
+    if (!advance && self.goOn) {
       var ud = isAnyUpOrDownPressed();
       var ap = isAnyActivatePressed(cmds);
       var apd = isAnyPointerDown();
-      if (ud || ap || apd) {
-        // note: this next state might immediately terminate itself.
-        return kGameOverSummary;
-      }
+      advance = ud || ap || apd;
     }
-    return undefined;
+    // note: game over summary might immediately terminate itself.
+    return advance ? kGameOverSummary : undefined;
   };
   self.Draw = function () {
     Cxdo(function () {
@@ -2014,7 +2018,6 @@ function GameOverSummaryState() {
   self.Init = function () {
     ResetInput();
     self.timeoutMsg = 2000;
-    self.timeoutEnd = 1000 * 10;
     self.started = gGameTime;
   };
   self.Step = function (dt) {
@@ -2042,14 +2045,15 @@ function GameOverSummaryState() {
     return nextState;
   };
   self.ProcessOneInput = function (cmds) {
-    var nextState;
-    // note: whatever the non-undefined nextState is, it must ResetP1Side() and gP{1,2}Pointer.Reset().
-    if (self.goOn && (isAnyUpOrDownPressed() || isAnyActivatePressed(cmds) || isAnyPointerDown())) {
-      nextState = kTitle;
-    } else if (isU(nextState) && gGameTime - self.started > self.timeoutMsg + self.timeoutEnd) {
-      nextState = kTitle;
+    var advance = gGameTime - self.started > kUITimeout;
+    if (!advance && self.goOn) {
+      var ud = isAnyUpOrDownPressed();
+      var ap = isAnyActivatePressed(cmds);
+      var apd = isAnyPointerDown();
+      advance = ud || ap || apd;
     }
-    return nextState;
+    // note: whatever the non-undefined nextState is, it must ResetP1Side() and gP{1,2}Pointer.Reset().
+    return advance ? kTitle : undefined;
   };
   self.Draw = function () {
     gSinglePlayer ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
