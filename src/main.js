@@ -106,7 +106,7 @@ var gLevelHighScores = LoadLocal(LocalStorageKeys.highScores, {});
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
 // although i did try to compensate in the run loop.
-var kFPS = 50;
+var kFPS = 30;
 var kTimeStep = 1000/kFPS;
 var kTimeStepThreshold = kTimeStep * 0.7;
 var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
