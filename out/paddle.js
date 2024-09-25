@@ -75,8 +75,8 @@ function Paddle(props) {
     self.stepSize = aub(props.stepSize, gPaddleStepSize);
     self.keyStates = props.keyStates;
     // todo: fold button & stick states together into a gamepadState wrapper.
-    self.buttonState = props.buttonState;
-    self.stickState = props.stickState;
+    self.buttonStates = props.buttonStates;
+    self.stickStates = props.stickStates;
     self.target = props.target;
     self.normalX = ForSide(self.side, 1, -1);
     self.scanIndex = 0;
@@ -331,18 +331,30 @@ function Paddle(props) {
     self.StepTarget(dt);
   };
   self.StepInput = function (dt) {
-    if (self.keyStates.some(function (ks) {
-      return ks.$.up;
-    }) || exists(self.stickState) && self.stickState.$.up || exists(self.buttonState) && self.buttonState.$.up) {
+    // todo: ideally the most recent input would win.
+    if (self.IsUp()) {
       self.MoveUp(dt);
-      return;
-    }
-    if (self.keyStates.some(function (ks) {
-      return ks.$.down;
-    }) || exists(self.stickState) && self.stickState.$.down || exists(self.buttonState) && self.buttonState.$.down) {
+    } else if (self.IsDown()) {
       self.MoveDown(dt);
-      return;
     }
+  };
+  self.IsUp = function () {
+    return self.keyStates.some(function (ks) {
+      return ks.$.up;
+    }) || self.stickStates.reduce(function (up, state) {
+      return up || state.$.up;
+    }, false) || self.buttonStates.reduce(function (up, state) {
+      return up || state.$.up;
+    }, false);
+  };
+  self.IsDown = function () {
+    return self.keyStates.some(function (ks) {
+      return ks.$.down;
+    }) || self.stickStates.reduce(function (up, state) {
+      return up || state.$.down;
+    }, false) || self.buttonStates.reduce(function (up, state) {
+      return up || state.$.down;
+    }, false);
   };
   self.StepTarget = function (dt) {
     var targety = self.target.position.y;

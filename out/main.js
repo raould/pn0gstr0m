@@ -236,9 +236,6 @@ var gP1Keys = new WrapState({
 var gP2Keys = new WrapState({
   resetFn: noKeysState
 });
-var gPNoneKeys = new WrapState({
-  resetFn: noKeysState
-});
 function isUpOrDownKeyPressed() {
   return gP1Keys.$.up || gP1Keys.$.down || gP2Keys.$.up || gP2Keys.$.down;
 }
@@ -1169,7 +1166,7 @@ function GameState(props) {
       self.theMenu = self.MakeMenu();
     }
 
-    // I think the ensuing code indicates the Paddle should perhaps
+    // I think the gross ensuing code indicates the Paddle should perhaps
     // at least be split up into human & ai variants. :-\ ...so confused.
     // warning: this setup is easily confusing wrt left vs. right.
     var lp = {
@@ -1184,68 +1181,54 @@ function GameState(props) {
     // show paddle labels for zen or level 1.
     var p1label = self.isAttract || gLevelIndex > 1 ? undefined : "P1";
     var p2label = self.isAttract || gLevelIndex > 1 ? undefined : gSinglePlayer ? "GPT" : "P2";
+    var paddle1specs = {
+      isPlayer: !self.isAttract,
+      width: gPaddleWidth,
+      height: gPaddleHeight,
+      label: p1label,
+      isSplitter: !self.isAttract,
+      keyStates: gSinglePlayer ? [gP1Keys, gP2Keys] : [gP1Keys],
+      buttonStates: gSinglePlayer ? [gGamepad1Buttons, gGamepad2Buttons] : [gGamepad1Buttons],
+      stickStates: gSinglePlayer ? [gGamepad1Sticks, gGamepad2Sticks] : [gGamepad1Sticks],
+      target: gP1Target
+    };
+    var paddle2specs = {
+      isPlayer: !self.isAttract && !gSinglePlayer,
+      width: gPaddleWidth,
+      height: gPaddleHeight,
+      label: p2label,
+      isSplitter: !self.isAttract,
+      isPillSeeker: true,
+      keyStates: gSinglePlayer ? [] : [gP2Keys],
+      buttonStates: gSinglePlayer ? [] : [gGamepad2Buttons],
+      stickStates: gSinglePlayer ? [] : [gGamepad2Sticks],
+      target: gP2Target
+    };
+
+    // p1 is always a human player.
+    // p2 is either cpu or another human.
     ForSide(gP1Side, function () {
-      // p1 is always a human player.
-      // p2 is either cpu or human.
-      self.paddleP1 = new Paddle({
-        isPlayer: !self.isAttract,
+      self.paddleP1 = new Paddle(_objectSpread(_objectSpread({}, paddle1specs), {}, {
         side: "left",
         x: lp.x,
-        y: lp.y,
-        width: gPaddleWidth,
-        height: gPaddleHeight,
-        label: p1label,
-        isSplitter: !self.isAttract,
-        keyStates: gSinglePlayer ? [gP1Keys, gP2Keys] : [gP1Keys],
-        buttonState: gGamepad1Buttons,
-        stickState: gGamepad1Sticks,
-        target: gP1Target
-      });
-      self.paddleP2 = new Paddle({
-        isPlayer: !self.isAttract && !gSinglePlayer,
+        y: lp.y
+      }));
+      self.paddleP2 = new Paddle(_objectSpread(_objectSpread({}, paddle2specs), {}, {
         side: "right",
         x: rp.x,
-        y: rp.y,
-        width: gPaddleWidth,
-        height: gPaddleHeight,
-        label: p2label,
-        isSplitter: !self.isAttract,
-        isPillSeeker: true,
-        keyStates: gSinglePlayer ? [gPNoneKeys] : [gP2Keys],
-        buttonState: gGamepad2Buttons,
-        stickState: gGamepad2Sticks,
-        target: gP2Target
-      });
+        y: rp.y
+      }));
     }, function () {
-      self.paddleP1 = new Paddle({
-        isPlayer: !self.isAttract,
+      self.paddleP1 = new Paddle(_objectSpread(_objectSpread({}, paddle1specs), {}, {
         side: "right",
         x: rp.x,
-        y: rp.y,
-        width: gPaddleWidth,
-        height: gPaddleHeight,
-        label: p1label,
-        isSplitter: !self.isAttract,
-        keyStates: gSinglePlayer ? [gP1Keys, gP2Keys] : [gP1Keys],
-        buttonState: gGamepad1Buttons,
-        stickState: gGamepad1Sticks,
-        target: gP1Target
-      });
-      self.paddleP2 = new Paddle({
-        isPlayer: !self.isAttract && !gSinglePlayer,
+        y: rp.y
+      }));
+      self.paddleP2 = new Paddle(_objectSpread(_objectSpread({}, paddle2specs), {}, {
         side: "left",
         x: lp.x,
-        y: lp.y,
-        width: gPaddleWidth,
-        height: gPaddleHeight,
-        label: p2label,
-        isSplitter: !self.isAttract,
-        isPillSeeker: true,
-        keyStates: gSinglePlayer ? [gPNoneKeys] : [gP2Keys],
-        buttonState: gGamepad2Buttons,
-        stickState: gGamepad2Sticks,
-        target: gP2Target
-      });
+        y: lp.y
+      }));
     })();
     self.MakeLevel();
     self.CreateStartingPuck(self.level.vx0);
