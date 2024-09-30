@@ -36,7 +36,7 @@ function MakeZen(paddleP1, paddleP2) {
     isSpawning: true,
     // but no limit on how many.
     vx0: sxi(2.5),
-    maxVX: sxi(18),
+    maxVX: sxi(22),
     isP1Player: true,
     isP2Player: !gSinglePlayer,
     pills: pills,

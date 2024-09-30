@@ -36,9 +36,16 @@ var gDebug_DrawList = [];
 var gShowToasts = gDebug;
 
 // screens auto-advance after this long.
-var kUITimeout = 1000 * (gDebug ? 5 : 20);
+var kUITimeout = 1000 * 10;
 var kCanvasName = "canvas"; // match: index.html
 var gLifecycle;
+
+// if true, the title menu is hidden until activated.
+// if false, then we are in "arcade" (demo night) mode and
+// the 1 vs. 2 player menu should always be up on the title,
+// for demo night environments with manly only game controllers
+// being used to play the game.
+var kAppMode = false;
 var gSinglePlayer = LoadLocal(LocalStorageKeys.singlePlayer, true);
 var kScoreIncrement = 1;
 // note: see GameState.Init().
@@ -62,12 +69,15 @@ var kZenLevelIndex = -2;
 var gLevelIndex = gGameMode === kGameModeZen ? kZenLevelIndex : 1;
 // it is awful how these overlap and interact, so confusing.
 // this doesn't even handle attract-mode levels.
+// todo: this is bad because 2 player is hacked to be exactly zen mode,
+// but then actually we need them to have different configs really.
 function ForGameMode(singlePlayer, gameMode, _ref) {
   var regular = _ref.regular,
     hard = _ref.hard,
     zen = _ref.zen;
   Assert(exists(regular));
   // two player mode is always zen mode.
+  // todo: 2p should be its own mode.
   if (!singlePlayer) {
     gameMode = kGameModeZen;
   }
@@ -112,7 +122,7 @@ var gMonochrome = false;
 
 // "fade" from all-green to specified colors. see: GameTime01 and color.js
 var kGreenFadeInMsec = gDebug ? 1000 : 7000;
-// "fade" in from 0 alpha to specified alphas. match: MakeGameStartAnimation.
+// "fade" in from 0 alpha to specified alphas.
 var kAlphaFadeInMsec = 700;
 
 // per-game high score doesn't make sense
@@ -278,13 +288,19 @@ function isGamepad1Up() {
   return !!gGamepad1Buttons.$.up || !!gGamepad1Sticks.$.up;
 }
 function isGamepad1Down() {
-  return !!gGamepad1Buttons.$.down || !!gGamepad1Sticks.$.down;
+  var bd = !!gGamepad1Buttons.$.down;
+  var sd = !!gGamepad1Sticks.$.down;
+  //console.log("1 down?", bd, sd);
+  return bd || sd;
 }
 function isGamepad2Up() {
   return !!gGamepad2Buttons.$.up || !!gGamepad2Sticks.$.up;
 }
 function isGamepad2Down() {
-  return !!gGamepad2Buttons.$.down || !!gGamepad2Sticks.$.down;
+  var bd = !!gGamepad2Buttons.$.down;
+  var sd = !!gGamepad2Sticks.$.down;
+  //console.log("2 down?", bd, sd);
+  return bd || sd;
 }
 function isGamepadActivatePressed() {
   var is = !!gGamepad1Buttons.$.activate || !!gGamepad2Buttons.$.activate;
@@ -295,7 +311,7 @@ function isAnyUpOrDownPressed() {
 }
 ;
 function isAnyActivatePressed(cmds) {
-  return cmds.activate || isGamepadActivatePressed();
+  return (cmds == null ? void 0 : cmds.activate) || isGamepadActivatePressed();
 }
 function clearAnyActivatePressed() {
   gGamepad1Buttons.$.activate = false;
@@ -615,7 +631,7 @@ var gDrawTitleLatch = new RandomLatch(0.005, 250);
 function DrawTitle() {
   var flicker = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
   Cxdo(function () {
-    gCx.fillStyle = flicker ? ColorCycle() : rgba255s(cyanDarkSpec.regular);
+    gCx.fillStyle = flicker ? ColorCycle(0.4) : rgba255s(cyanDarkSpec.regular);
     DrawText("P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker);
     gCx.fillStyle = rgba255s(cyanDarkSpec.regular);
     var msg = "ETERNAL BETA";
@@ -904,6 +920,8 @@ function TitleState() {
   self.Init = function () {
     ResetInput();
     ResetP1Side();
+    // tmp: demo hack.
+    gSinglePlayer = true;
     SetGameMode(gGameMode);
     self.attract = new GameState({
       isAttract: true
@@ -917,15 +935,39 @@ function TitleState() {
     console.log("TitleState", gSinglePlayer, gGameMode);
   };
   self.MakeMenu = function () {
-    return new Menu(_objectSpread({
-      isHidden: false,
-      OnClose: function OnClose() {
-        ResetP1Side();
-        // forget any extra in-menu state
-        // like which button is default selected.
-        self.theMenu = self.MakeMenu();
-      }
-    }, MakeTitleMenuButtons()));
+    if (kAppMode) {
+      return new Menu({
+        showButton: true,
+        OnClose: function OnClose() {
+          ResetP1Side();
+          // forget any extra in-menu state
+          // like which button is default selected.
+          self.theMenu = self.MakeMenu();
+        },
+        MakeNavigation: function MakeNavigation() {
+          return MakeAppMenuButtons();
+        }
+      });
+    } else {
+      var OnStart = function OnStart() {
+        self.done = true;
+      };
+      var menu = new Menu({
+        showButton: true,
+        OnClose: function OnClose() {
+          ResetP1Side();
+          // forget any extra in-menu state
+          // like which button is default selected.
+          self.theMenu = self.MakeMenu();
+        },
+        MakeNavigation: function MakeNavigation(menu) {
+          return MakeArcadeMenuButtons({
+            OnStart: OnStart
+          });
+        }
+      });
+      return menu;
+    }
   };
   self.isLoading = function () {
     return gGameTime - self.started <= self.timeout;
@@ -945,14 +987,22 @@ function TitleState() {
     var nextState;
     var hasEvents = gEventQueue.length > 0;
     if (hasEvents) {
+      //console.log("+TitleState.ProcessAllInput", gEventQueue);
       gEventQueue.forEach(function (event, i) {
         var cmds = {};
         event.updateFn(cmds);
         if (isU(nextState)) {
           nextState = self.ProcessOneInput(cmds);
+          //console.log("TitleState.ProcessAllInput", cmds, nextState);
         }
       });
       gEventQueue = [];
+      //console.log("-TitleState.ProcessAllInput", gEventQueue);
+    }
+
+    // menu must be after all gEventQueue buttons have been processed.
+    if (self.theMenu.ProcessOneInput()) {
+      return undefined;
     }
     return nextState;
   };
@@ -973,16 +1023,17 @@ function TitleState() {
       BeginMusic();
       return undefined;
     }
-    if (self.theMenu.ProcessOneInput(cmds)) {
-      return undefined;
-    }
     if (isAnyMenuPressed(cmds)) {
       self.theMenu.bMenu.Click();
       clearAnyMenuPressed(); // todo: code smell.
       return undefined;
     }
     if (!self.isLoading() && !self.theMenu.isOpen() && (isAnyUpOrDownPressed() || isAnyActivatePressed(cmds) || isAnyPointerDown())) {
-      self.done = true;
+      if (kAppMode) {
+        self.done = true;
+      } else {
+        self.theMenu.Open();
+      }
     }
     var nextState;
     if (self.done) {
@@ -1045,9 +1096,15 @@ function GetReadyState() {
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.pillIDs = ChoosePillIDs(gLevelIndex);
     PlayBlip();
-    console.log("GetReadyState", gSinglePlayer, gGameMode);
+    self.animations = {};
+    self.AddAnimation(MakeGameStartAnimation());
+    //console.log("GetReadyState", gSinglePlayer, gGameMode);
+  };
+  self.AddAnimation = function (a) {
+    self.animations[gNextID++] = a;
   };
   self.Step = function (dt) {
+    self.StepAnimations(dt);
     self.timeout -= dt;
     var sec = Math.floor(self.timeout / 1000);
     if (sec < self.lastSec) {
@@ -1056,11 +1113,28 @@ function GetReadyState() {
     }
     return self.timeout > 0 ? undefined : kGame;
   };
+  self.StepAnimations = function (dt) {
+    Object.entries(self.animations).forEach(function (_ref2) {
+      var _ref3 = _slicedToArray(_ref2, 2),
+        id = _ref3[0],
+        anim = _ref3[1];
+      var done = anim.Step(dt, self);
+      if (done) {
+        delete self.animations[id];
+      }
+    });
+  };
   self.Draw = function () {
     ClearScreen();
     DrawCRTOutline();
     self.DrawText();
     self.DrawPills();
+    self.DrawAnimations();
+  };
+  self.DrawAnimations = function () {
+    Object.values(self.animations).forEach(function (a) {
+      return a.Draw();
+    });
   };
   self.DrawText = function () {
     var t = Math.ceil(self.timeout / 1000);
@@ -1244,24 +1318,26 @@ function GameState(props) {
     self.isCpuPillAllowed = !gSinglePlayer;
     self.unfairPillCount = 0;
     if (!self.isAttract) {
-      self.AddAnimation(MakeGameStartAnimation());
       PlayStart();
     }
   };
   self.MakeMenu = function () {
-    return new Menu(_objectSpread({
-      isHidden: true,
+    return new Menu({
+      showButton: false,
       OnClose: function OnClose() {
         self.paused = false;
         // forget any extra in-menu state
         // like which button is default seleted.
         self.theMenu = self.MakeMenu();
+      },
+      MakeNavigation: function MakeNavigation() {
+        return MakeGameMenuButtons({
+          OnQuit: function OnQuit() {
+            self.quit = true;
+          }
+        });
       }
-    }, MakeGameMenuButtons({
-      OnQuit: function OnQuit() {
-        self.quit = true;
-      }
-    })));
+    });
   };
   self.MakeLevel = function () {
     Assert(exists(self.paddleP1));
@@ -1402,10 +1478,10 @@ function GameState(props) {
     return nextState;
   };
   self.StepAnimations = function (dt) {
-    Object.entries(self.animations).forEach(function (_ref2) {
-      var _ref3 = _slicedToArray(_ref2, 2),
-        id = _ref3[0],
-        anim = _ref3[1];
+    Object.entries(self.animations).forEach(function (_ref4) {
+      var _ref5 = _slicedToArray(_ref4, 2),
+        id = _ref5[0],
+        anim = _ref5[1];
       var done = anim.Step(dt, self);
       if (done) {
         delete self.animations[id];
@@ -1438,7 +1514,7 @@ function GameState(props) {
     if (exists(p)) {
       p.PlacementInit({
         x: gw(gR.RandomRange(1 / 8, 7 / 8)),
-        y: gh(gR.RandomRange(1 / 8, 7 / 8)),
+        y: gh(gR.RandomRange(4 / 8, 6 / 8)),
         vx: gR.RandomRange(self.maxVX * 0.3, self.maxVX * 0.5),
         vy: gR.RandomCentered(1, 0.5),
         ur: true
@@ -1563,8 +1639,8 @@ function GameState(props) {
 
         // note: splits are pushed before parent, match: Draw()'s revEach() z order.
         if (self.level.isSpawning) {
-          for (var _i = 0; (_ref4 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref4 : 0; ++_i) {
-            var _ref4;
+          for (var _i = 0; (_ref6 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref6 : 0; ++_i) {
+            var _ref6;
             var _p = gPuckPool.Alloc();
             if (exists(_p)) {
               _p.PlacementInit(splits[_i]);
@@ -1614,7 +1690,7 @@ function GameState(props) {
     if (alpha == undefined) {
       alpha = 1;
     }
-    return alpha * (self.isAttract ? 0.2 : 1);
+    return alpha * (self.isAttract ? 0.6 : 1);
   };
 
   // note: this really has to be z-under everything.
@@ -1867,18 +1943,22 @@ function LevelFinState() {
   self.Step = function () {
     self.goOn = gGameTime - self.started > self.timeout;
     var nextState;
-    gEventQueue.forEach(function (event, i) {
-      var cmds = {};
-      event.updateFn(cmds);
-      if (isU(nextState)) {
-        nextState = self.ProcessOneInput(cmds);
-      }
-    });
-    gEventQueue = [];
+    if (gEventQueue.length === 0) {
+      nextState = self.ProcessOneInput({});
+    } else {
+      gEventQueue.forEach(function (event, i) {
+        var cmds = {};
+        event.updateFn(cmds);
+        if (isU(nextState)) {
+          nextState = self.ProcessOneInput(cmds);
+        }
+      });
+      gEventQueue = [];
+    }
     return nextState;
   };
   self.ProcessOneInput = function (cmds) {
-    var advance = gGameTime - self.started > kUITimeout;
+    var advance = self.goOn && gGameTime - self.started > kUITimeout;
     if (!advance && self.goOn) {
       var ud = isAnyUpOrDownPressed();
       var ap = isAnyActivatePressed(cmds);
@@ -1957,18 +2037,22 @@ function GameOverState() {
   self.Step = function () {
     self.goOn = gGameTime - self.started > self.timeout;
     var nextState;
-    gEventQueue.forEach(function (event, i) {
-      var cmds = {};
-      event.updateFn(cmds);
-      if (isU(nextState)) {
-        nextState = self.ProcessOneInput(cmds);
-      }
-    });
-    gEventQueue = [];
+    if (gEventQueue.length === 0) {
+      nextState = self.ProcessOneInput({});
+    } else {
+      gEventQueue.forEach(function (event, i) {
+        var cmds = {};
+        event.updateFn(cmds);
+        if (isU(nextState)) {
+          nextState = self.ProcessOneInput(cmds);
+        }
+      });
+      gEventQueue = [];
+    }
     return nextState;
   };
   self.ProcessOneInput = function (cmds) {
-    var advance = gGameTime - self.started > kUITimeout;
+    var advance = self.goOn && gGameTime - self.started > kUITimeout;
     if (!advance && self.goOn) {
       var ud = isAnyUpOrDownPressed();
       var ap = isAnyActivatePressed(cmds);
@@ -2004,15 +2088,11 @@ function GameOverSummaryState() {
     self.started = gGameTime;
   };
   self.Step = function (dt) {
-    var nextState;
     self.goOn = gGameTime - self.started > self.timeoutMsg;
-    nextState = self.ProcessAllInput();
-    return nextState;
-  };
-  self.ProcessAllInput = function () {
     var nextState;
-    var hasEvents = gEventQueue.length > 0;
-    if (hasEvents) {
+    if (gEventQueue.length === 0) {
+      nextState = self.ProcessOneInput({});
+    } else {
       gEventQueue.forEach(function (event, i) {
         var cmds = {};
         event.updateFn(cmds);
@@ -2028,7 +2108,7 @@ function GameOverSummaryState() {
     return nextState;
   };
   self.ProcessOneInput = function (cmds) {
-    var advance = gGameTime - self.started > kUITimeout;
+    var advance = self.goOn && gGameTime - self.started > kUITimeout;
     if (!advance && self.goOn) {
       var ud = isAnyUpOrDownPressed();
       var ap = isAnyActivatePressed(cmds);
@@ -2145,7 +2225,9 @@ function JoystickMove(gamepad, e, state, pointer) {
   }
 }
 function isButtonPressed(gamepad, bid) {
-  return gamepad.buttons[bid].pressed;
+  var is = gamepad.buttons[bid].pressed;
+  //console.log("isButtonPressed", bid, is);
+  return is;
 }
 function Gamepad1ButtonChange(e) {
   GamepadButtonChange(e.gamepad.gamepad, gGamepad1Buttons);
@@ -2155,10 +2237,13 @@ function Gamepad2ButtonChange(e) {
 }
 function GamepadButtonChange(gamepad, state) {
   // dpad buttons up & down move player paddle and menu focus.
+  //console.log("1");
   if (isButtonPressed(gamepad, StandardMapping.Button.D_PAD_UP)) {
+    //console.log("2");
     gEventQueue.push({
       type: kEventGamepadButtonPressed,
       updateFn: function updateFn() {
+        //console.log("3");
         state.Update({
           up: true
         });
@@ -2167,19 +2252,25 @@ function GamepadButtonChange(gamepad, state) {
     return;
   } else {
     // this flooding is sad but otherwise we have a race condtition.
+    //console.log("4 release up");
     gEventQueue.push({
       type: kEventGamepadButtonReleased,
       updateFn: function updateFn() {
+        //console.log("5 release up");
         state.Update({
           up: false
         });
       }
     });
   }
+
+  //console.log("6");
   if (isButtonPressed(gamepad, StandardMapping.Button.D_PAD_BOTTOM)) {
+    //console.log("7 handle down");
     gEventQueue.push({
       type: kEventGamepadButtonPressed,
       updateFn: function updateFn() {
+        //console.log("8 down fn");
         state.Update({
           down: true
         });
@@ -2188,9 +2279,11 @@ function GamepadButtonChange(gamepad, state) {
     return;
   } else {
     // this flooding is sad but otherwise we have a race condtition.
+    //console.log("9 release down");
     gEventQueue.push({
       type: kEventGamepadButtonReleased,
       updateFn: function updateFn() {
+        //console.log("10 release down");
         state.Update({
           down: false
         });
@@ -2210,6 +2303,7 @@ function GamepadButtonChange(gamepad, state) {
   // https://www.w3.org/TR/gamepad/#remapping
   // which are to be "menu".
   if (isButtonPressed(gamepad, 8) || isButtonPressed(gamepad, 9) || isButtonPressed(gamepad, 16)) {
+    //console.log("10");
     gEventQueue.push({
       type: kEventGamepadButtonPressed,
       updateFn: function updateFn() {
@@ -2221,6 +2315,7 @@ function GamepadButtonChange(gamepad, state) {
     return;
   } else {
     // this flooding is sad but otherwise we have a race condtition.
+    //console.log("11");
     gEventQueue.push({
       type: kEventGamepadButtonReleased,
       updateFn: function updateFn() {
@@ -2234,6 +2329,7 @@ function GamepadButtonChange(gamepad, state) {
   // buttons 0, 1, 2, 3 are the "right cluster"
   // which are to be "activate".
   if (isButtonPressed(gamepad, 0) || isButtonPressed(gamepad, 1) || isButtonPressed(gamepad, 2) || isButtonPressed(gamepad, 3)) {
+    //console.log("12");
     gEventQueue.push({
       type: kEventGamepadButtonPressed,
       updateFn: function updateFn() {
@@ -2245,6 +2341,7 @@ function GamepadButtonChange(gamepad, state) {
     return;
   } else {
     // this flooding is sad but otherwise we have a race condtition.
+    //console.log("13");
     gEventQueue.push({
       type: kEventGamepadButtonReleased,
       updateFn: function updateFn() {

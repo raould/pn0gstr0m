@@ -31,7 +31,7 @@ var gMusicID;
  * but we still want the music to play.
  */
 var gStateMuted = false;
-var gMusicMuted = LoadLocal(LocalStorageKeys.musicMuted, false);
+var gMusicMuted = true; // tmp: LoadLocal(LocalStorageKeys.musicMuted, false);
 var gSfxMuted = LoadLocal(LocalStorageKeys.sfxMuted, false);
 function RegisterMusic(name, basename, props) {
   RegisterSound(name, basename, props, true);

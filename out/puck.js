@@ -163,23 +163,32 @@ function Puck() {
       }
       PlayBlip();
     } else {
+      // tmp: 2p (zen) hacked.
       var slowCountFactor = ForGameMode(gSinglePlayer, gGameMode, {
         regular: Math.pow(countFactor, 1.5),
-        zen: countFactor
+        zen: Math.pow(countFactor, 1.5)
       });
       // keep a few of the fast ones around.
       var slow = !doejectSpeed && self.vx > maxVX * 0.7 && gR.RandomFloat() < slowCountFactor;
       var slowF = gR.RandomRange(0.8, 0.9);
       var fastF = gR.RandomRange(1.005, 1.05);
       var zenF = gR.RandomRange(1.001, 1.01);
+      // tmp: 2p (zen) hacked.
       var scaleF = ForGameMode(gSinglePlayer, gGameMode, {
         regular: slow ? slowF : fastF,
-        zen: zenF
+        zen: slow ? slowF : fastF
       });
       var vxf = self.vx * scaleF;
       var vx = gR.RandomCentered(vxf, vxf / 10);
       var vy = self.vy;
-      vy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
+      // todo: this is bad because i am hacking
+      // it for 2p which is "zen" but i don't
+      // actually want this behavior for 1p zen.
+      var vyf = ForGameMode(gSinglePlayer, gGameMode, {
+        regular: 1,
+        zen: 1.2
+      });
+      vy = self.vy * (vyf * AvoidZero(0.5, 0.1) + 0.3);
 
       // code smell: because SplitPuck is called during MovePucks,
       // we return the new puck to go onto gPucks.B, whereas

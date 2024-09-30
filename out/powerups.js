@@ -664,9 +664,7 @@ function MakeNeoProps(maker) {
     lifespan: kPillLifespan,
     isUrgent: true,
     testFn: function testFn(gameState) {
-      // todo: in some playtesting this was being spawned too often,
-      // maybe each props needs a spawn weight too?
-      return gameState.level.IsMidGame() && (gDebug || gPucks.A.length > kEjectCountThreshold / 2) && isU(maker.paddle.neo);
+      return gameState.level.IsMidGame() && (gDebug || gPucks.A.length > kPuckPoolSize / 4) && isU(maker.paddle.neo);
     },
     canSkip: true,
     drawFn: function drawFn(self, alpha) {
