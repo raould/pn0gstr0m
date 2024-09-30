@@ -5,6 +5,8 @@
 
 /*
 
+  see also arcade_menu.js
+
   this is kind of complected because it is handling
   both the menu and the game states. :-\ software kinda
   sucks, coding is hard, there's just too much variation.
@@ -18,11 +20,13 @@
 
   also? this code just kinda sucks by now, sorry.
 
-  * on title screen, the esc button is not hidden and can
+  * on title screen, the Menu button is not hidden and can
   be clicked by pointer or via esc key.
-  * in-game, the esc button should be hidden, so the menu
+  * in-game, the Menu button should be hidden, so the menu
   can only be opened via esc / pause keys / gamepad buttons,
-  or by clicking/tapping on the pause icon. blimey.
+  or by clicking/tapping on the pause icon. BUT, in touch
+  environments there is an Esc menu button at the top of
+  the playfield since it might not have a physical Esc key.
   * in the menu, clicking/tapping on a button both focuses
   and immediately activates it, whereas with the keyboard
   or gamepad you navigate to a button and then have to
@@ -78,27 +82,36 @@ function MakeMenuButton({ OnClose }) {
     return bMenu;
 }
 
-/*class*/ function Menu({ isHidden, OnClose, navigation, focusId }) {
+/*class*/ function Menu({ showButton, OnClose, MakeNavigation }) {
     var self = this;
 
     self.Init = function() {
-        self.isHidden = isHidden;
-        self.bMenu = MakeMenuButton({ OnClose });
-        self.navigation = navigation;
-
-        self.focusId = focusId;
+        self.showButton = showButton;
+        self.OnClose = OnClose;
+        self.bMenu = MakeMenuButton({ OnClose: self.OnClose });
+        self.spec = MakeNavigation(self);
+        self.focusId = self.spec.focusId;
+	self.actionsPressed = {};
         var fb = self.Focused()?.button;
         Assert(exists(fb), "must have an initial focus, for keyboard nagivation");
         fb.has_focus = true;
     };
 
+    self.Navigation = function() {
+        return self.spec.navigation;
+    };
+
     self.Spec = function(bId) {
-        Assert(exists(self.navigation));
-        return self.navigation[bId];
+        Assert(exists(self.Navigation()));
+        return self.Navigation()[bId];
     };
 
     self.Focused = function() {
         return self.Spec(self.focusId);
+    };
+
+    self.Open = function() {
+        self.bMenu.isOpen = true;
     };
 
     self.isOpen = function() {
@@ -106,9 +119,9 @@ function MakeMenuButton({ OnClose }) {
     };
 
     self.Step = function() {
-        if (self.bMenu.isOpen) {
+        if (self.isOpen()) {
             var wants_focusId = undefined;
-            Object.entries(self.navigation).forEach(
+            Object.entries(self.Navigation()).forEach(
                 e => {
                     var bid = e[0];
                     var bspec = e[1];
@@ -122,7 +135,7 @@ function MakeMenuButton({ OnClose }) {
             );
         }
 
-        if (self.bMenu.isOpen || !self.isHidden) {
+        if (self.isOpen() || self.showButton) {
             self.bMenu.Step();
         }
 
@@ -150,25 +163,43 @@ function MakeMenuButton({ OnClose }) {
 
     self.ProcessOneInput = function(cmds) {
         var n, a, p1, p2;
-        if (self.bMenu.isOpen) {
+	//console.log("+Menu.ProcessOneInput", cmds);
+        if (self.isOpen()) {
             n = self.ProcessNavigation();
             a = self.ProcessAccept(cmds);
         }
-        if (self.bMenu.isOpen || !self.isHidden) {
+        if (self.isOpen() || self.showButton) {
             p1 = self.ProcessTarget(gP1Target);
             p2 = self.ProcessTarget(gP2Target);
         }
+	//console.log("-Menu.ProcessOneInput", cmds);
         return !!n || !!a || !!p1 || !!p2;
     };
 
     self.ProcessNavigation = function() {
-        if (gP1Keys.$.up || gP2Keys.$.up || isGamepad1Up() || isGamepad2Up()) {
+	var wasUpPressed = !!self.actionsPressed["up"];
+	if (wasUpPressed) {
+            if (!(gP1Keys.$.up || gP2Keys.$.up || isGamepad1Up() || isGamepad2Up())) {
+		self.actionsPressed["up"] = false;
+	    }
+	}
+        else if (gP1Keys.$.up || gP2Keys.$.up || isGamepad1Up() || isGamepad2Up()) {
+	    //console.log("up");
             self.FocusDirection("up");
+	    self.actionsPressed["up"] = true;
             return true;
         }
 
-        if (gP1Keys.$.down || gP2Keys.$.down || isGamepad1Down() || isGamepad2Down()) {
+	var wasDownPressed = !!self.actionsPressed["down"];
+	if (wasDownPressed) {
+	    if (!(gP1Keys.$.down || gP2Keys.$.down || isGamepad1Down() || isGamepad2Down())) {
+		self.actionsPressed["down"] = false;
+	    }
+	}
+	else if (gP1Keys.$.down || gP2Keys.$.down || isGamepad1Down() || isGamepad2Down()) {
+	    //console.log("---------- down");
             self.FocusDirection("down");
+	    self.actionsPressed["down"] = true;
             return true;
         }
 
@@ -196,7 +227,7 @@ function MakeMenuButton({ OnClose }) {
     };
 
     self.ProcessAccept = function(cmds) {
-        if (isAnyActivatePressed(cmds) && self.bMenu.isOpen) {
+        if (isAnyActivatePressed(cmds) && self.isOpen()) {
             var bspec = self.Focused();
             if (exists(bspec)) {
                 bspec.button.Click();
@@ -207,12 +238,13 @@ function MakeMenuButton({ OnClose }) {
         return false;
     };
 
+    // todo: this is broken for mouse now.
     self.ProcessTarget = function(target) {
         var hit = false;
         if (target.isDown()) {
             // menu.
-            if (self.bMenu.isOpen) {
-                var found = Object.entries(self.navigation).find(
+            if (self.isOpen()) {
+                var found = Object.entries(self.Navigation()).find(
                     e => e[1].button.ProcessTarget(target)
                 );
                 if (exists(found)) {
@@ -227,9 +259,10 @@ function MakeMenuButton({ OnClose }) {
                     target.ClearPointer();
                     hit = true;
                 }
+		//console.log("touch", hit);
             }
             // esc.
-            if (!hit && (self.bMenu.isOpen || !self.isHidden)) {
+            if (!hit && (self.isOpen() || self.showButton)) {
                 hit = self.bMenu.ProcessTarget(target);
                 if (hit) {
                     self.bMenu.Click();
@@ -241,7 +274,7 @@ function MakeMenuButton({ OnClose }) {
 
     self.Draw = function() {
         // menu.
-        if (self.bMenu.isOpen) {
+        if (self.isOpen()) {
             Cxdo(() => {
                 if (gDebug) {
                     // fade buttons so i can watch stepping the game.
@@ -253,13 +286,13 @@ function MakeMenuButton({ OnClose }) {
                     gCx.fillStyle = backgroundColorStr;
                     gCx.fillRect(0, 0, gw(1), gh(1));
                 }
-                Object.values(self.navigation).forEach(
+                Object.values(self.Navigation()).forEach(
                     bspec => bspec.button.Draw()
                 );
             });
         }
         // esc.
-        if (self.bMenu.isOpen || !self.isHidden) {
+        if (self.isOpen() || self.showButton) {
             self.bMenu.Draw();
         }
     };
