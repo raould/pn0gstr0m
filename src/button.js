@@ -57,7 +57,7 @@
         self.is_checkbox = props.is_checkbox;
         self.is_checked = aub(props.is_checked, false);
         self.has_focus = aub(props.has_focus, false);
-	self.hidden = false;
+    self.hidden = false;
         self.wants_focus = false;
     };
 
@@ -67,30 +67,30 @@
 
     self.Click = function() {
         if (!self.hidden) {
-	    self.click_fn(self);
-	}
+        self.click_fn(self);
+    }
     };
 
     self.ProcessTarget = function(target) {
-	if (self.hidden) {
-	    return false;
-	}
-	else {
+    if (self.hidden) {
+        return false;
+    }
+    else {
             const hit = target.isDown() ?
-		  isPointInRect(target.position, self.rect, self.margin) :
-		  false;
+          isPointInRect(target.position, self.rect, self.margin) :
+          false;
             if (hit) {
-		target.ClearPointer();
+        target.ClearPointer();
             }
             return hit;
-	}
+    }
     };
 
     self.Focus = function() {
         if (!self.hidden) {
-	    self.has_focus = true;
+        self.has_focus = true;
             self.wants_focus = false;
-	}
+    }
     };
 
     self.Defocus = function() {
@@ -111,9 +111,9 @@
     };
 
     self.Draw = function() {
-	if (self.hidden) {
-	    return;
-	}
+    if (self.hidden) {
+        return;
+    }
         Cxdo(() => {
             var wx = WX(self.x);
             var wy = WY(self.y);

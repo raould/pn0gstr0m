@@ -91,7 +91,10 @@ function MakeMenuButton({ OnClose }) {
         self.bMenu = MakeMenuButton({ OnClose: self.OnClose });
         self.spec = MakeNavigation(self);
         self.focusId = self.spec.focusId;
-	self.actionsPressed = {};
+
+        // prevent input auto repeat, that's unusable in the menu.
+        self.actionsPressed = {};
+
         var fb = self.Focused()?.button;
         Assert(exists(fb), "must have an initial focus, for keyboard nagivation");
         fb.has_focus = true;
@@ -163,7 +166,6 @@ function MakeMenuButton({ OnClose }) {
 
     self.ProcessOneInput = function(cmds) {
         var n, a, p1, p2;
-	//console.log("+Menu.ProcessOneInput", cmds);
         if (self.isOpen()) {
             n = self.ProcessNavigation();
             a = self.ProcessAccept(cmds);
@@ -172,34 +174,31 @@ function MakeMenuButton({ OnClose }) {
             p1 = self.ProcessTarget(gP1Target);
             p2 = self.ProcessTarget(gP2Target);
         }
-	//console.log("-Menu.ProcessOneInput", cmds);
         return !!n || !!a || !!p1 || !!p2;
     };
 
     self.ProcessNavigation = function() {
-	var wasUpPressed = !!self.actionsPressed["up"];
-	if (wasUpPressed) {
+        var wasUpPressed = !!self.actionsPressed["up"];
+        if (wasUpPressed) {
             if (!(gP1Keys.$.up || gP2Keys.$.up || isGamepad1Up() || isGamepad2Up())) {
-		self.actionsPressed["up"] = false;
-	    }
-	}
+                self.actionsPressed["up"] = false;
+            }
+        }
         else if (gP1Keys.$.up || gP2Keys.$.up || isGamepad1Up() || isGamepad2Up()) {
-	    //console.log("up");
             self.FocusDirection("up");
-	    self.actionsPressed["up"] = true;
+            self.actionsPressed["up"] = true;
             return true;
         }
 
-	var wasDownPressed = !!self.actionsPressed["down"];
-	if (wasDownPressed) {
-	    if (!(gP1Keys.$.down || gP2Keys.$.down || isGamepad1Down() || isGamepad2Down())) {
-		self.actionsPressed["down"] = false;
-	    }
-	}
-	else if (gP1Keys.$.down || gP2Keys.$.down || isGamepad1Down() || isGamepad2Down()) {
-	    //console.log("---------- down");
+        var wasDownPressed = !!self.actionsPressed["down"];
+        if (wasDownPressed) {
+            if (!(gP1Keys.$.down || gP2Keys.$.down || isGamepad1Down() || isGamepad2Down())) {
+                self.actionsPressed["down"] = false;
+            }
+        }
+        else if (gP1Keys.$.down || gP2Keys.$.down || isGamepad1Down() || isGamepad2Down()) {
             self.FocusDirection("down");
-	    self.actionsPressed["down"] = true;
+            self.actionsPressed["down"] = true;
             return true;
         }
 
@@ -259,7 +258,7 @@ function MakeMenuButton({ OnClose }) {
                     target.ClearPointer();
                     hit = true;
                 }
-		//console.log("touch", hit);
+                //console.log("touch", hit);
             }
             // esc.
             if (!hit && (self.isOpen() || self.showButton)) {

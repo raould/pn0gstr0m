@@ -277,15 +277,15 @@ function Puck() {
     /*
     if (gDebug) {
         gDebug_DrawList.push({
-    	fn: () => {
-    	    gCx.fillStyle = rgba255s(white);
-    	    var step = gh(0.1);
-    	    for (var y = 0; y < gh(); y += step) {
-    		var my = y+step/2;
-    		var fy = calc_fy(my);
-    		DrawText(F(fy), "right", gw(0.4), my, gSmallestFontSizePt);
-    	    }
-    	}
+        fn: () => {
+            gCx.fillStyle = rgba255s(white);
+            var step = gh(0.1);
+            for (var y = 0; y < gh(); y += step) {
+            var my = y+step/2;
+            var fy = calc_fy(my);
+            DrawText(F(fy), "right", gw(0.4), my, gSmallestFontSizePt);
+            }
+        }
         });
     }
     */

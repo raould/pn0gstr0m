@@ -80,13 +80,13 @@ var gPillInfo = {
     },
     [kDecimatePill]: {
         name: "DECIMATE",
-	maker: MakeDecimateProps,
+    maker: MakeDecimateProps,
         drawer: DrawDecimatePill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kEngorgePill]: {
         name: "ENGORGE",
-	maker: MakeEngorgeProps,
+    maker: MakeEngorgeProps,
         drawer: DrawEngorgePill,
         wfn: () => sxi(20), hfn: () => syi(35),
     },
@@ -94,31 +94,31 @@ var gPillInfo = {
         // "SPLIT" could be a confusing name since
         // the level msg says "n splits remaining".
         name: "ZPLT",
-	maker: MakeSplitProps,
+    maker: MakeSplitProps,
         drawer: DrawSplitPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kDefendPill]: {
         name: "DEFEND",
-	maker: MakeDefendProps,
+    maker: MakeDefendProps,
         drawer: DrawDefendPill,
         wfn: () => sxi(20), hfn: () => syi(40),
     },
     [kXtraPill]: {
         name: "XTRA",
-	maker: MakeXtraProps,
+    maker: MakeXtraProps,
         drawer: DrawXtraPill,
         wfn: () => sxi(15), hfn: () => syi(40),
     },
     [kNeoPill]: {
         name: "NEO",
-	maker: MakeNeoProps,
+    maker: MakeNeoProps,
         drawer: DrawNeoPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kChaosPill]: {
         name: "CHAOS",
-	maker: MakeChaosProps,
+    maker: MakeChaosProps,
         drawer: DrawChaosPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
@@ -471,10 +471,10 @@ function MakeSplitProps(maker) {
                 var split = t.SplitPuck({ forced: true, maxVX });
                 gameState.level.OnPuckSplits(1);
                 var p = gPuckPool.Alloc();
-		if (exists(p)) {
+        if (exists(p)) {
                     p.PlacementInit(split);
                     gPucks.A.push(p);
-		}
+        }
             });
             gameState.AddAnimation(MakeSplitAnimation({
                 lifespan: 250,
@@ -507,7 +507,7 @@ function MakeDefendProps(maker) {
             var n = 4; // match: kBarriersArrayInitialSize.
             // zen is more crazy so upping the hp and thus also scaling drawing so they aren't too wide.
             var hp = ForGameMode(gSinglePlayer, gGameMode, {regular: 15, zen: 45});
-	    var drawScale = ForGameMode(gSinglePlayer, gGameMode, {regular: 1, hard: 1, zen: 0.5});
+        var drawScale = ForGameMode(gSinglePlayer, gGameMode, {regular: 1, hard: 1, zen: 0.5});
             var width = sx1(hp/3);
             var height = (gHeight-gYInset*2) / n;
             var x = gw(ForSide(maker.side, 0.1, 0.9));
@@ -519,7 +519,7 @@ function MakeDefendProps(maker) {
                     x: x+xoff, y,
                     width, height,
                     hp,
-		    drawScale,
+            drawScale,
                     side: maker.side,
                 });
                 targets.push({x: x+width/2, y: y+height/2});
@@ -528,7 +528,7 @@ function MakeDefendProps(maker) {
                 lifespan: 150,
                 targets,
                 paddle: maker.paddle,
-		range: sx1(5),
+        range: sx1(5),
             }));
         },
     };

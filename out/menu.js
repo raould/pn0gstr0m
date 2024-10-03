@@ -105,6 +105,8 @@ function Menu(_ref2) {
     });
     self.spec = MakeNavigation(self);
     self.focusId = self.spec.focusId;
+
+    // prevent input auto repeat, that's unusable in the menu.
     self.actionsPressed = {};
     var fb = (_self$Focused = self.Focused()) == null ? void 0 : _self$Focused.button;
     Assert(exists(fb), "must have an initial focus, for keyboard nagivation");
@@ -164,7 +166,6 @@ function Menu(_ref2) {
   };
   self.ProcessOneInput = function (cmds) {
     var n, a, p1, p2;
-    //console.log("+Menu.ProcessOneInput", cmds);
     if (self.isOpen()) {
       n = self.ProcessNavigation();
       a = self.ProcessAccept(cmds);
@@ -173,7 +174,6 @@ function Menu(_ref2) {
       p1 = self.ProcessTarget(gP1Target);
       p2 = self.ProcessTarget(gP2Target);
     }
-    //console.log("-Menu.ProcessOneInput", cmds);
     return !!n || !!a || !!p1 || !!p2;
   };
   self.ProcessNavigation = function () {
@@ -183,7 +183,6 @@ function Menu(_ref2) {
         self.actionsPressed["up"] = false;
       }
     } else if (gP1Keys.$.up || gP2Keys.$.up || isGamepad1Up() || isGamepad2Up()) {
-      //console.log("up");
       self.FocusDirection("up");
       self.actionsPressed["up"] = true;
       return true;
@@ -194,7 +193,6 @@ function Menu(_ref2) {
         self.actionsPressed["down"] = false;
       }
     } else if (gP1Keys.$.down || gP2Keys.$.down || isGamepad1Down() || isGamepad2Down()) {
-      //console.log("---------- down");
       self.FocusDirection("down");
       self.actionsPressed["down"] = true;
       return true;

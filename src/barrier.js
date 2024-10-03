@@ -13,7 +13,7 @@ function Barrier( props /*x, y, height, width, hp, side*/) {
         self.prevX = self.x;
         self.prevY = self.y;
 
-	self.drawScale = aub(props.drawScale, 1);
+    self.drawScale = aub(props.drawScale, 1);
         self.height = props.height;
         self.width = props.width * self.drawScale;
 

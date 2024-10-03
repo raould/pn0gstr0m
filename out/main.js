@@ -332,6 +332,7 @@ function clearAnyMenuPressed() {
 // note: these are mainly (only) for keyboard input,
 // aren't specific to p1 vs. p2 or left vs. right.
 /* note: this is a list of what is supported, at runtime i just use {}.
+// todo: cmds vs. buttons is a hellacious mess.
 var nocmds = {
     menu: false,
     pause: false,
@@ -975,7 +976,7 @@ function TitleState() {
   self.Step = function (dt) {
     var nextState = undefined;
     self.attract.Step(dt);
-    self.theMenu.Step(); // note: this doesn't process menu input, actually.
+    self.theMenu.Step(); // note: this doesn't process menu *input*, actually.
     nextState = self.ProcessAllInput();
     if (exists(nextState)) {
       clearTimeout(self.musicTimer);
@@ -987,17 +988,14 @@ function TitleState() {
     var nextState;
     var hasEvents = gEventQueue.length > 0;
     if (hasEvents) {
-      //console.log("+TitleState.ProcessAllInput", gEventQueue);
       gEventQueue.forEach(function (event, i) {
         var cmds = {};
         event.updateFn(cmds);
         if (isU(nextState)) {
           nextState = self.ProcessOneInput(cmds);
-          //console.log("TitleState.ProcessAllInput", cmds, nextState);
         }
       });
       gEventQueue = [];
-      //console.log("-TitleState.ProcessAllInput", gEventQueue);
     }
 
     // menu must be after all gEventQueue buttons have been processed.

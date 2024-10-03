@@ -22,9 +22,9 @@ const kEnglishStep = 0.004;
         // and dangerous that way, vs. an explicit isAttract bool?
         // coding is hard please let me just go online shopping.
 
-	self.vx0 = props.vx0;
+    self.vx0 = props.vx0;
         self.maxVX = props.maxVX;
-	Assert(!isBadNumber(self.maxVX));
+    Assert(!isBadNumber(self.maxVX));
 
         self.speedupFactor = props.speedupFactor;
         self.englishFactorPlayer = 1;
@@ -65,16 +65,16 @@ const kEnglishStep = 0.004;
     };
 
     self.EnergyFactor = function() {
-	if (isU(self.splitsRemaining)) {
-	    return undefined;
-	}
-	else {
-	    return self.splitsRemaining / self.splitsMax;
-	}
+    if (isU(self.splitsRemaining)) {
+        return undefined;
+    }
+    else {
+        return self.splitsRemaining / self.splitsMax;
+    }
     };
 
     self.OnPuckSplits = function(splits) {
-	var count = splits?.length ?? 0;
+    var count = splits?.length ?? 0;
         if (self.isSpawning) {
             Assert(count <= 1, count);
             if (count > 0 && exists(self.splitsRemaining)) {
@@ -86,7 +86,7 @@ const kEnglishStep = 0.004;
 
     self.Step = function( dt ) {
         if (!self.isSpawning && exists(self.speedupFactor)) {
-	    Assert(gGameMode !== kGameModeZen);
+        Assert(gGameMode !== kGameModeZen);
 
             // allow future spawned pucks to go faster, up to a hard limit.
             self.maxVX = MinSigned(
@@ -94,14 +94,14 @@ const kEnglishStep = 0.004;
                 kMaxVX
             );
 
-	    // heuristics to increase english, all fairly arbitrary hacky values.
-	    // boost english at the very end of the level.
-	    var englishBoost = (gPucks.A.length < 5) ? 10 : 1;
-	    // increase over time, more so for the player.
-	    self.englishFactorPlayer += (dt / kTimeStep) * kEnglishStep * englishBoost;
-	    // the cpu doesn't get as much english because if they are the
-	    // first one to hit a puck with a lot of english it looks like cheating.
-	    self.englishFactorCPU += (dt / kTimeStep) * kEnglishStep;
+        // heuristics to increase english, all fairly arbitrary hacky values.
+        // boost english at the very end of the level.
+        var englishBoost = (gPucks.A.length < 5) ? 10 : 1;
+        // increase over time, more so for the player.
+        self.englishFactorPlayer += (dt / kTimeStep) * kEnglishStep * englishBoost;
+        // the cpu doesn't get as much english because if they are the
+        // first one to hit a puck with a lot of english it looks like cheating.
+        self.englishFactorCPU += (dt / kTimeStep) * kEnglishStep;
             
             self.paddleP1.englishFactor = self.paddleP1.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
             self.paddleP2.englishFactor = self.paddleP2.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
@@ -123,8 +123,8 @@ const kEnglishStep = 0.004;
     // match: main.GameState,Draw().
     self.Draw = function({ alpha, isEndScreenshot }) {
         if (!isEndScreenshot) {
-	    self.DrawTitle( alpha );
-	    self.DrawEnergy( alpha );
+        self.DrawTitle( alpha );
+        self.DrawEnergy( alpha );
             self.DrawPills( alpha );
             // todo: you'd maybe kind of expect lots of
             // other things like paddles and pucks to be
@@ -133,27 +133,27 @@ const kEnglishStep = 0.004;
     };
 
     self.DrawTitle = function( alpha ) {
-	if (self.index >= 1) {
-	    Cxdo(() => {
-		gCx.fillStyle = RandomForColor( cyanSpec, alpha );
-		DrawText(`LVL${self.index}`, "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
-	    });
-	}
+    if (self.index >= 1) {
+        Cxdo(() => {
+        gCx.fillStyle = RandomForColor( cyanSpec, alpha );
+        DrawText(`LVL${self.index}`, "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
+        });
+    }
     };
 
     self.DrawEnergy = function( alpha ) {
-	if (exists(self.splitsRemaining)) {
-	    Cxdo(() => {
-		gCx.beginPath();
-		gCx.fillStyle = RandomForColor(cyanSpec, alpha);
-		if (self.splitsRemaining > 0) {
-		    DrawText(self.splitsRemaining, "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
-		}
-		else {
-		    DrawText("NIL", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
-		}
-	    });
-	}
+    if (exists(self.splitsRemaining)) {
+        Cxdo(() => {
+        gCx.beginPath();
+        gCx.fillStyle = RandomForColor(cyanSpec, alpha);
+        if (self.splitsRemaining > 0) {
+            DrawText(self.splitsRemaining, "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
+        }
+        else {
+            DrawText("NIL", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
+        }
+        });
+    }
     };
 
     self.DrawPills = function( alpha ) {

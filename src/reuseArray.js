@@ -15,9 +15,9 @@
 
     self.Alloc = function() {
         return self.array.find(e => {
-	    Assert(exists(e));
-	    return !e.alive;
-	});
+        Assert(exists(e));
+        return !e.alive;
+    });
     };
     
     // note: as long as e.alive gets set to false somewhere, it

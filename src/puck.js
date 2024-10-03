@@ -110,7 +110,7 @@ function Puck() {
     self.Step = function( dt, maxVX, maxVY ) {
         if( self.alive && !self.isLocked ) {
             self.impotentTime -= dt;
-	    dt = dt * kPhysicsStepScale;
+        dt = dt * kPhysicsStepScale;
             Assert(!isNaN(dt));
             Assert(!isNaN(self.x), [dt, self]);
             Assert(!isNaN(self.y), [dt, self]);
@@ -149,7 +149,7 @@ function Puck() {
 
         // I'M SURE THE HEURISTICS BELOW ARE CLEARLY GENIUS.
         // BUT I SORT OF NO LONGER HAVE ANY IDEA
-	// WHAT/WHY THEY DO WHAT THEY DO. HA HA. 
+    // WHAT/WHY THEY DO WHAT THEY DO. HA HA. 
 
         // sometimes force ejection to avoid too many pucks.
         // if there are already too many pucks to allow for a split-spawned-puck,
@@ -168,49 +168,49 @@ function Puck() {
             PlayBlip();
         }
         else {
-	    // tmp: 2p (zen) hacked.
+        // tmp: 2p (zen) hacked.
             const slowCountFactor = ForGameMode(
-		gSinglePlayer,
-		gGameMode,
-		{
-		    regular: Math.pow(countFactor, 1.5),
-		    zen: Math.pow(countFactor, 1.5)
-		}
-	    );
+        gSinglePlayer,
+        gGameMode,
+        {
+            regular: Math.pow(countFactor, 1.5),
+            zen: Math.pow(countFactor, 1.5)
+        }
+        );
             // keep a few of the fast ones around.
             const slow = !doejectSpeed && (self.vx > maxVX*0.7) && (gR.RandomFloat() < slowCountFactor);
-	    const slowF = gR.RandomRange(0.8, 0.9);
-	    const fastF = gR.RandomRange(1.005, 1.05);
-	    const zenF = gR.RandomRange(1.001, 1.01);
-	    // tmp: 2p (zen) hacked.
-	    const scaleF = ForGameMode(
-		gSinglePlayer,
-		gGameMode,
-		{
-		    regular: slow?slowF:fastF,
-		    zen: slow?slowF:fastF,
-		}
-	    );
+        const slowF = gR.RandomRange(0.8, 0.9);
+        const fastF = gR.RandomRange(1.005, 1.05);
+        const zenF = gR.RandomRange(1.001, 1.01);
+        // tmp: 2p (zen) hacked.
+        const scaleF = ForGameMode(
+        gSinglePlayer,
+        gGameMode,
+        {
+            regular: slow?slowF:fastF,
+            zen: slow?slowF:fastF,
+        }
+        );
             const vxf = self.vx * scaleF;
             const vx = gR.RandomCentered(vxf, vxf/10);
             let vy = self.vy;
-	    // todo: this is bad because i am hacking
-	    // it for 2p which is "zen" but i don't
-	    // actually want this behavior for 1p zen.
-	    const vyf = ForGameMode(
-		gSinglePlayer,
-		gGameMode,
-		{
-		    regular: 1,
-		    zen: 1.2
-		}
-	    )
+        // todo: this is bad because i am hacking
+        // it for 2p which is "zen" but i don't
+        // actually want this behavior for 1p zen.
+        const vyf = ForGameMode(
+        gSinglePlayer,
+        gGameMode,
+        {
+            regular: 1,
+            zen: 1.2
+        }
+        )
             vy = self.vy * (vyf * AvoidZero(0.5, 0.1) + 0.3);
 
             // code smell: because SplitPuck is called during MovePucks,
             // we return the new puck to go onto gPucks.B, whereas
             // MoveSparks happens after so it goes onto gSparks.A.
-	    np = { x: self.x, y: self.y, vx, vy, ur: false, forced, maxVX };
+        np = { x: self.x, y: self.y, vx, vy, ur: false, forced, maxVX };
             AddSparks({ x:self.x, y:self.y, vx:sx(0.5), vy:sy(1), count: 3, rx:sx(1), ry:sy(1) });
 
             PlayExplosion();
@@ -272,39 +272,39 @@ function Puck() {
         // smallest bit of vertical english.
         // too much means you never get to 'streaming'.
         // too little means you maybe crash the machine :-)
-	// (but see also: SplitPuck()'s algorithm for culling.)
+    // (but see also: SplitPuck()'s algorithm for culling.)
         // note that englishFactor increases as level ends.
         var dy = self.midY - paddle.GetMidY();
         var mody = gR.RandomFloat() * 0.03 * Math.abs(dy) * paddle.englishFactor;
 
         // try to avoid getting boringly stuck at top or bottom, especially in zen.
         // but, don't want to utterly lose 'streaming'.
-	// note: this isn't really working all that well.
-	var calc_fy = (y) => {
-	    var dy = Math.abs(y - gh(0.5));
+    // note: this isn't really working all that well.
+    var calc_fy = (y) => {
+        var dy = Math.abs(y - gh(0.5));
             var t01 = T01(dy, gh(0.5));
             var fy = Math.pow(t01, 2);
-	    return fy;
-	};
-	/*
-	if (gDebug) {
-	    gDebug_DrawList.push({
-		fn: () => {
-		    gCx.fillStyle = rgba255s(white);
-		    var step = gh(0.1);
-		    for (var y = 0; y < gh(); y += step) {
-			var my = y+step/2;
-			var fy = calc_fy(my);
-			DrawText(F(fy), "right", gw(0.4), my, gSmallestFontSizePt);
-		    }
-		}
-	    });
-	}
-	*/
-	var rf = Math.pow(T01(gPucks.A.length, kEjectCountThreshold/2), 1.5);
+        return fy;
+    };
+    /*
+    if (gDebug) {
+        gDebug_DrawList.push({
+        fn: () => {
+            gCx.fillStyle = rgba255s(white);
+            var step = gh(0.1);
+            for (var y = 0; y < gh(); y += step) {
+            var my = y+step/2;
+            var fy = calc_fy(my);
+            DrawText(F(fy), "right", gw(0.4), my, gSmallestFontSizePt);
+            }
+        }
+        });
+    }
+    */
+    var rf = Math.pow(T01(gPucks.A.length, kEjectCountThreshold/2), 1.5);
         if (gR.RandomBool(rf)) {
-	    mody *= calc_fy(self.y);
-	}
+        mody *= calc_fy(self.y);
+    }
 
         if( self.midY < paddle.GetMidY() ) {
             self.vy -= mody;
@@ -336,7 +336,7 @@ function Puck() {
             paddles.forEach( paddle => {
                 var newprops = self.PaddleCollision(paddle, isSuddenDeath, maxVX);
                 if( exists(newprops) ) {
-		    if (isU(spawned)) { spawned = []; }
+            if (isU(spawned)) { spawned = []; }
                     spawned.push( newprops );
                 }
             } );

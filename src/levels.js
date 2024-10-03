@@ -10,7 +10,7 @@ function MakeAttract(paddleP1, paddleP2) {
         index: kAttractLevelIndex,
         isAttract: true,
         isSpawning: false,
-	vx0: sxi(3),
+    vx0: sxi(3),
         maxVX: sxi(14),
         isP1Player: false,
         isP2Player: false,
@@ -25,7 +25,7 @@ function MakeZen(paddleP1, paddleP2) {
     return new Level({
         index: kZenLevelIndex,
         isSpawning: true, // but no limit on how many.
-	vx0: sxi(2.5),
+    vx0: sxi(2.5),
         maxVX: sxi(22),
         isP1Player: true,
         isP2Player: !gSinglePlayer,
@@ -44,7 +44,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
     const level = new Level({
         index,
         isSpawning: true,
-	vx0: sxi(ForGameMode(gSinglePlayer, gGameMode, {regular: 2.5, hard: 3.5})),
+    vx0: sxi(ForGameMode(gSinglePlayer, gGameMode, {regular: 2.5, hard: 3.5})),
         // maxVX is allowed to grow after there are no more splits.
         maxVX: sxi(12 + index),
         speedupFactor: 0.0001,
@@ -61,19 +61,19 @@ function MakeLevel(index, paddleP1, paddleP2) {
 function MakeSplitsCount(index) {
     Assert(index !== 0, "index is 1-based");
     if (index === kAttractLevelIndex) {
-	return 0;
+    return 0;
     }
     else if (index === kZenLevelIndex) {
         return undefined;
     }
     else if (index === 1) {
-	return 100;
+    return 100;
     }
     else {
-	// level 2 is 200.
-	// note: this is just a big bad random swag.
-	var extra = Math.max(0, index-2) * 50;
-	return 200 + extra;
+    // level 2 is 200.
+    // note: this is just a big bad random swag.
+    var extra = Math.max(0, index-2) * 50;
+    return 200 + extra;
     }
 }
 
@@ -125,10 +125,10 @@ function ChoosePillIDsUncached(index) {
             console.log("ChoosePillIDsUncached random 4", index, pids, pids.map(i => gPillInfo[i]?.name));
             Assert(pids.length === 4);
         }
-	// after all that, dump in all powerups!
-	else {
-	    pids = [...gPillIDs];
-	}
+    // after all that, dump in all powerups!
+    else {
+        pids = [...gPillIDs];
+    }
         Assert(pids.length > 0);
     }
 

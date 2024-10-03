@@ -287,6 +287,7 @@ function clearAnyMenuPressed() {
 // note: these are mainly (only) for keyboard input,
 // aren't specific to p1 vs. p2 or left vs. right.
 /* note: this is a list of what is supported, at runtime i just use {}.
+// todo: cmds vs. buttons is a hellacious mess.
 var nocmds = {
     menu: false,
     pause: false,
@@ -888,8 +889,8 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         ResetP1Side();
-	// tmp: demo hack.
-	gSinglePlayer = true;
+    // tmp: demo hack.
+    gSinglePlayer = true;
         SetGameMode(gGameMode);
 
         self.attract = new GameState({ isAttract: true });
@@ -940,7 +941,7 @@ function UpdateLocalStorage() {
     self.Step = function( dt ) {
         var nextState = undefined;
         self.attract.Step( dt );
-        self.theMenu.Step(); // note: this doesn't process menu input, actually.
+        self.theMenu.Step(); // note: this doesn't process menu *input*, actually.
         nextState = self.ProcessAllInput();
         if (exists(nextState)) {
             clearTimeout(self.musicTimer);
@@ -953,20 +954,17 @@ function UpdateLocalStorage() {
         var nextState;
         var hasEvents = gEventQueue.length > 0;
         if (hasEvents) {
-	    //console.log("+TitleState.ProcessAllInput", gEventQueue);
             gEventQueue.forEach((event, i) => {
                 var cmds = {};
                 event.updateFn(cmds);
                 if (isU(nextState)) {
                     nextState = self.ProcessOneInput(cmds);
-		    //console.log("TitleState.ProcessAllInput", cmds, nextState);
                 }
             });
             gEventQueue = [];
-	    //console.log("-TitleState.ProcessAllInput", gEventQueue);
         }
 
-	// menu must be after all gEventQueue buttons have been processed.
+    // menu must be after all gEventQueue buttons have been processed.
         if (self.theMenu.ProcessOneInput()) {
             return undefined;
         }
@@ -1958,19 +1956,19 @@ function UpdateLocalStorage() {
     self.Step = function() {
         self.goOn = gGameTime - self.started > self.timeout;
         var nextState;
-	if (gEventQueue.length === 0) {
+    if (gEventQueue.length === 0) {
             nextState = self.ProcessOneInput({});
-	}
-	else {
+    }
+    else {
             gEventQueue.forEach((event, i) => {
-		var cmds = {};
-		event.updateFn(cmds);
-		if (isU(nextState)) {
+        var cmds = {};
+        event.updateFn(cmds);
+        if (isU(nextState)) {
                     nextState = self.ProcessOneInput(cmds);
-		}
+        }
             });
             gEventQueue = [];
-	}
+    }
         return nextState;
     };
 
@@ -2085,19 +2083,19 @@ function UpdateLocalStorage() {
     self.Step = function() {
         self.goOn = gGameTime - self.started > self.timeout;
         var nextState;
-	if (gEventQueue.length === 0) {
+    if (gEventQueue.length === 0) {
             nextState = self.ProcessOneInput({});
-	}
-	else {
+    }
+    else {
             gEventQueue.forEach((event, i) => {
-		var cmds = {};
-		event.updateFn(cmds);
-		if (isU(nextState)) {
+        var cmds = {};
+        event.updateFn(cmds);
+        if (isU(nextState)) {
                     nextState = self.ProcessOneInput(cmds);
-		}
+        }
             });
             gEventQueue = [];
-	}
+    }
         return nextState;
     };
 
@@ -2154,10 +2152,10 @@ function UpdateLocalStorage() {
     self.Step = function( dt ) {
         self.goOn = (gGameTime - self.started) > self.timeoutMsg;
         var nextState;
-	if (gEventQueue.length === 0) {
-            nextState = self.ProcessOneInput({});	    
-	}
-	else {
+    if (gEventQueue.length === 0) {
+            nextState = self.ProcessOneInput({});        
+    }
+    else {
             gEventQueue.forEach((event, i) => {
                 var cmds = {};
                 event.updateFn(cmds);
@@ -2323,21 +2321,21 @@ function GamepadButtonChange(gamepad, state) {
     // dpad buttons up & down move player paddle and menu focus.
     //console.log("1");
     if (isButtonPressed(gamepad, StandardMapping.Button.D_PAD_UP)) {
-	//console.log("2");
+    //console.log("2");
         gEventQueue.push({
             type: kEventGamepadButtonPressed,
             updateFn: () => {
-		//console.log("3");
+        //console.log("3");
                 state.Update({ up: true });
             },
         });
         return;
     } else { // this flooding is sad but otherwise we have a race condtition.
-	//console.log("4 release up");
+    //console.log("4 release up");
         gEventQueue.push({
             type: kEventGamepadButtonReleased,
             updateFn: () => {
-		//console.log("5 release up");
+        //console.log("5 release up");
                 state.Update({ up: false });
             },
         });
@@ -2345,21 +2343,21 @@ function GamepadButtonChange(gamepad, state) {
 
     //console.log("6");
     if (isButtonPressed(gamepad, StandardMapping.Button.D_PAD_BOTTOM)) {
-	//console.log("7 handle down");
+    //console.log("7 handle down");
         gEventQueue.push({
             type: kEventGamepadButtonPressed,
             updateFn: () => {
-		//console.log("8 down fn");
+        //console.log("8 down fn");
                 state.Update({ down: true });
             }
         });
         return;
     } else { // this flooding is sad but otherwise we have a race condtition.
-	//console.log("9 release down");
+    //console.log("9 release down");
         gEventQueue.push({
             type: kEventGamepadButtonReleased,
             updateFn: () => {
-		//console.log("10 release down");
+        //console.log("10 release down");
                 state.Update({ down: false });
             }
         });
@@ -2379,7 +2377,7 @@ function GamepadButtonChange(gamepad, state) {
     if (isButtonPressed(gamepad, 8) ||
         isButtonPressed(gamepad, 9) ||
         isButtonPressed(gamepad, 16) ) {
-	//console.log("10");
+    //console.log("10");
         gEventQueue.push({
             type: kEventGamepadButtonPressed,
             updateFn: () => {
@@ -2389,7 +2387,7 @@ function GamepadButtonChange(gamepad, state) {
         return;
     }
     else { // this flooding is sad but otherwise we have a race condtition.
-	//console.log("11");
+    //console.log("11");
         gEventQueue.push({
             type: kEventGamepadButtonReleased,
             updateFn: () => {
@@ -2404,7 +2402,7 @@ function GamepadButtonChange(gamepad, state) {
         isButtonPressed(gamepad, 1) ||
         isButtonPressed(gamepad, 2) ||
         isButtonPressed(gamepad, 3) ) {
-	//console.log("12");
+    //console.log("12");
         gEventQueue.push({
             type: kEventGamepadButtonPressed,
             updateFn: () => {
@@ -2414,7 +2412,7 @@ function GamepadButtonChange(gamepad, state) {
         return;
     }
     else { // this flooding is sad but otherwise we have a race condtition.
-	//console.log("13");
+    //console.log("13");
         gEventQueue.push({
             type: kEventGamepadButtonReleased,
             updateFn: () => {

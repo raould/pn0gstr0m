@@ -135,16 +135,16 @@ function MakeModeButtons({constants:k, modeRadios}) {
             is_checkbox: true,
             is_checked: gGameMode === kGameModeZen,
             step_fn: (bself) => {
-		if (gSinglePlayer) {
+        if (gSinglePlayer) {
                     var was_checked = bself.is_checked;
                     bself.is_checked = gGameMode === kGameModeZen;
                     bself.wants_focus = bself.is_checked && !was_checked;
-		    bself.hidden = false;
-		}
-		else {
-		    bself.wants_focus = false;
-		    bself.hidden = true;
-		}
+            bself.hidden = false;
+        }
+        else {
+            bself.wants_focus = false;
+            bself.hidden = true;
+        }
             },
             click_fn: (bself) => {
                 SetGameMode(gGameMode === kGameModeZen ? kGameModeRegular : kGameModeZen);

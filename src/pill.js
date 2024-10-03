@@ -65,7 +65,7 @@ function Pill( props ) {
     };
 
     self.Move = function( dt ) {
-	dt = dt * kPhysicsStepScale;
+    dt = dt * kPhysicsStepScale;
         self.prevX = self.x;
         self.prevY = self.y;
         self.x += (self.vx * dt);

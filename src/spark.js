@@ -44,7 +44,7 @@ function Spark() {
 
     self.Step = function( dt ) {
         if (self.alive) {
-	    dt = dt * kPhysicsStepScale;
+        dt = dt * kPhysicsStepScale;
             self.prevX = self.x;
             self.prevY = self.y;
             self.x += (self.vx * dt);
