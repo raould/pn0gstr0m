@@ -11,7 +11,12 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
         self.x = props.x;
         self.y = 0;
         self.normalX = props.normalX;
-        self.width = sx1(10);
+        // the closer all the pucks are to maxVX,
+        // the larger puck steps become, which means they
+        // can end up being fixed outside the
+        // visible neo bounds & that looks bad, so
+        // hard-coding it to be wider now.
+        self.width = sx1(30);
         self.height = gh(1);
         self.lifespan0 = props.lifespan;
         self.lifespan = self.lifespan0;
@@ -35,6 +40,7 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
             self.locked.forEach(p => {
                 p.isLocked = false;
                 p.vx = Math.abs(p.vx) * self.normalX * gR.RandomRange(1,1.5);
+                p.vy = p.vy * sy1(4);
                 // funny how sparks are global but animations aren't because history.
                 AddSparks({ x:p.x, y:p.y, vx:p.vx, vy:p.vy, count: 3, rx:sx(1), ry:sy(1) });
             });

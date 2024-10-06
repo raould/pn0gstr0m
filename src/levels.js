@@ -26,9 +26,9 @@ function MakeZen(paddleP1, paddleP2) {
         index: kZenLevelIndex,
         isSpawning: true, // but no limit on how many.
 	vx0: sxi(2.5),
-        maxVX: sxi(18),
+        maxVX: sxi(ForGameMode({zen: 18, z2p: 22})),
         isP1Player: true,
-        isP2Player: !gSinglePlayer,
+        isP2Player: !is1P(),
         pills,
         paddleP1: paddleP1,
         paddleP2: paddleP2,
@@ -44,13 +44,13 @@ function MakeLevel(index, paddleP1, paddleP2) {
     const level = new Level({
         index,
         isSpawning: true,
-	vx0: sxi(ForGameMode(gSinglePlayer, gGameMode, {regular: 2.5, hard: 3.5})),
+	vx0: sxi(ForGameMode({regular: 2.5, hard: 3.5})),
         // maxVX is allowed to grow after there are no more splits.
         maxVX: sxi(12 + index),
         speedupFactor: 0.0001,
         splitsCount,
         isP1Player: true,
-        isP2Player: !gSinglePlayer,
+        isP2Player: !is1P(),
         pills,
         paddleP1: paddleP1,
         paddleP2: paddleP2,

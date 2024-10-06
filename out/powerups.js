@@ -564,11 +564,11 @@ function MakeDefendProps(maker) {
       PlayPowerupBoom();
       var n = 4; // match: kBarriersArrayInitialSize.
       // zen is more crazy so upping the hp and thus also scaling drawing so they aren't too wide.
-      var hp = ForGameMode(gSinglePlayer, gGameMode, {
+      var hp = ForGameMode({
         regular: 15,
         zen: 45
       });
-      var drawScale = ForGameMode(gSinglePlayer, gGameMode, {
+      var drawScale = ForGameMode({
         regular: 1,
         hard: 1,
         zen: 0.5
@@ -664,9 +664,7 @@ function MakeNeoProps(maker) {
     lifespan: kPillLifespan,
     isUrgent: true,
     testFn: function testFn(gameState) {
-      // todo: in some playtesting this was being spawned too often,
-      // maybe each props needs a spawn weight too?
-      return gameState.level.IsMidGame() && (gDebug || gPucks.A.length > kEjectCountThreshold / 2) && isU(maker.paddle.neo);
+      return gameState.level.IsMidGame() && (gDebug || gPucks.A.length > kPuckPoolSize / 4) && isU(maker.paddle.neo);
     },
     canSkip: true,
     drawFn: function drawFn(self, alpha) {

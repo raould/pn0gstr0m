@@ -17,10 +17,10 @@
 // optional zen & hard settings?
 // make that less so somehow.
 
-function TitleMenuConstants() {
+function AppMenuConstants() {
   var bw = gw(0.2);
   var bh = gSmallFontSize * 1.7;
-  var bs = bh * 1.3;
+  var bs = bh * 1.2;
   var ss = bh / 2;
 
   // hard coded assumption:
@@ -73,6 +73,7 @@ function MakePlayerButtons(_ref) {
       },
       click_fn: function click_fn(bself) {
         // match: TitleState.ProcessOneInput singlePlayer.
+        gSinglePlayer = true;
         SetGameMode(kGameModeRegular);
         playerRadios.OnSelect(bself);
       }
@@ -116,6 +117,7 @@ function MakeModeButtons(_ref2) {
       font_size: k.font_size,
       is_checkbox: true,
       is_checked: gGameMode === kGameModeHard,
+      hidden: !is1P(),
       step_fn: function step_fn(bself) {
         if (is1P()) {
           var was_checked = bself.is_checked;
@@ -143,6 +145,7 @@ function MakeModeButtons(_ref2) {
       font_size: k.font_size,
       is_checkbox: true,
       is_checked: gGameMode === kGameModeZen,
+      hidden: !is1P(),
       step_fn: function step_fn(bself) {
         if (is1P()) {
           var was_checked = bself.is_checked;
@@ -203,8 +206,8 @@ function MakeMuteButtons(_ref3) {
     })
   };
 }
-function MakeTitleMenuButtons() {
-  var constants = new TitleMenuConstants();
+function MakeAppMenuButtons() {
+  var constants = new AppMenuConstants();
   var playerRadios = new Radios();
   var modeRadios = new Radios();
   var _MakePlayerButtons = MakePlayerButtons({
@@ -213,6 +216,8 @@ function MakeTitleMenuButtons() {
     }),
     bp1 = _MakePlayerButtons.bp1,
     bp2 = _MakePlayerButtons.bp2;
+  playerRadios.AddButton(bp1);
+  playerRadios.AddButton(bp2);
   var _MakeModeButtons = MakeModeButtons({
       constants: constants,
       modeRadios: modeRadios
@@ -224,8 +229,6 @@ function MakeTitleMenuButtons() {
     }),
     bMusic = _MakeMuteButtons.bMusic,
     bSfx = _MakeMuteButtons.bSfx;
-  playerRadios.AddButton(bp1);
-  playerRadios.AddButton(bp2);
   return {
     focusId: is1P() ? "bp1" : "bp2",
     navigation: {

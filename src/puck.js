@@ -168,21 +168,41 @@ function Puck() {
             PlayBlip();
         }
         else {
-            const slowCountFactor = ForGameMode(gSinglePlayer, gGameMode, {regular: Math.pow(countFactor, 1.5), zen: countFactor});
+            const slowCountFactor = ForGameMode({
+                regular: Math.pow(countFactor, 1.5),
+                zen: countFactor,
+                z2p: Math.pow(countFactor, 1.5)
+            });
             // keep a few of the fast ones around.
             const slow = !doejectSpeed && (self.vx > maxVX*0.7) && (gR.RandomFloat() < slowCountFactor);
 	    const slowF = gR.RandomRange(0.8, 0.9);
 	    const fastF = gR.RandomRange(1.005, 1.05);
 	    const zenF = gR.RandomRange(1.001, 1.01);
-	    const scaleF = ForGameMode(gSinglePlayer, gGameMode, {regular: slow?slowF:fastF, zen: zenF});
+	    const scaleF = ForGameMode({
+                regular: slow?slowF:fastF,
+                zen: zenF,
+                z2p: slow?slowF:fastF
+            });
             const vxf = self.vx * scaleF;
             const vx = gR.RandomCentered(vxf, vxf/10);
+
             let vy = self.vy;
-            vy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
+            let pvx = T01(Math.abs(self.vx), maxVX);
+            // todo: test and refine this.
+            // only want 'streaming' possible in zen mode.
+            const vyf = ForGameMode({
+                regular: 1.1,
+                hard: 1.2,
+                zen: 1.05,
+                // the faster things get, the more spread out, i hope, but,
+                // not too much since it can be fun to be 'streaming' until neo.
+                z2p: 1.15 + (pvx * 1),
+            });
+            vy = 0.3 + (self.vy * (vyf * AvoidZero(0.5, 0.05)));
 
             // code smell: because SplitPuck is called during MovePucks,
-            // we return the new puck to go onto gPucks.B, whereas
-            // MoveSparks happens after so it goes onto gSparks.A.
+            // we return the new puck to go onto gPucks.B,
+            // vs. MoveSparks happens after so it goes onto gSparks.A.
 	    np = { x: self.x, y: self.y, vx, vy, ur: false, forced, maxVX };
             AddSparks({ x:self.x, y:self.y, vx:sx(0.5), vy:sy(1), count: 3, rx:sx(1), ry:sy(1) });
 

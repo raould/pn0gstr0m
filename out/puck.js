@@ -163,27 +163,40 @@ function Puck() {
       }
       PlayBlip();
     } else {
-      var slowCountFactor = ForGameMode(gSinglePlayer, gGameMode, {
+      var slowCountFactor = ForGameMode({
         regular: Math.pow(countFactor, 1.5),
-        zen: countFactor
+        zen: countFactor,
+        z2p: Math.pow(countFactor, 1.5)
       });
       // keep a few of the fast ones around.
       var slow = !doejectSpeed && self.vx > maxVX * 0.7 && gR.RandomFloat() < slowCountFactor;
       var slowF = gR.RandomRange(0.8, 0.9);
       var fastF = gR.RandomRange(1.005, 1.05);
       var zenF = gR.RandomRange(1.001, 1.01);
-      var scaleF = ForGameMode(gSinglePlayer, gGameMode, {
+      var scaleF = ForGameMode({
         regular: slow ? slowF : fastF,
-        zen: zenF
+        zen: zenF,
+        z2p: slow ? slowF : fastF
       });
       var vxf = self.vx * scaleF;
       var vx = gR.RandomCentered(vxf, vxf / 10);
       var vy = self.vy;
-      vy = self.vy * (AvoidZero(0.5, 0.1) + 0.3);
+      var pvx = T01(Math.abs(self.vx), maxVX);
+      // todo: test and refine this.
+      // only want 'streaming' possible in zen mode.
+      var vyf = ForGameMode({
+        regular: 1.1,
+        hard: 1.2,
+        zen: 1.05,
+        // the faster things get, the more spread out, i hope, but,
+        // not too much since it can be fun to be 'streaming' until neo.
+        z2p: 1.15 + pvx * 1
+      });
+      vy = 0.3 + self.vy * (vyf * AvoidZero(0.5, 0.05));
 
       // code smell: because SplitPuck is called during MovePucks,
-      // we return the new puck to go onto gPucks.B, whereas
-      // MoveSparks happens after so it goes onto gSparks.A.
+      // we return the new puck to go onto gPucks.B,
+      // vs. MoveSparks happens after so it goes onto gSparks.A.
       np = {
         x: self.x,
         y: self.y,

@@ -60,44 +60,6 @@ function AddLightningPath(props) {
     });
 }
 
-function MakeGameStartAnimation() {
-    var lifespan = kAlphaFadeInMsec; // match: DrawMessage().
-    return new GSAnimation({
-        name: "gamestart",
-        lifespan,
-        drawFn: (anim) => {
-            var t = T10(anim.lifespan, anim.lifespan0);
-            var h = gh(0.05);
-            var c = 10;
-            var ybase  = -(h*c);
-            var yrange = gHeight + 2*(h*c);
-            var y = ybase + t * yrange;
-            Cxdo(() => {
-                var lastY = y;
-                for (var i = 0; i < ii(c/2); ++i) { // top bars
-                    var yo = y + i*h;
-                    gCx.beginPath();
-                    gCx.rect(0, yo, gWidth, h*0.8);
-                    gCx.fillStyle = RandomForColor(greenSpec, 1/c*i);
-                    gCx.fill();
-                    lastY = yo+h*0.8;
-                }
-                gCx.beginPath(); // shutter effect.
-                gCx.rect(0, lastY, gWidth, gHeight-lastY);
-                gCx.fillStyle = backgroundColorStr;
-                gCx.fill();
-                for (var i = ii(c/2); i < c; ++i) { // bottom bars.
-                    var yo = y + i*h;
-                    gCx.beginPath();
-                    gCx.rect(0, yo, gWidth, h*0.8);
-                    gCx.fillStyle = RandomForColor(greenSpec, 1-1/c*i);
-                    gCx.fill();
-                }
-            });
-        }
-    });
-}
-
 function MakePoofAnimation(x, y, radius) {
     var lifespan = 1000 * 1;
     var r = radius;

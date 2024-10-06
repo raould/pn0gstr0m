@@ -12,16 +12,16 @@
   handled in the *State in main.
   also, all the button positions are sorta hard-coded.
   also-also, there's too many things that need to refer
-  to each other, and special cases, like how the esc button
+  to each other, and special cases, like how the Menu button
   can never have keyboard focus, or the menu needs to know
   when it closes, to reset the focusId.
 
   also? this code just kinda sucks by now, sorry.
 
-  * on title screen, the esc button is not hidden and can
-  be clicked by pointer or via esc key.
-  * in-game, the esc button should be hidden, so the menu
-  can only be opened via esc / pause keys / gamepad buttons,
+  * on title screen, the Menu button is not hidden and can
+  be clicked by pointer or via Menu key.
+  * in-game, the Menu button should be hidden, so the menu
+  can only be opened via Menu / pause keys / gamepad buttons,
   or by clicking/tapping on the pause icon. blimey.
   * in the menu, clicking/tapping on a button both focuses
   and immediately activates it, whereas with the keyboard
@@ -53,16 +53,15 @@ function MakeMenuButton({ OnClose }) {
             let gameMode = " ";
             // theoretically in 2 player mode it cannot be
             // extra hard, and is secretly forced-zen behind the scenes.
-            if (gSinglePlayer) {
+            if (is1P()) {
                 if (gGameMode === kGameModeHard) { gameMode = "*"; }
                 if (gGameMode === kGameModeZen) { gameMode = "Z"; }
             }
             else {
-                Assert(gGameMode === kGameModeZen);
-                Assert(gGameMode !== kGameModeHard);
+                Assert(gGameMode === kGameMode2P);
             }
             bself.has_focus = false;
-            bself.title = (gSinglePlayer ? "1p  " : "2pp ") +
+            bself.title = (is1P() ? "1p  " : "2pp ") +
                 (gSfxMuted ? "  " : "m ") +
                 (gMusicMuted ? " " : "o") +
                 gameMode;
@@ -78,27 +77,39 @@ function MakeMenuButton({ OnClose }) {
     return bMenu;
 }
 
-/*class*/ function Menu({ isHidden, OnClose, navigation, focusId }) {
+/*class*/ function Menu({ showButton, OnClose, MakeNavigation }) {
     var self = this;
 
     self.Init = function() {
-        self.isHidden = isHidden;
+        self.showButton = showButton;
+        self.OnClose = OnClose;
         self.bMenu = MakeMenuButton({ OnClose });
-        self.navigation = navigation;
+        self.spec = MakeNavigation(self);
+        Assert(exists(self.spec));
 
-        self.focusId = focusId;
+        self.actionsPressed = {}; // prevent auto-repeat in menu.
+
+        self.focusId = self.spec.focusId;
         var fb = self.Focused()?.button;
         Assert(exists(fb), "must have an initial focus, for keyboard nagivation");
         fb.has_focus = true;
     };
 
+    self.Navigation = function() {
+        return this.spec.navigation;
+    };
+
     self.Spec = function(bId) {
-        Assert(exists(self.navigation));
-        return self.navigation[bId];
+        Assert(exists(self.Navigation()));
+        return self.Navigation()[bId];
     };
 
     self.Focused = function() {
         return self.Spec(self.focusId);
+    };
+
+    self.Open = function() {
+        self.bMenu.isOpen = true;
     };
 
     self.isOpen = function() {
@@ -106,9 +117,9 @@ function MakeMenuButton({ OnClose }) {
     };
 
     self.Step = function() {
-        if (self.bMenu.isOpen) {
+        if (self.isOpen()) {
             var wants_focusId = undefined;
-            Object.entries(self.navigation).forEach(
+            Object.entries(self.Navigation()).forEach(
                 e => {
                     var bid = e[0];
                     var bspec = e[1];
@@ -122,7 +133,7 @@ function MakeMenuButton({ OnClose }) {
             );
         }
 
-        if (self.bMenu.isOpen || !self.isHidden) {
+        if (self.isOpen() || self.showButton) {
             self.bMenu.Step();
         }
 
@@ -148,13 +159,17 @@ function MakeMenuButton({ OnClose }) {
         }
     };
 
+    self.IsMenuButtonClick = function() {
+        return self.bMenu.ProcessTarget()
+    };
+
     self.ProcessOneInput = function(cmds) {
         var n, a, p1, p2;
-        if (self.bMenu.isOpen) {
+        if (self.isOpen()) {
             n = self.ProcessNavigation();
             a = self.ProcessAccept(cmds);
         }
-        if (self.bMenu.isOpen || !self.isHidden) {
+        if ((!n && !a) && (self.isOpen() || self.showButton)) {
             p1 = self.ProcessTarget(gP1Target);
             p2 = self.ProcessTarget(gP2Target);
         }
@@ -162,13 +177,27 @@ function MakeMenuButton({ OnClose }) {
     };
 
     self.ProcessNavigation = function() {
-        if (gP1Keys.$.up || gP2Keys.$.up || isGamepad1Up() || isGamepad2Up()) {
+        var wasUpPressed = !!self.actionsPressed["up"];
+        if (wasUpPressed) {
+            if (!(gP1Keys.$.up || gP2Keys.$.up || isGamepad1Up() || isGamepad2Up())) {
+                self.actionsPressed["up"] = false;
+            }
+        }
+        else if (gP1Keys.$.up || gP2Keys.$.up || isGamepad1Up() || isGamepad2Up()) {
             self.FocusDirection("up");
+            self.actionsPressed["up"] = true;
             return true;
         }
 
-        if (gP1Keys.$.down || gP2Keys.$.down || isGamepad1Down() || isGamepad2Down()) {
+        var wasDownPressed = !!self.actionsPressed["down"];
+        if (wasDownPressed) {
+            if (!(gP1Keys.$.down || gP2Keys.$.down || isGamepad1Down() || isGamepad2Down())) {
+                self.actionsPressed["down"] = false;
+            }
+        }
+        else if (gP1Keys.$.down || gP2Keys.$.down || isGamepad1Down() || isGamepad2Down()) {
             self.FocusDirection("down");
+            self.actionsPressed["down"] = true;
             return true;
         }
 
@@ -196,7 +225,7 @@ function MakeMenuButton({ OnClose }) {
     };
 
     self.ProcessAccept = function(cmds) {
-        if (isAnyActivatePressed(cmds) && self.bMenu.isOpen) {
+        if (isAnyActivatePressed(cmds) && self.isOpen()) {
             var bspec = self.Focused();
             if (exists(bspec)) {
                 bspec.button.Click();
@@ -210,9 +239,9 @@ function MakeMenuButton({ OnClose }) {
     self.ProcessTarget = function(target) {
         var hit = false;
         if (target.isDown()) {
-            // menu.
-            if (self.bMenu.isOpen) {
-                var found = Object.entries(self.navigation).find(
+            // the menu is open so check buttons.
+            if (self.isOpen()) {
+                var found = Object.entries(self.Navigation()).find(
                     e => e[1].button.ProcessTarget(target)
                 );
                 if (exists(found)) {
@@ -228,8 +257,8 @@ function MakeMenuButton({ OnClose }) {
                     hit = true;
                 }
             }
-            // esc.
-            if (!hit && (self.bMenu.isOpen || !self.isHidden)) {
+            // the menu is closed, check the Menu button hit.
+            if (!hit && (self.isOpen() || self.showButton)) {
                 hit = self.bMenu.ProcessTarget(target);
                 if (hit) {
                     self.bMenu.Click();
@@ -241,7 +270,7 @@ function MakeMenuButton({ OnClose }) {
 
     self.Draw = function() {
         // menu.
-        if (self.bMenu.isOpen) {
+        if (self.isOpen()) {
             Cxdo(() => {
                 if (gDebug) {
                     // fade buttons so i can watch stepping the game.
@@ -253,13 +282,13 @@ function MakeMenuButton({ OnClose }) {
                     gCx.fillStyle = backgroundColorStr;
                     gCx.fillRect(0, 0, gw(1), gh(1));
                 }
-                Object.values(self.navigation).forEach(
+                Object.values(self.Navigation()).forEach(
                     bspec => bspec.button.Draw()
                 );
             });
         }
         // esc.
-        if (self.bMenu.isOpen || !self.isHidden) {
+        if (self.isOpen() || self.showButton) {
             self.bMenu.Draw();
         }
     };
