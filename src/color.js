@@ -90,9 +90,32 @@ function rgba255s(array, alpha) {
         _tc[3] = array[3];
     }
 
-    const joined = _tc.map((ch,i) => ((i < 3) ? Clip255(ch) : ch)).join(",");
-    const str = ((array.length == 4 || exists(alpha)) ? "rgba(" : "rgb(") + joined + ")";
+    var joined = _tc.map((ch,i) => ((i < 3) ? Clip255(ch) : ch)).join(",");
+    var str = ((array.length == 4 || exists(alpha)) ? "rgba(" : "rgb(") + joined + ")";
     return  str;
+}
+
+function lerp_channel(c0, c1, t) {
+    return c0 + t * (c1-c0);
+}
+
+function lerp_rgba255s(src255, dst255, alpha, t) {
+    Assert(exists(dst255));
+    Assert(exists(src255));
+    if (t < 0.01) {
+        return rgba255s(src255, alpha);
+    }
+    if (t > 0.99) {
+        return rgba255s(dst255, alpha);
+    }
+    else {
+        return rgba255s(
+            [lerp_channel(src255[0], dst255[0], t),
+             lerp_channel(src255[1], dst255[1], t),
+             lerp_channel(src255[2], dst255[2], t)],
+            alpha
+        );
+    }
 }
 
 function ColorCycle(alpha=1) {
@@ -136,33 +159,50 @@ function RandomForColor(spec, alpha=1) {
     }
 }
 
-function FadeIn(alpha) {
+function FadeIn(alpha, dstSpec=undefined) {
     if (gMonochrome) {
         // i.e. attract mode.
         return rgba255s(greenSpec.strong, alpha);
     }
-    else if (gR.RandomFloat() > GameTime01(kGreenFadeInMsec)) {
-        // gradully go from green to color at game start.
-        return rgba255s(greenSpec.strong, alpha);
+    else {
+        var t = GameTime01(kGreenFadeInMsec);
+        // old behavior.
+        if (isU(dstSpec)) {
+            if (gR.RandomFloat() > t) {
+                return rgba255s(
+                    greenSpec.strong,
+                    alpha
+                );
+            }
+        }
+        else {
+            // gradully go from green to color at game start.
+            // note that other code relies on getting undefined at t=1.
+            if (t > 0.99) {
+                return undefined;
+            }
+            else {
+                return lerp_rgba255s(
+                    greenSpec.strong,
+                    gR.RandomBool() ? dstSpec.regular : dstSpec.strong,
+                    alpha,
+                    t
+                );
+            }
+        }
     }
     return undefined;
 }
 
-// evil globals herein.
 // everything starts off all green to harken back to pongy games,
 // even if they weren't actually all on green screens, hah, 
-// then gradually flickers into the given color. 
+// then gradually becomes the given color. 
 function RandomForColorFadeIn(spec, alpha=1) {
-    var faded = FadeIn(alpha);
+    var faded = FadeIn(alpha, spec);
     if (exists(faded)) {
         return faded;
     }
     else {
-        // even more with the fading in, see MakeGameStartAnimation.
-        alpha = Math.min(
-            alpha,
-            Clip01(GameTime01(kAlphaFadeInMsec))
-        );
         return RandomForColor(spec, alpha);
     }
 }

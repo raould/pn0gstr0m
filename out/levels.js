@@ -36,9 +36,12 @@ function MakeZen(paddleP1, paddleP2) {
     isSpawning: true,
     // but no limit on how many.
     vx0: sxi(2.5),
-    maxVX: sxi(18),
+    maxVX: sxi(ForGameMode({
+      zen: 18,
+      z2p: 22
+    })),
     isP1Player: true,
-    isP2Player: !gSinglePlayer,
+    isP2Player: !is1P(),
     pills: pills,
     paddleP1: paddleP1,
     paddleP2: paddleP2
@@ -56,7 +59,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
   var level = new Level({
     index: index,
     isSpawning: true,
-    vx0: sxi(ForGameMode(gSinglePlayer, gGameMode, {
+    vx0: sxi(ForGameMode({
       regular: 2.5,
       hard: 3.5
     })),
@@ -65,7 +68,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
     speedupFactor: 0.0001,
     splitsCount: splitsCount,
     isP1Player: true,
-    isP2Player: !gSinglePlayer,
+    isP2Player: !is1P(),
     pills: pills,
     paddleP1: paddleP1,
     paddleP2: paddleP2

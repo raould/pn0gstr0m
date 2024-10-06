@@ -450,8 +450,11 @@ function Paddle(props) {
         // gets better to make things more interesting.
         var levelScale = (levelIndex-1) * 0.02;
 
-        // both zen and hard modes get faster ai paddle movement.
-        var scale = ForGameMode(gSinglePlayer, gGameMode, {regular: 0.4, hard: 1.1, zen: 1.1}) + levelScale;
+        // only 1p regular has the slower ai paddle.
+        var scale = ForGameMode({
+            regular: 0.4,
+            hard: 1.1,
+        }) + levelScale;
         scale = Clip(scale, 0.1, 1.2);
 
         if (gDebug) {

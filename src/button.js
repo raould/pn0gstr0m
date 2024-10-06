@@ -54,10 +54,10 @@
             () => { console.log(`no click_fn registered on '${self.title}'`); }
         );
         self.step_fn = aub(props.step_fn, () => {});
-        self.is_checkbox = props.is_checkbox;
+        self.is_checkbox = aub(props.is_checkbox, false);
         self.is_checked = aub(props.is_checked, false);
         self.has_focus = aub(props.has_focus, false);
-	self.hidden = false;
+	self.hidden = aub(props.hidden, false);
         self.wants_focus = false;
     };
 

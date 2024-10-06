@@ -32,6 +32,16 @@ function logOnce(key, msg) {
     }
 }
 
+const gLogEveryMap = {};
+function logEvery(key, v, count) {
+    const oc = gLogEveryMap[key];
+    const update = isU(oc) || (oc%count === 0);
+    if (update) {
+        console.log(key, v);
+        gLogEveryMap[key] = gLogEveryMap[key] + 1;
+    }
+}
+
 const gLogOnDeltaMap = {};
 function logOnDelta(key, v, delta, xmsg) {
     const ov = gLogOnDeltaMap[key];

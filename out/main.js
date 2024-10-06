@@ -39,44 +39,51 @@ var gShowToasts = gDebug;
 var kUITimeout = 1000 * (gDebug ? 5 : 20);
 var kCanvasName = "canvas"; // match: index.html
 var gLifecycle;
-var gSinglePlayer = LoadLocal(LocalStorageKeys.singlePlayer, true);
+
+// which title menu to show:
+// if true, which is the expected shipping state,
+// the title menu has more options.
+// if false, then we are in "arcade/demo
+// night" mode and the menu is just 1p, 2p, start
+// and the only way to start the game is to click start.
+// (for demo nights played with game controllers.)
+// and !kAppMode 1p is only ever kGameModeRegular.
+var kAppMode = true;
 var kScoreIncrement = 1;
 // note: see GameState.Init().
 var gP1Score = 0;
 var gP2Score = 0;
 
-// todo: the game mode stuff is a big ball of mud within
-// the larger death star of mud that is all of this code;
-// {single player, game mode, game level} need refactoring.
-// see also: gSinglePlayer usage, oh no.
+// mutually exclusive enum.
+// regular & hard & zen are single player.
 var kGameModeRegular = "regular";
 var kGameModeHard = "hard";
-// note: zen is also how 2 player is done, but that's never very explicit.
 var kGameModeZen = "zen";
+var kGameMode2P = "2p";
 var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
+function is1P() {
+  return gGameMode != kGameMode2P;
+}
 // code smell: sentinel values, -1 is attract, -2 is zen. 
 var kAttractLevelIndex = -1;
 var kZenLevelIndex = -2;
 // levels are 1-based.
-// todo: gLevelIndex is an overloaded mess.
+// todo: gLevelIndex is an overloaded mess yay.
 var gLevelIndex = gGameMode === kGameModeZen ? kZenLevelIndex : 1;
-// it is awful how these overlap and interact, so confusing.
 // this doesn't even handle attract-mode levels.
-function ForGameMode(singlePlayer, gameMode, _ref) {
+function ForGameMode(_ref) {
   var regular = _ref.regular,
     hard = _ref.hard,
-    zen = _ref.zen;
-  Assert(exists(regular));
-  // two player mode is always zen mode.
-  if (!singlePlayer) {
-    gameMode = kGameModeZen;
-  }
-  if (gameMode === kGameModeRegular) {
+    zen = _ref.zen,
+    z2p = _ref.z2p;
+  if (gGameMode === kGameModeRegular) {
     return regular;
-  } else if (gameMode === kGameModeHard) {
+  } else if (gGameMode === kGameModeHard) {
     return exists(hard) ? hard : regular;
-  } else if (gameMode === kGameModeZen) {
-    return exists(zen) ? zen : regular;
+  } else if (gGameMode === kGameModeZen) {
+    return exists(zen) ? zen : exists(hard) ? hard : regular;
+  } else if (gGameMode === kGameMode2P) {
+    return exists(z2p) ? z2p : exists(zen) ? zen : exists(hard) ? hard : regular;
   }
 }
 // note: calling this with no arguments is a hack
@@ -87,9 +94,9 @@ function ForGameMode(singlePlayer, gameMode, _ref) {
 // vs. level type and index.
 function SetGameMode() {
   var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : gGameMode;
-  Assert(mode === kGameModeRegular || mode === kGameModeHard || mode === kGameModeZen, mode);
+  Assert(mode === kGameModeRegular || mode === kGameModeHard || mode === kGameModeZen || mode === kGameMode2P, mode);
   gGameMode = mode;
-  ForGameMode(gSinglePlayer, gGameMode, {
+  ForGameMode({
     regular: function regular() {
       return gLevelIndex = 1;
     },
@@ -111,8 +118,8 @@ var kDrawAIPuckTarget = true;
 var gMonochrome = false;
 
 // "fade" from all-green to specified colors. see: GameTime01 and color.js
-var kGreenFadeInMsec = gDebug ? 1000 : 7000;
-// "fade" in from 0 alpha to specified alphas. match: MakeGameStartAnimation.
+var kGreenFadeInMsec = 7000;
+// "fade" in from 0 alpha to specified alphas.
 var kAlphaFadeInMsec = 700;
 
 // per-game high score doesn't make sense
@@ -207,7 +214,7 @@ var kXtrasArrayInitialSize = 6;
 
 // prevent pills from showing up too often, or too early - but not too late.
 var PillSpawnCooldownFn = function PillSpawnCooldownFn() {
-  return ForGameMode(gSinglePlayer, gGameMode, {
+  return ForGameMode({
     regular: function regular() {
       return 1000 * 5;
     },
@@ -361,17 +368,23 @@ function ResetP1Side() {
   exists(gP2Target) && gP2Target.ClearSide();
 }
 ResetP1Side();
-function SetP1Side(side) {
+function LatchP1Side(side) {
+  // the first call wins and everything thereafter is ignored, on purpose.
   if (gP1Side == undefined) {
     // todo: seems risky that 'side' exists in so many places.
     gP1Side = side;
     gP2Side = OtherSide(side);
-    gP1Target.SetSide(gP1Side, gSinglePlayer, gw(0.5));
-    if (!gSinglePlayer) {
-      gP2Target.SetSide(gP2Side, gSinglePlayer, gw(0.5));
+    gP1Target.SetSide(gP1Side, is1P(), gw(0.5));
+    if (!is1P()) {
+      gP2Target.SetSide(gP2Side, false, gw(0.5));
     }
   }
 }
+var kNoopEvent = {
+  updateFn: function updateFn() {
+    return {};
+  }
+};
 var gEventQueue = [];
 var kEventKeyDown = "key_down";
 var kEventKeyUp = "key_up";
@@ -458,8 +471,7 @@ var gR = new Random(0x1BADB002);
 
 // ----------------------------------------
 
-// return 0 to 1 during the given time period
-// from the start of the game.
+// return 0-1 during the given time period from the start of each level.
 // return > 1 after the period.
 function GameTime01(period) {
   var start = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : gLevelTime;
@@ -615,7 +627,7 @@ var gDrawTitleLatch = new RandomLatch(0.005, 250);
 function DrawTitle() {
   var flicker = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
   Cxdo(function () {
-    gCx.fillStyle = flicker ? ColorCycle() : rgba255s(cyanDarkSpec.regular);
+    gCx.fillStyle = flicker ? ColorCycle(kAppMode ? 1 : 0.4) : rgba255s(cyanDarkSpec.regular);
     DrawText("P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker);
     gCx.fillStyle = rgba255s(cyanDarkSpec.regular);
     var msg = "ETERNAL BETA";
@@ -750,7 +762,6 @@ function UpdateLocalStorage() {
   // since that requires deep-equals testing. so that is
   // left to be done hard-coded elsewhere.
   // (2) this doesn't include the unplayed music, see sound.js
-  SaveLocal(LocalStorageKeys.singlePlayer, gSinglePlayer);
   SaveLocal(LocalStorageKeys.gameMode, gGameMode);
   SaveLocal(LocalStorageKeys.sfxMuted, gSfxMuted);
   SaveLocal(LocalStorageKeys.musicMuted, gMusicMuted);
@@ -773,30 +784,43 @@ function Lifecycle(handlerMap) {
     self.stop = true;
   };
   self.RunLoop = function () {
+    var _self$handler$GetIsPa, _self$handler;
     if (self.stop) {
       return;
     }
     // this got complicated quickly, trying to handle time:
     // a) only stepping if enough time has really passed.
     // b) updating the screen even when paused & thus delta time is 0.
-    gGameTime = Date.now();
-    var dt = gGameTime - self.lastGameTime;
-    if (dt >= kTimeStepThreshold) {
+    var paused = aub((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false);
+    var now = Date.now();
+    var dt = now - self.lastGameTime;
+    if (dt >= kMaybeWasPausedInTheDangedDebuggerMsec) {
+      // do not suddenly jump the sum of time we were paused in the debugger.
+      self.lastGameTime = now;
+    } else if (dt >= kTimeStepThreshold) {
+      if (paused) {
+        dt = 0;
+      } else {
+        gGameTime = now;
+      }
+      // hack: give every step something to chew on even if just empty.
+      if (gEventQueue.length === 0) {
+        gEventQueue.push(kNoopEvent);
+      }
       self.StepFrame(dt);
       self.lastGameTime = gGameTime;
       gFrameCount++;
+      gEventQueue = [];
     }
     requestAnimationFrame(self.RunLoop);
   };
-  self.StepFrame = function (dt) {
-    var _self$handler$GetIsPa, _self$handler;
+  self.StepFrame = function (dt, paused) {
     Gamepads.poll();
     Assert(exists(self.handler), "RunLoop.handler");
     if (self.transitioned) {
       self.handler = self.handlerMap[self.state]();
       self.transitioned = false;
     }
-    var paused = aub((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false);
     var rdt = paused ? 0 : dt;
     var next = self.handler.Step(rdt);
     if (isU(next) || next == self.state) {
@@ -870,7 +894,6 @@ function WarningState() {
           nextState = self.ProcessOneInput(cmds);
         }
       });
-      gEventQueue = [];
       return nextState;
     }
   };
@@ -905,6 +928,10 @@ function TitleState() {
     ResetInput();
     ResetP1Side();
     SetGameMode(gGameMode);
+    if (!kAppMode) {
+      // reset to 1 player every time for clarity.
+      gGameMode = kGameModeRegular;
+    }
     self.attract = new GameState({
       isAttract: true
     });
@@ -914,18 +941,42 @@ function TitleState() {
     // at one point i guess it felt nicer to not start music immediately?
     self.musicTimer = setTimeout(BeginMusic, 1000);
     self.theMenu = self.MakeMenu();
-    console.log("TitleState", gSinglePlayer, gGameMode);
+    console.log("TitleState", is1P(), gGameMode);
   };
   self.MakeMenu = function () {
-    return new Menu(_objectSpread({
-      isHidden: false,
-      OnClose: function OnClose() {
-        ResetP1Side();
-        // forget any extra in-menu state
-        // like which button is default selected.
-        self.theMenu = self.MakeMenu();
-      }
-    }, MakeTitleMenuButtons()));
+    if (kAppMode) {
+      return new Menu({
+        showButton: true,
+        OnClose: function OnClose() {
+          ResetP1Side();
+          // forget any extra in-menu state
+          // like which button is default selected.
+          self.theMenu = self.MakeMenu();
+        },
+        MakeNavigation: function MakeNavigation() {
+          return MakeAppMenuButtons();
+        }
+      });
+    } else {
+      var OnStart = function OnStart() {
+        self.done = true;
+      };
+      var menu = new Menu({
+        showButton: true,
+        OnClose: function OnClose() {
+          ResetP1Side();
+          // forget any extra in-menu state
+          // like which button is default selected.
+          self.theMenu = self.MakeMenu();
+        },
+        MakeNavigation: function MakeNavigation(menu) {
+          return MakeArcadeMenuButtons({
+            OnStart: OnStart
+          });
+        }
+      });
+      return menu;
+    }
   };
   self.isLoading = function () {
     return gGameTime - self.started <= self.timeout;
@@ -933,7 +984,8 @@ function TitleState() {
   self.Step = function (dt) {
     var nextState = undefined;
     self.attract.Step(dt);
-    self.theMenu.Step(); // note: this doesn't process menu input, actually.
+    self.theMenu.Step(); // note: does not handle input, see below.
+
     nextState = self.ProcessAllInput();
     if (exists(nextState)) {
       clearTimeout(self.musicTimer);
@@ -943,30 +995,24 @@ function TitleState() {
   };
   self.ProcessAllInput = function () {
     var nextState;
-    var hasEvents = gEventQueue.length > 0;
-    if (hasEvents) {
-      gEventQueue.forEach(function (event, i) {
-        var cmds = {};
-        event.updateFn(cmds);
-        if (isU(nextState)) {
-          nextState = self.ProcessOneInput(cmds);
-        }
-      });
-      gEventQueue = [];
-    }
+    gEventQueue.forEach(function (event, i) {
+      var cmds = {};
+      event.updateFn(cmds);
+      if (isU(nextState)) {
+        nextState = self.ProcessOneInput(cmds);
+      }
+    });
     return nextState;
   };
   self.ProcessOneInput = function (cmds) {
     if (cmds.singlePlayer) {
       // match: title_menu.bp1.click
-      gSinglePlayer = true;
       SetGameMode(kGameModeRegular);
       return undefined;
     }
     if (cmds.doublePlayer) {
       // match: title_menu.bp2.click
-      gSinglePlayer = false;
-      SetGameMode(kGameModeZen);
+      SetGameMode(kGameMode2P);
       return undefined;
     }
     if (cmds.nextMusic) {
@@ -981,14 +1027,32 @@ function TitleState() {
       clearAnyMenuPressed(); // todo: code smell.
       return undefined;
     }
-    if (!self.isLoading() && !self.theMenu.isOpen() && (isAnyUpOrDownPressed() || isAnyActivatePressed(cmds) || isAnyPointerDown())) {
-      self.done = true;
+
+    // the menu can be opened in various ways:
+    // * "options" style gamepad buttons.
+    // * "esc" key on keyboard.
+    // * touching the menu button on-screen.
+    if (!self.isLoading() && !self.theMenu.isOpen() && !(self.theMenu.ProcessTarget(gP1Target) || self.theMenu.ProcessTarget(gP2Target)) && (isAnyUpOrDownPressed() || isAnyActivatePressed(cmds) || isAnyPointerDown())) {
+      if (kAppMode) {
+        self.done = true;
+      } else {
+        // the only way to start the game
+        // in demo mode is with the start
+        // button in the menu, to make it
+        // clear to gamepad demo night users
+        // what is going on, vs. app mode
+        // touch being used to decide which
+        // side 1p is on.
+        self.theMenu.Open();
+        gP1Target.ClearPointer();
+        gP2Target.ClearPointer();
+      }
     }
     var nextState;
     if (self.done) {
       // if it was all only gamepad inputs, there's no "side" set.
       if (isU(gP1Side)) {
-        SetP1Side("right");
+        LatchP1Side("right");
       }
       nextState = kGetReady;
     }
@@ -1044,10 +1108,16 @@ function GetReadyState() {
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.pillIDs = ChoosePillIDs(gLevelIndex);
+    self.animations = {};
+    self.AddAnimation(MakeGameStartAnimation());
     PlayBlip();
-    console.log("GetReadyState", gSinglePlayer, gGameMode);
+    console.log("GetReadyState", is1P(), gGameMode);
+  };
+  self.AddAnimation = function (a) {
+    self.animations[gNextID++] = a;
   };
   self.Step = function (dt) {
+    self.StepAnimations(dt);
     self.timeout -= dt;
     var sec = Math.floor(self.timeout / 1000);
     if (sec < self.lastSec) {
@@ -1056,11 +1126,28 @@ function GetReadyState() {
     }
     return self.timeout > 0 ? undefined : kGame;
   };
+  self.StepAnimations = function (dt) {
+    Object.entries(self.animations).forEach(function (_ref2) {
+      var _ref3 = _slicedToArray(_ref2, 2),
+        id = _ref3[0],
+        anim = _ref3[1];
+      var done = anim.Step(dt, self);
+      if (done) {
+        delete self.animations[id];
+      }
+    });
+  };
   self.Draw = function () {
     ClearScreen();
     DrawCRTOutline();
     self.DrawText();
     self.DrawPills();
+    self.DrawAnimations();
+  };
+  self.DrawAnimations = function () {
+    Object.values(self.animations).forEach(function (a) {
+      return a.Draw();
+    });
   };
   self.DrawText = function () {
     var t = Math.ceil(self.timeout / 1000);
@@ -1070,12 +1157,12 @@ function GetReadyState() {
       gCx.fillStyle = RandomGreen(0.3);
       DrawText(ForSide(gP1Side, "P1", "P2"), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
       DrawText(ForSide(gP1Side, "P2", "P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
-      ForGameMode(gSinglePlayer, gGameMode, {
+      ForGameMode({
         regular: function regular() {
           gCx.fillStyle = RandomForColor(cyanSpec);
           DrawText("LEVEL ".concat(gLevelIndex), "center", gw(0.5), gh(0.3), gSmallFontSizePt);
         },
-        zen: function zen() {}
+        zen: function zen() {} // only 1 level.
       })();
       gCx.fillStyle = RandomGreen();
       var y = self.pillIDs.length === 0 ? gh(0.55) : gh(0.52);
@@ -1087,12 +1174,10 @@ function GetReadyState() {
     });
   };
   self.DrawPills = function () {
-    // 0 pills on attract and level 1;
-    // 2 pills in order for the first N levels;
-    // 4 random pills thereafter.
-    // all pills in zen mode so/but don't bother showing them here.
-    var skip = ForGameMode(gSinglePlayer, gGameMode, {
+    var skip = ForGameMode({
       regular: false,
+      // all pills available in zen mode so
+      // don't bother showing them here.
       zen: true
     });
     if (skip) {
@@ -1180,28 +1265,28 @@ function GameState(props) {
 
     // show paddle labels for zen or level 1.
     var p1label = self.isAttract || gLevelIndex > 1 ? undefined : "P1";
-    var p2label = self.isAttract || gLevelIndex > 1 ? undefined : gSinglePlayer ? "GPT" : "P2";
+    var p2label = self.isAttract || gLevelIndex > 1 ? undefined : is1P() ? "GPT" : "P2";
     var paddle1specs = {
       isPlayer: !self.isAttract,
       width: gPaddleWidth,
       height: gPaddleHeight,
       label: p1label,
       isSplitter: !self.isAttract,
-      keyStates: gSinglePlayer ? [gP1Keys, gP2Keys] : [gP1Keys],
-      buttonStates: gSinglePlayer ? [gGamepad1Buttons, gGamepad2Buttons] : [gGamepad1Buttons],
-      stickStates: gSinglePlayer ? [gGamepad1Sticks, gGamepad2Sticks] : [gGamepad1Sticks],
+      keyStates: is1P() ? [gP1Keys, gP2Keys] : [gP1Keys],
+      buttonStates: is1P() ? [gGamepad1Buttons, gGamepad2Buttons] : [gGamepad1Buttons],
+      stickStates: is1P() ? [gGamepad1Sticks, gGamepad2Sticks] : [gGamepad1Sticks],
       target: gP1Target
     };
     var paddle2specs = {
-      isPlayer: !self.isAttract && !gSinglePlayer,
+      isPlayer: !self.isAttract && !is1P(),
       width: gPaddleWidth,
       height: gPaddleHeight,
       label: p2label,
       isSplitter: !self.isAttract,
       isPillSeeker: true,
-      keyStates: gSinglePlayer ? [] : [gP2Keys],
-      buttonStates: gSinglePlayer ? [] : [gGamepad2Buttons],
-      stickStates: gSinglePlayer ? [] : [gGamepad2Sticks],
+      keyStates: is1P() ? [] : [gP2Keys],
+      buttonStates: is1P() ? [] : [gGamepad2Buttons],
+      stickStates: is1P() ? [] : [gGamepad2Sticks],
       target: gP2Target
     };
 
@@ -1241,34 +1326,36 @@ function GameState(props) {
     // make sure the cpu doesn't get one first, that looks too mean/unfair,
     // however, allow a 2nd player to get one first!
     // also, neither side gets too many pills before the other.
-    self.isCpuPillAllowed = !gSinglePlayer;
+    self.isCpuPillAllowed = !is1P();
     self.unfairPillCount = 0;
     if (!self.isAttract) {
-      self.AddAnimation(MakeGameStartAnimation());
       PlayStart();
     }
   };
   self.MakeMenu = function () {
-    return new Menu(_objectSpread({
-      isHidden: true,
+    return new Menu({
+      showButton: false,
       OnClose: function OnClose() {
         self.paused = false;
         // forget any extra in-menu state
         // like which button is default seleted.
         self.theMenu = self.MakeMenu();
+      },
+      MakeNavigation: function MakeNavigation() {
+        return MakeGameMenuButtons({
+          OnQuit: function OnQuit() {
+            self.quit = true;
+          }
+        });
       }
-    }, MakeGameMenuButtons({
-      OnQuit: function OnQuit() {
-        self.quit = true;
-      }
-    })));
+    });
   };
   self.MakeLevel = function () {
     Assert(exists(self.paddleP1));
     Assert(exists(self.paddleP2));
     if (self.isAttract) {
       self.level = MakeAttract(self.paddleP1, self.paddleP2);
-    } else if (gGameMode === kGameModeZen || !gSinglePlayer) {
+    } else if (gGameMode === kGameModeZen || !is1P()) {
       self.level = MakeZen(self.paddleP1, self.paddleP2);
     } else {
       Assert(gLevelIndex > 0);
@@ -1303,7 +1390,7 @@ function GameState(props) {
     self.ProcessAllInput();
     if (self.quit) {
       SaveEndScreenshot(self);
-      return ForGameMode(gSinglePlayer, gGameMode, {
+      return ForGameMode({
         regular: gDebug ? kLevelFin : kGameOver,
         zen: kGameOver
       });
@@ -1326,8 +1413,8 @@ function GameState(props) {
       x: x,
       y: y,
       count: 50,
-      vx: gR.RandomFloat() * 0.8,
-      vy: gR.RandomFloat() * 0.8,
+      vx: gR.RandomRange(0.4, 0.8),
+      vy: gR.RandomRange(0.4, 0.8),
       rx: sx1(10),
       ry: sy1(10),
       colorSpec: cyanSpec
@@ -1355,7 +1442,7 @@ function GameState(props) {
     // sorry this is so much a dupe of the above.
     if (forced || isU(self.level.p2Pill) && self.pillP2SpawnCountdown <= 0 && self.isCpuPillAllowed && self.unfairPillCount > -kDiffMax) {
       // bias powerup creation toward the single player.
-      var factor = kSpawnPlayerPillFactor * (gSinglePlayer ? 0.7 : 1);
+      var factor = kSpawnPlayerPillFactor * (is1P() ? 0.7 : 1);
       var must = forced || self.pillP2SpawnCooldown < PillSpawnCooldownFn() * 2;
       self.level.p2Pill = self.MaybeSpawnPill(must, dt, self.level.p2Pill, factor, self.level.p2Powerups);
       if (exists(self.level.p2Pill)) {
@@ -1394,18 +1481,18 @@ function GameState(props) {
   self.CheckLevelOver = function () {
     var nextState;
     if (!self.isAttract && gPucks.A.length == 0) {
-      nextState = ForGameMode(gSinglePlayer, gGameMode, {
-        regular: gSinglePlayer ? gP1Score < gP2Score ? kGameOver : kLevelFin : kGameOver,
+      nextState = ForGameMode({
+        regular: is1P() ? gP1Score < gP2Score ? kGameOver : kLevelFin : kGameOver,
         zen: kGameOver
       });
     }
     return nextState;
   };
   self.StepAnimations = function (dt) {
-    Object.entries(self.animations).forEach(function (_ref2) {
-      var _ref3 = _slicedToArray(_ref2, 2),
-        id = _ref3[0],
-        anim = _ref3[1];
+    Object.entries(self.animations).forEach(function (_ref4) {
+      var _ref5 = _slicedToArray(_ref4, 2),
+        id = _ref5[0],
+        anim = _ref5[1];
       var done = anim.Step(dt, self);
       if (done) {
         delete self.animations[id];
@@ -1439,7 +1526,7 @@ function GameState(props) {
       p.PlacementInit({
         x: gw(gR.RandomRange(1 / 8, 7 / 8)),
         y: gh(gR.RandomRange(1 / 8, 7 / 8)),
-        vx: gR.RandomRange(self.maxVX * 0.3, self.maxVX * 0.5),
+        vx: gR.RandomRange(0.8, 0.9) * self.maxVX,
         vy: gR.RandomCentered(1, 0.5),
         ur: true
       });
@@ -1454,7 +1541,6 @@ function GameState(props) {
         event.updateFn(cmds);
         self.ProcessOneInput(cmds);
       });
-      gEventQueue = [];
     }
   };
   self.ProcessOneInput = function (cmds) {
@@ -1563,8 +1649,8 @@ function GameState(props) {
 
         // note: splits are pushed before parent, match: Draw()'s revEach() z order.
         if (self.level.isSpawning) {
-          for (var _i = 0; (_ref4 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref4 : 0; ++_i) {
-            var _ref4;
+          for (var _i = 0; (_ref6 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref6 : 0; ++_i) {
+            var _ref6;
             var _p = gPuckPool.Alloc();
             if (exists(_p)) {
               _p.PlacementInit(splits[_i]);
@@ -1614,7 +1700,7 @@ function GameState(props) {
     if (alpha == undefined) {
       alpha = 1;
     }
-    return alpha * (self.isAttract ? 0.2 : 1);
+    return alpha * (self.isAttract ? 0.6 : 1);
   };
 
   // note: this really has to be z-under everything.
@@ -1624,12 +1710,12 @@ function GameState(props) {
       var _self$level$EnergyFac;
       // note: this is all a tweaky hacky heuristic mess.
       var dashStep = gh() / (gMidLineDashCount * 2);
-      var top = ForGameMode(gSinglePlayer, gGameMode, {
+      var top = ForGameMode({
         regular: gYInset * 1.5,
         zen: gYInset
       }) + dashStep / 2;
       var txo = gSmallFontSize;
-      var bottom = ForGameMode(gSinglePlayer, gGameMode, {
+      var bottom = ForGameMode({
         regular: gh() - gYInset * 1.05 - txo,
         zen: gh() - gYInset
       });
@@ -1657,7 +1743,7 @@ function GameState(props) {
   self.DrawScoreHeader = function (isEndScreenshot) {
     Cxdo(function () {
       var style = RandomMagenta(self.Alpha(isEndScreenshot ? 1 : 0.4));
-      var p2 = gSinglePlayer ? "GPT: " : "P2: ";
+      var p2 = is1P() ? "GPT: " : "P2: ";
       var hiMsg = gGameMode === kGameModeZen ? "HIGH: " : "LVL HI: ";
       ForSide(self.isAttract ? "right" : gP1Side, function () {
         gCx.fillStyle = style;
@@ -1788,7 +1874,7 @@ function GameState(props) {
       }
       if (!isEndScreenshot) {
         self.DrawMoveTarget(gP1Target);
-        if (!gSinglePlayer) {
+        if (!is1P()) {
           self.DrawMoveTarget(gP2Target);
         }
       }
@@ -1843,7 +1929,7 @@ function LevelFinState() {
     self.started = gGameTime;
     self.highScore = gLevelHighScores[gLevelIndex];
     self.isNewHighScore = false;
-    if (gSinglePlayer) {
+    if (is1P()) {
       if (isU(self.highScore) || gP1Score > self.highScore) {
         self.highScore = gP1Score;
         self.isNewHighScore = true;
@@ -1874,11 +1960,10 @@ function LevelFinState() {
         nextState = self.ProcessOneInput(cmds);
       }
     });
-    gEventQueue = [];
     return nextState;
   };
   self.ProcessOneInput = function (cmds) {
-    var advance = gGameTime - self.started > kUITimeout;
+    var advance = self.goOn && gGameTime - self.started > kUITimeout;
     if (!advance && self.goOn) {
       var ud = isAnyUpOrDownPressed();
       var ap = isAnyActivatePressed(cmds);
@@ -1887,7 +1972,7 @@ function LevelFinState() {
     }
     if (advance) {
       gLevelIndex += 1;
-      if (gSinglePlayer) {
+      if (is1P()) {
         return kGetReady;
       } else {
         return kGameOverSummary;
@@ -1896,7 +1981,7 @@ function LevelFinState() {
     return undefined;
   };
   self.Draw = function () {
-    gSinglePlayer ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
+    is1P() ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
     self.DrawLevelHighScore();
   };
   self.DrawLevelHighScore = function () {
@@ -1964,7 +2049,6 @@ function GameOverState() {
         nextState = self.ProcessOneInput(cmds);
       }
     });
-    gEventQueue = [];
     return nextState;
   };
   self.ProcessOneInput = function (cmds) {
@@ -2004,31 +2088,22 @@ function GameOverSummaryState() {
     self.started = gGameTime;
   };
   self.Step = function (dt) {
-    var nextState;
     self.goOn = gGameTime - self.started > self.timeoutMsg;
-    nextState = self.ProcessAllInput();
-    return nextState;
-  };
-  self.ProcessAllInput = function () {
     var nextState;
-    var hasEvents = gEventQueue.length > 0;
-    if (hasEvents) {
-      gEventQueue.forEach(function (event, i) {
-        var cmds = {};
-        event.updateFn(cmds);
-        if (isU(nextState)) {
-          nextState = self.ProcessOneInput(cmds);
-        }
-      });
-      gEventQueue = [];
-    }
+    gEventQueue.forEach(function (event, i) {
+      var cmds = {};
+      event.updateFn(cmds);
+      if (isU(nextState)) {
+        nextState = self.ProcessOneInput(cmds);
+      }
+    });
     if (exists(nextState)) {
       PlayBlip();
     }
     return nextState;
   };
   self.ProcessOneInput = function (cmds) {
-    var advance = gGameTime - self.started > kUITimeout;
+    var advance = self.goOn && gGameTime - self.started > kUITimeout;
     if (!advance && self.goOn) {
       var ud = isAnyUpOrDownPressed();
       var ap = isAnyActivatePressed(cmds);
@@ -2039,7 +2114,7 @@ function GameOverSummaryState() {
     return advance ? kTitle : undefined;
   };
   self.Draw = function () {
-    gSinglePlayer ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
+    is1P() ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
     self.DrawGoOn();
   };
   self.DrawGoOn = function () {
@@ -2301,7 +2376,7 @@ function MouseDown(e) {
   e.preventDefault();
   if (e.button === 0) {
     PointerProcess(e, function (x, y) {
-      SetP1Side(x < gw(0.5) ? "left" : "right");
+      LatchP1Side(x < gw(0.5) ? "left" : "right");
       gEventQueue.push({
         type: kEventPointerDown,
         updateFn: function updateFn() {
@@ -2344,7 +2419,7 @@ function TouchStart(e) {
     var t = e.touches[i];
     var pid = t.identifier;
     PointerProcess(t, function (x, y) {
-      SetP1Side(x < gw(0.5) ? "left" : "right");
+      LatchP1Side(x < gw(0.5) ? "left" : "right");
       gEventQueue.push({
         type: kEventPointerDown,
         updateFn: function updateFn() {
@@ -2574,7 +2649,7 @@ function InitEvents() {
         type: kEventKeyDown,
         updateFn: function updateFn() {
           gP1Target.ClearY();
-          SetP1Side("left");
+          LatchP1Side("left");
           LeftKeys().Update({
             up: true
           });
@@ -2588,7 +2663,7 @@ function InitEvents() {
         type: kEventKeyDown,
         updateFn: function updateFn() {
           gP1Target.ClearY();
-          SetP1Side("left");
+          LatchP1Side("left");
           LeftKeys().Update({
             down: true
           });
@@ -2602,7 +2677,7 @@ function InitEvents() {
         type: kEventKeyDown,
         updateFn: function updateFn() {
           gP2Target.ClearY();
-          SetP1Side("right");
+          LatchP1Side("right");
           RightKeys().Update({
             up: true
           });
@@ -2616,7 +2691,7 @@ function InitEvents() {
         type: kEventKeyDown,
         updateFn: function updateFn() {
           gP2Target.ClearY();
-          SetP1Side("right");
+          LatchP1Side("right");
           RightKeys().Update({
             down: true
           });
