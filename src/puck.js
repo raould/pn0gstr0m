@@ -187,7 +187,7 @@ function Puck() {
             const vx = gR.RandomCentered(vxf, vxf/10);
 
             let vy = self.vy;
-            let pvx = T01(Math.abs(self.vx), maxVX);
+            const pvx = T01(Math.abs(self.vx), maxVX);
             // todo: test and refine this.
             // only want 'streaming' possible in zen mode.
             const vyf = ForGameMode({
