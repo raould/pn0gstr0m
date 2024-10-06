@@ -160,7 +160,7 @@ function MakeMenuButton({ OnClose }) {
     };
 
     self.IsMenuButtonClick = function() {
-        return self.bMenu.ProcessTarget()
+        return self.bMenu.ProcessTarget();
     };
 
     self.ProcessOneInput = function(cmds) {

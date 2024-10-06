@@ -211,21 +211,6 @@ var kPuckPoolSize = 500;
 var kSparkPoolSize = 300;
 var kBarriersArrayInitialSize = 4;
 var kXtrasArrayInitialSize = 6;
-
-// prevent pills from showing up too often, or too early - but not too late.
-var PillSpawnCooldownFn = function PillSpawnCooldownFn() {
-  return ForGameMode({
-    regular: function regular() {
-      return 1000 * 5;
-    },
-    hard: function hard() {
-      return 1000 * 10;
-    },
-    zen: function zen() {
-      return 1000 * 20;
-    }
-  })();
-};
 var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
@@ -1321,13 +1306,21 @@ function GameState(props) {
     // this countdown is a block on both player & cpu ill spawning.
     // first wait is longer before the very first pill.
     // also see the 'must' check later on.
-    self.pillP1SpawnCountdown = PillSpawnCooldownFn();
-    self.pillP2SpawnCountdown = PillSpawnCooldownFn();
+    // prevent pills from showing up too often, or too early - but not too late.
+    self.pillSpawnCooldown = ForGameMode({
+      regular: 1000 * 10,
+      hard: 1000 * 15,
+      zen: 1000 * 20,
+      zp2: 1000 * 15
+    });
+    self.pillP1SpawnCountdown = self.pillSpawnCooldown;
+    self.pillP2SpawnCountdown = self.pillSpawnCooldown;
     // make sure the cpu doesn't get one first, that looks too mean/unfair,
     // however, allow a 2nd player to get one first!
-    // also, neither side gets too many pills before the other.
     self.isCpuPillAllowed = !is1P();
+    // also, neither side gets too many pills before the other.
     self.unfairPillCount = 0;
+    self.unfairPillDiffMax = 1;
     if (!self.isAttract) {
       PlayStart();
     }
@@ -1427,33 +1420,34 @@ function GameState(props) {
     }
     self.pillP1SpawnCountdown -= dt;
     self.pillP2SpawnCountdown -= dt;
-    var kDiffMax = 2;
-    if (forced || isU(self.level.p1Pill) && self.pillP1SpawnCountdown <= 0 && self.unfairPillCount < kDiffMax) {
-      var must = forced || self.pillP1SpawnCooldown < PillSpawnCooldownFn() * 2;
-      self.level.p1Pill = self.MaybeSpawnPill(must, dt, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups);
+    if (forced || isU(self.level.p1Pill) && self.pillP1SpawnCountdown <= 0 && self.unfairPillCount < self.unfairPillDiffMax) {
+      var toolongago = self.pillP1SpawnCountdown < -self.pillSpawnCooldown * 2;
+      var must = forced || toolongago;
+      self.level.p1Pill = self.MaybeSpawnPill(must, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups);
       if (exists(self.level.p1Pill)) {
-        self.pillP1SpawnCountdown = PillSpawnCooldownFn();
+        self.pillP1SpawnCountdown = self.pillSpawnCooldown;
         self.unfairPillCount++;
         self.isCpuPillAllowed = true;
         self.AddPillSparks(self.level.p1Pill.x, self.level.p1Pill.y);
       }
     }
 
-    // sorry this is so much a dupe of the above.
-    if (forced || isU(self.level.p2Pill) && self.pillP2SpawnCountdown <= 0 && self.isCpuPillAllowed && self.unfairPillCount > -kDiffMax) {
-      // bias powerup creation toward the single player.
-      var factor = kSpawnPlayerPillFactor * (is1P() ? 0.7 : 1);
-      var must = forced || self.pillP2SpawnCooldown < PillSpawnCooldownFn() * 2;
-      self.level.p2Pill = self.MaybeSpawnPill(must, dt, self.level.p2Pill, factor, self.level.p2Powerups);
+    // the same-but-different as above.
+    if (forced || isU(self.level.p2Pill) && self.pillP2SpawnCountdown <= 0 && self.isCpuPillAllowed && self.unfairPillCount > -self.unfairPillDiffMax) {
+      // bias powerup creation toward the single player, no proof how much this does anything though.
+      var factor = kSpawnPlayerPillFactor * (is1P() ? 0.5 : 1);
+      var _toolongago = self.pillP2SpawnCountdown < -self.pillSpawnCooldown * 2;
+      var must = forced || _toolongago;
+      self.level.p2Pill = self.MaybeSpawnPill(must, self.level.p2Pill, factor, self.level.p2Powerups);
       if (exists(self.level.p2Pill)) {
-        self.pillP2SpawnCountdown = PillSpawnCooldownFn();
+        self.pillP2SpawnCountdown = self.pillSpawnCooldown;
         self.unfairPillCount--;
         self.AddPillSparks(self.level.p2Pill.x, self.level.p2Pill.y);
       }
     }
-    Assert(Math.abs(self.unfairPillCount) <= kDiffMax, "unfairPillCount");
+    Assert(Math.abs(self.unfairPillCount) <= self.unfairPillDiffMax, "unfairPillCount");
   };
-  self.MaybeSpawnPill = function (must, dt, prev, spawnFactor, maker) {
+  self.MaybeSpawnPill = function (must, prev, spawnFactor, maker) {
     var can_paused = !self.paused;
     var can_attract = !self.isAttract;
     var can_factor = gR.RandomBool(spawnFactor);
