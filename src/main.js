@@ -39,8 +39,13 @@ var kAppMode = true;
 
 var kScoreIncrement = 1;
 // note: see GameState.Init().
-var gP1Score = 0;
-var gP2Score = 0;
+var kZeroScore = {game: 0, level: 0};
+var gP1Score = {...kZeroScore};
+var gP2Score = {...kZeroScore};
+function incrScore(pscore, amount) {
+    pscore.level += amount;
+    pscore.game += amount;
+}
 
 // mutually exclusive enum.
 // regular & hard & zen are single player.
@@ -1234,8 +1239,8 @@ function UpdateLocalStorage() {
         RecalculateConstants();
         ResetGlobalStorage();
         ResetInput();
-        gP1Score = 0;
-        gP2Score = 0;
+        gP1Score = {...kZeroScore};
+        gP2Score = {...kZeroScore};
 
         gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
         gLevelTime = gGameTime;
@@ -1497,7 +1502,7 @@ function UpdateLocalStorage() {
         let nextState;
         if (!self.isAttract && gPucks.A.length == 0) {
             nextState = ForGameMode({
-                regular: is1P() ? (gP1Score < gP2Score ? kGameOver : kLevelFin) : kGameOver,
+                regular: is1P() ? (gP1Score.level < gP2Score.level ? kGameOver : kLevelFin) : kGameOver,
                 zen: kGameOver,
             });
         }
@@ -1632,14 +1637,14 @@ function UpdateLocalStorage() {
         var wasLeft = p.x < gw(0.5);
         if (wasLeft) {
             ForSide(gP1Side,
-                    () => { gP2Score += kScoreIncrement; },
-                    () => { gP1Score += kScoreIncrement; }
+                    () => { incrScore(gP2Score, kScoreIncrement); },
+                    () => { incrScore(gP1Score, kScoreIncrement); }
                    )();
         }
         else {
             ForSide(gP1Side,
-                    () => { gP1Score += kScoreIncrement; },
-                    () => { gP2Score += kScoreIncrement; }
+                    () => { incrScore(gP1Score, kScoreIncrement); },
+                    () => { incrScore(gP2Score, kScoreIncrement); }
                    )();
         }
     };
@@ -1768,7 +1773,7 @@ function UpdateLocalStorage() {
                     }
                     if (!self.isAttract) {
                         DrawText( p2 + gP2Score, "right", gw(0.8), gh(0.22), gRegularFontSizePt );
-                        DrawText( "P1: " + gP1Score, "left", gw(0.2), gh(0.22), gRegularFontSizePt );
+                        DrawText( "P1: " + gP1Score.level, "left", gw(0.2), gh(0.22), gRegularFontSizePt );
                     }
                 },
                 () => {
@@ -1777,8 +1782,8 @@ function UpdateLocalStorage() {
                         DrawText(hiMsg + self.levelHighScore, "right", gw(0.8), gh(0.12), gSmallerFontSizePt);
                     }
                     if (!self.isAttract) {
-                        DrawText( p2 + gP2Score, "left", gw(0.2), gh(0.22), gRegularFontSizePt );
-                        DrawText( "P1: " + gP1Score, "right", gw(0.8), gh(0.22), gRegularFontSizePt );
+                        DrawText( p2 + gP2Score.level, "left", gw(0.2), gh(0.22), gRegularFontSizePt );
+                        DrawText( "P1: " + gP1Score.level, "right", gw(0.8), gh(0.22), gRegularFontSizePt );
                     }
                 }
             )();
@@ -1957,13 +1962,13 @@ function UpdateLocalStorage() {
         self.highScore = gLevelHighScores[gLevelIndex];
         self.isNewHighScore = false;
         if (is1P()) {
-            if (isU(self.highScore) || gP1Score > self.highScore) {
-                self.highScore = gP1Score;
+            if (isU(self.highScore) || gP1Score.level > self.highScore) {
+                self.highScore = gP1Score.level;
                 self.isNewHighScore = true;
             }
         }
         else {
-            const maxScore = Math.max(gP1Score, gP2Score);
+            const maxScore = Math.max(gP1Score.level, gP2Score.level);
             if (isU(self.highScore) || maxScore > self.highScore) {
                 self.highScore = maxScore;
                 self.isNewHighScore = true;
@@ -1991,6 +1996,9 @@ function UpdateLocalStorage() {
                 nextState = self.ProcessOneInput(cmds);
             }
         });
+        if (exists(nextState)) {
+            gP1Score.level = gP2Score.level = 0;
+        }
         return nextState;
     };
 
@@ -2062,8 +2070,8 @@ function UpdateLocalStorage() {
             gCx.globalAlpha = 1;
             gCx.fillStyle = RandomForColor(greenSpec);
             let msg = "TIE!";
-            if (gP1Score != gP2Score) {
-                if (gP1Score > gP2Score) {
+            if (gP1Score.level != gP2Score.level) {
+                if (gP1Score.level > gP2Score.level) {
                     msg = "PLAYER 1 WINS!";
                 } else {
                     msg = "PLAYER 2 WINS!";
@@ -2205,12 +2213,11 @@ function UpdateLocalStorage() {
 
     self.DrawSinglePlayer = function() {
         ClearScreen();
-        var finalScore = gP1Score - gP2Score;
         var x = gw(0.5);
         var y = gh(0.5) - 20;
         Cxdo(() => {
             gCx.fillStyle = RandomForColor(magentaSpec);
-            var msg = `FINAL SCORE: ${gP1Score} - ${gP2Score} = ${finalScore}`;
+            var msg = `FINAL SCORE: ${gP1Score.game} - ${gP2Score.game} = ${gP1Score.game - gP2Score.game}`;
             DrawText( msg, "center", x, y, gRegularFontSizePt );
         });
     };
@@ -2223,10 +2230,10 @@ function UpdateLocalStorage() {
             gCx.fillStyle = RandomGreen(0.3);
             var p1a = ForSide(gP1Side, "left", "right");
             var p1x = ForSide(gP1Side, gw(0.2), gw(0.8));
-            DrawText( "P1: " + gP1Score, p1a, p1x, gh(0.22), gRegularFontSizePt );
+            DrawText( "P1: " + gP1Score.game, p1a, p1x, gh(0.22), gRegularFontSizePt );
             var p2a = ForSide(gP2Side, "left", "right");
             var p2x = ForSide(gP2Side, gw(0.2), gw(0.8));
-            DrawText( "P2: " + gP2Score, p2a, p2x, gh(0.22), gRegularFontSizePt );
+            DrawText( "P2: " + gP2Score.game, p2a, p2x, gh(0.22), gRegularFontSizePt );
 
             gCx.fillStyle = RandomBlue();
             DrawText(
@@ -2239,8 +2246,8 @@ function UpdateLocalStorage() {
             gCx.fillStyle = ColorCycle();
             DrawText(
                 // leading space to visually center player 1.
-                gP1Score === gP2Score ? "TIE!" :
-                    (gP1Score > gP2Score ? " PLAYER 1" : "PLAYER 2"),
+                gP1Score.game === gP2Score.game ? "TIE!" :
+                    (gP1Score.game > gP2Score.game ? " PLAYER 1" : "PLAYER 2"),
                 "center",
                 gw(0.5), gh(0.6),
                 gBigFontSizePt
