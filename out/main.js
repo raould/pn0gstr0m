@@ -1401,7 +1401,7 @@ function GameState(props) {
     if (self.quit) {
       SaveEndScreenshot(self);
       return ForGameMode({
-        regular: /*gDebug ? kLevelFin :*/kGameOver,
+        regular: gDebug ? kLevelFin : kGameOver,
         zen: kGameOver
       });
     }
@@ -2081,7 +2081,9 @@ function GameOverState() {
   self.Draw = function () {
     Cxdo(function () {
       ClearScreen();
+      gCx.globalAlpha = 0.35;
       gCx.drawImage(gCanvas2, 0, 0);
+      gCx.globalAlpha = 1;
       gCx.fillStyle = RandomForColor(redSpec);
       DrawText("GAME OVER", "center", gw(0.5), gh(0.55), gBigFontSizePt);
       if (self.goOn) {
