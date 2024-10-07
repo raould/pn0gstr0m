@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
 
@@ -1772,8 +1772,8 @@ function UpdateLocalStorage() {
                         DrawText(hiMsg + self.levelHighScore, "left", gw(0.2), gh(0.12), gSmallerFontSizePt);
                     }
                     if (!self.isAttract) {
-                        DrawText( p2 + gP2Score, "right", gw(0.8), gh(0.22), gRegularFontSizePt );
-                        DrawText( "P1: " + gP1Score.level, "left", gw(0.2), gh(0.22), gRegularFontSizePt );
+                        DrawText( p2 + gP2Score.level, "right", gw(0.8), gh(0.22), gRegularFontSizePt );
+                        DrawText( `P1: ${gP1Score.level}`, "left", gw(0.2), gh(0.22), gRegularFontSizePt );
                     }
                 },
                 () => {
@@ -1783,7 +1783,7 @@ function UpdateLocalStorage() {
                     }
                     if (!self.isAttract) {
                         DrawText( p2 + gP2Score.level, "left", gw(0.2), gh(0.22), gRegularFontSizePt );
-                        DrawText( "P1: " + gP1Score.level, "right", gw(0.8), gh(0.22), gRegularFontSizePt );
+                        DrawText( `P1: ${gP1Score.level}`, "right", gw(0.8), gh(0.22), gRegularFontSizePt );
                     }
                 }
             )();
@@ -1996,8 +1996,8 @@ function UpdateLocalStorage() {
                 nextState = self.ProcessOneInput(cmds);
             }
         });
-        if (exists(nextState)) {
-            gP1Score.level = gP2Score.level = 0;
+        if (exists(nextState)) { 
+           gP1Score.level = gP2Score.level = 0;
         }
         return nextState;
     };
@@ -2230,10 +2230,10 @@ function UpdateLocalStorage() {
             gCx.fillStyle = RandomGreen(0.3);
             var p1a = ForSide(gP1Side, "left", "right");
             var p1x = ForSide(gP1Side, gw(0.2), gw(0.8));
-            DrawText( "P1: " + gP1Score.game, p1a, p1x, gh(0.22), gRegularFontSizePt );
+            DrawText( `P1: ${gP1Score.game}`, p1a, p1x, gh(0.22), gRegularFontSizePt );
             var p2a = ForSide(gP2Side, "left", "right");
             var p2x = ForSide(gP2Side, gw(0.2), gw(0.8));
-            DrawText( "P2: " + gP2Score.game, p2a, p2x, gh(0.22), gRegularFontSizePt );
+            DrawText( `P2: ${gP2Score.game}`, p2a, p2x, gh(0.22), gRegularFontSizePt );
 
             gCx.fillStyle = RandomBlue();
             DrawText(
