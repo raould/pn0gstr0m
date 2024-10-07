@@ -764,26 +764,28 @@ function UpdateLocalStorage() {
         // this got complicated quickly, trying to handle time:
         // a) only stepping if enough time has really passed.
         // b) updating the screen even when paused & thus delta time is 0.
-        var paused = aub(self.handler.GetIsPaused?.(), false);
+        var paused = aub(self.handler.GetIsPaused?.(), false) || document.hidden;
         var now = Date.now();
         var dt = now - self.lastGameTime;
+        self.lastGameTime = now;
+        
         if (dt >= kMaybeWasPausedInTheDangedDebuggerMsec) {
             // do not suddenly jump the sum of time we were paused in the debugger.
-            self.lastGameTime = now;
         }
         else if (dt >= kTimeStepThreshold) {
             if (paused) {
                 dt = 0;
+                console.log("paused", dt, self.lastGameTime, gGameTime);
             } 
             else {
                 gGameTime = now;
-            }                
+                console.log("running", dt, self.lastGameTime, gGameTime);
+            }
             // hack: give every step something to chew on even if just empty.
             if (gEventQueue.length === 0) {
                 gEventQueue.push(kNoopEvent);
             }
             self.StepFrame(dt);
-            self.lastGameTime = gGameTime;
             gFrameCount++;
             gEventQueue = [];
         }
@@ -1594,8 +1596,10 @@ function UpdateLocalStorage() {
         if (cmds.clearHighScore) {
             if (self.paused) {
                 gLevelHighScores = {};
-                DeleteLocal(LocalStorageKeys.levelHighScores);
+                gHighScore = 0;
                 self.levelHighScore = undefined;
+                DeleteLocal(LocalStorageKeys.levelHighScores);
+                DeleteLocal(LocalStorageKeys.gameHighScore);
             }
         }
         if(cmds.addPuck) {
@@ -1985,7 +1989,6 @@ function UpdateLocalStorage() {
             }
         }
         Assert(!isBadNumber(self.levelHigh));
-        self.hiMsg = self.isNewHighScore ? `NEW LEVEL HIGH: ${self.levelHigh}` : undefined;
 
         self.goOn = false;
         PlayGameOver();
@@ -2035,10 +2038,11 @@ function UpdateLocalStorage() {
     };
 
     self.DrawLevelHighScore = function() {
-        if (self.hiMsg) {
+        var hiMsg = self.isNewHighScore ? `NEW LEVEL HIGH: ${self.levelHigh}` : undefined;
+        if (hiMsg) {
             Cxdo(() => {
-                gCx.fillStyle = RandomMagenta();
-                DrawText(self.hiMsg, "center", gw(0.5), gh(0.68), gSmallFontSizePt);
+                gCx.fillStyle = RandomCyan();
+                DrawText(hiMsg, "center", gw(0.5), gh(0.63), gSmallFontSizePt);
             });
         }
     };
@@ -2205,12 +2209,13 @@ function UpdateLocalStorage() {
         ResetInput();
         self.timeoutMsg = 2000;
         self.started = gGameTime;
-        self.maxScore = (is1P() ?
-                         gP1Score.game :
-                         Math.max(
-                             gP1Score.game,
-                             gP2Score.game
-                         ));
+        self.maxScore =
+            is1P() ?
+            gP1Score.game :
+            Math.max(
+                gP1Score.game,
+                gP2Score.game
+            );
         self.isNewHighScore = self.maxScore > gHighScore;
         if (self.isNewHighScore) {
             gHighScore = self.maxScore;
@@ -2277,11 +2282,11 @@ function UpdateLocalStorage() {
                 gSmallFontSizePt
             );
 
-            var msg = `FINAL SCORE: ${gP1Score.game} - ${gP2Score.game} = ${gP1Score.game - gP2Score.game}`;
+            var msg = `FINAL SCORE: ${gP1Score.game}`;
             DrawText( msg, "center", gw(0.5), gh(0.4), gRegularFontSizePt );
 
             if (self.isNewHighScore) {
-                gCx.fillStyle = RandomGreen();
+                gCx.fillStyle = RandomCyan();
                 DrawText(
                     `NEW HIGH SCORE: ${self.maxScore}`,
                     "center",

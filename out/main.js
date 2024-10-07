@@ -792,24 +792,25 @@ function Lifecycle(handlerMap) {
     // this got complicated quickly, trying to handle time:
     // a) only stepping if enough time has really passed.
     // b) updating the screen even when paused & thus delta time is 0.
-    var paused = aub((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false);
+    var paused = aub((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false) || document.hidden;
     var now = Date.now();
     var dt = now - self.lastGameTime;
+    self.lastGameTime = now;
     if (dt >= kMaybeWasPausedInTheDangedDebuggerMsec) {
       // do not suddenly jump the sum of time we were paused in the debugger.
-      self.lastGameTime = now;
     } else if (dt >= kTimeStepThreshold) {
       if (paused) {
         dt = 0;
+        console.log("paused", dt, self.lastGameTime, gGameTime);
       } else {
         gGameTime = now;
+        console.log("running", dt, self.lastGameTime, gGameTime);
       }
       // hack: give every step something to chew on even if just empty.
       if (gEventQueue.length === 0) {
         gEventQueue.push(kNoopEvent);
       }
       self.StepFrame(dt);
-      self.lastGameTime = gGameTime;
       gFrameCount++;
       gEventQueue = [];
     }
@@ -1576,8 +1577,10 @@ function GameState(props) {
     if (cmds.clearHighScore) {
       if (self.paused) {
         gLevelHighScores = {};
-        DeleteLocal(LocalStorageKeys.levelHighScores);
+        gHighScore = 0;
         self.levelHighScore = undefined;
+        DeleteLocal(LocalStorageKeys.levelHighScores);
+        DeleteLocal(LocalStorageKeys.gameHighScore);
       }
     }
     if (cmds.addPuck) {
@@ -1958,7 +1961,6 @@ function LevelFinState() {
       }
     }
     Assert(!isBadNumber(self.levelHigh));
-    self.hiMsg = self.isNewHighScore ? "NEW LEVEL HIGH: ".concat(self.levelHigh) : undefined;
     self.goOn = false;
     PlayGameOver();
     if (self.isNewHighScore) {
@@ -2001,10 +2003,11 @@ function LevelFinState() {
     self.DrawLevelHighScore();
   };
   self.DrawLevelHighScore = function () {
-    if (self.hiMsg) {
+    var hiMsg = self.isNewHighScore ? "NEW LEVEL HIGH: ".concat(self.levelHigh) : undefined;
+    if (hiMsg) {
       Cxdo(function () {
-        gCx.fillStyle = RandomMagenta();
-        DrawText(self.hiMsg, "center", gw(0.5), gh(0.68), gSmallFontSizePt);
+        gCx.fillStyle = RandomCyan();
+        DrawText(hiMsg, "center", gw(0.5), gh(0.63), gSmallFontSizePt);
       });
     }
   };
@@ -2151,10 +2154,10 @@ function GameOverSummaryState() {
       gCx.fillStyle = RandomForColor(magentaSpec);
       DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       DrawText("P2 GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
-      var msg = "FINAL SCORE: ".concat(gP1Score.game, " - ").concat(gP2Score.game, " = ").concat(gP1Score.game - gP2Score.game);
+      var msg = "FINAL SCORE: ".concat(gP1Score.game);
       DrawText(msg, "center", gw(0.5), gh(0.4), gRegularFontSizePt);
       if (self.isNewHighScore) {
-        gCx.fillStyle = RandomGreen();
+        gCx.fillStyle = RandomCyan();
         DrawText("NEW HIGH SCORE: ".concat(self.maxScore), "center", gw(0.5), gh(0.6), gRegularFontSizePt);
       }
     });
