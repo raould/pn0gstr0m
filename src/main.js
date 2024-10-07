@@ -1398,7 +1398,7 @@ function UpdateLocalStorage() {
         if (self.quit) {
             SaveEndScreenshot(self);
             return ForGameMode({
-                regular: gDebug ? kLevelFin : kGameOver,
+                regular: /*gDebug ? kLevelFin :*/ kGameOver,
                 zen: kGameOver,
             });
         }
@@ -2217,15 +2217,27 @@ function UpdateLocalStorage() {
 
     self.DrawSinglePlayer = function() {
         ClearScreen();
-        var x = gw(0.5);
-        var y = gh(0.5) - 20;
         Cxdo(() => {
             gCx.fillStyle = RandomForColor(magentaSpec);
 
-            //DrawText(gP1Score.game, ForSide(gP1Side
+            DrawText(
+                `P1 GAME: ${gP1Score.game}`,
+                ForP1Side("left", "right"),
+                ForP1Side(gw(0.2), gw(0.8)),
+                gh(0.2),
+                gSmallFontSizePt
+            );
+
+            DrawText(
+                `P2 GAME: ${gP2Score.game}`,
+                ForP2Side("left", "right"),
+                ForP2Side(gw(0.2), gw(0.8)),
+                gh(0.2),
+                gSmallFontSizePt
+            );
 
             var msg = `FINAL SCORE: ${gP1Score.game} - ${gP2Score.game} = ${gP1Score.game - gP2Score.game}`;
-            DrawText( msg, "center", x, y, gRegularFontSizePt );
+            DrawText( msg, "center", gw(0.5), gh(0.5)-sy1(20), gRegularFontSizePt );
         });
     };
 
