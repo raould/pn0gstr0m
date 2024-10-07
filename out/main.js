@@ -244,10 +244,10 @@ function isUpOrDownKeyPressed() {
   return gP1Keys.$.up || gP1Keys.$.down || gP2Keys.$.up || gP2Keys.$.down;
 }
 function LeftKeys() {
-  return ForSide(gP1Side, gP1Keys, gP2Keys);
+  return ForP1Side(gP1Keys, gP2Keys);
 }
 function RightKeys() {
-  return ForOtherSide(gP1Side, gP1Keys, gP2Keys);
+  return ForP2Side(gP2Keys, gP1Keys);
 }
 var nostick = {
   up: false,
@@ -479,6 +479,12 @@ function GameTime01(period) {
 }
 
 // (all) this really needs to go into GameState???
+function ForP1Side(left, right) {
+  return ForSide(gP1Side, left, right);
+}
+function ForP2Side(left, right) {
+  return ForSide(gP2Side, left, right);
+}
 function ForSide(src, left, right) {
   // due to history, undefined means right.
   if (src === "left") {
@@ -1863,14 +1869,14 @@ function GameState(props) {
       // match: pucks revEach so splits show up on top, z order.
       // pucks going away from (single) player.
       gPucks.A.revEach(function (p) {
-        if (Sign(p.vx) == ForSide(gP1Side, 1, -1)) {
+        if (Sign(p.vx) == ForP1Side(1, -1)) {
           Assert(exists(p));
           p.Draw(self.Alpha());
         }
       });
       // pucks attacking the (single) player on top.
       gPucks.A.revEach(function (p) {
-        if (Sign(p.vx) == ForSide(gP1Side, -1, 1)) {
+        if (Sign(p.vx) == ForP1Side(-1, 1)) {
           p.Draw(self.Alpha());
         }
       });
@@ -2136,6 +2142,9 @@ function GameOverSummaryState() {
     var y = gh(0.5) - 20;
     Cxdo(function () {
       gCx.fillStyle = RandomForColor(magentaSpec);
+
+      //DrawText(gP1Score.game, ForSide(gP1Side
+
       var msg = "FINAL SCORE: ".concat(gP1Score.game, " - ").concat(gP2Score.game, " = ").concat(gP1Score.game - gP2Score.game);
       DrawText(msg, "center", x, y, gRegularFontSizePt);
     });
@@ -2146,11 +2155,11 @@ function GameOverSummaryState() {
 
       // match: GameState.DrawScoreHeader() et. al.
       gCx.fillStyle = RandomGreen(0.3);
-      var p1a = ForSide(gP1Side, "left", "right");
-      var p1x = ForSide(gP1Side, gw(0.2), gw(0.8));
+      var p1a = ForP1Side("left", "right");
+      var p1x = ForP1Side(gw(0.2), gw(0.8));
       DrawText("P1: ".concat(gP1Score.game), p1a, p1x, gh(0.22), gRegularFontSizePt);
-      var p2a = ForSide(gP2Side, "left", "right");
-      var p2x = ForSide(gP2Side, gw(0.2), gw(0.8));
+      var p2a = ForP2Side("left", "right");
+      var p2x = ForP2Side(gw(0.2), gw(0.8));
       DrawText("P2: ".concat(gP2Score.game), p2a, p2x, gh(0.22), gRegularFontSizePt);
       gCx.fillStyle = RandomBlue();
       DrawText("*** WINNER ***", "center", gw(0.5), gh(0.4), gReducedFontSizePt);
