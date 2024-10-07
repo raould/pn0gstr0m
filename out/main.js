@@ -55,8 +55,12 @@ var kZeroScore = {
   game: 0,
   level: 0
 };
-var gP1Score = _objectSpread({}, kZeroScore);
-var gP2Score = _objectSpread({}, kZeroScore);
+var gP1Score;
+var gP2Score;
+function ResetScores() {
+  gP1Score = _objectSpread({}, kZeroScore);
+  gP2Score = _objectSpread({}, kZeroScore);
+}
 function incrScore(pscore, amount) {
   pscore.level += amount;
   pscore.game += amount;
@@ -920,6 +924,7 @@ function TitleState() {
   self.Init = function () {
     ResetInput();
     ResetP1Side();
+    ResetScores();
     SetGameMode(gGameMode);
     if (!kAppMode) {
       // reset to 1 player every time for clarity.
@@ -1230,8 +1235,8 @@ function GameState(props) {
     RecalculateConstants();
     ResetGlobalStorage();
     ResetInput();
-    gP1Score = _objectSpread({}, kZeroScore);
-    gP2Score = _objectSpread({}, kZeroScore);
+    gP1Score.level = 0;
+    gP2Score.level = 0;
     gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
     gLevelTime = gGameTime;
     self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelIndex];
@@ -1962,9 +1967,6 @@ function LevelFinState() {
         nextState = self.ProcessOneInput(cmds);
       }
     });
-    if (exists(nextState)) {
-      gP1Score.level = gP2Score.level = 0;
-    }
     return nextState;
   };
   self.ProcessOneInput = function (cmds) {

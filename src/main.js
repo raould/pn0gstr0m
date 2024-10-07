@@ -40,8 +40,12 @@ var kAppMode = true;
 var kScoreIncrement = 1;
 // note: see GameState.Init().
 var kZeroScore = {game: 0, level: 0};
-var gP1Score = {...kZeroScore};
-var gP2Score = {...kZeroScore};
+var gP1Score;
+var gP2Score;
+function ResetScores() {
+    gP1Score = {...kZeroScore};
+    gP2Score = {...kZeroScore};
+}
 function incrScore(pscore, amount) {
     pscore.level += amount;
     pscore.game += amount;
@@ -902,6 +906,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         ResetP1Side();
+        ResetScores();
         SetGameMode(gGameMode);
 
         if (!kAppMode) {
@@ -1239,8 +1244,8 @@ function UpdateLocalStorage() {
         RecalculateConstants();
         ResetGlobalStorage();
         ResetInput();
-        gP1Score = {...kZeroScore};
-        gP2Score = {...kZeroScore};
+        gP1Score.level = 0;
+        gP2Score.level = 0;
 
         gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
         gLevelTime = gGameTime;
@@ -1996,9 +2001,6 @@ function UpdateLocalStorage() {
                 nextState = self.ProcessOneInput(cmds);
             }
         });
-        if (exists(nextState)) { 
-           gP1Score.level = gP2Score.level = 0;
-        }
         return nextState;
     };
 
