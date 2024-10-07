@@ -1159,8 +1159,8 @@ function GetReadyState() {
     Cxdo(function () {
       // match: GameState.DrawScoreHeader() et. al.
       gCx.fillStyle = RandomGreen(0.3);
-      DrawText(ForSide(gP1Side, "P1", "P2"), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
-      DrawText(ForSide(gP1Side, "P2", "P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
+      DrawText(ForP1Side("P1", "P2"), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
+      DrawText(ForP1Side("P2", "P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
       ForGameMode({
         regular: function regular() {
           gCx.fillStyle = RandomForColor(cyanSpec);
@@ -1403,7 +1403,7 @@ function GameState(props) {
     if (self.quit) {
       SaveEndScreenshot(self);
       return ForGameMode({
-        regular: /*gDebug ? kLevelFin :*/kGameOver,
+        regular: gDebug ? kLevelFin : kGameOver,
         zen: kGameOver
       });
     }
@@ -1630,13 +1630,13 @@ function GameState(props) {
   self.UpdateScore = function (p) {
     var wasLeft = p.x < gw(0.5);
     if (wasLeft) {
-      ForSide(gP1Side, function () {
+      ForP1Side(function () {
         incrScore(gP2Score, kScoreIncrement);
       }, function () {
         incrScore(gP1Score, kScoreIncrement);
       })();
     } else {
-      ForSide(gP1Side, function () {
+      ForP1Side(function () {
         incrScore(gP1Score, kScoreIncrement);
       }, function () {
         incrScore(gP2Score, kScoreIncrement);
@@ -1758,16 +1758,21 @@ function GameState(props) {
       var style = RandomMagenta(self.Alpha(isEndScreenshot ? 1 : 0.4));
       var p2 = is1P() ? "GPT: " : "P2: ";
       var hiMsg = gGameMode === kGameModeZen ? "HIGH: " : "LVL HI: ";
-      ForSide(self.isAttract ? "right" : gP1Side, function () {
+      // i wish i could be sure attract always had p1 on the right.
+      ForSide(self.isAttract ? "right" : gP1Side,
+      // p1 on the left.
+      function () {
         gCx.fillStyle = style;
         if (exists(self.levelHighScore)) {
           DrawText(hiMsg + self.levelHighScore, "left", gw(0.2), gh(0.12), gSmallerFontSizePt);
         }
         if (!self.isAttract) {
-          DrawText(p2 + gP2Score.level, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
           DrawText("P1: ".concat(gP1Score.level), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
+          DrawText(p2 + gP2Score.level, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
         }
-      }, function () {
+      },
+      // p1 on the right.
+      function () {
         gCx.fillStyle = style;
         if (exists(self.levelHighScore)) {
           DrawText(hiMsg + self.levelHighScore, "right", gw(0.8), gh(0.12), gSmallerFontSizePt);
@@ -2008,9 +2013,12 @@ function LevelFinState() {
   self.DrawSinglePlayer = function () {
     Cxdo(function () {
       ClearScreen();
-      gCx.drawImage(gCanvas2, 0, 0);
       gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
       DrawText("LEVEL ".concat(self.levelIndex, " WON!"), "center", gw(0.5), gh(0.55), gBigFontSizePt);
+      DrawText("P1 LVL: ".concat(gP1Score.level), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
+      DrawText("P2 LVL: ".concat(gP2Score.level), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
+      DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.3), gSmallFontSizePt);
+      DrawText("P2 GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.3), gSmallFontSizePt);
       if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
         DrawText("NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
@@ -2020,9 +2028,6 @@ function LevelFinState() {
   self.DrawTwoPlayer = function () {
     Cxdo(function () {
       ClearScreen();
-      gCx.globalAlpha = 0.5;
-      gCx.drawImage(gCanvas2, 0, 0);
-      gCx.globalAlpha = 1;
       gCx.fillStyle = RandomForColor(greenSpec);
       var msg = "TIE!";
       if (gP1Score.level != gP2Score.level) {
