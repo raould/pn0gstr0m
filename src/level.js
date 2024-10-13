@@ -27,6 +27,7 @@ const kEnglishStep = 0.01;
 	Assert(!isBadNumber(self.maxVX));
 
         self.speedupFactor = props.speedupFactor;
+        // these do not apply until after the MidGame.
         self.englishFactorPlayer = 1;
         self.englishFactorCPU = 1;
 
