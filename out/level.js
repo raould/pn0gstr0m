@@ -6,7 +6,7 @@
  */
 
 // see also: english in puck.js
-var kEnglishStep = 0.004;
+var kEnglishStep = 0.01;
 
 /*class*/
 function Level(props) {
@@ -55,7 +55,7 @@ function Level(props) {
   self.IsMidGame = function () {
     var isMidGame = true;
     if (exists(self.splitsRemaining)) {
-      isMidGame = self.splitsRemaining > 10;
+      isMidGame = self.splitsRemaining > self.splitsMax / 4;
     }
     return isMidGame;
   };
@@ -63,7 +63,7 @@ function Level(props) {
     if (isU(self.splitsRemaining)) {
       return undefined;
     } else {
-      return self.splitsRemaining / self.splitsMax;
+      return T01(self.splitsRemaining, self.splitsMax);
     }
   };
   self.OnPuckSplits = function (splits) {
@@ -78,26 +78,24 @@ function Level(props) {
     }
   };
   self.Step = function (dt) {
-    if (!self.isSpawning && exists(self.speedupFactor)) {
+    // boost things at level end to prevent getting stuck on the level for ever.
+    if (!self.IsMidGame() && exists(self.speedupFactor)) {
+      var _self$EnergyFactor;
       Assert(gGameMode !== kGameModeZen);
 
       // allow future spawned pucks to go faster, up to a hard limit.
       self.maxVX = MinSigned(self.maxVX + self.speedupFactor * dt / kTimeStep, kMaxVX);
 
       // heuristics to increase english, all fairly arbitrary hacky values.
-      // boost english at the very end of the level.
-      var englishBoost = gPucks.A.length < 5 ? 10 : 1;
-      // increase over time, more so for the player.
-      self.englishFactorPlayer += dt / kTimeStep * kEnglishStep * englishBoost;
-      // the cpu doesn't get as much english because if they are the
+      var boostFactor = 1 - ((_self$EnergyFactor = self.EnergyFactor()) != null ? _self$EnergyFactor : 1);
+      // increase over time, more so for human players.
+      self.englishFactorPlayer += dt / kTimeStep * kEnglishStep * boostFactor;
+
+      // cpu doesn't get as much english because if they are the
       // first one to hit a puck with a lot of english it looks like cheating.
       self.englishFactorCPU += dt / kTimeStep * kEnglishStep;
       self.paddleP1.englishFactor = self.paddleP1.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
       self.paddleP2.englishFactor = self.paddleP2.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
-
-      // logOnDelta("+maxVX", F(self.maxVX), 1, F(kMaxVX));
-      // logOnDelta("+englishFactorPlayer", F(self.englishFactorPlayer), 0.1);
-      // logOnDelta("+englishFactorCPU", F(self.englishFactorCPU), 0.1);
     }
   };
   self.IsLastOfThePucks = function () {

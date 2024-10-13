@@ -496,6 +496,8 @@ function MakeDefendProps(maker) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
+            // todo: there is a bug here that let one paddle
+            // have 2 defend powerups active at the same time wtf.
             return gameState.level.IsMidGame() &&
                 maker.paddle.barriers.A.length == 0 &&
                 (gDebug || gPucks.A.length > 10);
@@ -586,7 +588,7 @@ function MakeNeoProps(maker) {
         isUrgent: true,
         testFn: (gameState) => {
             return gameState.level.IsMidGame() &&
-                (gDebug || gPucks.A.length > kPuckPoolSize/4) &&
+                (gDebug || gPucks.A.length > 20) &&
                 isU(maker.paddle.neo);
         },
         canSkip: true,

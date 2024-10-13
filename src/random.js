@@ -16,8 +16,8 @@
         };
     };
 
-    self.RandomFloat = function() {
-        return self.next();
+    self.RandomFloat = function(max=1) {
+        return self.next() * max;
     };
 
     self.RandomBool = function(cutoff=0.5) {
@@ -25,7 +25,7 @@
     };
 
     self.RandomSign = function(cutoff) {
-        return self.RandomBool() ? 1 : -1;
+        return self.RandomBool(cutoff) ? 1 : -1;
     };
 
     self.RandomChoice = function(a, b, chooseA) {

@@ -78,7 +78,7 @@ function Paddle(props) {
         self.scanCount = 10;
         self.attackingNearCount = 0;
         self.nudgeX();
-        self.englishFactor = 1; // match: level, puck.
+        self.englishFactor = 0; // ugh, this gets modified & used elsewhere. match: level, puck.
     };
 
     self.GetCollisionBounds = function(isSuddenDeath, maxVX) {
@@ -120,7 +120,7 @@ function Paddle(props) {
             side: self.side,
             ...props,
             isPlayer: false,
-            isSplitter: false,
+            isSplitter: true,
             isPillSeeker: false,
             isXtra: true,
         });
@@ -225,6 +225,19 @@ function Paddle(props) {
 	else {
             self.DrawAsPlayer(alpha, s01, isEndScreenshot);
 	}
+
+        if (gDebug && self.isPlayer && isPlayer1(self.side)) {
+            gDebug_DrawList.push({
+                fn: () => {
+                    gCx.fillStyle = "white";
+                    DrawText(F(self.englishFactor),
+                             "center",
+                             ForP1Side(gw(0.2), gw(0.8)),
+                             gh(0.8),
+                             gSmallestFontSizePt);
+                },
+            });
+        }
     };
 
     self.DrawAsXtra = function( alpha, hp01 ) {

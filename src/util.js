@@ -42,6 +42,20 @@ function logEvery(key, v, count) {
     }
 }
 
+const gLogOnChangeMap = {};
+function logOnChange(key, v, xmsg) {
+    const ov = gLogOnChangeMap[key];
+    const update = isU(ov) || ov != v;
+    if (update) {
+        if (exists(xmsg)) {
+            console.log(key, v, xmsg);
+        } else {
+            console.log(key, v);
+        }
+        gLogOnChangeMap[key] = v;
+    }
+}
+
 const gLogOnDeltaMap = {};
 function logOnDelta(key, v, delta, xmsg) {
     const ov = gLogOnDeltaMap[key];
@@ -105,9 +119,14 @@ function Sign(value) {
 }
 
 function AvoidZero(value, radius) {
-    if (Math.abs(value) < radius) {
-        return radius * Sign(value);
-    }
+    if (value > 0 && value < radius) { return radius; }
+    if (value < 0 && value > radius) { return -radius; }
+    return value;
+}
+
+function AvoidOne(value, radius) {
+    if (value > 0) { return AvoidZero(value-1, radius); }
+    if (value < 0) { return AvoidZero(value+1, radius); }
     return value;
 }
 
@@ -130,8 +149,9 @@ function Pow2(v) {
     return Math.pow(v, 2);
 }
 
-function F(n) {
-    return Math.floor(n*100)/100;
+function F(n, sd) {
+    var dd = (sd == undefined) ? 100 : Math.pow(10, sd);
+    return Math.floor(n*dd)/dd;
 }
 
 function FNP(n, singular, plural) {
@@ -167,6 +187,11 @@ function Clip01(n) {
     return Clip(n, 0, 1);
 }
 
+function Clip01Signed(n) {
+    if (n < 0) { return Clip(n, -1, 0); }
+    return Clip(n, 0, 1);
+}
+
 function Clip255(n) {
     var i = Math.floor(n);
     return Clip(i, 0, 255);
@@ -180,12 +205,22 @@ function T10(v, max) {
     return Clip01(1 - v/max);
 }
 
+function T10Signed(v, max) {
+    max = max == 0 ? 1 : max;
+    return Clip01Signed(1 - v/max);
+}
+
 // v expected to be in range [0, max].
 // v = 0 -> return = 0.
 // v = max -> return = 1.
 function T01(v, max) {
     max = max == 0 ? 1 : max;
     return Clip01(v/max);
+}
+
+function T01Signed(v, max) {
+    max = max == 0 ? 1 : max;
+    return Clip01Signed(v/max);
 }
 
 // aesthetically "non linear".

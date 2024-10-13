@@ -22,14 +22,15 @@ function Random() {
     };
   };
   self.RandomFloat = function () {
-    return self.next();
+    var max = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+    return self.next() * max;
   };
   self.RandomBool = function () {
     var cutoff = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0.5;
     return self.next() < cutoff;
   };
   self.RandomSign = function (cutoff) {
-    return self.RandomBool() ? 1 : -1;
+    return self.RandomBool(cutoff) ? 1 : -1;
   };
   self.RandomChoice = function (a, b, chooseA) {
     return self.RandomBool(chooseA) ? a : b;
