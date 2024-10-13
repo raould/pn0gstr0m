@@ -214,7 +214,7 @@ function Paddle(props) {
       gDebug_DrawList.push({
         fn: function fn() {
           gCx.fillStyle = "white";
-          DrawText(F(self.englishFactor), "center", ForP1Side(gw(0.2), gw(0.8)), gh(0.8), gSmallestFontSizePt);
+          DrawText(F(self.englishFactor), "left", ForP1Side(gw(0.2), gw(0.8)), gh(0.8), gSmallestFontSizePt);
         }
       });
     }
