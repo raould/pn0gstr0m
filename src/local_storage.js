@@ -4,7 +4,8 @@
  */
 
 const LocalStorageKeys = {
-    highScores: 'pn0g_level_highs', // per level.
+    levelHighScores: 'pn0g_level_highs',
+    gameHighScore: 'pn0g_game_high',
     gameMode: 'pn0g_game_mode',
     sfxMuted: 'pn0g_sfx_muted',
     musicMuted: 'pn0g_music_muted',

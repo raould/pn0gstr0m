@@ -51,8 +51,20 @@ var gLifecycle;
 var kAppMode = true;
 var kScoreIncrement = 1;
 // note: see GameState.Init().
-var gP1Score = 0;
-var gP2Score = 0;
+var kZeroScore = {
+  game: 0,
+  level: 0
+};
+var gP1Score;
+var gP2Score;
+function ResetScores() {
+  gP1Score = _objectSpread({}, kZeroScore);
+  gP2Score = _objectSpread({}, kZeroScore);
+}
+function incrScore(pscore, amount) {
+  pscore.level += amount;
+  pscore.game += amount;
+}
 
 // mutually exclusive enum.
 // regular & hard & zen are single player.
@@ -121,10 +133,8 @@ var gMonochrome = false;
 var kGreenFadeInMsec = 7000;
 // "fade" in from 0 alpha to specified alphas.
 var kAlphaFadeInMsec = 700;
-
-// per-game high score doesn't make sense
-// now that we have levels that start scores at 0:0.
-var gLevelHighScores = LoadLocal(LocalStorageKeys.highScores, {});
+var gLevelHighScores = LoadLocal(LocalStorageKeys.levelHighScores, {});
+var gHighScore = LoadLocal(LocalStorageKeys.gameHighScore, 0);
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
 // although i did try to compensate in the run loop.
@@ -232,10 +242,10 @@ function isUpOrDownKeyPressed() {
   return gP1Keys.$.up || gP1Keys.$.down || gP2Keys.$.up || gP2Keys.$.down;
 }
 function LeftKeys() {
-  return ForSide(gP1Side, gP1Keys, gP2Keys);
+  return ForP1Side(gP1Keys, gP2Keys);
 }
 function RightKeys() {
-  return ForOtherSide(gP1Side, gP1Keys, gP2Keys);
+  return ForP2Side(gP2Keys, gP1Keys);
 }
 var nostick = {
   up: false,
@@ -467,6 +477,18 @@ function GameTime01(period) {
 }
 
 // (all) this really needs to go into GameState???
+function isPlayer1(side) {
+  return gP1Side === side;
+}
+function isPlayer2(side) {
+  return gP2Side === side;
+}
+function ForP1Side(left, right) {
+  return ForSide(gP1Side, left, right);
+}
+function ForP2Side(left, right) {
+  return ForSide(gP2Side, left, right);
+}
 function ForSide(src, left, right) {
   // due to history, undefined means right.
   if (src === "left") {
@@ -763,7 +785,7 @@ function Lifecycle(handlerMap) {
     self.handler = handlerMap[self.state]();
     self.stop = false;
     self.transitioned = false;
-    self.lastGameTime = 0; // to Step() and Draw() at desired fps.
+    self.lastGameTime = Date.now();
   };
   self.Quit = function () {
     self.stop = true;
@@ -776,7 +798,7 @@ function Lifecycle(handlerMap) {
     // this got complicated quickly, trying to handle time:
     // a) only stepping if enough time has really passed.
     // b) updating the screen even when paused & thus delta time is 0.
-    var paused = aub((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false);
+    var paused = aub((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false) || document.hidden;
     var now = Date.now();
     var dt = now - self.lastGameTime;
     if (dt >= kMaybeWasPausedInTheDangedDebuggerMsec) {
@@ -788,12 +810,12 @@ function Lifecycle(handlerMap) {
       } else {
         gGameTime = now;
       }
+      self.lastGameTime = now;
       // hack: give every step something to chew on even if just empty.
       if (gEventQueue.length === 0) {
         gEventQueue.push(kNoopEvent);
       }
       self.StepFrame(dt);
-      self.lastGameTime = gGameTime;
       gFrameCount++;
       gEventQueue = [];
     }
@@ -912,6 +934,7 @@ function TitleState() {
   self.Init = function () {
     ResetInput();
     ResetP1Side();
+    ResetScores();
     SetGameMode(gGameMode);
     if (!kAppMode) {
       // reset to 1 player every time for clarity.
@@ -1140,8 +1163,8 @@ function GetReadyState() {
     Cxdo(function () {
       // match: GameState.DrawScoreHeader() et. al.
       gCx.fillStyle = RandomGreen(0.3);
-      DrawText(ForSide(gP1Side, "P1", "P2"), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
-      DrawText(ForSide(gP1Side, "P2", "P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
+      DrawText(ForP1Side("P1", "P2"), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
+      DrawText(ForP1Side("P2", "P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
       ForGameMode({
         regular: function regular() {
           gCx.fillStyle = RandomForColor(cyanSpec);
@@ -1222,8 +1245,8 @@ function GameState(props) {
     RecalculateConstants();
     ResetGlobalStorage();
     ResetInput();
-    gP1Score = 0;
-    gP2Score = 0;
+    gP1Score.level = 0;
+    gP2Score.level = 0;
     gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
     gLevelTime = gGameTime;
     self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelIndex];
@@ -1476,7 +1499,7 @@ function GameState(props) {
     var nextState;
     if (!self.isAttract && gPucks.A.length == 0) {
       nextState = ForGameMode({
-        regular: is1P() ? gP1Score < gP2Score ? kGameOver : kLevelFin : kGameOver,
+        regular: is1P() ? gP1Score.level < gP2Score.level ? kGameOver : kLevelFin : kGameOver,
         zen: kGameOver
       });
     }
@@ -1520,7 +1543,7 @@ function GameState(props) {
       p.PlacementInit({
         x: gw(gR.RandomRange(1 / 8, 7 / 8)),
         y: gh(gR.RandomRange(1 / 8, 7 / 8)),
-        vx: gR.RandomRange(0.8, 0.9) * self.maxVX,
+        vx: gR.RandomRange(0.2, 0.3) * self.maxVX,
         vy: gR.RandomCentered(1, 0.5),
         ur: true
       });
@@ -1559,8 +1582,10 @@ function GameState(props) {
     if (cmds.clearHighScore) {
       if (self.paused) {
         gLevelHighScores = {};
-        DeleteLocal(LocalStorageKeys.highScores);
+        gHighScore = 0;
         self.levelHighScore = undefined;
+        DeleteLocal(LocalStorageKeys.levelHighScores);
+        DeleteLocal(LocalStorageKeys.gameHighScore);
       }
     }
     if (cmds.addPuck) {
@@ -1611,16 +1636,16 @@ function GameState(props) {
   self.UpdateScore = function (p) {
     var wasLeft = p.x < gw(0.5);
     if (wasLeft) {
-      ForSide(gP1Side, function () {
-        gP2Score += kScoreIncrement;
+      ForP1Side(function () {
+        incrScore(gP2Score, kScoreIncrement);
       }, function () {
-        gP1Score += kScoreIncrement;
+        incrScore(gP1Score, kScoreIncrement);
       })();
     } else {
-      ForSide(gP1Side, function () {
-        gP1Score += kScoreIncrement;
+      ForP1Side(function () {
+        incrScore(gP1Score, kScoreIncrement);
       }, function () {
-        gP2Score += kScoreIncrement;
+        incrScore(gP2Score, kScoreIncrement);
       })();
     }
   };
@@ -1739,23 +1764,28 @@ function GameState(props) {
       var style = RandomMagenta(self.Alpha(isEndScreenshot ? 1 : 0.4));
       var p2 = is1P() ? "GPT: " : "P2: ";
       var hiMsg = gGameMode === kGameModeZen ? "HIGH: " : "LVL HI: ";
-      ForSide(self.isAttract ? "right" : gP1Side, function () {
+      // i wish i could be sure attract always had p1 on the right.
+      ForSide(self.isAttract ? "right" : gP1Side,
+      // p1 on the left.
+      function () {
         gCx.fillStyle = style;
         if (exists(self.levelHighScore)) {
           DrawText(hiMsg + self.levelHighScore, "left", gw(0.2), gh(0.12), gSmallerFontSizePt);
         }
         if (!self.isAttract) {
-          DrawText(p2 + gP2Score, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
-          DrawText("P1: " + gP1Score, "left", gw(0.2), gh(0.22), gRegularFontSizePt);
+          DrawText("P1: ".concat(gP1Score.level), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
+          DrawText(p2 + gP2Score.level, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
         }
-      }, function () {
+      },
+      // p1 on the right.
+      function () {
         gCx.fillStyle = style;
         if (exists(self.levelHighScore)) {
           DrawText(hiMsg + self.levelHighScore, "right", gw(0.8), gh(0.12), gSmallerFontSizePt);
         }
         if (!self.isAttract) {
-          DrawText(p2 + gP2Score, "left", gw(0.2), gh(0.22), gRegularFontSizePt);
-          DrawText("P1: " + gP1Score, "right", gw(0.8), gh(0.22), gRegularFontSizePt);
+          DrawText(p2 + gP2Score.level, "left", gw(0.2), gh(0.22), gRegularFontSizePt);
+          DrawText("P1: ".concat(gP1Score.level), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
         }
       })();
     });
@@ -1850,14 +1880,14 @@ function GameState(props) {
       // match: pucks revEach so splits show up on top, z order.
       // pucks going away from (single) player.
       gPucks.A.revEach(function (p) {
-        if (Sign(p.vx) == ForSide(gP1Side, 1, -1)) {
+        if (Sign(p.vx) == ForP1Side(1, -1)) {
           Assert(exists(p));
           p.Draw(self.Alpha());
         }
       });
       // pucks attacking the (single) player on top.
       gPucks.A.revEach(function (p) {
-        if (Sign(p.vx) == ForSide(gP1Side, -1, 1)) {
+        if (Sign(p.vx) == ForP1Side(-1, 1)) {
           p.Draw(self.Alpha());
         }
       });
@@ -1921,27 +1951,26 @@ function LevelFinState() {
     self.levelIndex = gLevelIndex;
     self.timeout = 1000 * 2;
     self.started = gGameTime;
-    self.highScore = gLevelHighScores[gLevelIndex];
+    self.levelHigh = gLevelHighScores[gLevelIndex];
     self.isNewHighScore = false;
     if (is1P()) {
-      if (isU(self.highScore) || gP1Score > self.highScore) {
-        self.highScore = gP1Score;
+      if (isU(self.levelHigh) || gP1Score.level > self.levelHigh) {
+        self.levelHigh = gP1Score.level;
         self.isNewHighScore = true;
       }
     } else {
-      var maxScore = Math.max(gP1Score, gP2Score);
-      if (isU(self.highScore) || maxScore > self.highScore) {
-        self.highScore = maxScore;
+      var maxScore = Math.max(gP1Score.level, gP2Score.level);
+      if (isU(self.levelHigh) || maxScore > self.levelHigh) {
+        self.levelHigh = maxScore;
         self.isNewHighScore = true;
       }
     }
-    Assert(!isBadNumber(self.highScore));
-    self.hiMsg = self.isNewHighScore ? "NEW LEVEL HIGH: ".concat(self.highScore) : undefined;
+    Assert(!isBadNumber(self.levelHigh));
     self.goOn = false;
     PlayGameOver();
     if (self.isNewHighScore) {
-      gLevelHighScores[gLevelIndex] = self.highScore;
-      SaveLocal(LocalStorageKeys.highScores, gLevelHighScores, true);
+      gLevelHighScores[gLevelIndex] = self.levelHigh;
+      SaveLocal(LocalStorageKeys.levelHighScores, gLevelHighScores, true);
     }
   };
   self.Step = function () {
@@ -1979,19 +2008,23 @@ function LevelFinState() {
     self.DrawLevelHighScore();
   };
   self.DrawLevelHighScore = function () {
-    if (self.hiMsg) {
+    var hiMsg = self.isNewHighScore ? "NEW LEVEL HIGH: ".concat(self.levelHigh) : undefined;
+    if (hiMsg) {
       Cxdo(function () {
-        gCx.fillStyle = RandomMagenta();
-        DrawText(self.hiMsg, "center", gw(0.5), gh(0.68), gSmallFontSizePt);
+        gCx.fillStyle = RandomCyan();
+        DrawText(hiMsg, "center", gw(0.5), gh(0.65), gSmallFontSizePt);
       });
     }
   };
   self.DrawSinglePlayer = function () {
     Cxdo(function () {
       ClearScreen();
-      gCx.drawImage(gCanvas2, 0, 0);
       gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
       DrawText("LEVEL ".concat(self.levelIndex, " WON!"), "center", gw(0.5), gh(0.55), gBigFontSizePt);
+      DrawText("P1 LVL: ".concat(gP1Score.level), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
+      DrawText("P2 LVL: ".concat(gP2Score.level), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
+      DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.3), gSmallFontSizePt);
+      DrawText("P2 GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.3), gSmallFontSizePt);
       if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
         DrawText("NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
@@ -2001,13 +2034,10 @@ function LevelFinState() {
   self.DrawTwoPlayer = function () {
     Cxdo(function () {
       ClearScreen();
-      gCx.globalAlpha = 0.5;
-      gCx.drawImage(gCanvas2, 0, 0);
-      gCx.globalAlpha = 1;
       gCx.fillStyle = RandomForColor(greenSpec);
       var msg = "TIE!";
-      if (gP1Score != gP2Score) {
-        if (gP1Score > gP2Score) {
+      if (gP1Score.level != gP2Score.level) {
+        if (gP1Score.level > gP2Score.level) {
           msg = "PLAYER 1 WINS!";
         } else {
           msg = "PLAYER 2 WINS!";
@@ -2059,7 +2089,9 @@ function GameOverState() {
   self.Draw = function () {
     Cxdo(function () {
       ClearScreen();
+      gCx.globalAlpha = 0.35;
       gCx.drawImage(gCanvas2, 0, 0);
+      gCx.globalAlpha = 1;
       gCx.fillStyle = RandomForColor(redSpec);
       DrawText("GAME OVER", "center", gw(0.5), gh(0.55), gBigFontSizePt);
       if (self.goOn) {
@@ -2074,12 +2106,16 @@ function GameOverState() {
 /*class*/
 function GameOverSummaryState() {
   var self = this;
-
-  // todo: support game high score.
   self.Init = function () {
     ResetInput();
     self.timeoutMsg = 2000;
     self.started = gGameTime;
+    self.maxScore = is1P() ? gP1Score.game : Math.max(gP1Score.game, gP2Score.game);
+    self.isNewHighScore = self.maxScore > gHighScore;
+    if (self.isNewHighScore) {
+      gHighScore = self.maxScore;
+      SaveLocal(LocalStorageKeys.gameHighScore, gHighScore);
+    }
   };
   self.Step = function (dt) {
     self.goOn = gGameTime - self.started > self.timeoutMsg;
@@ -2119,13 +2155,16 @@ function GameOverSummaryState() {
   };
   self.DrawSinglePlayer = function () {
     ClearScreen();
-    var finalScore = gP1Score - gP2Score;
-    var x = gw(0.5);
-    var y = gh(0.5) - 20;
     Cxdo(function () {
       gCx.fillStyle = RandomForColor(magentaSpec);
-      var msg = "FINAL SCORE: ".concat(gP1Score, " - ").concat(gP2Score, " = ").concat(finalScore);
-      DrawText(msg, "center", x, y, gRegularFontSizePt);
+      DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
+      DrawText("P2 GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
+      var msg = "FINAL SCORE: ".concat(gP1Score.game);
+      DrawText(msg, "center", gw(0.5), gh(0.4), gRegularFontSizePt);
+      if (self.isNewHighScore) {
+        gCx.fillStyle = RandomCyan();
+        DrawText("NEW HIGH SCORE: ".concat(self.maxScore), "center", gw(0.5), gh(0.6), gRegularFontSizePt);
+      }
     });
   };
   self.DrawTwoPlayer = function () {
@@ -2134,18 +2173,22 @@ function GameOverSummaryState() {
 
       // match: GameState.DrawScoreHeader() et. al.
       gCx.fillStyle = RandomGreen(0.3);
-      var p1a = ForSide(gP1Side, "left", "right");
-      var p1x = ForSide(gP1Side, gw(0.2), gw(0.8));
-      DrawText("P1: " + gP1Score, p1a, p1x, gh(0.22), gRegularFontSizePt);
-      var p2a = ForSide(gP2Side, "left", "right");
-      var p2x = ForSide(gP2Side, gw(0.2), gw(0.8));
-      DrawText("P2: " + gP2Score, p2a, p2x, gh(0.22), gRegularFontSizePt);
+      var p1a = ForP1Side("left", "right");
+      var p1x = ForP1Side(gw(0.2), gw(0.8));
+      DrawText("P1: ".concat(gP1Score.game), p1a, p1x, gh(0.22), gRegularFontSizePt);
+      var p2a = ForP2Side("left", "right");
+      var p2x = ForP2Side(gw(0.2), gw(0.8));
+      DrawText("P2: ".concat(gP2Score.game), p2a, p2x, gh(0.22), gRegularFontSizePt);
       gCx.fillStyle = RandomBlue();
-      DrawText("*** WINNER ***", "center", gw(0.5), gh(0.4), gReducedFontSizePt);
+      DrawText("*** WINNER ***", "center", gw(0.5), gh(0.3), gReducedFontSizePt);
       gCx.fillStyle = ColorCycle();
       DrawText(
       // leading space to visually center player 1.
-      gP1Score === gP2Score ? "TIE!" : gP1Score > gP2Score ? " PLAYER 1" : "PLAYER 2", "center", gw(0.5), gh(0.6), gBigFontSizePt);
+      gP1Score.game === gP2Score.game ? "TIE!" : gP1Score.game > gP2Score.game ? " PLAYER 1" : "PLAYER 2", "center", gw(0.5), gh(0.47), gBigFontSizePt);
+      if (self.isNewHighScore) {
+        gCx.fillStyle = RandomGreen();
+        DrawText("NEW HIGH SCORE: ".concat(self.maxScore), "center", gw(0.5), gh(0.6), gRegularFontSizePt);
+      }
     });
   };
   self.Init();

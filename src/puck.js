@@ -33,10 +33,10 @@ function Puck() {
     };
 
     self.Draw = function( alpha ) {
-        // scal size: more total pucks -> smaller size.
+        // scale size: more total pucks -> smaller size to see them better.
         var countScale = 1 + T10(gPucks.A.length, kEjectCountThreshold) * 0.4;
 
-        // slight crt distortion of size based on horizontal position.
+        // slight crt distortion of size based on horizontal position. todo: vertical as well.
         var crtScale = T10( Math.abs(self.x-gw(0.5)), gw(0.5)) * 0.5 + 1;
         var width = self.width * countScale * crtScale;
         var dw = width - self.width;
@@ -173,7 +173,8 @@ function Puck() {
                 zen: countFactor,
                 z2p: Math.pow(countFactor, 1.5)
             });
-            // keep a few of the fast ones around.
+
+            // some variety in vx.
             const slow = !doejectSpeed && (self.vx > maxVX*0.7) && (gR.RandomFloat() < slowCountFactor);
 	    const slowF = gR.RandomRange(0.8, 0.9);
 	    const fastF = gR.RandomRange(1.005, 1.05);
@@ -186,6 +187,7 @@ function Puck() {
             const vxf = self.vx * scaleF;
             const vx = gR.RandomCentered(vxf, vxf/10);
 
+            // some variety in vy.
             let vy = self.vy;
             const pvx = T01(Math.abs(self.vx), maxVX);
             // todo: test and refine this.
@@ -196,9 +198,9 @@ function Puck() {
                 zen: 1.05,
                 // the faster things get, the more spread out, i hope, but,
                 // not too much since it can be fun to be 'streaming' until neo.
-                z2p: 1.15 + (pvx * 1),
+                z2p: 1.15 + pvx * 0.2,
             });
-            vy = 0.3 + (self.vy * (vyf * AvoidZero(0.5, 0.05)));
+            vy = self.vy * AvoidZero(vyf, 0.05);
 
             // code smell: because SplitPuck is called during MovePucks,
             // we return the new puck to go onto gPucks.B,
@@ -268,7 +270,7 @@ function Puck() {
 	// (but see also: SplitPuck()'s algorithm for culling.)
         // note that englishFactor increases as level ends.
         var dy = self.midY - paddle.GetMidY();
-        var mody = gR.RandomFloat() * 0.03 * Math.abs(dy) * paddle.englishFactor;
+        var mody = gR.RandomFloat(0.02) * Math.abs(dy) * paddle.englishFactor;
 
         // try to avoid getting boringly stuck at top or bottom, especially in zen.
         // but, don't want to utterly lose 'streaming'.
@@ -279,32 +281,22 @@ function Puck() {
             var fy = Math.pow(t01, 2);
 	    return fy;
 	};
-	/*
-	if (gDebug) {
-	    gDebug_DrawList.push({
-		fn: () => {
-		    gCx.fillStyle = rgba255s(white);
-		    var step = gh(0.1);
-		    for (var y = 0; y < gh(); y += step) {
-			var my = y+step/2;
-			var fy = calc_fy(my);
-			DrawText(F(fy), "right", gw(0.4), my, gSmallestFontSizePt);
-		    }
-		}
-	    });
-	}
-	*/
 	var rf = Math.pow(T01(gPucks.A.length, kEjectCountThreshold/2), 1.5);
         if (gR.RandomBool(rf)) {
 	    mody *= calc_fy(self.y);
 	}
 
+        // todo: er, maybe don't let the english reduce the
+        // angle of reflection to less than the angle of attack?
+
+        let nvy = self.vy;
         if( self.midY < paddle.GetMidY() ) {
-            self.vy -= mody;
+            nvy -= mody;
         }
         else if( self.midY > paddle.GetMidY() ) {
-            self.vy += mody;
+            nvy += mody;
         }
+        self.vy = nvy;
     };
 
     self.PaddleCollision = function( paddle, isSuddenDeath, maxVX ) {
