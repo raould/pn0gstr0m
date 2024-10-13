@@ -2163,7 +2163,7 @@ function GameOverSummaryState() {
       DrawText(msg, "center", gw(0.5), gh(0.4), gRegularFontSizePt);
       if (self.isNewHighScore) {
         gCx.fillStyle = RandomCyan();
-        DrawText("NEW HIGH SCORE: ".concat(self.maxScore), "center", gw(0.5), gh(0.6), gRegularFontSizePt);
+        DrawText("NEW HIGH: ".concat(self.maxScore), "center", gw(0.5), gh(0.6), gBigFontSizePt);
       }
     });
   };

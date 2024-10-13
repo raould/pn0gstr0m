@@ -2289,10 +2289,10 @@ function UpdateLocalStorage() {
             if (self.isNewHighScore) {
                 gCx.fillStyle = RandomCyan();
                 DrawText(
-                    `NEW HIGH SCORE: ${self.maxScore}`,
+                    `NEW HIGH: ${self.maxScore}`,
                     "center",
                     gw(0.5), gh(0.6),
-                    gRegularFontSizePt
+                    gBigFontSizePt
                 );
             }
         });

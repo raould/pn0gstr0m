@@ -231,7 +231,7 @@ function Paddle(props) {
                 fn: () => {
                     gCx.fillStyle = "white";
                     DrawText(F(self.englishFactor),
-                             "center",
+                             "left",
                              ForP1Side(gw(0.2), gw(0.8)),
                              gh(0.8),
                              gSmallestFontSizePt);
