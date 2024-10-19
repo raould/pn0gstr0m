@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
 
@@ -802,6 +802,8 @@ function UpdateLocalStorage() {
         }
         var rdt = paused ? 0 : dt;
         var next = self.handler.Step(rdt);
+        ClearScreen();
+        DrawCRTOutline();
         if (isU(next) || next == self.state) {
             self.handler.Draw();
         }
@@ -811,7 +813,6 @@ function UpdateLocalStorage() {
             self.state = next;
             cancelPointing();
         }
-        DrawCRTOutline();
         self.DrawCRTScanlines();
         DrawDebugList();
         if (gDebug) { DrawBounds(0.3); }
@@ -889,7 +890,6 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function() {
-        ClearScreen();
         if (gResizing) {
             DrawResizing();
         }
@@ -1057,7 +1057,6 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function() {
-        ClearScreen();
         if (gResizing) {
             self.started = gGameTime;
             DrawResizing();
@@ -1144,7 +1143,6 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function() {
-        ClearScreen();
         self.DrawText();
         self.DrawPills();
         self.DrawAnimations();
@@ -1876,7 +1874,7 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function(props) {
-        if (!self.isAttract) { ClearScreen(); }
+        //if (!self.isAttract) { ClearScreen(); }
         if (!gResizing) {
             // painter's z order algorithm here below, keep important things last.
 
@@ -2048,7 +2046,6 @@ function UpdateLocalStorage() {
 
     self.DrawSinglePlayer = function() {
         Cxdo(() => {
-            ClearScreen();
             gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
             DrawText(
                 `LEVEL ${self.levelIndex} WON!`,
@@ -2105,7 +2102,6 @@ function UpdateLocalStorage() {
 
     self.DrawTwoPlayer = function() {
         Cxdo(() => {
-            ClearScreen();
             gCx.fillStyle = RandomForColor(greenSpec);
             let msg = "TIE!";
             if (gP1Score.level != gP2Score.level) {
@@ -2175,7 +2171,6 @@ function UpdateLocalStorage() {
 
     self.Draw = function() {
         Cxdo(() => {
-            ClearScreen();
             gCx.globalAlpha = 0.35;
             gCx.drawImage(gCanvas2, 0, 0);
             gCx.globalAlpha = 1;
@@ -2263,7 +2258,6 @@ function UpdateLocalStorage() {
     };        
 
     self.DrawSinglePlayer = function() {
-        ClearScreen();
         Cxdo(() => {
             gCx.fillStyle = RandomForColor(magentaSpec);
 
@@ -2300,8 +2294,6 @@ function UpdateLocalStorage() {
 
     self.DrawTwoPlayer = function() {
         Cxdo(() => {
-            ClearScreen();
-
             // match: GameState.DrawScoreHeader() et. al.
             gCx.fillStyle = RandomGreen(0.3);
             var p1a = ForP1Side("left", "right");
@@ -2351,7 +2343,6 @@ function UpdateLocalStorage() {
     self.Step = function() {
     };
     self.Draw = function() {
-        ClearScreen();
         Cxdo(() => {
             gCx.fillStyle = RandomForColor(blueSpec, 0.3);
             DrawText( "D E B U G", "center", gw(0.5), gh(0.8), gBigFontSizePt );
