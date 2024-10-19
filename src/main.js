@@ -811,6 +811,7 @@ function UpdateLocalStorage() {
             self.state = next;
             cancelPointing();
         }
+        DrawCRTOutline();
         self.DrawCRTScanlines();
         DrawDebugList();
         if (gDebug) { DrawBounds(0.3); }
@@ -893,7 +894,6 @@ function UpdateLocalStorage() {
             DrawResizing();
         }
         else {
-            DrawCRTOutline();
             DrawTitle(false);
             DrawWarning();
             DrawLandscape();
@@ -1063,7 +1063,6 @@ function UpdateLocalStorage() {
             DrawResizing();
         }
         else {
-            DrawCRTOutline();
             Cxdo(() => {
                 self.attract.Draw();
                 DrawTitle();
@@ -1146,7 +1145,6 @@ function UpdateLocalStorage() {
 
     self.Draw = function() {
         ClearScreen();
-        DrawCRTOutline();
         self.DrawText();
         self.DrawPills();
         self.DrawAnimations();
@@ -1856,7 +1854,7 @@ function UpdateLocalStorage() {
                 gCx.fillStyle = gCx.strokeStyle = RandomForColor(greySpec, 0.3);
                 DrawText("ESC", "center", cx, cy + gSmallestFontSize*0.4, gSmallestFontSizePt);
                 gCx.beginPath();
-                gCx.roundRect(cx-gPauseRadius, cy-gPauseRadius,
+                gCx.RoundRect(cx-gPauseRadius, cy-gPauseRadius,
                               gPauseRadius*2, gPauseRadius*2,
                               8);
                 gCx.lineWidth = sx1(1.5);
@@ -1974,7 +1972,7 @@ function UpdateLocalStorage() {
         self.levelIndex = gLevelIndex;
         self.timeout = 1000 * 2;
         self.started = gGameTime;
-        self.levelHigh = gLevelHighScores[gLevelIndex];
+        self.levelHigh = gLevelHighScores[self.levelIndex];
         self.isNewHighScore = false;
         if (is1P()) {
             if (isU(self.levelHigh) || gP1Score.level > self.levelHigh) {
@@ -1995,7 +1993,7 @@ function UpdateLocalStorage() {
         PlayGameOver();
 
         if (self.isNewHighScore) {
-            gLevelHighScores[gLevelIndex] = self.levelHigh;
+            gLevelHighScores[self.levelIndex] = self.levelHigh;
             SaveLocal(LocalStorageKeys.levelHighScores, gLevelHighScores, true);
         }
     };
@@ -2075,20 +2073,22 @@ function UpdateLocalStorage() {
                 gSmallFontSizePt
             );
 
-            DrawText(
-                `P1 GAME: ${gP1Score.game}`,
-                ForP1Side("left", "right"),
-                ForP1Side(gw(0.2), gw(0.8)),
-                gh(0.3),
-                gSmallFontSizePt
-            );
-            DrawText(
-                `P2 GAME: ${gP2Score.game}`,
-                ForP2Side("left", "right"),
-                ForP2Side(gw(0.2), gw(0.8)),
-                gh(0.3),
-                gSmallFontSizePt
-            );
+            if (self.levelIndex > 1) {
+                DrawText(
+                    `P1 GAME: ${gP1Score.game}`,
+                    ForP1Side("left", "right"),
+                    ForP1Side(gw(0.2), gw(0.8)),
+                    gh(0.3),
+                    gSmallFontSizePt
+                );
+                DrawText(
+                    `P2 GAME: ${gP2Score.game}`,
+                    ForP2Side("left", "right"),
+                    ForP2Side(gw(0.2), gw(0.8)),
+                    gh(0.3),
+                    gSmallFontSizePt
+                );
+            }
 
             if (self.goOn) {
                 gCx.fillStyle = RandomYellowSolid();
