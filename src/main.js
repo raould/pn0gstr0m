@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
 
@@ -421,8 +421,13 @@ var kGameOverSummary = 6;
 
 var gCanvas;
 var gCx;
+// for screenshots.
 var gCanvas2;
 var gCx2;
+// for background.
+var gCanvasBg;
+var gCxBg;
+
 var gToasts = [];
 var gGamepad1;
 var gGamepad2;
@@ -473,12 +478,13 @@ function Cxdo(fn) { // get it?
     gCx.restore();
 }
 
-function SaveEndScreenshot(state) {
+function TakeScreenshot(state, gCxDst) {
     Cxdo(() => {
-        Assert(exists(state.Draw));
-        state.Draw({ isEndScreenshot: true });
-        gCx2.clearRect(0, 0, gWidth, gHeight);
-        gCx2.drawImage(gCanvas, 0, 0);
+        if( state != undefined ) {
+            state.Draw({ isEndScreenshot: true });
+        }
+        gCxDst.clearRect(0, 0, gWidth, gHeight);
+        gCxDst.drawImage(gCanvas, 0, 0);
     });
 }
 
@@ -686,12 +692,18 @@ function CreateCRTOutlinePath() {
     gCx.bezierCurveTo(inset, 0,
                       gw(1)-inset, 0,
                       gw(1)-inset, inset);
+
+    gCx.moveTo(gw(1)-inset, inset);
     gCx.bezierCurveTo(gw(1), inset,
                       gw(1), gh(1)-inset,
                       gw(1)-inset, gh(1)-inset);
+
+    gCx.moveTo(gw(1)-inset, gh(1)-inset);
     gCx.bezierCurveTo(gw(1)-inset, gh(1),
                       inset, gh(1),
                       inset, gh(1)-inset);
+
+    gCx.moveTo(inset, gh(1)-inset);
     gCx.bezierCurveTo(0, gh(1)-inset,
                       0, inset,
                       inset, inset);
@@ -706,12 +718,6 @@ function DrawCRTOutline() {
         gCx.stroke();
     });
 }    
-
-function ResetClipping() {
-    gCx.clearRect(0, 0, gw(), gh());
-    self.CreateCRTOutlinePath();
-    gCx.clip();
-}
 
 function DrawDebugList() {
     if (gDebug) {
@@ -755,6 +761,12 @@ function UpdateLocalStorage() {
         self.stop = false;
         self.transitioned = false;
         self.lastGameTime = Date.now();
+
+        Cxdo(() => {
+            ClearScreen();
+            DrawCRTOutline();
+            TakeScreenshot(undefined, gCxBg);
+        });
     };
 
     self.Quit = function() {
@@ -804,7 +816,7 @@ function UpdateLocalStorage() {
         }
         var rdt = paused ? 0 : dt;
         var next = self.handler.Step(rdt);
-        ClearScreen();
+        gCx.drawImage(gCanvasBg, 0, 0);
         DrawCRTOutline();
         if (isU(next) || next == self.state) {
             self.handler.Draw();
@@ -1396,7 +1408,7 @@ function UpdateLocalStorage() {
 
         self.ProcessAllInput();
         if (self.quit) {
-            SaveEndScreenshot(self);
+            TakeScreenshot(self, gCx2);
             return ForGameMode({
                 regular: gDebug ? kLevelFin : kGameOver,
                 zen: kGameOver,
@@ -1499,7 +1511,7 @@ function UpdateLocalStorage() {
         else {
             var nextState = self.CheckLevelOver();
             if (exists(nextState)) {
-                SaveEndScreenshot(self);
+                TakeScreenshot(self, gCx2);
             }
             return nextState;
         }
@@ -1876,7 +1888,6 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function(props) {
-        //if (!self.isAttract) { ClearScreen(); }
         if (!gResizing) {
             // painter's z order algorithm here below, keep important things last.
 
@@ -2770,7 +2781,10 @@ function Start() {
     gCanvas2.height = gCanvas.height;
     gCx2 = gCanvas2.getContext('2d');
 
-    ResetClipping();
+    gCanvasBg = document.createElement('canvas');
+    gCanvasBg.width = gCanvas.width;
+    gCanvasBg.height = gCanvas.height;
+    gCxBg = gCanvasBg.getContext('2d');
 
     var handlerMap = {};
     handlerMap[kRoot] = () => new RootState(kWarning);
