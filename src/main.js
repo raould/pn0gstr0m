@@ -237,7 +237,7 @@ function LeftKeys() {
     return ForP1Side(gP1Keys, gP2Keys);
 }
 function RightKeys() {
-    return ForP2Side(gP2Keys, gP1Keys);
+    return ForP1Side(gP2Keys, gP1Keys);
 }
 
 var nostick = { up: false, down: false, dz: kJoystickDeadZone };
@@ -443,6 +443,8 @@ function GameTime01(period, start=gLevelTime) {
 // (all) this really needs to go into GameState???
 function isPlayer1(side) { return gP1Side === side; }
 function isPlayer2(side) { return gP2Side === side; }
+
+// todo: this has gotten surprisingly bad and confusing.
 function ForP1Side(left, right) { return ForSide(gP1Side, left, right); }
 function ForP2Side(left, right) { return ForSide(gP2Side, left, right); }
 function ForSide(src, left, right) {
@@ -802,6 +804,8 @@ function UpdateLocalStorage() {
         }
         var rdt = paused ? 0 : dt;
         var next = self.handler.Step(rdt);
+        ClearScreen();
+        DrawCRTOutline();
         if (isU(next) || next == self.state) {
             self.handler.Draw();
         }
@@ -888,12 +892,10 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function() {
-        ClearScreen();
         if (gResizing) {
             DrawResizing();
         }
         else {
-            DrawCRTOutline();
             DrawTitle(false);
             DrawWarning();
             DrawLandscape();
@@ -1057,13 +1059,11 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function() {
-        ClearScreen();
         if (gResizing) {
             self.started = gGameTime;
             DrawResizing();
         }
         else {
-            DrawCRTOutline();
             Cxdo(() => {
                 self.attract.Draw();
                 DrawTitle();
@@ -1145,8 +1145,6 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function() {
-        ClearScreen();
-        DrawCRTOutline();
         self.DrawText();
         self.DrawPills();
         self.DrawAnimations();
@@ -1856,7 +1854,7 @@ function UpdateLocalStorage() {
                 gCx.fillStyle = gCx.strokeStyle = RandomForColor(greySpec, 0.3);
                 DrawText("ESC", "center", cx, cy + gSmallestFontSize*0.4, gSmallestFontSizePt);
                 gCx.beginPath();
-                gCx.roundRect(cx-gPauseRadius, cy-gPauseRadius,
+                gCx.RoundRect(cx-gPauseRadius, cy-gPauseRadius,
                               gPauseRadius*2, gPauseRadius*2,
                               8);
                 gCx.lineWidth = sx1(1.5);
@@ -1878,7 +1876,7 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function(props) {
-        if (!self.isAttract) { ClearScreen(); }
+        //if (!self.isAttract) { ClearScreen(); }
         if (!gResizing) {
             // painter's z order algorithm here below, keep important things last.
 
@@ -1974,7 +1972,7 @@ function UpdateLocalStorage() {
         self.levelIndex = gLevelIndex;
         self.timeout = 1000 * 2;
         self.started = gGameTime;
-        self.levelHigh = gLevelHighScores[gLevelIndex];
+        self.levelHigh = gLevelHighScores[self.levelIndex];
         self.isNewHighScore = false;
         if (is1P()) {
             if (isU(self.levelHigh) || gP1Score.level > self.levelHigh) {
@@ -1995,7 +1993,7 @@ function UpdateLocalStorage() {
         PlayGameOver();
 
         if (self.isNewHighScore) {
-            gLevelHighScores[gLevelIndex] = self.levelHigh;
+            gLevelHighScores[self.levelIndex] = self.levelHigh;
             SaveLocal(LocalStorageKeys.levelHighScores, gLevelHighScores, true);
         }
     };
@@ -2050,7 +2048,6 @@ function UpdateLocalStorage() {
 
     self.DrawSinglePlayer = function() {
         Cxdo(() => {
-            ClearScreen();
             gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
             DrawText(
                 `LEVEL ${self.levelIndex} WON!`,
@@ -2075,20 +2072,22 @@ function UpdateLocalStorage() {
                 gSmallFontSizePt
             );
 
-            DrawText(
-                `P1 GAME: ${gP1Score.game}`,
-                ForP1Side("left", "right"),
-                ForP1Side(gw(0.2), gw(0.8)),
-                gh(0.3),
-                gSmallFontSizePt
-            );
-            DrawText(
-                `P2 GAME: ${gP2Score.game}`,
-                ForP2Side("left", "right"),
-                ForP2Side(gw(0.2), gw(0.8)),
-                gh(0.3),
-                gSmallFontSizePt
-            );
+            if (self.levelIndex > 1) {
+                DrawText(
+                    `P1 GAME: ${gP1Score.game}`,
+                    ForP1Side("left", "right"),
+                    ForP1Side(gw(0.2), gw(0.8)),
+                    gh(0.3),
+                    gSmallFontSizePt
+                );
+                DrawText(
+                    `P2 GAME: ${gP2Score.game}`,
+                    ForP2Side("left", "right"),
+                    ForP2Side(gw(0.2), gw(0.8)),
+                    gh(0.3),
+                    gSmallFontSizePt
+                );
+            }
 
             if (self.goOn) {
                 gCx.fillStyle = RandomYellowSolid();
@@ -2105,7 +2104,6 @@ function UpdateLocalStorage() {
 
     self.DrawTwoPlayer = function() {
         Cxdo(() => {
-            ClearScreen();
             gCx.fillStyle = RandomForColor(greenSpec);
             let msg = "TIE!";
             if (gP1Score.level != gP2Score.level) {
@@ -2175,7 +2173,6 @@ function UpdateLocalStorage() {
 
     self.Draw = function() {
         Cxdo(() => {
-            ClearScreen();
             gCx.globalAlpha = 0.35;
             gCx.drawImage(gCanvas2, 0, 0);
             gCx.globalAlpha = 1;
@@ -2263,7 +2260,6 @@ function UpdateLocalStorage() {
     };        
 
     self.DrawSinglePlayer = function() {
-        ClearScreen();
         Cxdo(() => {
             gCx.fillStyle = RandomForColor(magentaSpec);
 
@@ -2300,8 +2296,6 @@ function UpdateLocalStorage() {
 
     self.DrawTwoPlayer = function() {
         Cxdo(() => {
-            ClearScreen();
-
             // match: GameState.DrawScoreHeader() et. al.
             gCx.fillStyle = RandomGreen(0.3);
             var p1a = ForP1Side("left", "right");
@@ -2351,7 +2345,6 @@ function UpdateLocalStorage() {
     self.Step = function() {
     };
     self.Draw = function() {
-        ClearScreen();
         Cxdo(() => {
             gCx.fillStyle = RandomForColor(blueSpec, 0.3);
             DrawText( "D E B U G", "center", gw(0.5), gh(0.8), gBigFontSizePt );
@@ -2692,6 +2685,16 @@ function ResetGlobalStorage() {
 
 function OnOrientationChange() {
     OnResize();
+}
+
+function OnBlur() {
+    if (exists(gLifecycle)) {
+        if (gLifecycle.state == kGame) {
+            if (exists(gLifecycle.handler)) {
+                gLifecycle.handler.Pause();
+            }
+        }
+    }
 }
 
 // (the web is a pi(l)e of feces.)
@@ -3096,6 +3099,7 @@ function InitEvents() {
 
     window.addEventListener( 'orientationChange', OnOrientationChange, false );
     window.addEventListener( 'resize', OnResize, false );
+    window.addEventListener( 'blur', OnBlur, false );
 }
 
 window.addEventListener( 'load', () => { Start(); InitEvents(); }, false );

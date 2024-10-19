@@ -245,7 +245,7 @@ function LeftKeys() {
   return ForP1Side(gP1Keys, gP2Keys);
 }
 function RightKeys() {
-  return ForP2Side(gP2Keys, gP1Keys);
+  return ForP1Side(gP2Keys, gP1Keys);
 }
 var nostick = {
   up: false,
@@ -483,6 +483,8 @@ function isPlayer1(side) {
 function isPlayer2(side) {
   return gP2Side === side;
 }
+
+// todo: this has gotten surprisingly bad and confusing.
 function ForP1Side(left, right) {
   return ForSide(gP1Side, left, right);
 }
@@ -830,6 +832,8 @@ function Lifecycle(handlerMap) {
     }
     var rdt = paused ? 0 : dt;
     var next = self.handler.Step(rdt);
+    ClearScreen();
+    DrawCRTOutline();
     if (isU(next) || next == self.state) {
       self.handler.Draw();
     } else {
@@ -914,11 +918,9 @@ function WarningState() {
     return self.done ? kTitle : undefined;
   };
   self.Draw = function () {
-    ClearScreen();
     if (gResizing) {
       DrawResizing();
     } else {
-      DrawCRTOutline();
       DrawTitle(false);
       DrawWarning();
       DrawLandscape();
@@ -1067,12 +1069,10 @@ function TitleState() {
     return nextState;
   };
   self.Draw = function () {
-    ClearScreen();
     if (gResizing) {
       self.started = gGameTime;
       DrawResizing();
     } else {
-      DrawCRTOutline();
       Cxdo(function () {
         self.attract.Draw();
         DrawTitle();
@@ -1146,8 +1146,6 @@ function GetReadyState() {
     });
   };
   self.Draw = function () {
-    ClearScreen();
-    DrawCRTOutline();
     self.DrawText();
     self.DrawPills();
     self.DrawAnimations();
@@ -1838,7 +1836,7 @@ function GameState(props) {
         gCx.fillStyle = gCx.strokeStyle = RandomForColor(greySpec, 0.3);
         DrawText("ESC", "center", cx, cy + gSmallestFontSize * 0.4, gSmallestFontSizePt);
         gCx.beginPath();
-        gCx.roundRect(cx - gPauseRadius, cy - gPauseRadius, gPauseRadius * 2, gPauseRadius * 2, 8);
+        gCx.RoundRect(cx - gPauseRadius, cy - gPauseRadius, gPauseRadius * 2, gPauseRadius * 2, 8);
         gCx.lineWidth = sx1(1.5);
         gCx.stroke();
         if (gDebug) {
@@ -1855,9 +1853,7 @@ function GameState(props) {
     });
   };
   self.Draw = function (props) {
-    if (!self.isAttract) {
-      ClearScreen();
-    }
+    //if (!self.isAttract) { ClearScreen(); }
     if (!gResizing) {
       // painter's z order algorithm here below, keep important things last.
 
@@ -1951,7 +1947,7 @@ function LevelFinState() {
     self.levelIndex = gLevelIndex;
     self.timeout = 1000 * 2;
     self.started = gGameTime;
-    self.levelHigh = gLevelHighScores[gLevelIndex];
+    self.levelHigh = gLevelHighScores[self.levelIndex];
     self.isNewHighScore = false;
     if (is1P()) {
       if (isU(self.levelHigh) || gP1Score.level > self.levelHigh) {
@@ -1969,7 +1965,7 @@ function LevelFinState() {
     self.goOn = false;
     PlayGameOver();
     if (self.isNewHighScore) {
-      gLevelHighScores[gLevelIndex] = self.levelHigh;
+      gLevelHighScores[self.levelIndex] = self.levelHigh;
       SaveLocal(LocalStorageKeys.levelHighScores, gLevelHighScores, true);
     }
   };
@@ -2018,13 +2014,14 @@ function LevelFinState() {
   };
   self.DrawSinglePlayer = function () {
     Cxdo(function () {
-      ClearScreen();
       gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
       DrawText("LEVEL ".concat(self.levelIndex, " WON!"), "center", gw(0.5), gh(0.55), gBigFontSizePt);
       DrawText("P1 LVL: ".concat(gP1Score.level), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       DrawText("P2 LVL: ".concat(gP2Score.level), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
-      DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.3), gSmallFontSizePt);
-      DrawText("P2 GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.3), gSmallFontSizePt);
+      if (self.levelIndex > 1) {
+        DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.3), gSmallFontSizePt);
+        DrawText("P2 GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.3), gSmallFontSizePt);
+      }
       if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
         DrawText("NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
@@ -2033,7 +2030,6 @@ function LevelFinState() {
   };
   self.DrawTwoPlayer = function () {
     Cxdo(function () {
-      ClearScreen();
       gCx.fillStyle = RandomForColor(greenSpec);
       var msg = "TIE!";
       if (gP1Score.level != gP2Score.level) {
@@ -2088,7 +2084,6 @@ function GameOverState() {
   };
   self.Draw = function () {
     Cxdo(function () {
-      ClearScreen();
       gCx.globalAlpha = 0.35;
       gCx.drawImage(gCanvas2, 0, 0);
       gCx.globalAlpha = 1;
@@ -2154,7 +2149,6 @@ function GameOverSummaryState() {
     }
   };
   self.DrawSinglePlayer = function () {
-    ClearScreen();
     Cxdo(function () {
       gCx.fillStyle = RandomForColor(magentaSpec);
       DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
@@ -2169,8 +2163,6 @@ function GameOverSummaryState() {
   };
   self.DrawTwoPlayer = function () {
     Cxdo(function () {
-      ClearScreen();
-
       // match: GameState.DrawScoreHeader() et. al.
       gCx.fillStyle = RandomGreen(0.3);
       var p1a = ForP1Side("left", "right");
@@ -2200,7 +2192,6 @@ function DebugState() {
   self.Init = function () {};
   self.Step = function () {};
   self.Draw = function () {
-    ClearScreen();
     Cxdo(function () {
       gCx.fillStyle = RandomForColor(blueSpec, 0.3);
       DrawText("D E B U G", "center", gw(0.5), gh(0.8), gBigFontSizePt);
@@ -2526,6 +2517,15 @@ function ResetGlobalStorage() {
 }
 function OnOrientationChange() {
   OnResize();
+}
+function OnBlur() {
+  if (exists(gLifecycle)) {
+    if (gLifecycle.state == kGame) {
+      if (exists(gLifecycle.handler)) {
+        gLifecycle.handler.Pause();
+      }
+    }
+  }
 }
 
 // (the web is a pi(l)e of feces.)
@@ -2988,6 +2988,7 @@ function InitEvents() {
   });
   window.addEventListener('orientationChange', OnOrientationChange, false);
   window.addEventListener('resize', OnResize, false);
+  window.addEventListener('blur', OnBlur, false);
 }
 window.addEventListener('load', function () {
   Start();
