@@ -31,7 +31,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = true;
+var gDebug = false;
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
 
@@ -245,7 +245,7 @@ function LeftKeys() {
   return ForP1Side(gP1Keys, gP2Keys);
 }
 function RightKeys() {
-  return ForP2Side(gP2Keys, gP1Keys);
+  return ForP1Side(gP2Keys, gP1Keys);
 }
 var nostick = {
   up: false,
@@ -483,6 +483,8 @@ function isPlayer1(side) {
 function isPlayer2(side) {
   return gP2Side === side;
 }
+
+// todo: this has gotten surprisingly bad and confusing.
 function ForP1Side(left, right) {
   return ForSide(gP1Side, left, right);
 }

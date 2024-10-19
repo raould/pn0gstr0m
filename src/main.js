@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = true;
+var gDebug = false;
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
 
@@ -237,7 +237,7 @@ function LeftKeys() {
     return ForP1Side(gP1Keys, gP2Keys);
 }
 function RightKeys() {
-    return ForP2Side(gP2Keys, gP1Keys);
+    return ForP1Side(gP2Keys, gP1Keys);
 }
 
 var nostick = { up: false, down: false, dz: kJoystickDeadZone };
@@ -443,6 +443,8 @@ function GameTime01(period, start=gLevelTime) {
 // (all) this really needs to go into GameState???
 function isPlayer1(side) { return gP1Side === side; }
 function isPlayer2(side) { return gP2Side === side; }
+
+// todo: this has gotten surprisingly bad and confusing.
 function ForP1Side(left, right) { return ForSide(gP1Side, left, right); }
 function ForP2Side(left, right) { return ForSide(gP2Side, left, right); }
 function ForSide(src, left, right) {
