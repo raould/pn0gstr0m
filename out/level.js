@@ -28,8 +28,8 @@ function Level(props) {
     Assert(!isBadNumber(self.maxVX));
     self.speedupFactor = props.speedupFactor;
     // these do not apply until after the MidGame.
-    self.englishFactorPlayer = 1;
-    self.englishFactorCPU = 1;
+    self.englishFactorPlayer = 0.5;
+    self.englishFactorCPU = 0.5;
     self.splitsMax = props.splitsCount; // undefined means unlimited.
     self.splitsRemaining = self.splitsMax;
     self.isSpawning = props.isSpawning;

@@ -28,8 +28,8 @@ const kEnglishStep = 0.01;
 
         self.speedupFactor = props.speedupFactor;
         // these do not apply until after the MidGame.
-        self.englishFactorPlayer = 1;
-        self.englishFactorCPU = 1;
+        self.englishFactorPlayer = 0.5;
+        self.englishFactorCPU = 0.5;
 
         self.splitsMax = props.splitsCount; // undefined means unlimited.
         self.splitsRemaining = self.splitsMax;
@@ -104,7 +104,7 @@ const kEnglishStep = 0.01;
 	    // cpu doesn't get as much english because if they are the
 	    // first one to hit a puck with a lot of english it looks like cheating.
 	    self.englishFactorCPU += (dt / kTimeStep) * kEnglishStep;
-            
+
             self.paddleP1.englishFactor = self.paddleP1.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
             self.paddleP2.englishFactor = self.paddleP2.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
         }
