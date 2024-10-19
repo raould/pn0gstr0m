@@ -2685,6 +2685,16 @@ function OnOrientationChange() {
     OnResize();
 }
 
+function OnBlur() {
+    if (exists(gLifecycle)) {
+        if (gLifecycle.state == kGame) {
+            if (exists(gLifecycle.handler)) {
+                gLifecycle.handler.Pause();
+            }
+        }
+    }
+}
+
 // (the web is a pi(l)e of feces.)
 var gResizing = false;
 var gLastArea = 0;
@@ -3087,6 +3097,7 @@ function InitEvents() {
 
     window.addEventListener( 'orientationChange', OnOrientationChange, false );
     window.addEventListener( 'resize', OnResize, false );
+    window.addEventListener( 'blur', OnBlur, false );
 }
 
 window.addEventListener( 'load', () => { Start(); InitEvents(); }, false );
