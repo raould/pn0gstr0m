@@ -1403,9 +1403,10 @@ function UpdateLocalStorage() {
             self.level.p1Pill = self.MaybeSpawnPill(
                 must, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups
             );
+            console.log("p1", must, exists(self.level.p1Pill));
             if (exists(self.level.p1Pill)) {
                 self.pillP1SpawnCountdown = self.pillSpawnCooldown;
-                self.unfairPillCount++;
+                if (!forced) { self.unfairPillCount++; }
                 self.isCpuPillAllowed = true;
                 self.AddPillSparks(self.level.p1Pill.x, self.level.p1Pill.y);
             }
@@ -1424,9 +1425,10 @@ function UpdateLocalStorage() {
             self.level.p2Pill = self.MaybeSpawnPill(
                 must, self.level.p2Pill, factor, self.level.p2Powerups
             );
+            console.log("p2", must, exists(self.level.p2Pill));
             if (exists(self.level.p2Pill)) {
                 self.pillP2SpawnCountdown = self.pillSpawnCooldown;
-                self.unfairPillCount--;
+                if (!forced) { self.unfairPillCount--; }
                 self.AddPillSparks(self.level.p2Pill.x, self.level.p2Pill.y);
             }
         }
@@ -1926,7 +1928,7 @@ function UpdateLocalStorage() {
 
     self.Init = function() {
         ResetInput();
-        self.timeout = 1000 * 15;
+        self.timeout = 1000 * (gDebug ? 5 : 15);
 
         // todo: remove this testing hack.
         LatchP1Side("left");
