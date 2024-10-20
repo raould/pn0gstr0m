@@ -2058,15 +2058,18 @@ function UpdateLocalStorage() {
             var spec = specs[i];
             var x = spec.x;
             var y = spec.y;
-            var ox = sx1(20);
+            var ox = sx1(40);
             var oy = sy1(20);
             var rect = { x: x-ox, y: y-oy, width: ox*2, height: oy*2 };
-            gDebug_DrawList.push({
-                fn: () => {
-                    gCx.strokeStyle = RandomColor();
-                    gCx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-                }
-            });
+            if (gDebug) {
+                var d = {...rect};
+                gDebug_DrawList.push({
+                    fn: () => {
+                        gCx.strokeStyle = RandomColor();
+                        gCx.strokeRect(d.x, d.y, d.width, d.height);
+                    }
+                });
+            }
             const hit = target.isDown() ?
                   isPointInRect(target.position, rect) :
                   false;
