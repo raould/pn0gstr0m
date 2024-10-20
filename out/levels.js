@@ -13,8 +13,13 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 
 // yes this is really hard to playtest.
 
-var gP1Pills = [];
-var gP2Pills = [];
+var gP1Pills;
+var gP2Pills;
+function ResetLevelsPills() {
+  gP1Pills = [];
+  gP2Pills = [];
+}
+ResetLevelsPills();
 function MakeAttract(paddleP1, paddleP2) {
   return new Level({
     index: kAttractLevelIndex,

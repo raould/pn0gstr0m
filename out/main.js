@@ -939,6 +939,7 @@ function TitleState() {
     ResetInput();
     ResetP1Side();
     ResetScores();
+    ResetLevelsPills();
     SetGameMode(gGameMode);
     if (!kAppMode) {
       // reset to 1 player every time for clarity.

@@ -915,6 +915,7 @@ function UpdateLocalStorage() {
         ResetInput();
         ResetP1Side();
         ResetScores();
+        ResetLevelsPills();
         SetGameMode(gGameMode);
 
         if (!kAppMode) {
