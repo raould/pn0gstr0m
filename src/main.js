@@ -869,7 +869,7 @@ function UpdateLocalStorage() {
 
     self.Step = function() {
         if (gDebug) { // skip it!
-            return kLevelFinChoose; // todo: kTitle;
+            return kTitle;
         }
         else {
             var nextState;
@@ -1945,11 +1945,8 @@ function UpdateLocalStorage() {
             self.p2Specs.push({ pid: pillIDs[i], x: p2x, y });
         }
 
-        self.p1Index = 0;
         self.p1Highlight = 0;
-
-        self.p2Index = is1P() ? gR.RandomRangeInt(0, pillIDs.length-1) : 0;
-        self.p2Highlight = self.p2Index ?? 0;
+        self.p2Highlight = is1P() ? gR.RandomRangeInt(0, pillIDs.length-1) : 0;
     };
 
     self.Step = function(dt) {
@@ -1973,11 +1970,8 @@ function UpdateLocalStorage() {
     };
 
     self.SaveIndices = function() {
-        Assert(exists(self.p1Index));
-        gP1Pills.push(self.p1Specs[self.p1Index].pid);
-        if (exists(self.gP2Index)) {
-            gP2Pills.push(self.p2Specs[self.p2Index].pid);
-        }
+        gP1Pills.push(self.p1Specs[self.p1Highlight].pid);
+        gP2Pills.push(self.p2Specs[self.p2Highlight].pid);
     };
     
     self.ProcessOneInput = function() {
