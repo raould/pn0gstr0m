@@ -29,7 +29,6 @@ function MakeAttract(paddleP1, paddleP2) {
 }
 
 function MakeZen(paddleP1, paddleP2) {
-    const pills = ChoosePillIDs(kZenLevelIndex).map(pid => gPillInfo[pid].maker);
     return new Level({
         index: kZenLevelIndex,
         isSpawning: true, // but no limit on how many.
@@ -37,7 +36,8 @@ function MakeZen(paddleP1, paddleP2) {
         maxVX: sxi(ForGameMode({zen: 18, z2p: 22})),
         isP1Player: true,
         isP2Player: !is1P(),
-        pills,
+        p1Pills: [...gP1Pills],
+        p2Pills: [...gP2Pills],
         paddleP1: paddleP1,
         paddleP2: paddleP2,
     });
@@ -48,7 +48,6 @@ function MakeZen(paddleP1, paddleP2) {
 function MakeLevel(index, paddleP1, paddleP2) {
     Assert(index > 0, "index is 1-based");
     const splitsCount = MakeSplitsCount(index);
-    const pills = ChoosePillIDs(index).map(pid => gPillInfo[pid].maker);
     const level = new Level({
         index,
         isSpawning: true,
@@ -59,7 +58,8 @@ function MakeLevel(index, paddleP1, paddleP2) {
         splitsCount,
         isP1Player: true,
         isP2Player: !is1P(),
-        pills,
+        p1Pills: [...gP1Pills],
+        p2Pills: [...gP2Pills],
         paddleP1: paddleP1,
         paddleP2: paddleP2,
     });
@@ -83,44 +83,6 @@ function MakeSplitsCount(index) {
 	var extra = Math.max(0, index-2) * 50;
 	return 200 + extra;
     }
-}
-
-function ChoosePillIDs(index) {
-    let pids = [];
-    const i0 = index-1;
-
-    // attract and first level have no pills.
-    if (i0 > 0) {
-
-        // the first n levels get 2 pills in order.
-        if (i0 <= gPillIDs.length/2) {
-            Assert(i0 > 0, "attract and level 1 should not have pills", index);
-            const i = (i0-1)*2;
-            pids = gPillIDs.slice(i, i+2);
-            console.log("ChoosePillIDs by 2", index, pids, pids.map(i => gPillInfo[i]?.name));
-            Assert(pids.length === 2);
-        }
-        // after those first n levels, for another n levels, 4 random pills per level.
-        else if (i0 <= gPillIDs.length) {
-            const r = new Random(index);
-            const p = [...gPillIDs];
-            pids = [
-                p.splice(r.RandomRangeInt(0, p.length-1), 1)[0],
-                p.splice(r.RandomRangeInt(0, p.length-1), 1)[0],
-                p.splice(r.RandomRangeInt(0, p.length-1), 1)[0],
-                p.splice(r.RandomRangeInt(0, p.length-1), 1)[0],
-            ];
-            console.log("ChoosePillIDs random 4", index, pids, pids.map(i => gPillInfo[i]?.name));
-            Assert(pids.length === 4);
-        }
-	// after all that, dump in all powerups!
-	else {
-	    pids = [...gPillIDs];
-	}
-        Assert(pids.length > 0);
-    }
-
-    return pids;
 }
 
 // todo: this has to be told which pills

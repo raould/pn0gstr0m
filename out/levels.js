@@ -35,9 +35,6 @@ function MakeAttract(paddleP1, paddleP2) {
   });
 }
 function MakeZen(paddleP1, paddleP2) {
-  var pills = ChoosePillIDs(kZenLevelIndex).map(function (pid) {
-    return gPillInfo[pid].maker;
-  });
   return new Level({
     index: kZenLevelIndex,
     isSpawning: true,
@@ -49,7 +46,8 @@ function MakeZen(paddleP1, paddleP2) {
     })),
     isP1Player: true,
     isP2Player: !is1P(),
-    pills: pills,
+    p1Pills: _toConsumableArray(gP1Pills),
+    p2Pills: _toConsumableArray(gP2Pills),
     paddleP1: paddleP1,
     paddleP2: paddleP2
   });
@@ -60,9 +58,6 @@ function MakeZen(paddleP1, paddleP2) {
 function MakeLevel(index, paddleP1, paddleP2) {
   Assert(index > 0, "index is 1-based");
   var splitsCount = MakeSplitsCount(index);
-  var pills = ChoosePillIDs(index).map(function (pid) {
-    return gPillInfo[pid].maker;
-  });
   var level = new Level({
     index: index,
     isSpawning: true,
@@ -76,7 +71,8 @@ function MakeLevel(index, paddleP1, paddleP2) {
     splitsCount: splitsCount,
     isP1Player: true,
     isP2Player: !is1P(),
-    pills: pills,
+    p1Pills: _toConsumableArray(gP1Pills),
+    p2Pills: _toConsumableArray(gP2Pills),
     paddleP1: paddleP1,
     paddleP2: paddleP2
   });
@@ -97,42 +93,6 @@ function MakeSplitsCount(index) {
     return 200 + extra;
   }
 }
-function ChoosePillIDs(index) {
-  var pids = [];
-  var i0 = index - 1;
-
-  // attract and first level have no pills.
-  if (i0 > 0) {
-    // the first n levels get 2 pills in order.
-    if (i0 <= gPillIDs.length / 2) {
-      Assert(i0 > 0, "attract and level 1 should not have pills", index);
-      var i = (i0 - 1) * 2;
-      pids = gPillIDs.slice(i, i + 2);
-      console.log("ChoosePillIDs by 2", index, pids, pids.map(function (i) {
-        var _gPillInfo$i;
-        return (_gPillInfo$i = gPillInfo[i]) == null ? void 0 : _gPillInfo$i.name;
-      }));
-      Assert(pids.length === 2);
-    }
-    // after those first n levels, for another n levels, 4 random pills per level.
-    else if (i0 <= gPillIDs.length) {
-      var r = new Random(index);
-      var p = _toConsumableArray(gPillIDs);
-      pids = [p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0]];
-      console.log("ChoosePillIDs random 4", index, pids, pids.map(function (i) {
-        var _gPillInfo$i2;
-        return (_gPillInfo$i2 = gPillInfo[i]) == null ? void 0 : _gPillInfo$i2.name;
-      }));
-      Assert(pids.length === 4);
-    }
-    // after all that, dump in all powerups!
-    else {
-      pids = _toConsumableArray(gPillIDs);
-    }
-    Assert(pids.length > 0);
-  }
-  return pids;
-}
 
 // todo: this has to be told which pills
 // not to include, because they are already owned.
@@ -142,8 +102,8 @@ function ChooseRewards(index, excluding) {
   var i = i0 * 2;
   pids = gPillIDs.slice(i, i + 2);
   console.log("ChooseRewards", index, pids, pids.map(function (i) {
-    var _gPillInfo$i3;
-    return (_gPillInfo$i3 = gPillInfo[i]) == null ? void 0 : _gPillInfo$i3.name;
+    var _gPillInfo$i;
+    return (_gPillInfo$i = gPillInfo[i]) == null ? void 0 : _gPillInfo$i.name;
   }));
   Assert(pids.length === 0 || pids.length === 2);
   return pids;

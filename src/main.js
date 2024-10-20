@@ -968,7 +968,7 @@ function UpdateLocalStorage() {
     };
 
     self.Step = function( dt ) {
-        var nextState = undefined;
+        var nextState;
 
         self.attract.Step( dt );
         self.theMenu.Step(); // note: does not handle input, see below.
@@ -1967,17 +1967,12 @@ function UpdateLocalStorage() {
     self.Init();
 }
 
-// choose 2 new powerups.
-// let each human player pick one to keep.
 /*class*/ function LevelFinChooseState() {
     var self = this;
 
     self.Init = function() {
         ResetInput();
         self.timeout = 1000 * 10;
-
-        // todo: remove this testing hack.
-        LatchP1Side("right");
 
         // might be empty if you already got them all!
         const pillIDs = ChooseRewards(gLevelIndex);
@@ -1995,18 +1990,19 @@ function UpdateLocalStorage() {
             self.p2Specs.push({ pid: pillIDs[i], x: p2x, y });
         }
 
-        self.p1Choice = undefined;
+        self.p1Index = undefined;
         self.p1Highlight = 0;
 
-        self.p2Choice = is1P() ? gR.RandomRangeInt(0, pillIDs.length-1) : undefined;
-        self.p2Highlight = self.p2Choice ?? 0;
+        self.p2Index = is1P() ? gR.RandomRangeInt(0, pillIDs.length-1) : undefined;
+        self.p2Highlight = self.p2Index ?? 0;
     };
 
     self.Step = function(dt) {
         self.timeout -= dt;
         self.goOn = self.timeout <= 0;
         if (self.goOn) {
-            // todo: return kGetReady;
+            self.SaveIndices();
+            return kGetReady;
         }
 
         var nextState;
@@ -2019,6 +2015,14 @@ function UpdateLocalStorage() {
         });
 
         return nextState;
+    };
+
+    self.SaveIndices = function() {
+        Assert(exists(self.p1Index));
+        gP1Pills.push(self.p1Specs[self.p1Index]);
+        if (exists(gP2Index)) {
+            gP2Pills.push(self.p2Specs[self.p2Index]);
+        }
     };
     
     self.ProcessOneInput = function() {
@@ -2138,7 +2142,7 @@ function UpdateLocalStorage() {
         var ox = sx1(10);
         var oy = sy1(5);
         if (isU(side) || side === "right") {
-            var axm = x + mxo
+            var axm = x + mxo;
             gCx.beginPath();
             gCx.moveTo(axm, y);
             gCx.lineTo(axm + ox, y - oy);
@@ -2147,7 +2151,7 @@ function UpdateLocalStorage() {
             gCx.fill();
             DrawText(label, OtherSide(side), axm + ox*1.8, y + sy1(5), gSmallFontSizePt);
         } else { // left
-            var axm = x - mxo
+            var axm = x - mxo;
             gCx.beginPath();
             gCx.moveTo(axm, y);
             gCx.lineTo(axm - ox, y - oy);
