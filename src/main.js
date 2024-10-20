@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // do not check this (to main, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -2429,15 +2429,15 @@ function UpdateLocalStorage() {
             );
 
             var msg = `FINAL SCORE: ${gP1Score.game}`;
-            DrawText( msg, "center", gw(0.5), gh(0.4), gRegularFontSizePt );
+            DrawText( msg, "center", gw(0.5), gh(0.5), gBigFontSizePt );
 
             if (self.isNewHighScore) {
-                gCx.fillStyle = RandomCyan();
+                gCx.fillStyle = ColorCycle();
                 DrawText(
                     `NEW HIGH: ${self.maxScore}`,
                     "center",
-                    gw(0.5), gh(0.6),
-                    gBigFontSizePt
+                    gw(0.5), gh(0.65),
+                    gSmallFontSizePt
                 );
             }
         });
@@ -2468,14 +2468,14 @@ function UpdateLocalStorage() {
                 gP1Score.game === gP2Score.game ? "TIE!" :
                     (gP1Score.game > gP2Score.game ? " PLAYER 1" : "PLAYER 2"),
                 "center",
-                gw(0.5), gh(0.52),
+                gw(0.5), gh(0.55),
                 gBigFontSizePt
             );
 
             if (self.isNewHighScore) {
                 gCx.fillStyle = ColorCycle();
                 DrawText(
-                    `NEW HIGH SCORE: ${self.maxScore}`,
+                    `NEW HIGH: ${self.maxScore}`,
                     "center",
                     gw(0.5), gh(0.65),
                     gSmallFontSizePt

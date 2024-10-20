@@ -32,7 +32,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // do not check this (to main, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -2321,10 +2321,10 @@ function GameOverSummaryState() {
       DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       DrawText("P2 GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       var msg = "FINAL SCORE: ".concat(gP1Score.game);
-      DrawText(msg, "center", gw(0.5), gh(0.4), gRegularFontSizePt);
+      DrawText(msg, "center", gw(0.5), gh(0.5), gBigFontSizePt);
       if (self.isNewHighScore) {
-        gCx.fillStyle = RandomCyan();
-        DrawText("NEW HIGH: ".concat(self.maxScore), "center", gw(0.5), gh(0.6), gBigFontSizePt);
+        gCx.fillStyle = ColorCycle();
+        DrawText("NEW HIGH: ".concat(self.maxScore), "center", gw(0.5), gh(0.65), gSmallFontSizePt);
       }
     });
   };
@@ -2343,10 +2343,10 @@ function GameOverSummaryState() {
       gCx.fillStyle = RandomGreen();
       DrawText(
       // leading space to visually center player 1.
-      gP1Score.game === gP2Score.game ? "TIE!" : gP1Score.game > gP2Score.game ? " PLAYER 1" : "PLAYER 2", "center", gw(0.5), gh(0.52), gBigFontSizePt);
+      gP1Score.game === gP2Score.game ? "TIE!" : gP1Score.game > gP2Score.game ? " PLAYER 1" : "PLAYER 2", "center", gw(0.5), gh(0.55), gBigFontSizePt);
       if (self.isNewHighScore) {
         gCx.fillStyle = ColorCycle();
-        DrawText("NEW HIGH SCORE: ".concat(self.maxScore), "center", gw(0.5), gh(0.65), gSmallFontSizePt);
+        DrawText("NEW HIGH: ".concat(self.maxScore), "center", gw(0.5), gh(0.65), gSmallFontSizePt);
       }
     });
   };
