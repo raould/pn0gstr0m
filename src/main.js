@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // do not check this in as true.
-var gDebug = true;
+var gDebug = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
