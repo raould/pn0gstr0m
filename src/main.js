@@ -17,8 +17,8 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-// do not check this in as true.
-var gDebug = true;
+// do not check this (to main, anyway) in as true.
+var gDebug = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1938,27 +1938,26 @@ function UpdateLocalStorage() {
         self.levelHigh = gLevelHighScores[self.levelIndex];
         self.isNewHighScore = false;
         if (is1P()) {
-            if (isU(self.levelHigh) || gP1Score.level > self.levelHigh) {
+            if (gP1Score.level > 0 && (isU(self.levelHigh) || gP1Score.level > self.levelHigh)) {
                 self.levelHigh = gP1Score.level;
                 self.isNewHighScore = true;
             }
         }
         else {
             const maxScore = Math.max(gP1Score.level, gP2Score.level);
-            if (isU(self.levelHigh) || maxScore > self.levelHigh) {
+            if (maxScore > 0 && (isU(self.levelHigh) || maxScore > self.levelHigh)) {
                 self.levelHigh = maxScore;
                 self.isNewHighScore = true;
             }
         }
-        Assert(!isBadNumber(self.levelHigh));
-
-        self.goOn = false;
-        PlayGameOver();
-
         if (self.isNewHighScore) {
+            Assert(!isBadNumber(self.levelHigh));
             gLevelHighScores[self.levelIndex] = self.levelHigh;
             SaveLocal(LocalStorageKeys.levelHighScores, gLevelHighScores, true);
         }
+
+        self.goOn = false;
+        PlayGameOver();
     };
 
     self.Step = function() {
