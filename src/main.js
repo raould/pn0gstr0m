@@ -2086,7 +2086,7 @@ function UpdateLocalStorage() {
     self.DrawText = function() {
         Cxdo(() => {
             gCx.fillStyle = RandomGreen();
-            DrawText("CHOOSE YOUR PRIZE", "center", gw(0.5), gh(0.3), gRegularFontSizePt);
+            DrawText("CHOOSE YOUR PRIZE!", "center", gw(0.5), gh(0.3), gRegularFontSizePt);
             var timeStr = String(Math.ceil(Math.max(0, self.timeout / 1000)));
             DrawText(timeStr, "center", gw(0.5), gh(0.45), gRegularFontSizePt);
         });
@@ -2094,59 +2094,67 @@ function UpdateLocalStorage() {
 
     self.DrawPills = function() {
         self.DrawPillsColumn(gP1Side, self.p1Specs, self.p1Highlight, "P1");
-        // todo: implement cpu choosing & show what the cpu chose.
         self.DrawPillsColumn(gP2Side, self.p2Specs, self.p2Highlight, is1P() ? "GPT" : "P2");
     };
 
     self.DrawPillsColumn = function(side, specs, highlight, label) {
-        var scale = 1;
         Cxdo(() => {
-            for(var i = 0; i < specs.length; ++i) {
-                gCx.fillStyle = RandomBlue();
+            for(let i = 0; i < specs.length; ++i) {
                 const spec = specs[i];
-                const highlighted = highlight === i;
-                const pid = spec.pid;
                 const x = spec.x;
                 const y = spec.y;
-                const { name, drawer, wfn, hfn } = gPillInfo[pid];
-                const width = wfn() * scale;
-                const height = hfn() * scale;
-                drawer(side,
-                       {
-                           x: x - (width/2),
-                           y: y - (height/2),
-                           width,
-                           height
-                       },
-                       1);
-                DrawText(name, "center", x, y + height*1.5, gSmallestFontSizePt);
-                if (highlighted) {
-                    gCx.fillStyle = RandomGreen();
-                    var mxo = gw(0.07);
-                    var ox = sx1(10);
-                    var oy = sy1(5);
-                    if (isU(side) || side === "right") {
-                        var axm = x + mxo
-                        gCx.beginPath();
-                        gCx.moveTo(axm, y);
-                        gCx.lineTo(axm + ox, y - oy);
-                        gCx.lineTo(axm + ox, y + oy);
-                        gCx.lineTo(axm, y);
-                        gCx.fill();
-                        DrawText(label, OtherSide(side), axm + ox*1.8, y + sy1(5), gSmallFontSizePt);
-                    } else { // left
-                        var axm = x - mxo
-                        gCx.beginPath();
-                        gCx.moveTo(axm, y);
-                        gCx.lineTo(axm - ox, y - oy);
-                        gCx.lineTo(axm - ox, y + oy);
-                        gCx.lineTo(axm, y);
-                        gCx.fill();
-                        DrawText(label, OtherSide(side), axm - ox*1.8, y + sy1(5), gSmallFontSizePt);
-                    }
-                }
+                const highlighted = highlight === i;
+                self.DrawPill(side, spec, highlighted);
+                if (highlighted) { self.DrawArrow(side, x, y, label); }
             }
         });
+    };
+
+    self.DrawPill = function(side, spec, highlighted) {
+        var scale = 1;
+        gCx.fillStyle = RandomBlue();
+        const pid = spec.pid;
+        const x = spec.x;
+        const y = spec.y;
+        const { name, drawer, wfn, hfn } = gPillInfo[pid];
+        const width = wfn() * scale;
+        const height = hfn() * scale;
+        drawer(side,
+               {
+                   x: x - (width/2),
+                   y: y - (height/2),
+                   width,
+                   height
+               },
+               1);
+        gCx.fillStyle = RandomBlue();
+        DrawText(name, "center", x, y + height*1.5, gSmallestFontSizePt);
+    };
+
+    self.DrawArrow = function(side, x, y, label) {
+        gCx.fillStyle = RandomGreen();
+        var mxo = gw(0.07);
+        var ox = sx1(10);
+        var oy = sy1(5);
+        if (isU(side) || side === "right") {
+            var axm = x + mxo
+            gCx.beginPath();
+            gCx.moveTo(axm, y);
+            gCx.lineTo(axm + ox, y - oy);
+            gCx.lineTo(axm + ox, y + oy);
+            gCx.lineTo(axm, y);
+            gCx.fill();
+            DrawText(label, OtherSide(side), axm + ox*1.8, y + sy1(5), gSmallFontSizePt);
+        } else { // left
+            var axm = x - mxo
+            gCx.beginPath();
+            gCx.moveTo(axm, y);
+            gCx.lineTo(axm - ox, y - oy);
+            gCx.lineTo(axm - ox, y + oy);
+            gCx.lineTo(axm, y);
+            gCx.fill();
+            DrawText(label, OtherSide(side), axm - ox*1.8, y + sy1(5), gSmallFontSizePt);
+        }
     };
 
     self.Init();
