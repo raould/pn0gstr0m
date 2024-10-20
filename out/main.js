@@ -1946,6 +1946,7 @@ function GameState(props) {
 function LevelFinChooseState() {
   var self = this;
   self.Init = function () {
+    var _self$p2Choice;
     ResetInput();
     self.timeout = 1000 * 30;
 
@@ -1955,8 +1956,6 @@ function LevelFinChooseState() {
     // might be empty if you already got them all!
     var pillIDs = ChooseRewards(gLevelIndex);
     self.goOn = pillIDs.length === 0;
-    self.p1Choice = 0;
-    self.p2Choice = is1P() ? gR.RandomRangeInt(0, pillIDs.length - 1) : 0;
     self.p1Specs = [];
     self.p2Specs = [];
     var sy = gHeight / 2 / pillIDs.length;
@@ -1976,6 +1975,10 @@ function LevelFinChooseState() {
         y: y
       });
     }
+    self.p1Choice = undefined;
+    self.p1Highlight = 0;
+    self.p2Choice = is1P() ? gR.RandomRangeInt(0, pillIDs.length - 1) : undefined;
+    self.p2Highlight = (_self$p2Choice = self.p2Choice) != null ? _self$p2Choice : 0;
   };
   self.Step = function (dt) {
     self.timeout -= dt;
@@ -1993,35 +1996,39 @@ function LevelFinChooseState() {
     });
     return nextState;
   };
-  self.ProcessOneInput = function (cmds) {
+  self.ProcessOneInput = function () {
     if (self.goOn) {
       return;
     }
-    // todo: touch!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    self.ProcessButtons();
+    self.ProcessTouch();
+  };
+  self.ProcessButtons = function () {
     if (gP1Keys.$.up || isGamepad1Up()) {
-      self.p1Choice = Math.max(0, self.p1Choice - 1);
+      self.p1Highlight = Math.max(0, self.p1Highlight - 1);
       gP1Keys.Reset();
       gGamepad1Sticks.Reset();
     }
     if (gP1Keys.$.down || isGamepad1Down()) {
-      self.p1Choice = Math.min(self.p1Specs.length - 1, self.p1Choice + 1);
+      self.p1Highlight = Math.min(self.p1Specs.length - 1, self.p1Highlight + 1);
       gP1Keys.Reset();
       gGamepad1Sticks.Reset();
     }
     if (!is1P()) {
       if (gP2Keys.$.up || isGamepad2Up()) {
-        self.p2Choice = Math.max(0, self.p2Choice - 1);
+        self.p2Highlight = Math.max(0, self.p2Highlight - 1);
         gP2Keys.Reset();
         gGamepad2Sticks.Reset();
       }
       if (gP2Keys.$.down || isGamepad2Down()) {
-        self.p2Choice = Math.min(self.p2Specs.length - 1, self.p2Choice + 1);
+        self.p2Highlight = Math.min(self.p2Specs.length - 1, self.p2Highlight + 1);
         gP2Keys.Reset();
         gGamepad2Sticks.Reset();
       }
     }
     return undefined;
   };
+  self.ProcessTouch = function () {};
   self.Draw = function () {
     if (self.goOn) {
       return;
@@ -2038,17 +2045,17 @@ function LevelFinChooseState() {
     });
   };
   self.DrawPills = function () {
-    self.DrawPillsColumn(gP1Side, self.p1Specs, self.p1Choice, "P1");
+    self.DrawPillsColumn(gP1Side, self.p1Specs, self.p1Highlight, "P1");
     // todo: implement cpu choosing & show what the cpu chose.
-    self.DrawPillsColumn(gP2Side, self.p2Specs, self.p2Choice, is1P() ? "GPT" : "P2");
+    self.DrawPillsColumn(gP2Side, self.p2Specs, self.p2Highlight, is1P() ? "GPT" : "P2");
   };
-  self.DrawPillsColumn = function (side, specs, choice, label) {
+  self.DrawPillsColumn = function (side, specs, highlight, label) {
     var scale = 1;
     Cxdo(function () {
       for (var i = 0; i < specs.length; ++i) {
         gCx.fillStyle = RandomBlue();
         var spec = specs[i];
-        var highlighted = choice === i;
+        var highlighted = highlight === i;
         var pid = spec.pid;
         var x = spec.x;
         var y = spec.y;
