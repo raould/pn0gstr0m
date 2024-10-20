@@ -62,6 +62,7 @@ function ResetScores() {
   gP1Score = _objectSpread({}, kZeroScore);
   gP2Score = _objectSpread({}, kZeroScore);
 }
+ResetScores();
 function incrScore(pscore, amount) {
   pscore.level += amount;
   pscore.game += amount;
@@ -1115,8 +1116,7 @@ function GetReadyState() {
   self.Init = function () {
     ResetInput();
     gStateMuted = false;
-    self.pillIDs = ChoosePillIDs(gLevelIndex);
-    var seconds = gDebug ? 1 : self.pillIDs.length > 0 ? 5 : 3;
+    var seconds = gDebug ? 1 : 3;
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.animations = {};
@@ -1150,7 +1150,6 @@ function GetReadyState() {
   };
   self.Draw = function () {
     self.DrawText();
-    self.DrawPills();
     self.DrawAnimations();
   };
   self.DrawAnimations = function () {
@@ -1174,57 +1173,12 @@ function GetReadyState() {
         zen: function zen() {} // only 1 level.
       })();
       gCx.fillStyle = RandomGreen();
-      var y = self.pillIDs.length === 0 ? gh(0.55) : gh(0.52);
-      DrawText("GET READY! ".concat(t), "center", gw(0.5), y, gBigFontSizePt);
+      DrawText("GET READY! ".concat(t), "center", gw(0.5), gh(0.55), gBigFontSizePt);
       if (exists(zpt)) {
         gCx.fillStyle = RandomForColor(cyanSpec);
         DrawText("ZERO POINT ENERGY: ".concat(zpt), "center", gw(0.5), gh(0.9), gSmallFontSizePt);
       }
     });
-  };
-  self.DrawPills = function () {
-    var skip = ForGameMode({
-      regular: false,
-      // all pills available in zen mode so
-      // don't bother showing them here.
-      zen: true
-    });
-    if (skip) {
-      return;
-    }
-    if (self.pillIDs.length > 0) {
-      var ty = gh(0.8);
-      Cxdo(function () {
-        gCx.fillStyle = RandomGreen();
-        if (self.pillIDs.length <= 2) {
-          DrawText("POWERUPS", "center", gw(0.5), ty, gReducedFontSizePt);
-        }
-        var dx = gw() / (self.pillIDs.length + 1);
-        var x0 = dx;
-        var scale = 1;
-        for (var i = 0; i < self.pillIDs.length; ++i) {
-          var pid = self.pillIDs[i];
-          var _gPillInfo$pid = gPillInfo[pid],
-            name = _gPillInfo$pid.name,
-            drawer = _gPillInfo$pid.drawer,
-            wfn = _gPillInfo$pid.wfn,
-            hfn = _gPillInfo$pid.hfn;
-          var width = wfn() * scale;
-          var height = hfn() * scale;
-          var x = x0 + dx * i;
-          var oy = Math.sin(x * 10 + gGameTime / 150) * (height / 2) * 0.2;
-          drawer(gP1Side,
-          // least wrong choice for required 'side' arg. :-(
-          {
-            x: x - width / 2,
-            y: ty - height / 2 - sy(40) - oy,
-            width: width,
-            height: height
-          }, 1);
-          DrawText(name, "center", x, ty, gSmallestFontSizePt);
-        }
-      });
-    }
   };
   self.Init();
 }
@@ -1439,9 +1393,6 @@ function GameState(props) {
   };
   self.MaybeSpawnPills = function (dt) {
     var forced = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-    if (self.level.pills.length == 0) {
-      return;
-    }
     self.pillP1SpawnCountdown -= dt;
     self.pillP2SpawnCountdown -= dt;
     if (forced || isU(self.level.p1Pill) && self.pillP1SpawnCountdown <= 0 && self.unfairPillCount < self.unfairPillDiffMax) {
@@ -1948,7 +1899,10 @@ function LevelFinChooseState() {
   self.Init = function () {
     var _self$p2Index;
     ResetInput();
-    self.timeout = 1000 * 10;
+    self.timeout = 1000 * 1;
+
+    // todo: remove this testing hack.
+    LatchP1Side("left");
 
     // might be empty if you already got them all!
     var pillIDs = ChooseRewards(gLevelIndex);
@@ -1965,16 +1919,16 @@ function LevelFinChooseState() {
         x: p1x,
         y: y
       });
-      var p2x = gw(ForP2Side(0.25, 0.75));
+      var p2x = gw(ForP2Side(0.3, 0.7));
       self.p2Specs.push({
         pid: pillIDs[i],
         x: p2x,
         y: y
       });
     }
-    self.p1Index = undefined;
+    self.p1Index = 0;
     self.p1Highlight = 0;
-    self.p2Index = is1P() ? gR.RandomRangeInt(0, pillIDs.length - 1) : undefined;
+    self.p2Index = is1P() ? gR.RandomRangeInt(0, pillIDs.length - 1) : 0;
     self.p2Highlight = (_self$p2Index = self.p2Index) != null ? _self$p2Index : 0;
   };
   self.Step = function (dt) {
@@ -1997,7 +1951,7 @@ function LevelFinChooseState() {
   self.SaveIndices = function () {
     Assert(exists(self.p1Index));
     gP1Pills.push(self.p1Specs[self.p1Index]);
-    if (exists(gP2Index)) {
+    if (exists(self.gP2Index)) {
       gP2Pills.push(self.p2Specs[self.p2Index]);
     }
   };
@@ -2106,11 +2060,11 @@ function LevelFinChooseState() {
     var pid = spec.pid;
     var x = spec.x;
     var y = spec.y;
-    var _gPillInfo$pid2 = gPillInfo[pid],
-      name = _gPillInfo$pid2.name,
-      drawer = _gPillInfo$pid2.drawer,
-      wfn = _gPillInfo$pid2.wfn,
-      hfn = _gPillInfo$pid2.hfn;
+    var _gPillInfo$pid = gPillInfo[pid],
+      name = _gPillInfo$pid.name,
+      drawer = _gPillInfo$pid.drawer,
+      wfn = _gPillInfo$pid.wfn,
+      hfn = _gPillInfo$pid.hfn;
     var width = wfn() * scale;
     var height = hfn() * scale;
     drawer(side, {
