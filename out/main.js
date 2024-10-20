@@ -31,8 +31,8 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-// do not check this (to main, anyway) in as true.
-var gDebug = false;
+// do not check this (to main branch, anyway) in as true.
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1152,12 +1152,48 @@ function GetReadyState() {
   };
   self.Draw = function () {
     self.DrawText();
+    self.DrawPills();
     self.DrawAnimations();
   };
   self.DrawAnimations = function () {
     Object.values(self.animations).forEach(function (a) {
       return a.Draw();
     });
+  };
+  self.DrawPills = function () {
+    self.DrawPillsSide(gP1Side, gP1Pills);
+    self.DrawPillsSide(gP2Side, gP2Pills);
+  };
+  self.DrawPillsSide = function (side, pills) {
+    var count = pills.length;
+    if (count > 0) {
+      var mx = ForSide(side, gw(0.25), gw(0.75));
+      var ox = gw(0.4) / count;
+      var lx = mx - (count - 1) / 2 * ox;
+      var scale = 1;
+      var y = gh(0.7);
+      Cxdo(function () {
+        for (var i = 0; i < pills.length; ++i) {
+          var pid = pills[i];
+          var x = lx + ox * i;
+          var _gPillInfo$pid = gPillInfo[pid],
+            name = _gPillInfo$pid.name,
+            drawer = _gPillInfo$pid.drawer,
+            wfn = _gPillInfo$pid.wfn,
+            hfn = _gPillInfo$pid.hfn;
+          var width = wfn() * scale;
+          var height = hfn() * scale;
+          drawer(side, {
+            x: x - width / 2,
+            y: y - height / 2,
+            width: width,
+            height: height
+          }, 1);
+          gCx.fillStyle = RandomForColor(blueSpec);
+          DrawText(name, "center", x, y + height / 2 + sy1(25), gSmallestFontSizePt);
+        }
+      });
+    }
   };
   self.DrawText = function () {
     var t = Math.ceil(self.timeout / 1000);
@@ -2167,13 +2203,12 @@ function LevelFinChooseState() {
   };
   self.DrawPill = function (side, spec, highlighted) {
     var scale = 1;
-    gCx.fillStyle = RandomBlue();
     var pid = spec.pid;
-    var _gPillInfo$pid = gPillInfo[pid],
-      name = _gPillInfo$pid.name,
-      drawer = _gPillInfo$pid.drawer,
-      wfn = _gPillInfo$pid.wfn,
-      hfn = _gPillInfo$pid.hfn;
+    var _gPillInfo$pid2 = gPillInfo[pid],
+      name = _gPillInfo$pid2.name,
+      drawer = _gPillInfo$pid2.drawer,
+      wfn = _gPillInfo$pid2.wfn,
+      hfn = _gPillInfo$pid2.hfn;
     var width = wfn() * scale;
     var height = hfn() * scale;
     var x = spec.cx - width / 2;
@@ -2184,34 +2219,38 @@ function LevelFinChooseState() {
       width: width,
       height: height
     }, 1);
-    gCx.fillStyle = RandomBlue();
-    DrawText(name, "center", spec.cx, spec.cy + height / 2 + sy1(20), gSmallestFontSizePt);
+    Cxdo(function () {
+      gCx.fillStyle = RandomBlue();
+      DrawText(name, "center", spec.cx, spec.cy + height / 2 + sy1(20), gSmallestFontSizePt);
+    });
   };
   self.DrawArrow = function (side, x, y, label) {
-    gCx.fillStyle = RandomGreen();
-    var mxo = gw(0.07);
-    var ox = sx1(10);
-    var oy = sy1(5);
-    if (isU(side) || side === "right") {
-      var axm = x + mxo;
-      gCx.beginPath();
-      gCx.moveTo(axm, y);
-      gCx.lineTo(axm + ox, y - oy);
-      gCx.lineTo(axm + ox, y + oy);
-      gCx.lineTo(axm, y);
-      gCx.fill();
-      DrawText(label, OtherSide(side), axm + ox * 1.8, y + sy1(8), gReducedFontSizePt);
-    } else {
-      // left
-      var axm = x - mxo;
-      gCx.beginPath();
-      gCx.moveTo(axm, y);
-      gCx.lineTo(axm - ox, y - oy);
-      gCx.lineTo(axm - ox, y + oy);
-      gCx.lineTo(axm, y);
-      gCx.fill();
-      DrawText(label, OtherSide(side), axm - ox * 1.8, y + sy1(8), gReducedFontSizePt);
-    }
+    Cxdo(function () {
+      gCx.fillStyle = RandomGreen();
+      var mxo = gw(0.07);
+      var ox = sx1(10);
+      var oy = sy1(5);
+      if (isU(side) || side === "right") {
+        var axm = x + mxo;
+        gCx.beginPath();
+        gCx.moveTo(axm, y);
+        gCx.lineTo(axm + ox, y - oy);
+        gCx.lineTo(axm + ox, y + oy);
+        gCx.lineTo(axm, y);
+        gCx.fill();
+        DrawText(label, OtherSide(side), axm + ox * 1.8, y + sy1(8), gReducedFontSizePt);
+      } else {
+        // left
+        var axm = x - mxo;
+        gCx.beginPath();
+        gCx.moveTo(axm, y);
+        gCx.lineTo(axm - ox, y - oy);
+        gCx.lineTo(axm - ox, y + oy);
+        gCx.lineTo(axm, y);
+        gCx.fill();
+        DrawText(label, OtherSide(side), axm - ox * 1.8, y + sy1(8), gReducedFontSizePt);
+      }
+    });
   };
   self.Init();
 }
