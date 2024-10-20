@@ -17,7 +17,9 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = true;
+// do not check this in as true.
+var gDebug = false;
+
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
@@ -1950,7 +1952,9 @@ function UpdateLocalStorage() {
     };
 
     self.Step = function(dt) {
-        //self.timeout -= dt;
+        if (!gDebug) {
+            self.timeout -= dt;
+        }
         self.goOn = self.timeout <= 0;
         if (self.goOn) {
             self.SaveIndices();

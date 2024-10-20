@@ -31,7 +31,9 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = true;
+// do not check this in as true.
+var gDebug = false;
+
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
@@ -1929,7 +1931,9 @@ function LevelFinChooseState() {
     self.p2Highlight = is1P() ? gR.RandomRangeInt(0, pillIDs.length - 1) : 0;
   };
   self.Step = function (dt) {
-    //self.timeout -= dt;
+    if (!gDebug) {
+      self.timeout -= dt;
+    }
     self.goOn = self.timeout <= 0;
     if (self.goOn) {
       self.SaveIndices();
