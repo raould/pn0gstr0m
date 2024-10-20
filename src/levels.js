@@ -104,8 +104,6 @@ function MakeSplitsCount(index) {
     }
 }
 
-// todo: this has to be told which pills
-// not to include, because they are already owned.
 function ChooseRewards(index, excluding) {
     let pids = [];
     const i0 = index-1;

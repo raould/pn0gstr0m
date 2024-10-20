@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // do not check this in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -2003,7 +2003,7 @@ function UpdateLocalStorage() {
         var hiMsg = self.isNewHighScore ? `NEW LEVEL HIGH: ${self.levelHigh}` : undefined;
         if (hiMsg) {
             Cxdo(() => {
-                gCx.fillStyle = RandomCyan();
+                gCx.fillStyle = ColorCycle();
                 DrawText(hiMsg, "center", gw(0.5), gh(0.65), gSmallFontSizePt);
             });
         }
@@ -2011,7 +2011,7 @@ function UpdateLocalStorage() {
 
     self.DrawSinglePlayer = function() {
         Cxdo(() => {
-            gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
+            gCx.fillStyle = RandomGreen();
             DrawText(
                 `LEVEL ${self.levelIndex} WON!`,
                 "center",
@@ -2104,9 +2104,6 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         self.timeout = 1000 * (gDebug ? 5 : 15);
-
-        // todo: remove this testing hack.
-        LatchP1Side("left");
 
         // might be empty if you already got them all!
         const pillIDs = ChooseRewards(gLevelIndex);

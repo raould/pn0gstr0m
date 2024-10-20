@@ -117,9 +117,6 @@ function MakeSplitsCount(index) {
     return 200 + extra;
   }
 }
-
-// todo: this has to be told which pills
-// not to include, because they are already owned.
 function ChooseRewards(index, excluding) {
   var pids = [];
   var i0 = index - 1;

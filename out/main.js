@@ -32,7 +32,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // do not check this in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1971,14 +1971,14 @@ function LevelFinState() {
     var hiMsg = self.isNewHighScore ? "NEW LEVEL HIGH: ".concat(self.levelHigh) : undefined;
     if (hiMsg) {
       Cxdo(function () {
-        gCx.fillStyle = RandomCyan();
+        gCx.fillStyle = ColorCycle();
         DrawText(hiMsg, "center", gw(0.5), gh(0.65), gSmallFontSizePt);
       });
     }
   };
   self.DrawSinglePlayer = function () {
     Cxdo(function () {
-      gCx.fillStyle = RandomGreen(); // todo: ColorCycle()
+      gCx.fillStyle = RandomGreen();
       DrawText("LEVEL ".concat(self.levelIndex, " WON!"), "center", gw(0.5), gh(0.55), gBigFontSizePt);
       DrawText("P1 LVL: ".concat(gP1Score.level), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       DrawText("P2 LVL: ".concat(gP2Score.level), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
@@ -2019,9 +2019,6 @@ function LevelFinChooseState() {
   self.Init = function () {
     ResetInput();
     self.timeout = 1000 * (gDebug ? 5 : 15);
-
-    // todo: remove this testing hack.
-    LatchP1Side("left");
 
     // might be empty if you already got them all!
     var pillIDs = ChooseRewards(gLevelIndex);
