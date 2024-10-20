@@ -1973,7 +1973,7 @@ function UpdateLocalStorage() {
 
     self.Init = function() {
         ResetInput();
-        self.timeout = 1000 * 30;
+        self.timeout = 1000 * 10;
 
         // todo: remove this testing hack.
         LatchP1Side("right");
@@ -2054,22 +2054,19 @@ function UpdateLocalStorage() {
     };
 
     self.ProcessTouch = function(target, specs, ph) {
-        for (var i = 0; i < specs.length; ++i) {
-            var spec = specs[i];
-            var x = spec.x;
-            var y = spec.y;
-            var ox = sx1(40);
-            var oy = sy1(20);
-            var rect = { x: x-ox, y: y-oy, width: ox*2, height: oy*2 };
-            if (gDebug) {
-                var d = {...rect};
-                gDebug_DrawList.push({
-                    fn: () => {
-                        gCx.strokeStyle = RandomColor();
-                        gCx.strokeRect(d.x, d.y, d.width, d.height);
-                    }
-                });
-            }
+        for (let i = 0; i < specs.length; ++i) {
+            const spec = specs[i];
+            const x = spec.x;
+            const y = spec.y;
+            const ox = sx1(40);
+            const oy = sy1(20);
+            const rect = { x: x-ox, y: y-oy, width: ox*2, height: oy*2 };
+            gDebug && gDebug_DrawList.push({
+                fn: () => {
+                    gCx.strokeStyle = RandomColor();
+                    gCx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+                }
+            });
             const hit = target.isDown() ?
                   isPointInRect(target.position, rect) :
                   false;

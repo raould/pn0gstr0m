@@ -99,12 +99,10 @@ function Paddle(props) {
         else {
             bounds = self;
         }
-        if (gDebug) {
-            gDebug_DrawList.push({ fn: () => {
-                gCx.strokeStyle = "yellow";
-                gCx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
-            }});
-        }
+        gDebug && gDebug_DrawList.push({ fn: () => {
+            gCx.strokeStyle = "yellow";
+            gCx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+        }});
         return bounds;
     };
 
@@ -470,12 +468,10 @@ function Paddle(props) {
         }) + levelScale;
         scale = Clip(scale, 0.1, 1.2);
 
-        if (gDebug) {
-            gDebug_DrawList.push({ fn: () => {
-                gCx.fillStyle = "blue";
-                DrawText(F(scale), "center", gw(0.8), gh(0.6), gSmallestFontSizePt);
-            }});
-        }
+        gDebug && gDebug_DrawList.push({ fn: () => {
+            gCx.fillStyle = "blue";
+            DrawText(F(scale), "center", gw(0.8), gh(0.6), gSmallestFontSizePt);
+        }});
 
         if (PS && exists(self.aiPill) && self.aiPill.isUrgent) {
             self.debugMsg = "PILL_1";

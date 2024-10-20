@@ -1949,7 +1949,7 @@ function LevelFinChooseState() {
   self.Init = function () {
     var _self$p2Choice;
     ResetInput();
-    self.timeout = 1000 * 30;
+    self.timeout = 1000 * 10;
 
     // todo: remove this testing hack.
     LatchP1Side("right");
@@ -2031,31 +2031,35 @@ function LevelFinChooseState() {
     return undefined;
   };
   self.ProcessTouch = function (target, specs, ph) {
-    for (var i = 0; i < specs.length; ++i) {
-      var spec = specs[i];
-      var x = spec.x;
-      var y = spec.y;
-      var ox = sx1(40);
-      var oy = sy1(20);
-      var rect = {
-        x: x - ox,
-        y: y - oy,
-        width: ox * 2,
-        height: oy * 2
-      };
-      if (gDebug) {
-        var d = _objectSpread({}, rect);
-        gDebug_DrawList.push({
+    var _loop = function _loop() {
+        var spec = specs[i];
+        var x = spec.x;
+        var y = spec.y;
+        var ox = sx1(40);
+        var oy = sy1(20);
+        var rect = {
+          x: x - ox,
+          y: y - oy,
+          width: ox * 2,
+          height: oy * 2
+        };
+        gDebug && gDebug_DrawList.push({
           fn: function fn() {
             gCx.strokeStyle = RandomColor();
-            gCx.strokeRect(d.x, d.y, d.width, d.height);
+            gCx.strokeRect(rect.x, rect.y, rect.width, rect.height);
           }
         });
-      }
-      var hit = target.isDown() ? isPointInRect(target.position, rect) : false;
-      if (hit) {
-        return i;
-      }
+        var hit = target.isDown() ? isPointInRect(target.position, rect) : false;
+        if (hit) {
+          return {
+            v: i
+          };
+        }
+      },
+      _ret;
+    for (var i = 0; i < specs.length; ++i) {
+      _ret = _loop();
+      if (_ret) return _ret.v;
     }
     return ph;
   };
@@ -2639,7 +2643,7 @@ function MouseUp(e) {
 }
 function TouchStart(e) {
   e.preventDefault();
-  var _loop = function _loop() {
+  var _loop2 = function _loop2() {
     var t = e.touches[i];
     var pid = t.identifier;
     PointerProcess(t, function (x, y) {
@@ -2654,12 +2658,12 @@ function TouchStart(e) {
     });
   };
   for (var i = 0; i < e.touches.length; ++i) {
-    _loop();
+    _loop2();
   }
 }
 function TouchMove(e) {
   e.preventDefault();
-  var _loop2 = function _loop2() {
+  var _loop3 = function _loop3() {
     var t = e.touches[i];
     var pid = t.identifier;
     PointerProcess(t, function (x, y) {
@@ -2673,12 +2677,12 @@ function TouchMove(e) {
     });
   };
   for (var i = 0; i < e.touches.length; ++i) {
-    _loop2();
+    _loop3();
   }
 }
 function TouchEnd(e) {
   e.preventDefault();
-  var _loop3 = function _loop3() {
+  var _loop4 = function _loop4() {
     var t = e.changedTouches[i];
     var pid = t.identifier;
     PointerProcess(e, function (x, y) {
@@ -2692,7 +2696,7 @@ function TouchEnd(e) {
     });
   };
   for (var i = 0; i < e.changedTouches.length; ++i) {
-    _loop3();
+    _loop4();
   }
 }
 function ResetGlobalStorage() {
