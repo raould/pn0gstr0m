@@ -1910,7 +1910,7 @@ function LevelFinChooseState() {
     self.goOn = pillIDs.length === 0;
     self.p1Specs = [];
     self.p2Specs = [];
-    var sy = gHeight / 2 / pillIDs.length;
+    var sy = gHeight * 0.6 / pillIDs.length;
     var s0 = gh(0.6) - sy / 2;
     for (var i = 0; i < pillIDs.length; ++i) {
       var cy = s0 + sy * i;
@@ -1931,9 +1931,7 @@ function LevelFinChooseState() {
     self.p2Highlight = is1P() ? gR.RandomRangeInt(0, pillIDs.length - 1) : 0;
   };
   self.Step = function (dt) {
-    if (!gDebug) {
-      self.timeout -= dt;
-    }
+    self.timeout -= dt;
     self.goOn = self.timeout <= 0;
     if (self.goOn) {
       self.SaveIndices();
@@ -2072,8 +2070,7 @@ function LevelFinChooseState() {
       height: height
     }, 1);
     gCx.fillStyle = RandomBlue();
-    gCx.fillRect(x, y, width, height); // todo: remove this testing hack.
-    DrawText(name, "center", spec.cx, spec.cy + height + sy1(10), gSmallestFontSizePt);
+    DrawText(name, "center", spec.cx, spec.cy + height / 2 + sy1(20), gSmallestFontSizePt);
   };
   self.DrawArrow = function (side, x, y, label) {
     gCx.fillStyle = RandomGreen();
