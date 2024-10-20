@@ -31,7 +31,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
 
@@ -233,10 +233,12 @@ function noKeysState() {
   return _objectSpread({}, nokeys);
 }
 var gP1Keys = new WrapState({
-  resetFn: noKeysState
+  resetFn: noKeysState,
+  debug: true
 });
 var gP2Keys = new WrapState({
-  resetFn: noKeysState
+  resetFn: noKeysState,
+  debug: true
 });
 function isUpOrDownKeyPressed() {
   return gP1Keys.$.up || gP1Keys.$.down || gP2Keys.$.up || gP2Keys.$.down;
@@ -451,9 +453,10 @@ var kWarning = 0; // audio permission via user interaction effing eff.
 var kTitle = 1;
 var kGetReady = 2; // includes 'level splash' for levels 2+.
 var kGame = 3;
-var kLevelFin = 4;
-var kGameOver = 5;
-var kGameOverSummary = 6;
+var kLevelFin = 4; // todo: deprecate for LevelFinChoose.
+var kLevelFinChoose = 5;
+var kGameOver = 6;
+var kGameOverSummary = 7;
 var gCanvas;
 var gCx;
 var gCanvas2;
@@ -895,7 +898,7 @@ function WarningState() {
   self.Step = function () {
     if (gDebug) {
       // skip it!
-      return kTitle;
+      return kLevelFinChoose; //kTitle;
     } else {
       var nextState;
       gEventQueue.forEach(function (event, i) {
@@ -1112,10 +1115,10 @@ function GetReadyState() {
   self.Init = function () {
     ResetInput();
     gStateMuted = false;
-    var seconds = gDebug ? 1 : gLevelIndex >= 1 && ChoosePillIDs(gLevelIndex).length > 0 ? 5 : 3;
+    self.pillIDs = ChoosePillIDs(gLevelIndex);
+    var seconds = gDebug ? 1 : self.pillIDs.length > 0 ? 5 : 3;
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
-    self.pillIDs = ChoosePillIDs(gLevelIndex);
     self.animations = {};
     self.AddAnimation(MakeGameStartAnimation());
     PlayBlip();
@@ -1211,7 +1214,7 @@ function GetReadyState() {
           var x = x0 + dx * i;
           var oy = Math.sin(x * 10 + gGameTime / 150) * (height / 2) * 0.2;
           drawer(gP1Side,
-          // just the least wrong choice for side.
+          // least wrong choice for required 'side' arg. :-(
           {
             x: x - width / 2,
             y: ty - height / 2 - sy(40) - oy,
@@ -1939,6 +1942,116 @@ function GameState(props) {
   self.Init();
 }
 
+// choose 2 new powerups.
+// let each human player pick one to keep.
+/*class*/
+function LevelFinChooseState() {
+  var self = this;
+  self.Init = function () {
+    ResetInput();
+    // might be empty if you already got them all!
+    var pillIDs = ChooseRewards(gLevelIndex);
+    self.p1Choice = 0;
+    self.p2Choice = 0;
+    self.p1Specs = [];
+    self.p2Specs = [];
+    var sy = gHeight / 2 / pillIDs.length;
+    var s0 = gh(0.6) - sy / 2;
+    for (var i = 0; i < pillIDs.length; ++i) {
+      var y = s0 + sy * i;
+      var p1x = gw(ForP1Side(0.25, 0.75));
+      self.p1Specs.push({
+        pid: pillIDs[i],
+        x: p1x,
+        y: y
+      });
+      if (!is1P()) {
+        var p2x = gw(ForP2Side(0.25, 0.75));
+        self.p2Specs.push({
+          pid: pillIDs[i],
+          x: p2x,
+          y: y
+        });
+      }
+    }
+  };
+  self.Step = function (dt) {
+    var nextState;
+    gEventQueue.forEach(function (event, i) {
+      var cmds = {};
+      event.updateFn(cmds);
+      if (isU(nextState)) {
+        nextState = self.ProcessOneInput(cmds);
+      }
+    });
+    return nextState;
+  };
+  self.ProcessOneInput = function (cmds) {
+    // todo: touch.
+    if (gP1Keys.$.up || isGamepad1Up()) {
+      self.p1Choice = Math.max(0, self.p1Choice - 1);
+      gP1Keys.Reset();
+      gGamepad1Sticks.Reset();
+      console.log(self.p1Choice);
+    }
+    if (gP1Keys.$.down || isGamepad1Down()) {
+      self.p1Choice = Math.min(self.p1Specs.length - 1, self.p1Choice + 1);
+      gP1Keys.Reset();
+      gGamepad1Sticks.Reset();
+      console.log(self.p1Choice);
+    }
+    return undefined;
+  };
+  self.Draw = function () {
+    Cxdo(function () {
+      gCx.fillStyle = RandomGreen();
+      DrawText("CHOOSE YOUR PRIZE", "center", gw(0.5), gh(0.3), gRegularFontSizePt);
+    });
+    self.DrawPills();
+  };
+  self.DrawPills = function () {
+    self.DrawPillsColumn(gP1Side, self.p1Specs);
+    self.DrawPillsColumn(gP2Side, self.p2Specs);
+  };
+  self.DrawPillsColumn = function (side, specs) {
+    var scale = 1;
+    Cxdo(function () {
+      gCx.fillStyle = RandomBlue();
+      for (var i = 0; i < specs.length; ++i) {
+        var spec = specs[i];
+        var highlighted = self.p1Choice === i;
+        var pid = spec.pid;
+        var x = spec.x;
+        var y = spec.y;
+        var _gPillInfo$pid2 = gPillInfo[pid],
+          name = _gPillInfo$pid2.name,
+          drawer = _gPillInfo$pid2.drawer,
+          wfn = _gPillInfo$pid2.wfn,
+          hfn = _gPillInfo$pid2.hfn;
+        var width = wfn() * scale;
+        var height = hfn() * scale;
+        drawer(side, {
+          x: x - width / 2,
+          y: y - height / 2,
+          width: width,
+          height: height
+        }, 1);
+        if (highlighted) {
+          gCx.beginPath();
+          gCx.moveTo(x + width * 1.5, y);
+          gCx.lineTo(x + width * 1.5 + sx1(10), y - sy1(10));
+          gCx.lineTo(x + width * 1.5 + sx1(10), y + sy1(10));
+          gCx.lineTo(x + width * 1.5, y);
+          gCx.fillStyle = RandomGreen();
+          gCx.fill();
+        }
+        DrawText(name, "center", x, y + height * 1.5, gSmallestFontSizePt);
+      }
+    });
+  };
+  self.Init();
+}
+
 /*class*/
 function LevelFinState() {
   var self = this;
@@ -2613,6 +2726,9 @@ function Start() {
   };
   handlerMap[kLevelFin] = function () {
     return new LevelFinState();
+  };
+  handlerMap[kLevelFinChoose] = function () {
+    return new LevelFinChooseState();
   };
   handlerMap[kGameOver] = function () {
     return new GameOverState();

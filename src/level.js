@@ -39,6 +39,7 @@ const kEnglishStep = 0.01;
         self.paddleP1 = props.paddleP1;
         self.paddleP2 = props.paddleP2;
 
+        // powerup code is split very nastily across many files.
         self.pills = props.pills;
         self.p1Powerups = new Powerups({
             isPlayer: props.isP1Player,
@@ -47,7 +48,6 @@ const kEnglishStep = 0.01;
             specs: self.pills
         });
         self.p1Pill = undefined;
-
         self.p2Powerups = new Powerups({
             isPlayer: props.isP2Player,
             paddle: self.paddleP2,

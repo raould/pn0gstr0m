@@ -5,6 +5,9 @@
 
 // yes this is really hard to playtest.
 
+var gP1Pills = [];
+var gP2Pills = [];
+
 function MakeAttract(paddleP1, paddleP2) {
     return new Level({
         index: kAttractLevelIndex,
@@ -77,27 +80,7 @@ function MakeSplitsCount(index) {
     }
 }
 
-let gChosenPillIDsCache;
 function ChoosePillIDs(index) {
-    Assert(index != kAttractLevelIndex);
-
-    if (index === kZenLevelIndex) {
-        return [...gPillIDs];
-    }
-
-    const i0 = index - 1;
-    if (gChosenPillIDsCache?.index === index) {
-        return gChosenPillIDsCache?.pids;
-    }
-
-    const pids = ChoosePillIDsUncached(index);
-    console.log("Pids", index, pids);
-    gChosenPillIDsCache = { index, pids };
-
-    return pids;
-}
-
-function ChoosePillIDsUncached(index) {
     let pids = [];
     const i0 = index-1;
 
@@ -109,7 +92,7 @@ function ChoosePillIDsUncached(index) {
             Assert(i0 > 0, "attract and level 1 should not have pills", index);
             const i = (i0-1)*2;
             pids = gPillIDs.slice(i, i+2);
-            console.log("ChoosePillIDsUncached by 2", index, pids, pids.map(i => gPillInfo[i]?.name));
+            console.log("ChoosePillIDs by 2", index, pids, pids.map(i => gPillInfo[i]?.name));
             Assert(pids.length === 2);
         }
         // after those first n levels, for another n levels, 4 random pills per level.
@@ -122,7 +105,7 @@ function ChoosePillIDsUncached(index) {
                 p.splice(r.RandomRangeInt(0, p.length-1), 1)[0],
                 p.splice(r.RandomRangeInt(0, p.length-1), 1)[0],
             ];
-            console.log("ChoosePillIDsUncached random 4", index, pids, pids.map(i => gPillInfo[i]?.name));
+            console.log("ChoosePillIDs random 4", index, pids, pids.map(i => gPillInfo[i]?.name));
             Assert(pids.length === 4);
         }
 	// after all that, dump in all powerups!
@@ -132,5 +115,17 @@ function ChoosePillIDsUncached(index) {
         Assert(pids.length > 0);
     }
 
+    return pids;
+}
+
+// todo: this has to be told which pills
+// not to include, because they are already owned.
+function ChooseRewards(index, excluding) {
+    let pids = [];
+    const i0 = index-1;
+    const i = i0*2;
+    pids = gPillIDs.slice(i, i+2);
+    console.log("ChooseRewards", index, pids, pids.map(i => gPillInfo[i]?.name));
+    Assert(pids.length === 0 || pids.length === 2);
     return pids;
 }

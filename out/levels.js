@@ -13,6 +13,8 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 
 // yes this is really hard to playtest.
 
+var gP1Pills = [];
+var gP2Pills = [];
 function MakeAttract(paddleP1, paddleP2) {
   return new Level({
     index: kAttractLevelIndex,
@@ -90,27 +92,7 @@ function MakeSplitsCount(index) {
     return 200 + extra;
   }
 }
-var gChosenPillIDsCache;
 function ChoosePillIDs(index) {
-  var _gChosenPillIDsCache;
-  Assert(index != kAttractLevelIndex);
-  if (index === kZenLevelIndex) {
-    return _toConsumableArray(gPillIDs);
-  }
-  var i0 = index - 1;
-  if (((_gChosenPillIDsCache = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache.index) === index) {
-    var _gChosenPillIDsCache2;
-    return (_gChosenPillIDsCache2 = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache2.pids;
-  }
-  var pids = ChoosePillIDsUncached(index);
-  console.log("Pids", index, pids);
-  gChosenPillIDsCache = {
-    index: index,
-    pids: pids
-  };
-  return pids;
-}
-function ChoosePillIDsUncached(index) {
   var pids = [];
   var i0 = index - 1;
 
@@ -121,7 +103,7 @@ function ChoosePillIDsUncached(index) {
       Assert(i0 > 0, "attract and level 1 should not have pills", index);
       var i = (i0 - 1) * 2;
       pids = gPillIDs.slice(i, i + 2);
-      console.log("ChoosePillIDsUncached by 2", index, pids, pids.map(function (i) {
+      console.log("ChoosePillIDs by 2", index, pids, pids.map(function (i) {
         var _gPillInfo$i;
         return (_gPillInfo$i = gPillInfo[i]) == null ? void 0 : _gPillInfo$i.name;
       }));
@@ -132,7 +114,7 @@ function ChoosePillIDsUncached(index) {
       var r = new Random(index);
       var p = _toConsumableArray(gPillIDs);
       pids = [p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0]];
-      console.log("ChoosePillIDsUncached random 4", index, pids, pids.map(function (i) {
+      console.log("ChoosePillIDs random 4", index, pids, pids.map(function (i) {
         var _gPillInfo$i2;
         return (_gPillInfo$i2 = gPillInfo[i]) == null ? void 0 : _gPillInfo$i2.name;
       }));
@@ -144,5 +126,20 @@ function ChoosePillIDsUncached(index) {
     }
     Assert(pids.length > 0);
   }
+  return pids;
+}
+
+// todo: this has to be told which pills
+// not to include, because they are already owned.
+function ChooseRewards(index, excluding) {
+  var pids = [];
+  var i0 = index - 1;
+  var i = i0 * 2;
+  pids = gPillIDs.slice(i, i + 2);
+  console.log("ChooseRewards", index, pids, pids.map(function (i) {
+    var _gPillInfo$i3;
+    return (_gPillInfo$i3 = gPillInfo[i]) == null ? void 0 : _gPillInfo$i3.name;
+  }));
+  Assert(pids.length === 0 || pids.length === 2);
   return pids;
 }

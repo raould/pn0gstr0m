@@ -37,6 +37,8 @@ function Level(props) {
     // todo: maybe GameState shouldn't own the paddles.
     self.paddleP1 = props.paddleP1;
     self.paddleP2 = props.paddleP2;
+
+    // powerup code is split very nastily across many files.
     self.pills = props.pills;
     self.p1Powerups = new Powerups({
       isPlayer: props.isP1Player,
