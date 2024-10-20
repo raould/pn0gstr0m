@@ -428,7 +428,7 @@ var gToasts = [];
 var gGamepad1;
 var gGamepad2;
 var kJoystickDeadZone = 0.5;
-var gR = new Random( 0x1BADB002 );
+var gR = new Random( Math.round(Date.now()) );
 
 // ----------------------------------------
 
@@ -867,7 +867,7 @@ function UpdateLocalStorage() {
 
     self.Step = function() {
         if (gDebug) { // skip it!
-            return kLevelFinChoose; //kTitle;
+            return kLevelFinChoose; // todo: kTitle;
         }
         else {
             var nextState;
@@ -1972,30 +1972,36 @@ function UpdateLocalStorage() {
 
     self.Init = function() {
         ResetInput();
+        self.timeout = 1000 * 30;
 
         // todo: remove this testing hack.
         LatchP1Side("right");
 
         // might be empty if you already got them all!
         const pillIDs = ChooseRewards(gLevelIndex);
+        self.goOn = pillIDs.length === 0;
         self.p1Choice = 0;
-        self.p2Choice = 0;
+        self.p2Choice = is1P() ? gR.RandomRangeInt(0, pillIDs.length-1) : 0;
         self.p1Specs = [];
         self.p2Specs = [];
         const sy = gHeight / 2 / pillIDs.length;
         const s0 = gh(0.6) - sy/2;
         for (let i = 0; i < pillIDs.length; ++i) {
             const y = s0 + (sy*i);
-            const p1x = gw(ForP1Side(0.3, 0.6));
+            const p1x = gw(ForP1Side(0.3, 0.7));
             self.p1Specs.push({ pid: pillIDs[i], x: p1x, y });
-            if (!is1P()) {
-                const p2x = gw(ForP2Side(0.25, 0.75));
-                self.p2Specs.push({ pid: pillIDs[i], x: p2x, y });
-            }
+            const p2x = gw(ForP2Side(0.25, 0.75));
+            self.p2Specs.push({ pid: pillIDs[i], x: p2x, y });
         }
     };
 
     self.Step = function(dt) {
+        self.timeout -= dt;
+        self.goOn = self.timeout <= 0;
+        if (self.goOn) {
+            // todo: return kGetReady;
+        }
+
         var nextState;
         gEventQueue.forEach((event, i) => {
             var cmds = {};
@@ -2004,11 +2010,13 @@ function UpdateLocalStorage() {
                 nextState = self.ProcessOneInput(cmds);
             }
         });
+
         return nextState;
     };
     
     self.ProcessOneInput = function(cmds) {
-        // todo: touch.
+        if (self.goOn) { return; }
+        // todo: touch!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if (gP1Keys.$.up || isGamepad1Up()) {
             self.p1Choice = Math.max(0, self.p1Choice-1);
             gP1Keys.Reset();
@@ -2019,30 +2027,49 @@ function UpdateLocalStorage() {
             gP1Keys.Reset();
             gGamepad1Sticks.Reset();
         }
+        if (!is1P()) {
+            if (gP2Keys.$.up || isGamepad2Up()) {
+                self.p2Choice = Math.max(0, self.p2Choice-1);
+                gP2Keys.Reset();
+                gGamepad2Sticks.Reset();
+            }
+            if (gP2Keys.$.down || isGamepad2Down()) {
+                self.p2Choice = Math.min(self.p2Specs.length-1, self.p2Choice+1);
+                gP2Keys.Reset();
+                gGamepad2Sticks.Reset();
+            }
+        }
         return undefined;
     };
 
     self.Draw = function() {
+        if (self.goOn) { return; }
+        self.DrawText();
+        self.DrawPills();
+    };
+    
+    self.DrawText = function() {
         Cxdo(() => {
             gCx.fillStyle = RandomGreen();
             DrawText("CHOOSE YOUR PRIZE", "center", gw(0.5), gh(0.3), gRegularFontSizePt);
+            var timeStr = String(Math.ceil(Math.max(0, self.timeout / 1000)));
+            DrawText(timeStr, "center", gw(0.5), gh(0.45), gRegularFontSizePt);
         });
-        self.DrawPills();
     };
 
     self.DrawPills = function() {
-        self.DrawPillsColumn(gP1Side, self.p1Specs, "P1");
+        self.DrawPillsColumn(gP1Side, self.p1Specs, self.p1Choice, "P1");
         // todo: implement cpu choosing & show what the cpu chose.
-        self.DrawPillsColumn(gP2Side, self.p2Specs, "P2");
+        self.DrawPillsColumn(gP2Side, self.p2Specs, self.p2Choice, is1P() ? "GPT" : "P2");
     };
 
-    self.DrawPillsColumn = function(side, specs, label) {
+    self.DrawPillsColumn = function(side, specs, choice, label) {
         var scale = 1;
         Cxdo(() => {
             for(var i = 0; i < specs.length; ++i) {
                 gCx.fillStyle = RandomBlue();
                 const spec = specs[i];
-                const highlighted = self.p1Choice === i;
+                const highlighted = choice === i;
                 const pid = spec.pid;
                 const x = spec.x;
                 const y = spec.y;
@@ -2060,7 +2087,7 @@ function UpdateLocalStorage() {
                 DrawText(name, "center", x, y + height*1.5, gSmallestFontSizePt);
                 if (highlighted) {
                     gCx.fillStyle = RandomGreen();
-                    var mxo = gw(0.08);
+                    var mxo = gw(0.07);
                     var ox = sx1(10);
                     var oy = sy1(5);
                     if (isU(side) || side === "right") {
@@ -2071,7 +2098,7 @@ function UpdateLocalStorage() {
                         gCx.lineTo(axm + ox, y + oy);
                         gCx.lineTo(axm, y);
                         gCx.fill();
-                        DrawText(label, OtherSide(side), axm + ox*2, y + sy1(5), gSmallFontSizePt);
+                        DrawText(label, OtherSide(side), axm + ox*1.8, y + sy1(5), gSmallFontSizePt);
                     } else { // left
                         var axm = x - mxo
                         gCx.beginPath();
@@ -2080,7 +2107,7 @@ function UpdateLocalStorage() {
                         gCx.lineTo(axm - ox, y + oy);
                         gCx.lineTo(axm, y);
                         gCx.fill();
-                        DrawText(label, OtherSide(side), axm - ox*2, y + sy1(5), gSmallFontSizePt);
+                        DrawText(label, OtherSide(side), axm - ox*1.8, y + sy1(5), gSmallFontSizePt);
                     }
                 }
             }
@@ -2148,7 +2175,7 @@ function UpdateLocalStorage() {
         if (advance) {
             gLevelIndex += 1;
             if (is1P()) {
-                return kGetReady;
+                return kLevelFinChoose;
             }
             else {
                 return kGameOverSummary;
