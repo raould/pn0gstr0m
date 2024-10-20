@@ -1902,212 +1902,6 @@ function GameState(props) {
 }
 
 /*class*/
-function LevelFinChooseState() {
-  var self = this;
-  self.Init = function () {
-    ResetInput();
-    self.timeout = 1000 * (gDebug ? 5 : 15);
-
-    // todo: remove this testing hack.
-    LatchP1Side("left");
-
-    // might be empty if you already got them all!
-    var pillIDs = ChooseRewards(gLevelIndex);
-    self.goOn = pillIDs.length === 0;
-    self.p1Specs = [];
-    self.p2Specs = [];
-    var sy = gHeight * 0.6 / pillIDs.length;
-    var s0 = gh(0.6) - sy / 2;
-    for (var i = 0; i < pillIDs.length; ++i) {
-      var cy = s0 + sy * i;
-      var p1x = gw(ForP1Side(0.3, 0.7));
-      self.p1Specs.push({
-        pid: pillIDs[i],
-        cx: p1x,
-        cy: cy
-      });
-      var p2x = gw(ForP2Side(0.3, 0.7));
-      self.p2Specs.push({
-        pid: pillIDs[i],
-        cx: p2x,
-        cy: cy
-      });
-    }
-    self.p1Highlight = 0;
-    self.p2Highlight = is1P() ? gR.RandomRangeInt(0, pillIDs.length - 1) : 0;
-  };
-  self.Step = function (dt) {
-    self.timeout -= dt;
-    self.goOn = self.timeout <= 0;
-    if (self.goOn) {
-      self.SaveIndices();
-      return kGetReady;
-    }
-    var nextState;
-    gEventQueue.forEach(function (event, i) {
-      var cmds = {};
-      event.updateFn(cmds);
-      if (isU(nextState)) {
-        nextState = self.ProcessOneInput(cmds);
-      }
-    });
-    return nextState;
-  };
-  self.SaveIndices = function () {
-    gP1Pills.push(self.p1Specs[self.p1Highlight].pid);
-    gP2Pills.push(self.p2Specs[self.p2Highlight].pid);
-  };
-  self.ProcessOneInput = function () {
-    if (self.goOn) {
-      return;
-    }
-    self.ProcessButtons();
-    self.p1Highlight = self.ProcessTouch(gP1Target, self.p1Specs, self.p1Highlight);
-    self.p2Highlight = self.ProcessTouch(gP2Target, self.p2Specs, self.p2Highlight);
-  };
-  self.ProcessButtons = function () {
-    if (gP1Keys.$.up || isGamepad1Up()) {
-      self.p1Highlight = Math.max(0, self.p1Highlight - 1);
-      gP1Keys.Reset();
-      gGamepad1Sticks.Reset();
-    }
-    if (gP1Keys.$.down || isGamepad1Down()) {
-      self.p1Highlight = Math.min(self.p1Specs.length - 1, self.p1Highlight + 1);
-      gP1Keys.Reset();
-      gGamepad1Sticks.Reset();
-    }
-    if (!is1P()) {
-      if (gP2Keys.$.up || isGamepad2Up()) {
-        self.p2Highlight = Math.max(0, self.p2Highlight - 1);
-        gP2Keys.Reset();
-        gGamepad2Sticks.Reset();
-      }
-      if (gP2Keys.$.down || isGamepad2Down()) {
-        self.p2Highlight = Math.min(self.p2Specs.length - 1, self.p2Highlight + 1);
-        gP2Keys.Reset();
-        gGamepad2Sticks.Reset();
-      }
-    }
-    return undefined;
-  };
-  self.ProcessTouch = function (target, specs, ph) {
-    var _loop = function _loop() {
-        var spec = specs[i];
-        var ox = sx1(40);
-        var oy = sy1(20);
-        var x = spec.cx - ox;
-        var y = spec.cy - oy;
-        var rect = {
-          x: x,
-          y: y,
-          width: ox * 2,
-          height: oy * 2
-        };
-        gDebug && gDebug_DrawList.push({
-          fn: function fn() {
-            gCx.strokeStyle = RandomColor();
-            gCx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-          }
-        });
-        var hit = target.isDown() ? isPointInRect(target.position, rect) : false;
-        if (hit) {
-          return {
-            v: i
-          };
-        }
-      },
-      _ret;
-    for (var i = 0; i < specs.length; ++i) {
-      _ret = _loop();
-      if (_ret) return _ret.v;
-    }
-    return ph;
-  };
-  self.Draw = function () {
-    if (self.goOn) {
-      return;
-    }
-    self.DrawText();
-    self.DrawPills();
-  };
-  self.DrawText = function () {
-    Cxdo(function () {
-      gCx.fillStyle = RandomGreen();
-      DrawText("CHOOSE YOUR PRIZE!", "center", gw(0.5), gh(0.3), gRegularFontSizePt);
-      var timeStr = String(Math.ceil(Math.max(0, self.timeout / 1000)));
-      DrawText(timeStr, "center", gw(0.5), gh(0.45), gRegularFontSizePt);
-    });
-  };
-  self.DrawPills = function () {
-    self.DrawPillsColumn(gP1Side, self.p1Specs, self.p1Highlight, "P1");
-    self.DrawPillsColumn(gP2Side, self.p2Specs, self.p2Highlight, is1P() ? "GPT" : "P2");
-  };
-  self.DrawPillsColumn = function (side, specs, highlight, label) {
-    Cxdo(function () {
-      for (var i = 0; i < specs.length; ++i) {
-        var spec = specs[i];
-        var cx = spec.cx;
-        var cy = spec.cy;
-        var highlighted = highlight === i;
-        self.DrawPill(side, spec, highlighted);
-        if (highlighted) {
-          self.DrawArrow(side, cx, cy, label);
-        }
-      }
-    });
-  };
-  self.DrawPill = function (side, spec, highlighted) {
-    var scale = 1;
-    gCx.fillStyle = RandomBlue();
-    var pid = spec.pid;
-    var _gPillInfo$pid = gPillInfo[pid],
-      name = _gPillInfo$pid.name,
-      drawer = _gPillInfo$pid.drawer,
-      wfn = _gPillInfo$pid.wfn,
-      hfn = _gPillInfo$pid.hfn;
-    var width = wfn() * scale;
-    var height = hfn() * scale;
-    var x = spec.cx - width / 2;
-    var y = spec.cy - height / 2;
-    drawer(side, {
-      x: x,
-      y: y,
-      width: width,
-      height: height
-    }, 1);
-    gCx.fillStyle = RandomBlue();
-    DrawText(name, "center", spec.cx, spec.cy + height / 2 + sy1(20), gSmallestFontSizePt);
-  };
-  self.DrawArrow = function (side, x, y, label) {
-    gCx.fillStyle = RandomGreen();
-    var mxo = gw(0.07);
-    var ox = sx1(10);
-    var oy = sy1(5);
-    if (isU(side) || side === "right") {
-      var axm = x + mxo;
-      gCx.beginPath();
-      gCx.moveTo(axm, y);
-      gCx.lineTo(axm + ox, y - oy);
-      gCx.lineTo(axm + ox, y + oy);
-      gCx.lineTo(axm, y);
-      gCx.fill();
-      DrawText(label, OtherSide(side), axm + ox * 1.8, y + sy1(5), gSmallFontSizePt);
-    } else {
-      // left
-      var axm = x - mxo;
-      gCx.beginPath();
-      gCx.moveTo(axm, y);
-      gCx.lineTo(axm - ox, y - oy);
-      gCx.lineTo(axm - ox, y + oy);
-      gCx.lineTo(axm, y);
-      gCx.fill();
-      DrawText(label, OtherSide(side), axm - ox * 1.8, y + sy1(5), gSmallFontSizePt);
-    }
-  };
-  self.Init();
-}
-
-/*class*/
 function LevelFinState() {
   var self = this;
   self.Init = function () {
@@ -2213,6 +2007,212 @@ function LevelFinState() {
         DrawText("NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
       }
     });
+  };
+  self.Init();
+}
+
+/*class*/
+function LevelFinChooseState() {
+  var self = this;
+  self.Init = function () {
+    ResetInput();
+    self.timeout = 1000 * (gDebug ? 5 : 15);
+
+    // todo: remove this testing hack.
+    LatchP1Side("left");
+
+    // might be empty if you already got them all!
+    var pillIDs = ChooseRewards(gLevelIndex);
+    self.goOn = pillIDs.length === 0;
+    self.p1Specs = [];
+    self.p2Specs = [];
+    var sy = gHeight * 0.6 / pillIDs.length;
+    var s0 = gh(0.6) - sy / 2;
+    for (var i = 0; i < pillIDs.length; ++i) {
+      var cy = s0 + sy * i;
+      var p1x = gw(ForP1Side(0.25, 0.75));
+      self.p1Specs.push({
+        pid: pillIDs[i],
+        cx: p1x,
+        cy: cy
+      });
+      var p2x = gw(ForP2Side(0.25, 0.75));
+      self.p2Specs.push({
+        pid: pillIDs[i],
+        cx: p2x,
+        cy: cy
+      });
+    }
+    self.p1Highlight = 0;
+    self.p2Highlight = is1P() ? gR.RandomRangeInt(0, pillIDs.length - 1) : 0;
+  };
+  self.Step = function (dt) {
+    self.timeout -= dt;
+    self.goOn = self.timeout <= -1000; // neg 1 sec to show '0'.
+    if (self.goOn) {
+      self.SaveIndices();
+      return kGetReady;
+    }
+    var nextState;
+    gEventQueue.forEach(function (event, i) {
+      var cmds = {};
+      event.updateFn(cmds);
+      if (isU(nextState)) {
+        nextState = self.ProcessOneInput(cmds);
+      }
+    });
+    return nextState;
+  };
+  self.SaveIndices = function () {
+    gP1Pills.push(self.p1Specs[self.p1Highlight].pid);
+    gP2Pills.push(self.p2Specs[self.p2Highlight].pid);
+  };
+  self.ProcessOneInput = function () {
+    if (self.goOn) {
+      return;
+    }
+    self.ProcessButtons();
+    self.p1Highlight = self.ProcessTouch(gP1Target, self.p1Specs, self.p1Highlight);
+    self.p2Highlight = self.ProcessTouch(gP2Target, self.p2Specs, self.p2Highlight);
+  };
+  self.ProcessButtons = function () {
+    if (gP1Keys.$.up || isGamepad1Up()) {
+      self.p1Highlight = Math.max(0, self.p1Highlight - 1);
+      gP1Keys.Reset();
+      gGamepad1Sticks.Reset();
+    }
+    if (gP1Keys.$.down || isGamepad1Down()) {
+      self.p1Highlight = Math.min(self.p1Specs.length - 1, self.p1Highlight + 1);
+      gP1Keys.Reset();
+      gGamepad1Sticks.Reset();
+    }
+    if (!is1P()) {
+      if (gP2Keys.$.up || isGamepad2Up()) {
+        self.p2Highlight = Math.max(0, self.p2Highlight - 1);
+        gP2Keys.Reset();
+        gGamepad2Sticks.Reset();
+      }
+      if (gP2Keys.$.down || isGamepad2Down()) {
+        self.p2Highlight = Math.min(self.p2Specs.length - 1, self.p2Highlight + 1);
+        gP2Keys.Reset();
+        gGamepad2Sticks.Reset();
+      }
+    }
+    return undefined;
+  };
+  self.ProcessTouch = function (target, specs, ph) {
+    var _loop = function _loop() {
+        var spec = specs[i];
+        var ox = sx1(40);
+        var oy = sy1(20);
+        var x = spec.cx - ox;
+        var y = spec.cy - oy;
+        var rect = {
+          x: x,
+          y: y,
+          width: ox * 2,
+          height: oy * 2
+        };
+        gDebug && gDebug_DrawList.push({
+          fn: function fn() {
+            gCx.strokeStyle = RandomColor();
+            gCx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+          }
+        });
+        var hit = target.isDown() ? isPointInRect(target.position, rect) : false;
+        if (hit) {
+          return {
+            v: i
+          };
+        }
+      },
+      _ret;
+    for (var i = 0; i < specs.length; ++i) {
+      _ret = _loop();
+      if (_ret) return _ret.v;
+    }
+    return ph;
+  };
+  self.Draw = function () {
+    if (self.goOn) {
+      return;
+    }
+    self.DrawText();
+    self.DrawPills();
+  };
+  self.DrawText = function () {
+    Cxdo(function () {
+      gCx.fillStyle = RandomGreen();
+      DrawText("CHOOSE YOUR PRIZE!", "center", gw(0.5), gh(0.2), gRegularFontSizePt);
+      var timeStr = String(Math.ceil(Math.max(0, self.timeout / 1000)));
+      DrawText(timeStr, "center", gw(0.5), gh(0.35), gRegularFontSizePt);
+    });
+  };
+  self.DrawPills = function () {
+    self.DrawPillsColumn(gP1Side, self.p1Specs, self.p1Highlight, "P1");
+    self.DrawPillsColumn(gP2Side, self.p2Specs, self.p2Highlight, is1P() ? "GPT" : "P2");
+  };
+  self.DrawPillsColumn = function (side, specs, highlight, label) {
+    Cxdo(function () {
+      for (var i = 0; i < specs.length; ++i) {
+        var spec = specs[i];
+        var cx = spec.cx;
+        var cy = spec.cy;
+        var highlighted = highlight === i;
+        self.DrawPill(side, spec, highlighted);
+        if (highlighted) {
+          self.DrawArrow(side, cx, cy, label);
+        }
+      }
+    });
+  };
+  self.DrawPill = function (side, spec, highlighted) {
+    var scale = 1;
+    gCx.fillStyle = RandomBlue();
+    var pid = spec.pid;
+    var _gPillInfo$pid = gPillInfo[pid],
+      name = _gPillInfo$pid.name,
+      drawer = _gPillInfo$pid.drawer,
+      wfn = _gPillInfo$pid.wfn,
+      hfn = _gPillInfo$pid.hfn;
+    var width = wfn() * scale;
+    var height = hfn() * scale;
+    var x = spec.cx - width / 2;
+    var y = spec.cy - height / 2;
+    drawer(side, {
+      x: x,
+      y: y,
+      width: width,
+      height: height
+    }, 1);
+    gCx.fillStyle = RandomBlue();
+    DrawText(name, "center", spec.cx, spec.cy + height / 2 + sy1(20), gSmallestFontSizePt);
+  };
+  self.DrawArrow = function (side, x, y, label) {
+    gCx.fillStyle = RandomGreen();
+    var mxo = gw(0.07);
+    var ox = sx1(10);
+    var oy = sy1(5);
+    if (isU(side) || side === "right") {
+      var axm = x + mxo;
+      gCx.beginPath();
+      gCx.moveTo(axm, y);
+      gCx.lineTo(axm + ox, y - oy);
+      gCx.lineTo(axm + ox, y + oy);
+      gCx.lineTo(axm, y);
+      gCx.fill();
+      DrawText(label, OtherSide(side), axm + ox * 1.8, y + sy1(8), gReducedFontSizePt);
+    } else {
+      // left
+      var axm = x - mxo;
+      gCx.beginPath();
+      gCx.moveTo(axm, y);
+      gCx.lineTo(axm - ox, y - oy);
+      gCx.lineTo(axm - ox, y + oy);
+      gCx.lineTo(axm, y);
+      gCx.fill();
+      DrawText(label, OtherSide(side), axm - ox * 1.8, y + sy1(8), gReducedFontSizePt);
+    }
   };
   self.Init();
 }

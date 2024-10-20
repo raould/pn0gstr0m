@@ -1923,196 +1923,6 @@ function UpdateLocalStorage() {
     self.Init();
 }
 
-/*class*/ function LevelFinChooseState() {
-    var self = this;
-
-    self.Init = function() {
-        ResetInput();
-        self.timeout = 1000 * (gDebug ? 5 : 15);
-
-        // todo: remove this testing hack.
-        LatchP1Side("left");
-
-        // might be empty if you already got them all!
-        const pillIDs = ChooseRewards(gLevelIndex);
-        self.goOn = pillIDs.length === 0;
-
-        self.p1Specs = [];
-        self.p2Specs = [];
-        const sy = (gHeight * 0.6) / pillIDs.length;
-        const s0 = gh(0.6) - sy/2;
-        for (let i = 0; i < pillIDs.length; ++i) {
-            const cy = s0 + (sy*i);
-            const p1x = gw(ForP1Side(0.3, 0.7));
-            self.p1Specs.push({ pid: pillIDs[i], cx: p1x, cy });
-            const p2x = gw(ForP2Side(0.3, 0.7));
-            self.p2Specs.push({ pid: pillIDs[i], cx: p2x, cy });
-        }
-
-        self.p1Highlight = 0;
-        self.p2Highlight = is1P() ? gR.RandomRangeInt(0, pillIDs.length-1) : 0;
-    };
-
-    self.Step = function(dt) {
-        self.timeout -= dt;
-        self.goOn = self.timeout <= 0;
-        if (self.goOn) {
-            self.SaveIndices();
-            return kGetReady;
-        }
-
-        var nextState;
-        gEventQueue.forEach((event, i) => {
-            var cmds = {};
-            event.updateFn(cmds);
-            if (isU(nextState)) {
-                nextState = self.ProcessOneInput(cmds);
-            }
-        });
-
-        return nextState;
-    };
-
-    self.SaveIndices = function() {
-        gP1Pills.push(self.p1Specs[self.p1Highlight].pid);
-        gP2Pills.push(self.p2Specs[self.p2Highlight].pid);
-    };
-    
-    self.ProcessOneInput = function() {
-        if (self.goOn) { return; }
-        self.ProcessButtons();
-        self.p1Highlight = self.ProcessTouch(gP1Target, self.p1Specs, self.p1Highlight);
-        self.p2Highlight = self.ProcessTouch(gP2Target, self.p2Specs, self.p2Highlight);
-    };
-
-    self.ProcessButtons = function() {
-        if (gP1Keys.$.up || isGamepad1Up()) {
-            self.p1Highlight = Math.max(0, self.p1Highlight-1);
-            gP1Keys.Reset();
-            gGamepad1Sticks.Reset();
-        }
-        if (gP1Keys.$.down || isGamepad1Down()) {
-            self.p1Highlight = Math.min(self.p1Specs.length-1, self.p1Highlight+1);
-            gP1Keys.Reset();
-            gGamepad1Sticks.Reset();
-        }
-        if (!is1P()) {
-            if (gP2Keys.$.up || isGamepad2Up()) {
-                self.p2Highlight = Math.max(0, self.p2Highlight-1);
-                gP2Keys.Reset();
-                gGamepad2Sticks.Reset();
-            }
-            if (gP2Keys.$.down || isGamepad2Down()) {
-                self.p2Highlight = Math.min(self.p2Specs.length-1, self.p2Highlight+1);
-                gP2Keys.Reset();
-                gGamepad2Sticks.Reset();
-            }
-        }
-        return undefined;
-    };
-
-    self.ProcessTouch = function(target, specs, ph) {
-        for (let i = 0; i < specs.length; ++i) {
-            const spec = specs[i];
-            const ox = sx1(40);
-            const oy = sy1(20);
-            const x = spec.cx - ox;
-            const y = spec.cy - oy;
-            const rect = { x: x, y: y, width: ox*2, height: oy*2 };
-            gDebug && gDebug_DrawList.push({
-                fn: () => {
-                    gCx.strokeStyle = RandomColor();
-                    gCx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-                }
-            });
-            const hit = target.isDown() ?
-                  isPointInRect(target.position, rect) :
-                  false;
-            if (hit) {
-                return i;
-            }
-        }
-        return ph;
-    };
-
-    self.Draw = function() {
-        if (self.goOn) { return; }
-        self.DrawText();
-        self.DrawPills();
-    };
-    
-    self.DrawText = function() {
-        Cxdo(() => {
-            gCx.fillStyle = RandomGreen();
-            DrawText("CHOOSE YOUR PRIZE!", "center", gw(0.5), gh(0.3), gRegularFontSizePt);
-            var timeStr = String(Math.ceil(Math.max(0, self.timeout / 1000)));
-            DrawText(timeStr, "center", gw(0.5), gh(0.45), gRegularFontSizePt);
-        });
-    };
-
-    self.DrawPills = function() {
-        self.DrawPillsColumn(gP1Side, self.p1Specs, self.p1Highlight, "P1");
-        self.DrawPillsColumn(gP2Side, self.p2Specs, self.p2Highlight, is1P() ? "GPT" : "P2");
-    };
-
-    self.DrawPillsColumn = function(side, specs, highlight, label) {
-        Cxdo(() => {
-            for(let i = 0; i < specs.length; ++i) {
-                const spec = specs[i];
-                const cx = spec.cx;
-                const cy = spec.cy;
-                const highlighted = highlight === i;
-                self.DrawPill(side, spec, highlighted);
-                if (highlighted) {
-                    self.DrawArrow(side, cx, cy, label);
-                }
-            }
-        });
-    };
-
-    self.DrawPill = function(side, spec, highlighted) {
-        const scale = 1;
-        gCx.fillStyle = RandomBlue();
-        const pid = spec.pid;
-        const { name, drawer, wfn, hfn } = gPillInfo[pid];
-        const width = wfn() * scale;
-        const height = hfn() * scale;
-        const x = spec.cx - width/2;
-        const y = spec.cy - height/2;
-        drawer(side, { x, y, width, height }, 1);
-        gCx.fillStyle = RandomBlue();
-        DrawText(name, "center", spec.cx, spec.cy + height/2 + sy1(20), gSmallestFontSizePt);
-    };
-
-    self.DrawArrow = function(side, x, y, label) {
-        gCx.fillStyle = RandomGreen();
-        var mxo = gw(0.07);
-        var ox = sx1(10);
-        var oy = sy1(5);
-        if (isU(side) || side === "right") {
-            var axm = x + mxo;
-            gCx.beginPath();
-            gCx.moveTo(axm, y);
-            gCx.lineTo(axm + ox, y - oy);
-            gCx.lineTo(axm + ox, y + oy);
-            gCx.lineTo(axm, y);
-            gCx.fill();
-            DrawText(label, OtherSide(side), axm + ox*1.8, y + sy1(5), gSmallFontSizePt);
-        } else { // left
-            var axm = x - mxo;
-            gCx.beginPath();
-            gCx.moveTo(axm, y);
-            gCx.lineTo(axm - ox, y - oy);
-            gCx.lineTo(axm - ox, y + oy);
-            gCx.lineTo(axm, y);
-            gCx.fill();
-            DrawText(label, OtherSide(side), axm - ox*1.8, y + sy1(5), gSmallFontSizePt);
-        }
-    };
-
-    self.Init();
-}
-
 /*class*/ function LevelFinState() {
     var self = this;
 
@@ -2279,6 +2089,196 @@ function UpdateLocalStorage() {
                 );
             }
         });
+    };
+
+    self.Init();
+}
+
+/*class*/ function LevelFinChooseState() {
+    var self = this;
+
+    self.Init = function() {
+        ResetInput();
+        self.timeout = 1000 * (gDebug ? 5 : 15);
+
+        // todo: remove this testing hack.
+        LatchP1Side("left");
+
+        // might be empty if you already got them all!
+        const pillIDs = ChooseRewards(gLevelIndex);
+        self.goOn = pillIDs.length === 0;
+
+        self.p1Specs = [];
+        self.p2Specs = [];
+        const sy = (gHeight * 0.6) / pillIDs.length;
+        const s0 = gh(0.6) - sy/2;
+        for (let i = 0; i < pillIDs.length; ++i) {
+            const cy = s0 + (sy*i);
+            const p1x = gw(ForP1Side(0.25, 0.75));
+            self.p1Specs.push({ pid: pillIDs[i], cx: p1x, cy });
+            const p2x = gw(ForP2Side(0.25, 0.75));
+            self.p2Specs.push({ pid: pillIDs[i], cx: p2x, cy });
+        }
+
+        self.p1Highlight = 0;
+        self.p2Highlight = is1P() ? gR.RandomRangeInt(0, pillIDs.length-1) : 0;
+    };
+
+    self.Step = function(dt) {
+        self.timeout -= dt;
+        self.goOn = self.timeout <= -1000; // neg 1 sec to show '0'.
+        if (self.goOn) {
+            self.SaveIndices();
+            return kGetReady;
+        }
+
+        var nextState;
+        gEventQueue.forEach((event, i) => {
+            var cmds = {};
+            event.updateFn(cmds);
+            if (isU(nextState)) {
+                nextState = self.ProcessOneInput(cmds);
+            }
+        });
+
+        return nextState;
+    };
+
+    self.SaveIndices = function() {
+        gP1Pills.push(self.p1Specs[self.p1Highlight].pid);
+        gP2Pills.push(self.p2Specs[self.p2Highlight].pid);
+    };
+    
+    self.ProcessOneInput = function() {
+        if (self.goOn) { return; }
+        self.ProcessButtons();
+        self.p1Highlight = self.ProcessTouch(gP1Target, self.p1Specs, self.p1Highlight);
+        self.p2Highlight = self.ProcessTouch(gP2Target, self.p2Specs, self.p2Highlight);
+    };
+
+    self.ProcessButtons = function() {
+        if (gP1Keys.$.up || isGamepad1Up()) {
+            self.p1Highlight = Math.max(0, self.p1Highlight-1);
+            gP1Keys.Reset();
+            gGamepad1Sticks.Reset();
+        }
+        if (gP1Keys.$.down || isGamepad1Down()) {
+            self.p1Highlight = Math.min(self.p1Specs.length-1, self.p1Highlight+1);
+            gP1Keys.Reset();
+            gGamepad1Sticks.Reset();
+        }
+        if (!is1P()) {
+            if (gP2Keys.$.up || isGamepad2Up()) {
+                self.p2Highlight = Math.max(0, self.p2Highlight-1);
+                gP2Keys.Reset();
+                gGamepad2Sticks.Reset();
+            }
+            if (gP2Keys.$.down || isGamepad2Down()) {
+                self.p2Highlight = Math.min(self.p2Specs.length-1, self.p2Highlight+1);
+                gP2Keys.Reset();
+                gGamepad2Sticks.Reset();
+            }
+        }
+        return undefined;
+    };
+
+    self.ProcessTouch = function(target, specs, ph) {
+        for (let i = 0; i < specs.length; ++i) {
+            const spec = specs[i];
+            const ox = sx1(40);
+            const oy = sy1(20);
+            const x = spec.cx - ox;
+            const y = spec.cy - oy;
+            const rect = { x: x, y: y, width: ox*2, height: oy*2 };
+            gDebug && gDebug_DrawList.push({
+                fn: () => {
+                    gCx.strokeStyle = RandomColor();
+                    gCx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+                }
+            });
+            const hit = target.isDown() ?
+                  isPointInRect(target.position, rect) :
+                  false;
+            if (hit) {
+                return i;
+            }
+        }
+        return ph;
+    };
+
+    self.Draw = function() {
+        if (self.goOn) { return; }
+        self.DrawText();
+        self.DrawPills();
+    };
+    
+    self.DrawText = function() {
+        Cxdo(() => {
+            gCx.fillStyle = RandomGreen();
+            DrawText("CHOOSE YOUR PRIZE!", "center", gw(0.5), gh(0.2), gRegularFontSizePt);
+            var timeStr = String(Math.ceil(Math.max(0, self.timeout / 1000)));
+            DrawText(timeStr, "center", gw(0.5), gh(0.35), gRegularFontSizePt);
+        });
+    };
+
+    self.DrawPills = function() {
+        self.DrawPillsColumn(gP1Side, self.p1Specs, self.p1Highlight, "P1");
+        self.DrawPillsColumn(gP2Side, self.p2Specs, self.p2Highlight, is1P() ? "GPT" : "P2");
+    };
+
+    self.DrawPillsColumn = function(side, specs, highlight, label) {
+        Cxdo(() => {
+            for(let i = 0; i < specs.length; ++i) {
+                const spec = specs[i];
+                const cx = spec.cx;
+                const cy = spec.cy;
+                const highlighted = highlight === i;
+                self.DrawPill(side, spec, highlighted);
+                if (highlighted) {
+                    self.DrawArrow(side, cx, cy, label);
+                }
+            }
+        });
+    };
+
+    self.DrawPill = function(side, spec, highlighted) {
+        const scale = 1;
+        gCx.fillStyle = RandomBlue();
+        const pid = spec.pid;
+        const { name, drawer, wfn, hfn } = gPillInfo[pid];
+        const width = wfn() * scale;
+        const height = hfn() * scale;
+        const x = spec.cx - width/2;
+        const y = spec.cy - height/2;
+        drawer(side, { x, y, width, height }, 1);
+        gCx.fillStyle = RandomBlue();
+        DrawText(name, "center", spec.cx, spec.cy + height/2 + sy1(20), gSmallestFontSizePt);
+    };
+
+    self.DrawArrow = function(side, x, y, label) {
+        gCx.fillStyle = RandomGreen();
+        var mxo = gw(0.07);
+        var ox = sx1(10);
+        var oy = sy1(5);
+        if (isU(side) || side === "right") {
+            var axm = x + mxo;
+            gCx.beginPath();
+            gCx.moveTo(axm, y);
+            gCx.lineTo(axm + ox, y - oy);
+            gCx.lineTo(axm + ox, y + oy);
+            gCx.lineTo(axm, y);
+            gCx.fill();
+            DrawText(label, OtherSide(side), axm + ox*1.8, y + sy1(8), gReducedFontSizePt);
+        } else { // left
+            var axm = x - mxo;
+            gCx.beginPath();
+            gCx.moveTo(axm, y);
+            gCx.lineTo(axm - ox, y - oy);
+            gCx.lineTo(axm - ox, y + oy);
+            gCx.lineTo(axm, y);
+            gCx.fill();
+            DrawText(label, OtherSide(side), axm - ox*1.8, y + sy1(8), gReducedFontSizePt);
+        }
     };
 
     self.Init();
