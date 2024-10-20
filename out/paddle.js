@@ -84,6 +84,10 @@ function Paddle(props) {
     self.nudgeX();
     self.englishFactor = 0; // ugh, this gets modified & used elsewhere. match: level, puck.
   };
+  self.ForEachPaddle = function (fn) {
+    fn(self);
+    self.xtras.A.forEach(fn);
+  };
   self.GetCollisionBounds = function (isSuddenDeath, maxVX) {
     var _gPucks$A$metadata;
     var bounds;

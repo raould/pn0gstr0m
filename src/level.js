@@ -60,14 +60,6 @@ const kEnglishStep = 0.01;
         self.p2Pill = undefined;
     };
 
-    self.IsMidGame = function() {
-        var isMidGame = true;
-        if (exists(self.splitsRemaining)) {
-            isMidGame = self.splitsRemaining > (self.splitsMax/4);
-        }
-        return isMidGame;
-    };
-
     self.EnergyFactor = function() {
 	if (isU(self.splitsRemaining)) {
 	    return undefined;
@@ -113,8 +105,12 @@ const kEnglishStep = 0.01;
         }
     };
 
-    self.IsLastOfThePucks = function() {
-        return exists(self.splitsRemaining) && self.splitsRemaining <= 200;
+    self.IsMidGame = function() {
+        var isMidGame = true;
+        if (exists(self.splitsRemaining)) {
+            isMidGame = self.splitsRemaining > (self.splitsMax/4);
+        }
+        return isMidGame;
     };
 
     self.IsSuddenDeath = function() {

@@ -40,8 +40,23 @@ function MakeZen(paddleP1, paddleP2) {
         maxVX: sxi(ForGameMode({zen: 18, z2p: 22})),
         isP1Player: true,
         isP2Player: !is1P(),
-        p1Pills: PillIDsToMakers(gP1Pills),
-        p2Pills: PillIDsToMakers(gP2Pills),
+        p1Pills: PillIDsToMakers([...gPillIDs]),
+        p2Pills: PillIDsToMakers([...gPillIDs]),
+        paddleP1: paddleP1,
+        paddleP2: paddleP2,
+    });
+}
+
+function MakeZ2P(paddleP1, paddleP2) {
+    return new Level({
+        index: kZenLevelIndex,
+        isSpawning: true, // but no limit on how many.
+	vx0: sxi(2.5),
+        maxVX: sxi(ForGameMode({zen: 18, z2p: 22})),
+        isP1Player: true,
+        isP2Player: !is1P(),
+        p1Pills: PillIDsToMakers([...gPillIDs]),
+        p2Pills: PillIDsToMakers([...gPillIDs]),
         paddleP1: paddleP1,
         paddleP2: paddleP2,
     });

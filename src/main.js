@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // do not check this in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1321,7 +1321,10 @@ function UpdateLocalStorage() {
         if (self.isAttract) {
             self.level = MakeAttract(self.paddleP1, self.paddleP2);
         }
-        else if (gGameMode === kGameModeZen || !is1P()) {
+        else if (gGameMode === kGameMode2P) {
+            self.level = MakeZ2P(self.paddleP1, self.paddleP2);
+        }
+        else if (gGameMode === kGameModeZen) {
             self.level = MakeZen(self.paddleP1, self.paddleP2);
         }
         else {
@@ -1632,9 +1635,10 @@ function UpdateLocalStorage() {
                 // xtras, barriers, neos do not split pucks,
                 // only the main player & cpu paddles.
                 const splits = p.AllPaddlesCollision(
-                    [ self.paddleP1, self.paddleP2 ],
                     self.level.IsSuddenDeath(),
-                    self.maxVX
+                    self.maxVX,
+                    self.paddleP1,
+                    self.paddleP2,
                 );
                 self.level.OnPuckSplits(splits);
                 
@@ -1679,7 +1683,7 @@ function UpdateLocalStorage() {
             self.level.p1Pill = self.level.p1Pill.Step( dt, self );
         }
         if (exists(self.level.p1Pill)) {
-            self.level.p1Pill = self.level.p1Pill.AllPaddlesCollision( self, [ self.paddleP1 ] );
+            self.level.p1Pill = self.level.p1Pill.PaddleCollisionUpdate( self, self.paddleP1 );
         }
     };
 
@@ -1688,7 +1692,7 @@ function UpdateLocalStorage() {
             self.level.p2Pill = self.level.p2Pill.Step( dt, self );
         }
         if (exists(self.level.p2Pill)) {
-            self.level.p2Pill = self.level.p2Pill.AllPaddlesCollision( self, [ self.paddleP2 ] );
+            self.level.p2Pill = self.level.p2Pill.PaddleCollisionUpdate( self, self.paddleP2 );
         }
     };
 

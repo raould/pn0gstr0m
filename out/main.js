@@ -32,7 +32,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // do not check this in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1328,7 +1328,9 @@ function GameState(props) {
     Assert(exists(self.paddleP2));
     if (self.isAttract) {
       self.level = MakeAttract(self.paddleP1, self.paddleP2);
-    } else if (gGameMode === kGameModeZen || !is1P()) {
+    } else if (gGameMode === kGameMode2P) {
+      self.level = MakeZ2P(self.paddleP1, self.paddleP2);
+    } else if (gGameMode === kGameModeZen) {
       self.level = MakeZen(self.paddleP1, self.paddleP2);
     } else {
       Assert(gLevelIndex > 0);
@@ -1623,7 +1625,7 @@ function GameState(props) {
       if (p.alive) {
         // xtras, barriers, neos do not split pucks,
         // only the main player & cpu paddles.
-        var splits = p.AllPaddlesCollision([self.paddleP1, self.paddleP2], self.level.IsSuddenDeath(), self.maxVX);
+        var splits = p.AllPaddlesCollision(self.level.IsSuddenDeath(), self.maxVX, self.paddleP1, self.paddleP2);
         self.level.OnPuckSplits(splits);
 
         // note: splits are pushed before parent, match: Draw()'s revEach() z order.
@@ -1664,7 +1666,7 @@ function GameState(props) {
       self.level.p1Pill = self.level.p1Pill.Step(dt, self);
     }
     if (exists(self.level.p1Pill)) {
-      self.level.p1Pill = self.level.p1Pill.AllPaddlesCollision(self, [self.paddleP1]);
+      self.level.p1Pill = self.level.p1Pill.PaddleCollisionUpdate(self, self.paddleP1);
     }
   };
   self.MoveCPUPill = function (dt) {
@@ -1672,7 +1674,7 @@ function GameState(props) {
       self.level.p2Pill = self.level.p2Pill.Step(dt, self);
     }
     if (exists(self.level.p2Pill)) {
-      self.level.p2Pill = self.level.p2Pill.AllPaddlesCollision(self, [self.paddleP2]);
+      self.level.p2Pill = self.level.p2Pill.PaddleCollisionUpdate(self, self.paddleP2);
     }
   };
   self.Alpha = function (alpha) {

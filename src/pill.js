@@ -111,15 +111,13 @@ function Pill( props ) {
         return (dxOverlaps || xOverlaps) && yOverlaps;
     };
     
-    self.AllPaddlesCollision = function( gameState, paddles ) {
+    self.PaddleCollisionUpdate = function( gameState, paddle ) {
         var nextSelf = self;
-        paddles.forEach( function(paddle) {
-            var hit = self.PaddleCollision(paddle);
-            if( hit ) {
-                self.boomFn(gameState);
-                nextSelf = undefined;
-            }
-        } );
+        var hit = self.PaddleCollision(paddle);
+        if( hit ) {
+            self.boomFn(gameState);
+            nextSelf = undefined;
+        }
         return nextSelf;
     };
 

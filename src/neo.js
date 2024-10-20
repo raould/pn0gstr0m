@@ -40,7 +40,7 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
             self.locked.forEach(p => {
                 p.isLocked = false;
                 p.vx = Math.abs(p.vx) * self.normalX * gR.RandomRange(1,1.5);
-                p.vy = p.vy * sy1(4);
+                p.vy = p.vy * gR.RandomRange(1, 2);
                 // funny how sparks are global but animations aren't because history.
                 AddSparks({ x:p.x, y:p.y, vx:p.vx, vy:p.vy, count: 3, rx:sx(1), ry:sy(1) });
             });
