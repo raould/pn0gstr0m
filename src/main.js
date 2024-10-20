@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
@@ -1938,11 +1938,11 @@ function UpdateLocalStorage() {
         const sy = gHeight / 2 / pillIDs.length;
         const s0 = gh(0.6) - sy/2;
         for (let i = 0; i < pillIDs.length; ++i) {
-            const y = s0 + (sy*i);
+            const cy = s0 + (sy*i);
             const p1x = gw(ForP1Side(0.3, 0.7));
-            self.p1Specs.push({ pid: pillIDs[i], x: p1x, y });
+            self.p1Specs.push({ pid: pillIDs[i], cx: p1x, cy });
             const p2x = gw(ForP2Side(0.3, 0.7));
-            self.p2Specs.push({ pid: pillIDs[i], x: p2x, y });
+            self.p2Specs.push({ pid: pillIDs[i], cx: p2x, cy });
         }
 
         self.p1Highlight = 0;
@@ -1950,7 +1950,7 @@ function UpdateLocalStorage() {
     };
 
     self.Step = function(dt) {
-        self.timeout -= dt;
+        //self.timeout -= dt;
         self.goOn = self.timeout <= 0;
         if (self.goOn) {
             self.SaveIndices();
@@ -2010,11 +2010,11 @@ function UpdateLocalStorage() {
     self.ProcessTouch = function(target, specs, ph) {
         for (let i = 0; i < specs.length; ++i) {
             const spec = specs[i];
-            const x = spec.x;
-            const y = spec.y;
             const ox = sx1(40);
             const oy = sy1(20);
-            const rect = { x: x-ox, y: y-oy, width: ox*2, height: oy*2 };
+            const x = spec.cx - ox;
+            const y = spec.cy - oy;
+            const rect = { x: x, y: y, width: ox*2, height: oy*2 };
             gDebug && gDebug_DrawList.push({
                 fn: () => {
                     gCx.strokeStyle = RandomColor();
@@ -2055,11 +2055,13 @@ function UpdateLocalStorage() {
         Cxdo(() => {
             for(let i = 0; i < specs.length; ++i) {
                 const spec = specs[i];
-                const x = spec.x;
-                const y = spec.y;
+                const cx = spec.cx;
+                const cy = spec.cy;
                 const highlighted = highlight === i;
                 self.DrawPill(side, spec, highlighted);
-                if (highlighted) { self.DrawArrow(side, x, y, label); }
+                if (highlighted) {
+                    self.DrawArrow(side, cx, cy, label);
+                }
             }
         });
     };
@@ -2068,21 +2070,15 @@ function UpdateLocalStorage() {
         var scale = 1;
         gCx.fillStyle = RandomBlue();
         const pid = spec.pid;
-        const x = spec.x;
-        const y = spec.y;
         const { name, drawer, wfn, hfn } = gPillInfo[pid];
         const width = wfn() * scale;
         const height = hfn() * scale;
-        drawer(side,
-               {
-                   x: x - (width/2),
-                   y: y - (height/2),
-                   width,
-                   height
-               },
-               1);
+        const x = spec.cx - width/2;
+        const y = spec.cy - height/2;
+        drawer(side, { x, y, width, height }, 1);
         gCx.fillStyle = RandomBlue();
-        DrawText(name, "center", x, y + height*1.5, gSmallestFontSizePt);
+        gCx.fillRect(x, y, width, height); // todo: remove this testing hack.
+        DrawText(name, "center", spec.cx, spec.cy + height + sy1(10), gSmallestFontSizePt);
     };
 
     self.DrawArrow = function(side, x, y, label) {

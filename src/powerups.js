@@ -362,7 +362,7 @@ function MakeForcePushProps(maker) {
         testFn: (gameState) => {
             return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
         },
-        drawFn: (self, alpha) => DrawForcePushPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawForcePushPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var targetSign = ForSide(maker.side, -1, 1);
@@ -396,7 +396,7 @@ function MakeDecimateProps(maker) {
             return gDebug || gPucks.A.length > 20;
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawDecimatePill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawDecimatePill(maker.side, self, alpha),
         boomFn: (gameState) => {
             // try to destroy at least 1, but leave at least 1 still alive.
             // prefer destroying the ones closest to the player.
@@ -438,7 +438,7 @@ function MakeEngorgeProps(maker) {
             return !maker.paddle.engorged;
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawEngorgePill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawEngorgePill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             gameState.AddAnimation(MakeEngorgeAnimation({
@@ -460,7 +460,7 @@ function MakeSplitProps(maker) {
         testFn: (gameState) => {
             return true;
         },
-        drawFn: (self, alpha) => DrawSplitPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawSplitPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             var r = 10/gPucks.A.length;
             var targets = gPucks.A.filter((p, i) => {
@@ -503,7 +503,7 @@ function MakeDefendProps(maker) {
                 (gDebug || gPucks.A.length > 10);
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawDefendPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawDefendPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var n = 4; // match: kBarriersArrayInitialSize.
@@ -551,7 +551,7 @@ function MakeXtraProps(maker) {
                 (gDebug || gPucks.A.length > 20);
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawXtraPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawXtraPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var n = 6; // match: kXtrasArrayInitialSize.
@@ -592,7 +592,7 @@ function MakeNeoProps(maker) {
                 isU(maker.paddle.neo);
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawNeoPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawNeoPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             maker.paddle.AddNeo({
@@ -616,7 +616,7 @@ function MakeChaosProps(maker) {
         testFn: (gameState) => {
             return (gDebug || gPucks.A.length > 10) && isU(maker.paddle.neo);
         },
-        drawFn: (self, alpha) => DrawChaosPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawChaosPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var targets = [];

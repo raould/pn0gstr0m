@@ -31,7 +31,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false;
+var gDebug = true;
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
@@ -1911,25 +1911,25 @@ function LevelFinChooseState() {
     var sy = gHeight / 2 / pillIDs.length;
     var s0 = gh(0.6) - sy / 2;
     for (var i = 0; i < pillIDs.length; ++i) {
-      var y = s0 + sy * i;
+      var cy = s0 + sy * i;
       var p1x = gw(ForP1Side(0.3, 0.7));
       self.p1Specs.push({
         pid: pillIDs[i],
-        x: p1x,
-        y: y
+        cx: p1x,
+        cy: cy
       });
       var p2x = gw(ForP2Side(0.3, 0.7));
       self.p2Specs.push({
         pid: pillIDs[i],
-        x: p2x,
-        y: y
+        cx: p2x,
+        cy: cy
       });
     }
     self.p1Highlight = 0;
     self.p2Highlight = is1P() ? gR.RandomRangeInt(0, pillIDs.length - 1) : 0;
   };
   self.Step = function (dt) {
-    self.timeout -= dt;
+    //self.timeout -= dt;
     self.goOn = self.timeout <= 0;
     if (self.goOn) {
       self.SaveIndices();
@@ -1985,13 +1985,13 @@ function LevelFinChooseState() {
   self.ProcessTouch = function (target, specs, ph) {
     var _loop = function _loop() {
         var spec = specs[i];
-        var x = spec.x;
-        var y = spec.y;
         var ox = sx1(40);
         var oy = sy1(20);
+        var x = spec.cx - ox;
+        var y = spec.cy - oy;
         var rect = {
-          x: x - ox,
-          y: y - oy,
+          x: x,
+          y: y,
           width: ox * 2,
           height: oy * 2
         };
@@ -2038,12 +2038,12 @@ function LevelFinChooseState() {
     Cxdo(function () {
       for (var i = 0; i < specs.length; ++i) {
         var spec = specs[i];
-        var x = spec.x;
-        var y = spec.y;
+        var cx = spec.cx;
+        var cy = spec.cy;
         var highlighted = highlight === i;
         self.DrawPill(side, spec, highlighted);
         if (highlighted) {
-          self.DrawArrow(side, x, y, label);
+          self.DrawArrow(side, cx, cy, label);
         }
       }
     });
@@ -2052,8 +2052,6 @@ function LevelFinChooseState() {
     var scale = 1;
     gCx.fillStyle = RandomBlue();
     var pid = spec.pid;
-    var x = spec.x;
-    var y = spec.y;
     var _gPillInfo$pid = gPillInfo[pid],
       name = _gPillInfo$pid.name,
       drawer = _gPillInfo$pid.drawer,
@@ -2061,14 +2059,17 @@ function LevelFinChooseState() {
       hfn = _gPillInfo$pid.hfn;
     var width = wfn() * scale;
     var height = hfn() * scale;
+    var x = spec.cx - width / 2;
+    var y = spec.cy - height / 2;
     drawer(side, {
-      x: x - width / 2,
-      y: y - height / 2,
+      x: x,
+      y: y,
       width: width,
       height: height
     }, 1);
     gCx.fillStyle = RandomBlue();
-    DrawText(name, "center", x, y + height * 1.5, gSmallestFontSizePt);
+    gCx.fillRect(x, y, width, height); // todo: remove this testing hack.
+    DrawText(name, "center", spec.cx, spec.cy + height + sy1(10), gSmallestFontSizePt);
   };
   self.DrawArrow = function (side, x, y, label) {
     gCx.fillStyle = RandomGreen();

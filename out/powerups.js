@@ -382,7 +382,8 @@ function MakeForcePushProps(maker) {
     testFn: function testFn(gameState) {
       return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
     },
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawForcePushPill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -420,7 +421,8 @@ function MakeDecimateProps(maker) {
       return gDebug || gPucks.A.length > 20;
     },
     canSkip: true,
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawDecimatePill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -482,7 +484,8 @@ function MakeEngorgeProps(maker) {
       return !maker.paddle.engorged;
     },
     canSkip: true,
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawEngorgePill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -510,7 +513,8 @@ function MakeSplitProps(maker) {
     testFn: function testFn(gameState) {
       return true;
     },
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawSplitPill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -559,7 +563,8 @@ function MakeDefendProps(maker) {
       return gameState.level.IsMidGame() && maker.paddle.barriers.A.length == 0 && (gDebug || gPucks.A.length > 10);
     },
     canSkip: true,
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawDefendPill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -622,7 +627,8 @@ function MakeXtraProps(maker) {
       return gameState.level.IsMidGame() && maker.paddle.xtras.A.length == 0 && (gDebug || gPucks.A.length > 20);
     },
     canSkip: true,
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawXtraPill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -669,7 +675,8 @@ function MakeNeoProps(maker) {
       return gameState.level.IsMidGame() && (gDebug || gPucks.A.length > 20) && isU(maker.paddle.neo);
     },
     canSkip: true,
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawNeoPill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -698,7 +705,8 @@ function MakeChaosProps(maker) {
     testFn: function testFn(gameState) {
       return (gDebug || gPucks.A.length > 10) && isU(maker.paddle.neo);
     },
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawChaosPill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
