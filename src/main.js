@@ -18,6 +18,7 @@
 // with a few icons in the lower case.
 
 var gDebug = true;
+// [{ fn, frames? }]
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
 
@@ -2022,7 +2023,8 @@ function UpdateLocalStorage() {
     self.ProcessOneInput = function() {
         if (self.goOn) { return; }
         self.ProcessButtons();
-        self.ProcessTouch();
+        self.p1Highlight = self.ProcessTouch(gP1Target, self.p1Specs, self.p1Highlight);
+        self.p2Highlight = self.ProcessTouch(gP2Target, self.p2Specs, self.p2Highlight);
     };
 
     self.ProcessButtons = function() {
@@ -2051,7 +2053,28 @@ function UpdateLocalStorage() {
         return undefined;
     };
 
-    self.ProcessTouch = function() {
+    self.ProcessTouch = function(target, specs, ph) {
+        for (var i = 0; i < specs.length; ++i) {
+            var spec = specs[i];
+            var x = spec.x;
+            var y = spec.y;
+            var ox = sx1(20);
+            var oy = sy1(20);
+            var rect = { x: x-ox, y: y-oy, width: ox*2, height: oy*2 };
+            gDebug_DrawList.push({
+                fn: () => {
+                    gCx.strokeStyle = RandomColor();
+                    gCx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+                }
+            });
+            const hit = target.isDown() ?
+                  isPointInRect(target.position, rect) :
+                  false;
+            if (hit) {
+                return i;
+            }
+        }
+        return ph;
     };
 
     self.Draw = function() {
