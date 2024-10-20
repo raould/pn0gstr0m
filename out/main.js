@@ -233,12 +233,10 @@ function noKeysState() {
   return _objectSpread({}, nokeys);
 }
 var gP1Keys = new WrapState({
-  resetFn: noKeysState,
-  debug: true
+  resetFn: noKeysState
 });
 var gP2Keys = new WrapState({
-  resetFn: noKeysState,
-  debug: true
+  resetFn: noKeysState
 });
 function isUpOrDownKeyPressed() {
   return gP1Keys.$.up || gP1Keys.$.down || gP2Keys.$.up || gP2Keys.$.down;
@@ -1949,6 +1947,10 @@ function LevelFinChooseState() {
   var self = this;
   self.Init = function () {
     ResetInput();
+
+    // todo: remove this testing hack.
+    LatchP1Side("right");
+
     // might be empty if you already got them all!
     var pillIDs = ChooseRewards(gLevelIndex);
     self.p1Choice = 0;
@@ -1959,7 +1961,7 @@ function LevelFinChooseState() {
     var s0 = gh(0.6) - sy / 2;
     for (var i = 0; i < pillIDs.length; ++i) {
       var y = s0 + sy * i;
-      var p1x = gw(ForP1Side(0.25, 0.75));
+      var p1x = gw(ForP1Side(0.3, 0.6));
       self.p1Specs.push({
         pid: pillIDs[i],
         x: p1x,
@@ -1992,13 +1994,11 @@ function LevelFinChooseState() {
       self.p1Choice = Math.max(0, self.p1Choice - 1);
       gP1Keys.Reset();
       gGamepad1Sticks.Reset();
-      console.log(self.p1Choice);
     }
     if (gP1Keys.$.down || isGamepad1Down()) {
       self.p1Choice = Math.min(self.p1Specs.length - 1, self.p1Choice + 1);
       gP1Keys.Reset();
       gGamepad1Sticks.Reset();
-      console.log(self.p1Choice);
     }
     return undefined;
   };
@@ -2010,14 +2010,15 @@ function LevelFinChooseState() {
     self.DrawPills();
   };
   self.DrawPills = function () {
-    self.DrawPillsColumn(gP1Side, self.p1Specs);
-    self.DrawPillsColumn(gP2Side, self.p2Specs);
+    self.DrawPillsColumn(gP1Side, self.p1Specs, "P1");
+    // todo: implement cpu choosing & show what the cpu chose.
+    self.DrawPillsColumn(gP2Side, self.p2Specs, "P2");
   };
-  self.DrawPillsColumn = function (side, specs) {
+  self.DrawPillsColumn = function (side, specs, label) {
     var scale = 1;
     Cxdo(function () {
-      gCx.fillStyle = RandomBlue();
       for (var i = 0; i < specs.length; ++i) {
+        gCx.fillStyle = RandomBlue();
         var spec = specs[i];
         var highlighted = self.p1Choice === i;
         var pid = spec.pid;
@@ -2036,16 +2037,33 @@ function LevelFinChooseState() {
           width: width,
           height: height
         }, 1);
-        if (highlighted) {
-          gCx.beginPath();
-          gCx.moveTo(x + width * 1.5, y);
-          gCx.lineTo(x + width * 1.5 + sx1(10), y - sy1(10));
-          gCx.lineTo(x + width * 1.5 + sx1(10), y + sy1(10));
-          gCx.lineTo(x + width * 1.5, y);
-          gCx.fillStyle = RandomGreen();
-          gCx.fill();
-        }
         DrawText(name, "center", x, y + height * 1.5, gSmallestFontSizePt);
+        if (highlighted) {
+          gCx.fillStyle = RandomGreen();
+          var mxo = gw(0.08);
+          var ox = sx1(10);
+          var oy = sy1(5);
+          if (isU(side) || side === "right") {
+            var axm = x + mxo;
+            gCx.beginPath();
+            gCx.moveTo(axm, y);
+            gCx.lineTo(axm + ox, y - oy);
+            gCx.lineTo(axm + ox, y + oy);
+            gCx.lineTo(axm, y);
+            gCx.fill();
+            DrawText(label, OtherSide(side), axm + ox * 2, y + sy1(5), gSmallFontSizePt);
+          } else {
+            // left
+            var axm = x - mxo;
+            gCx.beginPath();
+            gCx.moveTo(axm, y);
+            gCx.lineTo(axm - ox, y - oy);
+            gCx.lineTo(axm - ox, y + oy);
+            gCx.lineTo(axm, y);
+            gCx.fill();
+            DrawText(label, OtherSide(side), axm - ox * 2, y + sy1(5), gSmallFontSizePt);
+          }
+        }
       }
     });
   };
