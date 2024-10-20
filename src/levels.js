@@ -5,11 +5,15 @@
 
 // yes this is really hard to playtest.
 
+// no, i am not proud of all the globals.
 var gP1Pills;
 var gP2Pills;
 function ResetLevelsPills() {
     gP1Pills = [];
     gP2Pills = [];
+}
+function PillIDsToMakers(pids) {
+    return pids.map(pid => gPillInfo[pid].maker);
 }
 ResetLevelsPills();
 
@@ -36,8 +40,8 @@ function MakeZen(paddleP1, paddleP2) {
         maxVX: sxi(ForGameMode({zen: 18, z2p: 22})),
         isP1Player: true,
         isP2Player: !is1P(),
-        p1Pills: [...gP1Pills],
-        p2Pills: [...gP2Pills],
+        p1Pills: PillIDsToMakers(gP1Pills),
+        p2Pills: PillIDsToMakers(gP2Pills),
         paddleP1: paddleP1,
         paddleP2: paddleP2,
     });
@@ -58,8 +62,8 @@ function MakeLevel(index, paddleP1, paddleP2) {
         splitsCount,
         isP1Player: true,
         isP2Player: !is1P(),
-        p1Pills: [...gP1Pills],
-        p2Pills: [...gP2Pills],
+        p1Pills: PillIDsToMakers(gP1Pills),
+        p2Pills: PillIDsToMakers(gP2Pills),
         paddleP1: paddleP1,
         paddleP2: paddleP2,
     });

@@ -1950,9 +1950,9 @@ function LevelFinChooseState() {
   };
   self.SaveIndices = function () {
     Assert(exists(self.p1Index));
-    gP1Pills.push(self.p1Specs[self.p1Index]);
+    gP1Pills.push(self.p1Specs[self.p1Index].pid);
     if (exists(self.gP2Index)) {
-      gP2Pills.push(self.p2Specs[self.p2Index]);
+      gP2Pills.push(self.p2Specs[self.p2Index].pid);
     }
   };
   self.ProcessOneInput = function () {

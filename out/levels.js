@@ -1,11 +1,5 @@
 "use strict";
 
-function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
-function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 /* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
@@ -13,11 +7,17 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 
 // yes this is really hard to playtest.
 
+// no, i am not proud of all the globals.
 var gP1Pills;
 var gP2Pills;
 function ResetLevelsPills() {
   gP1Pills = [];
   gP2Pills = [];
+}
+function PillIDsToMakers(pids) {
+  return pids.map(function (pid) {
+    return gPillInfo[pid].maker;
+  });
 }
 ResetLevelsPills();
 function MakeAttract(paddleP1, paddleP2) {
@@ -46,8 +46,8 @@ function MakeZen(paddleP1, paddleP2) {
     })),
     isP1Player: true,
     isP2Player: !is1P(),
-    p1Pills: _toConsumableArray(gP1Pills),
-    p2Pills: _toConsumableArray(gP2Pills),
+    p1Pills: PillIDsToMakers(gP1Pills),
+    p2Pills: PillIDsToMakers(gP2Pills),
     paddleP1: paddleP1,
     paddleP2: paddleP2
   });
@@ -71,8 +71,8 @@ function MakeLevel(index, paddleP1, paddleP2) {
     splitsCount: splitsCount,
     isP1Player: true,
     isP2Player: !is1P(),
-    p1Pills: _toConsumableArray(gP1Pills),
-    p2Pills: _toConsumableArray(gP2Pills),
+    p1Pills: PillIDsToMakers(gP1Pills),
+    p2Pills: PillIDsToMakers(gP2Pills),
     paddleP1: paddleP1,
     paddleP2: paddleP2
   });

@@ -31,8 +31,6 @@ function Paddle(props) {
   var self = this;
   self.Init = function (label) {
     self.id = gNextID++;
-    self.isXtra = props.isXtra; // temporary, for debugging.
-
     self.isPlayer = props.isPlayer;
     self.side = props.side;
     // barriers are { x, y, width, height,
@@ -62,10 +60,11 @@ function Paddle(props) {
     self.width = props.width;
     self.height = props.height;
     self.isSplitter = aub(props.isSplitter, false);
-    self.isPillSeeker = aub(props.isPillSeeker, false);
     self.alive = isU(self.hp) || self.hp > 0;
     self.engorgedHeight = gPaddleHeight * 2;
     self.engorgedWidth = gPaddleWidth * 0.8;
+    self.isPillSeeker = aub(props.isPillSeeker, false);
+
     // admitedly these names are too visually similar. :-(
     self.aiPuck = undefined;
     self.aiPill = undefined;
@@ -120,8 +119,7 @@ function Paddle(props) {
     }, props), {}, {
       isPlayer: false,
       isSplitter: true,
-      isPillSeeker: false,
-      isXtra: true
+      isPillSeeker: false
     }));
     self.xtras.A.push(o);
   };
