@@ -1924,7 +1924,7 @@ function UpdateLocalStorage() {
 
     self.Init = function() {
         ResetInput();
-        self.timeout = 1000 * 1;
+        self.timeout = 1000 * 15;
 
         // todo: remove this testing hack.
         LatchP1Side("left");
