@@ -2476,7 +2476,7 @@ function UpdateLocalStorage() {
                 gBigFontSizePt
             );
 
-            if (true) { //self.isNewHighScore) {
+            if (self.isNewHighScore) {
                 gCx.fillStyle = ColorCycle();
                 DrawText(
                     `NEW HIGH SCORE: ${self.maxScore}`,
