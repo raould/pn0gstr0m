@@ -51,8 +51,7 @@ const kXtraPill = 5;
 const kNeoPill = 6;
 const kChaosPill = 7;
 
-// levels are 1-based, and level 1 has no powerups.
-// levels with powerup pills have 2 types of pill.
+// note: order matters.
 const gPillIDs = [
     kForcePushPill,
     kDecimatePill,
@@ -63,43 +62,42 @@ const gPillIDs = [
     kXtraPill,
     kNeoPill,
 ];
-// there should be 2 per level
-// for the first n levels.
-Assert(gPillIDs.length%2===0);
 
-// note: width and height are functions
+// note:
+// 1) width and height are functions
 // because they need to be evaluated after
 // all the display resizing is done.
 // see: width and height in GetReadyState.DrawPills().
+// 2) keep the names short, for the get ready screen.
 var gPillInfo = {
     [kForcePushPill]: {
-        name: "FORCE PUSH",
+        name: "PUSH",
         maker: MakeForcePushProps,
         drawer: DrawForcePushPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kDecimatePill]: {
-        name: "DECIMATE",
+        name: "KILL",
 	maker: MakeDecimateProps,
         drawer: DrawDecimatePill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kEngorgePill]: {
-        name: "ENGORGE",
+        name: "PHAT",
 	maker: MakeEngorgeProps,
         drawer: DrawEngorgePill,
         wfn: () => sxi(20), hfn: () => syi(35),
     },
     [kSplitPill]: {
         // "SPLIT" could be a confusing name since
-        // the level msg says "n splits remaining".
+        // the level msg says "n splits remaining" ha ha.
         name: "ZPLT",
 	maker: MakeSplitProps,
         drawer: DrawSplitPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kDefendPill]: {
-        name: "DEFEND",
+        name: "SHLD",
 	maker: MakeDefendProps,
         drawer: DrawDefendPill,
         wfn: () => sxi(20), hfn: () => syi(40),
@@ -117,7 +115,7 @@ var gPillInfo = {
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kChaosPill]: {
-        name: "CHAOS",
+        name: "CRZY",
 	maker: MakeChaosProps,
         drawer: DrawChaosPill,
         wfn: () => sxi(20), hfn: () => syi(20),
@@ -362,7 +360,7 @@ function MakeForcePushProps(maker) {
         testFn: (gameState) => {
             return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
         },
-        drawFn: (self, alpha) => DrawForcePushPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawForcePushPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var targetSign = ForSide(maker.side, -1, 1);
@@ -396,7 +394,7 @@ function MakeDecimateProps(maker) {
             return gDebug || gPucks.A.length > 20;
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawDecimatePill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawDecimatePill(maker.side, self, alpha),
         boomFn: (gameState) => {
             // try to destroy at least 1, but leave at least 1 still alive.
             // prefer destroying the ones closest to the player.
@@ -438,7 +436,7 @@ function MakeEngorgeProps(maker) {
             return !maker.paddle.engorged;
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawEngorgePill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawEngorgePill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             gameState.AddAnimation(MakeEngorgeAnimation({
@@ -460,7 +458,7 @@ function MakeSplitProps(maker) {
         testFn: (gameState) => {
             return true;
         },
-        drawFn: (self, alpha) => DrawSplitPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawSplitPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             var r = 10/gPucks.A.length;
             var targets = gPucks.A.filter((p, i) => {
@@ -503,13 +501,20 @@ function MakeDefendProps(maker) {
                 (gDebug || gPucks.A.length > 10);
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawDefendPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawDefendPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var n = 4; // match: kBarriersArrayInitialSize.
             // zen is more crazy so upping the hp and thus also scaling drawing so they aren't too wide.
-            var hp = ForGameMode({regular: 15, zen: 45});
-	    var drawScale = ForGameMode({regular: 1, hard: 1, zen: 0.5});
+            var pc = T01(gPucks.A.length, kPuckPoolSize);
+            var hp = ForGameMode({
+                regular: 15,
+                hard: 20,
+                zen: 50 + (pc*100),
+                z2p: 20,
+            });
+            console.log(`defend pc=${pc} hp=${F(hp)}`);
+	    var drawScale = ForGameMode({ regular: 1, zen: 0.5 });
             var width = sx1(hp/3);
             var height = (gHeight-gYInset*2) / n;
             var x = gw(ForSide(maker.side, 0.1, 0.9));
@@ -551,14 +556,21 @@ function MakeXtraProps(maker) {
                 (gDebug || gPucks.A.length > 20);
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawXtraPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawXtraPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var n = 6; // match: kXtrasArrayInitialSize.
             var yy = (gHeight-gYInset*2)/n;
             var width = gPaddleWidth*2/3;
             var height = Math.min(gPaddleHeight/2, yy/2);
-            var hp = 30;
+            var pc = T01(gPucks.A.length, kPuckPoolSize);
+            var hp = ForGameMode({
+                regular: 30,
+                hard: 50,
+                zen: 50 + (pc*100),
+                z2p: 50,
+            });
+            console.log(`xtra pc=${pc} hp=${F(hp)}`);
             ForCount(n, (i) => {
                 var x = ForSide(maker.side, gw(0.15), gw(0.85));
                 var xoff = isEven(i) ? 0 : gw(0.02);
@@ -592,7 +604,7 @@ function MakeNeoProps(maker) {
                 isU(maker.paddle.neo);
         },
         canSkip: true,
-        drawFn: (self, alpha) => DrawNeoPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawNeoPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             maker.paddle.AddNeo({
@@ -616,7 +628,7 @@ function MakeChaosProps(maker) {
         testFn: (gameState) => {
             return (gDebug || gPucks.A.length > 10) && isU(maker.paddle.neo);
         },
-        drawFn: (self, alpha) => DrawChaosPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawChaosPill(maker.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var targets = [];

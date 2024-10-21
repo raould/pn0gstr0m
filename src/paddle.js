@@ -25,8 +25,6 @@ function Paddle(props) {
     self.Init = function(label) {
         self.id = gNextID++;
 
-        self.isXtra = props.isXtra; // temporary, for debugging.
-
         self.isPlayer = props.isPlayer;
         self.side = props.side;
         // barriers are { x, y, width, height,
@@ -57,10 +55,11 @@ function Paddle(props) {
         self.width = props.width;
         self.height = props.height;
         self.isSplitter = aub(props.isSplitter, false);
-        self.isPillSeeker = aub(props.isPillSeeker, false);
         self.alive = isU(self.hp) || self.hp > 0;
         self.engorgedHeight = gPaddleHeight * 2;
         self.engorgedWidth = gPaddleWidth * 0.8;
+        self.isPillSeeker = aub(props.isPillSeeker, false);
+
         // admitedly these names are too visually similar. :-(
         self.aiPuck = undefined;
         self.aiPill = undefined;
@@ -68,6 +67,7 @@ function Paddle(props) {
         self.label = props.label;
         self.engorged = false;
         self.stepSize = aub(props.stepSize, gPaddleStepSize);
+
         self.keyStates = props.keyStates;
         // todo: fold button & stick states together into a gamepadState wrapper.
         self.buttonStates = props.buttonStates;
@@ -79,6 +79,11 @@ function Paddle(props) {
         self.attackingNearCount = 0;
         self.nudgeX();
         self.englishFactor = 0; // ugh, this gets modified & used elsewhere. match: level, puck.
+    };
+
+    self.ForEachPaddle = function(fn) {
+        fn(self);
+        self.xtras.A.forEach(fn);
     };
 
     self.GetCollisionBounds = function(isSuddenDeath, maxVX) {
@@ -99,12 +104,10 @@ function Paddle(props) {
         else {
             bounds = self;
         }
-        if (gDebug) {
-            gDebug_DrawList.push({ fn: () => {
-                gCx.strokeStyle = "yellow";
-                gCx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
-            }});
-        }
+        gDebug && gDebug_DrawList.push({ fn: () => {
+            gCx.strokeStyle = "yellow";
+            gCx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+        }});
         return bounds;
     };
 
@@ -122,7 +125,6 @@ function Paddle(props) {
             isPlayer: false,
             isSplitter: true,
             isPillSeeker: false,
-            isXtra: true,
         });
         self.xtras.A.push(o);
     };
@@ -470,12 +472,10 @@ function Paddle(props) {
         }) + levelScale;
         scale = Clip(scale, 0.1, 1.2);
 
-        if (gDebug) {
-            gDebug_DrawList.push({ fn: () => {
-                gCx.fillStyle = "blue";
-                DrawText(F(scale), "center", gw(0.8), gh(0.6), gSmallestFontSizePt);
-            }});
-        }
+        gDebug && gDebug_DrawList.push({ fn: () => {
+            gCx.fillStyle = "blue";
+            DrawText(F(scale), "center", gw(0.8), gh(0.6), gSmallestFontSizePt);
+        }});
 
         if (PS && exists(self.aiPill) && self.aiPill.isUrgent) {
             self.debugMsg = "PILL_1";

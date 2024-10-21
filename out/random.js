@@ -40,6 +40,7 @@ function Random() {
   };
 
   // closed interval [min, max].
+  // no idea how this handles negative values.
   self.RandomRange = function (min, max) {
     if (min > max) {
       Swap(min, max);
@@ -49,11 +50,17 @@ function Random() {
   };
 
   // closed interval [min, max].
+  // no idea how this handles negative values.
   self.RandomRangeInt = function (min, max) {
-    var f = self.RandomRange(min, max);
-    var i = Math.round(f);
-    return Clip(i, min, max);
+    if (min > max) {
+      Swap(min, max);
+    }
+    var o = self.next() * (max - min);
+    var r = Math.round(min + o);
+    return r;
   };
+
+  // no idea how this handles negative values.
   self.RandomCentered = function (center, halfRange) {
     var halfDeadZone = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
     var r = halfDeadZone + self.RandomRange(0, halfRange - halfDeadZone);

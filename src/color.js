@@ -166,7 +166,8 @@ function FadeIn(alpha, dstSpec=undefined) {
     }
     else {
         var t = GameTime01(kGreenFadeInMsec);
-        // old behavior.
+        // old behavior that was flickering.
+        // todo: remove this and clean up any callers.
         if (isU(dstSpec)) {
             if (gR.RandomFloat() > t) {
                 return rgba255s(
@@ -176,6 +177,7 @@ function FadeIn(alpha, dstSpec=undefined) {
             }
         }
         else {
+            // new behavior that is lerping.
             // gradully go from green to color at game start.
             // note that other code relies on getting undefined at t=1.
             if (t > 0.99) {

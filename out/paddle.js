@@ -31,8 +31,6 @@ function Paddle(props) {
   var self = this;
   self.Init = function (label) {
     self.id = gNextID++;
-    self.isXtra = props.isXtra; // temporary, for debugging.
-
     self.isPlayer = props.isPlayer;
     self.side = props.side;
     // barriers are { x, y, width, height,
@@ -62,10 +60,11 @@ function Paddle(props) {
     self.width = props.width;
     self.height = props.height;
     self.isSplitter = aub(props.isSplitter, false);
-    self.isPillSeeker = aub(props.isPillSeeker, false);
     self.alive = isU(self.hp) || self.hp > 0;
     self.engorgedHeight = gPaddleHeight * 2;
     self.engorgedWidth = gPaddleWidth * 0.8;
+    self.isPillSeeker = aub(props.isPillSeeker, false);
+
     // admitedly these names are too visually similar. :-(
     self.aiPuck = undefined;
     self.aiPill = undefined;
@@ -85,6 +84,10 @@ function Paddle(props) {
     self.nudgeX();
     self.englishFactor = 0; // ugh, this gets modified & used elsewhere. match: level, puck.
   };
+  self.ForEachPaddle = function (fn) {
+    fn(self);
+    self.xtras.A.forEach(fn);
+  };
   self.GetCollisionBounds = function (isSuddenDeath, maxVX) {
     var _gPucks$A$metadata;
     var bounds;
@@ -100,14 +103,12 @@ function Paddle(props) {
     } else {
       bounds = self;
     }
-    if (gDebug) {
-      gDebug_DrawList.push({
-        fn: function fn() {
-          gCx.strokeStyle = "yellow";
-          gCx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
-        }
-      });
-    }
+    gDebug && gDebug_DrawList.push({
+      fn: function fn() {
+        gCx.strokeStyle = "yellow";
+        gCx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+      }
+    });
     return bounds;
   };
   self.AddBarrier = function (props) {
@@ -122,8 +123,7 @@ function Paddle(props) {
     }, props), {}, {
       isPlayer: false,
       isSplitter: true,
-      isPillSeeker: false,
-      isXtra: true
+      isPillSeeker: false
     }));
     self.xtras.A.push(o);
   };
@@ -429,14 +429,12 @@ function Paddle(props) {
       hard: 1.1
     }) + levelScale;
     scale = Clip(scale, 0.1, 1.2);
-    if (gDebug) {
-      gDebug_DrawList.push({
-        fn: function fn() {
-          gCx.fillStyle = "blue";
-          DrawText(F(scale), "center", gw(0.8), gh(0.6), gSmallestFontSizePt);
-        }
-      });
-    }
+    gDebug && gDebug_DrawList.push({
+      fn: function fn() {
+        gCx.fillStyle = "blue";
+        DrawText(F(scale), "center", gw(0.8), gh(0.6), gSmallestFontSizePt);
+      }
+    });
     if (PS && exists(self.aiPill) && self.aiPill.isUrgent) {
       self.debugMsg = "PILL_1";
       self.AISeekTargetMidY(dt, self.aiPill.y + self.aiPill.height / 2, scale);

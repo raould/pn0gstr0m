@@ -190,12 +190,12 @@ function Puck() {
             // some variety in vy.
             let vy = self.vy;
             const pvx = T01(Math.abs(self.vx), maxVX);
-            // todo: test and refine this.
-            // only want 'streaming' possible in zen mode.
+            // todo: test and refine this... eternally not quite right, hard to test.
+            // sort of want 'streaming' possible mainly in zen mode.
             const vyf = ForGameMode({
                 regular: 1.1,
                 hard: 1.2,
-                zen: 1.05,
+                zen: 1.08,
                 // the faster things get, the more spread out, i hope, but,
                 // not too much since it can be fun to be 'streaming' until neo.
                 z2p: 1.15 + pvx * 0.2,
@@ -299,7 +299,7 @@ function Puck() {
         self.vy = nvy;
     };
 
-    self.PaddleCollision = function( paddle, isSuddenDeath, maxVX ) {
+    self.PaddleCollisionNewprops = function( paddle, isSuddenDeath, maxVX ) {
         var newprops = undefined;
         var bounds = paddle.GetCollisionBounds( isSuddenDeath, maxVX );
         var hit = self.CollisionTest( bounds, -paddle.normalX );
@@ -315,16 +315,18 @@ function Puck() {
         return newprops;
     };
 
-    self.AllPaddlesCollision = function(paddles, isSuddenDeath, maxVX ) {
-        var spawned;
+    self.PaddleCollision = function(paddle, isSuddenDeath, maxVX, spawned) {
+        var newprops = self.PaddleCollisionNewprops(paddle, isSuddenDeath, maxVX);
+        if( exists(newprops) ) {
+            spawned.push( newprops );
+        }
+    };
+
+    self.AllPaddlesCollision = function(isSuddenDeath, maxVX, pA, pB) {
+        var spawned = [];
         if (self.alive && !self.isLocked) {
-            paddles.forEach( paddle => {
-                var newprops = self.PaddleCollision(paddle, isSuddenDeath, maxVX);
-                if( exists(newprops) ) {
-		    if (isU(spawned)) { spawned = []; }
-                    spawned.push( newprops );
-                }
-            } );
+            pA.ForEachPaddle(p => self.PaddleCollision(p, isSuddenDeath, maxVX, spawned));
+            pB.ForEachPaddle(p => self.PaddleCollision(p, isSuddenDeath, maxVX, spawned));
         }
         return spawned;
     };
