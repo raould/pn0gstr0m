@@ -32,7 +32,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = true;
+var gDebug = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1118,7 +1118,7 @@ function GetReadyState() {
   self.Init = function () {
     ResetInput();
     gStateMuted = false;
-    var seconds = gDebug ? 1 : 3;
+    var seconds = gDebug ? gP1Pills.length > 0 ? 3 : 1 : 5;
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.animations = {};
@@ -1161,19 +1161,30 @@ function GetReadyState() {
     });
   };
   self.DrawPills = function () {
-    self.DrawPillsSide(gP1Side, gP1Pills);
-    self.DrawPillsSide(gP2Side, gP2Pills);
+    var whscale = Math.max(0.4, T10(Math.max(gP1Pills.length, gP2Pills.length), gPillIDs.length));
+    var y = gh(0.7);
+    var maxWidth = 0;
+    var maxHeight = 0;
+    gP1Pills.map(function (pid) {
+      maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
+      maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
+    });
+    gP2Pills.map(function (pid) {
+      maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
+      maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
+    });
+    var ox = maxWidth * 3 * whscale;
+    var labelY = y + sy1(10) + maxHeight * whscale;
+    self.DrawPillsSide(gP1Side, gP1Pills, whscale, ox, y, labelY);
+    self.DrawPillsSide(gP2Side, gP2Pills, whscale, ox, y, labelY);
   };
-  self.DrawPillsSide = function (side, pills) {
+  self.DrawPillsSide = function (side, pills, whscale, ox, y, labelY) {
     var count = pills.length;
     if (count > 0) {
-      var mx = ForSide(side, gw(0.25), gw(0.75));
-      var ox = gw(0.4) / count;
+      var mx = gw(ForSide(side, 0.25, 0.75));
       var lx = mx - (count - 1) / 2 * ox;
-      var scale = 1;
-      var y = gh(0.7);
       Cxdo(function () {
-        for (var i = 0; i < pills.length; ++i) {
+        for (var i = 0; i < count; ++i) {
           var pid = pills[i];
           var x = lx + ox * i;
           var _gPillInfo$pid = gPillInfo[pid],
@@ -1181,8 +1192,8 @@ function GetReadyState() {
             drawer = _gPillInfo$pid.drawer,
             wfn = _gPillInfo$pid.wfn,
             hfn = _gPillInfo$pid.hfn;
-          var width = wfn() * scale;
-          var height = hfn() * scale;
+          var width = wfn() * whscale;
+          var height = hfn() * whscale;
           drawer(side, {
             x: x - width / 2,
             y: y - height / 2,
@@ -1190,7 +1201,7 @@ function GetReadyState() {
             height: height
           }, 1);
           gCx.fillStyle = RandomForColor(blueSpec);
-          DrawText(name, "center", x, y + height / 2 + sy1(25), gSmallestFontSizePt);
+          DrawText(name, "center", x, labelY, gSmallestFontSizePt);
         }
       });
     }
@@ -2057,29 +2068,41 @@ function LevelFinChooseState() {
     self.timeout = 1000 * (gDebug ? 5 : 15);
 
     // might be empty if you already got them all!
-    var pillIDs = ChooseRewards(gLevelIndex);
-    self.goOn = pillIDs.length === 0;
+    var p1Rewards = ChooseRewards(gP1Pills);
+    var p2Rewards = ChooseRewards(gP2Pills);
+    // theoretically the # of rewards should match because
+    // all paddles are forced to get 1 reward at the end
+    // of every level. it is only the order that might be different.
+    // sure wish i could unit test this ha ha ha.
+    Assert(p1Rewards.length === p2Rewards.length);
+    var count = p1Rewards.length;
+
+    // skip the whole sceen if all pills have been rewarded.
+    var goOn = count === 0;
     self.p1Specs = [];
     self.p2Specs = [];
-    var sy = gHeight * 0.6 / pillIDs.length;
+    var sy = gHeight * 0.6 / count;
     var s0 = gh(0.6) - sy / 2;
-    for (var i = 0; i < pillIDs.length; ++i) {
+    for (var i = 0; i < count; ++i) {
       var cy = s0 + sy * i;
       var p1x = gw(ForP1Side(0.25, 0.75));
       self.p1Specs.push({
-        pid: pillIDs[i],
+        pid: p1Rewards[i],
         cx: p1x,
         cy: cy
       });
+    }
+    for (var _i2 = 0; _i2 < count; ++_i2) {
+      var _cy = s0 + sy * _i2;
       var p2x = gw(ForP2Side(0.25, 0.75));
       self.p2Specs.push({
-        pid: pillIDs[i],
+        pid: p2Rewards[_i2],
         cx: p2x,
-        cy: cy
+        cy: _cy
       });
     }
     self.p1Highlight = 0;
-    self.p2Highlight = is1P() ? gR.RandomRangeInt(0, pillIDs.length - 1) : 0;
+    self.p2Highlight = is1P() ? gR.RandomRangeInt(0, count - 1) : 0;
   };
   self.Step = function (dt) {
     self.timeout -= dt;
@@ -2202,15 +2225,15 @@ function LevelFinChooseState() {
     });
   };
   self.DrawPill = function (side, spec, highlighted) {
-    var scale = 1;
+    var whscale = 1;
     var pid = spec.pid;
     var _gPillInfo$pid2 = gPillInfo[pid],
       name = _gPillInfo$pid2.name,
       drawer = _gPillInfo$pid2.drawer,
       wfn = _gPillInfo$pid2.wfn,
       hfn = _gPillInfo$pid2.hfn;
-    var width = wfn() * scale;
-    var height = hfn() * scale;
+    var width = wfn() * whscale;
+    var height = hfn() * whscale;
     var x = spec.cx - width / 2;
     var y = spec.cy - height / 2;
     drawer(side, {

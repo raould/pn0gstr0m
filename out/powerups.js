@@ -65,19 +65,17 @@ var kXtraPill = 5;
 var kNeoPill = 6;
 var kChaosPill = 7;
 
-// levels are 1-based, and level 1 has no powerups.
-// levels with powerup pills have 2 types of pill.
+// note: order matters.
 var gPillIDs = [kForcePushPill, kDecimatePill, kEngorgePill, kChaosPill, kDefendPill, kSplitPill, kXtraPill, kNeoPill];
-// there should be 2 per level
-// for the first n levels.
-Assert(gPillIDs.length % 2 === 0);
 
-// note: width and height are functions
+// note:
+// 1) width and height are functions
 // because they need to be evaluated after
 // all the display resizing is done.
 // see: width and height in GetReadyState.DrawPills().
+// 2) keep the names short, for the get ready screen.
 var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty({}, kForcePushPill, {
-  name: "FORCE PUSH",
+  name: "PUSH",
   maker: MakeForcePushProps,
   drawer: DrawForcePushPill,
   wfn: function wfn() {
@@ -87,7 +85,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(20);
   }
 }), kDecimatePill, {
-  name: "DECIMATE",
+  name: "KILL",
   maker: MakeDecimateProps,
   drawer: DrawDecimatePill,
   wfn: function wfn() {
@@ -97,7 +95,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(20);
   }
 }), kEngorgePill, {
-  name: "ENGORGE",
+  name: "PHAT",
   maker: MakeEngorgeProps,
   drawer: DrawEngorgePill,
   wfn: function wfn() {
@@ -108,7 +106,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
   }
 }), kSplitPill, {
   // "SPLIT" could be a confusing name since
-  // the level msg says "n splits remaining".
+  // the level msg says "n splits remaining" ha ha.
   name: "ZPLT",
   maker: MakeSplitProps,
   drawer: DrawSplitPill,
@@ -119,7 +117,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(20);
   }
 }), kDefendPill, {
-  name: "DEFEND",
+  name: "SHLD",
   maker: MakeDefendProps,
   drawer: DrawDefendPill,
   wfn: function wfn() {
@@ -149,7 +147,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(20);
   }
 }), kChaosPill, {
-  name: "CHAOS",
+  name: "CRZY",
   maker: MakeChaosProps,
   drawer: DrawChaosPill,
   wfn: function wfn() {

@@ -51,8 +51,7 @@ const kXtraPill = 5;
 const kNeoPill = 6;
 const kChaosPill = 7;
 
-// levels are 1-based, and level 1 has no powerups.
-// levels with powerup pills have 2 types of pill.
+// note: order matters.
 const gPillIDs = [
     kForcePushPill,
     kDecimatePill,
@@ -63,43 +62,42 @@ const gPillIDs = [
     kXtraPill,
     kNeoPill,
 ];
-// there should be 2 per level
-// for the first n levels.
-Assert(gPillIDs.length%2===0);
 
-// note: width and height are functions
+// note:
+// 1) width and height are functions
 // because they need to be evaluated after
 // all the display resizing is done.
 // see: width and height in GetReadyState.DrawPills().
+// 2) keep the names short, for the get ready screen.
 var gPillInfo = {
     [kForcePushPill]: {
-        name: "FORCE PUSH",
+        name: "PUSH",
         maker: MakeForcePushProps,
         drawer: DrawForcePushPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kDecimatePill]: {
-        name: "DECIMATE",
+        name: "KILL",
 	maker: MakeDecimateProps,
         drawer: DrawDecimatePill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kEngorgePill]: {
-        name: "ENGORGE",
+        name: "PHAT",
 	maker: MakeEngorgeProps,
         drawer: DrawEngorgePill,
         wfn: () => sxi(20), hfn: () => syi(35),
     },
     [kSplitPill]: {
         // "SPLIT" could be a confusing name since
-        // the level msg says "n splits remaining".
+        // the level msg says "n splits remaining" ha ha.
         name: "ZPLT",
 	maker: MakeSplitProps,
         drawer: DrawSplitPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kDefendPill]: {
-        name: "DEFEND",
+        name: "SHLD",
 	maker: MakeDefendProps,
         drawer: DrawDefendPill,
         wfn: () => sxi(20), hfn: () => syi(40),
@@ -117,7 +115,7 @@ var gPillInfo = {
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kChaosPill]: {
-        name: "CHAOS",
+        name: "CRZY",
 	maker: MakeChaosProps,
         drawer: DrawChaosPill,
         wfn: () => sxi(20), hfn: () => syi(20),

@@ -9,8 +9,8 @@
 var gP1Pills;
 var gP2Pills;
 function ResetLevelsPills() {
-    gP1Pills = [kForcePushPill];
-    gP2Pills = [kForcePushPill];
+    gP1Pills = []; //[...gPillIDs].slice(0,8);
+    gP2Pills = []; //[...gPillIDs].slice(0,2);
 }
 function PillIDsToMakers(pids) {
     return pids.map(pid => gPillInfo[pid].maker);
@@ -104,12 +104,11 @@ function MakeSplitsCount(index) {
     }
 }
 
-function ChooseRewards(index, excluding) {
-    let pids = [];
-    const i0 = index-1;
-    const i = i0*2;
-    pids = gPillIDs.slice(i, i+2);
-    console.log("ChooseRewards", index, pids, pids.map(i => gPillInfo[i]?.name));
-    Assert(pids.length === 0 || pids.length === 2);
-    return pids;
+function ChooseRewards(excluding) {
+    var deck = gPillIDs.filter(pid => !excluding.includes(pid));
+    if (deck.length > 0) {
+        deck = deck.slice(0, Math.min(2, deck.length));
+    }
+    console.log("ChooseRewards", deck);
+    return deck;
 }

@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = true;
+var gDebug = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1116,7 +1116,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        var seconds = gDebug ? 1 : 3;
+        var seconds = gDebug ? (gP1Pills.length > 0 ? 3 : 1) : 5;
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
@@ -1160,28 +1160,45 @@ function UpdateLocalStorage() {
     };
 
     self.DrawPills = function() {
-        self.DrawPillsSide(gP1Side, gP1Pills);
-        self.DrawPillsSide(gP2Side, gP2Pills);
+        var whscale = Math.max(
+            0.4,
+            T10(
+                Math.max(gP1Pills.length, gP2Pills.length),
+                gPillIDs.length
+            )
+        );
+        var y = gh(0.7);
+        let maxWidth = 0;
+        let maxHeight = 0;
+        gP1Pills.map(pid => {
+            maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
+            maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
+        });
+        gP2Pills.map(pid => {
+            maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
+            maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
+        });
+        const ox = maxWidth * 3 * whscale;
+        const labelY = y + sy1(10) + (maxHeight * whscale);
+        self.DrawPillsSide(gP1Side, gP1Pills, whscale, ox, y, labelY);
+        self.DrawPillsSide(gP2Side, gP2Pills, whscale, ox, y, labelY);
     };
 
-    self.DrawPillsSide = function(side, pills) {
+    self.DrawPillsSide = function(side, pills, whscale, ox, y, labelY) {
         var count = pills.length;
         if (count > 0) {
-            var mx = ForSide(side, gw(0.25), gw(0.75));
-            var ox = gw(0.4) / count;
+            var mx = gw(ForSide(side, 0.25, 0.75));
             var lx = mx - (count-1)/2 * ox;
-            var scale = 1;
-            var y = gh(0.7);
             Cxdo(() => {
-                for(var i = 0; i < pills.length; ++i) {
+                for(var i = 0; i < count; ++i) {
                     const pid = pills[i];
                     const x = lx + (ox*i);
                     const { name, drawer, wfn, hfn } = gPillInfo[pid];
-                    const width = wfn() * scale;
-                    const height = hfn() * scale;
+                    const width = wfn() * whscale;
+                    const height = hfn() * whscale;
                     drawer(side, { x:x-width/2, y:y-height/2, width, height }, 1);
                     gCx.fillStyle = RandomForColor(blueSpec);
-                    DrawText(name, "center", x, y + height/2 + sy1(25), gSmallestFontSizePt);
+                    DrawText(name, "center", x, labelY, gSmallestFontSizePt);
                 }
             });
         }
@@ -2134,23 +2151,35 @@ function UpdateLocalStorage() {
         self.timeout = 1000 * (gDebug ? 5 : 15);
 
         // might be empty if you already got them all!
-        const pillIDs = ChooseRewards(gLevelIndex);
-        self.goOn = pillIDs.length === 0;
+        const p1Rewards = ChooseRewards(gP1Pills);
+        const p2Rewards = ChooseRewards(gP2Pills);
+        // theoretically the # of rewards should match because
+        // all paddles are forced to get 1 reward at the end
+        // of every level. it is only the order that might be different.
+        // sure wish i could unit test this ha ha ha.
+        Assert(p1Rewards.length === p2Rewards.length);
+        const count = p1Rewards.length;
+
+        // skip the whole sceen if all pills have been rewarded.
+        const goOn =  count === 0;
 
         self.p1Specs = [];
         self.p2Specs = [];
-        const sy = (gHeight * 0.6) / pillIDs.length;
+        const sy = (gHeight * 0.6) / count;
         const s0 = gh(0.6) - sy/2;
-        for (let i = 0; i < pillIDs.length; ++i) {
+        for (let i = 0; i < count; ++i) {
             const cy = s0 + (sy*i);
             const p1x = gw(ForP1Side(0.25, 0.75));
-            self.p1Specs.push({ pid: pillIDs[i], cx: p1x, cy });
+            self.p1Specs.push({ pid: p1Rewards[i], cx: p1x, cy });
+        }
+        for (let i = 0; i < count; ++i) {
+            const cy = s0 + (sy*i);
             const p2x = gw(ForP2Side(0.25, 0.75));
-            self.p2Specs.push({ pid: pillIDs[i], cx: p2x, cy });
+            self.p2Specs.push({ pid: p2Rewards[i], cx: p2x, cy });
         }
 
         self.p1Highlight = 0;
-        self.p2Highlight = is1P() ? gR.RandomRangeInt(0, pillIDs.length-1) : 0;
+        self.p2Highlight = is1P() ? gR.RandomRangeInt(0, count-1) : 0;
     };
 
     self.Step = function(dt) {
@@ -2271,11 +2300,11 @@ function UpdateLocalStorage() {
     };
 
     self.DrawPill = function(side, spec, highlighted) {
-        const scale = 1;
+        const whscale = 1;
         const pid = spec.pid;
         const { name, drawer, wfn, hfn } = gPillInfo[pid];
-        const width = wfn() * scale;
-        const height = hfn() * scale;
+        const width = wfn() * whscale;
+        const height = hfn() * whscale;
         const x = spec.cx - width/2;
         const y = spec.cy - height/2;
         drawer(side, { x, y, width, height }, 1);
