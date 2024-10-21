@@ -3,7 +3,7 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-function isPointInRect( p, xywh, marginxy ) {
+function isPointInRect( p, xywh, marginxy=0 ) {
     if (isU(p) || isU(xywh)) {
         return false;
     }

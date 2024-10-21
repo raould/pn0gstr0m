@@ -37,28 +37,24 @@ function Level(props) {
     // todo: maybe GameState shouldn't own the paddles.
     self.paddleP1 = props.paddleP1;
     self.paddleP2 = props.paddleP2;
-    self.pills = props.pills;
+
+    // powerup code is split very nastily across many files.
+    self.p1Pills = props.p1Pills;
+    self.p2Pills = props.p2Pills;
     self.p1Powerups = new Powerups({
       isPlayer: props.isP1Player,
       paddle: self.paddleP1,
       side: ForSide(gP1Side, "left", "right"),
-      specs: self.pills
+      specs: self.p1Pills
     });
     self.p1Pill = undefined;
     self.p2Powerups = new Powerups({
       isPlayer: props.isP2Player,
       paddle: self.paddleP2,
       side: ForSide(gP1Side, "right", "left"),
-      specs: self.pills
+      specs: self.p2Pills
     });
     self.p2Pill = undefined;
-  };
-  self.IsMidGame = function () {
-    var isMidGame = true;
-    if (exists(self.splitsRemaining)) {
-      isMidGame = self.splitsRemaining > self.splitsMax / 4;
-    }
-    return isMidGame;
   };
   self.EnergyFactor = function () {
     if (isU(self.splitsRemaining)) {
@@ -99,8 +95,12 @@ function Level(props) {
       self.paddleP2.englishFactor = self.paddleP2.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
     }
   };
-  self.IsLastOfThePucks = function () {
-    return exists(self.splitsRemaining) && self.splitsRemaining <= 200;
+  self.IsMidGame = function () {
+    var isMidGame = true;
+    if (exists(self.splitsRemaining)) {
+      isMidGame = self.splitsRemaining > self.splitsMax / 4;
+    }
+    return isMidGame;
   };
   self.IsSuddenDeath = function () {
     return exists(self.splitsRemaining) && self.splitsRemaining <= 0;

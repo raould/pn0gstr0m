@@ -13,6 +13,19 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 
 // yes this is really hard to playtest.
 
+// no, i am not proud of all the globals.
+var gP1Pills;
+var gP2Pills;
+function ResetLevelsPills() {
+  gP1Pills = []; //[...gPillIDs].slice(0,8);
+  gP2Pills = []; //[...gPillIDs].slice(0,8);
+}
+function PillIDsToMakers(pids) {
+  return pids.map(function (pid) {
+    return gPillInfo[pid].maker;
+  });
+}
+ResetLevelsPills();
 function MakeAttract(paddleP1, paddleP2) {
   return new Level({
     index: kAttractLevelIndex,
@@ -28,9 +41,6 @@ function MakeAttract(paddleP1, paddleP2) {
   });
 }
 function MakeZen(paddleP1, paddleP2) {
-  var pills = ChoosePillIDs(kZenLevelIndex).map(function (pid) {
-    return gPillInfo[pid].maker;
-  });
   return new Level({
     index: kZenLevelIndex,
     isSpawning: true,
@@ -42,7 +52,26 @@ function MakeZen(paddleP1, paddleP2) {
     })),
     isP1Player: true,
     isP2Player: !is1P(),
-    pills: pills,
+    p1Pills: PillIDsToMakers(_toConsumableArray(gPillIDs)),
+    p2Pills: PillIDsToMakers(_toConsumableArray(gPillIDs)),
+    paddleP1: paddleP1,
+    paddleP2: paddleP2
+  });
+}
+function MakeZ2P(paddleP1, paddleP2) {
+  return new Level({
+    index: kZenLevelIndex,
+    isSpawning: true,
+    // but no limit on how many.
+    vx0: sxi(2.5),
+    maxVX: sxi(ForGameMode({
+      zen: 18,
+      z2p: 22
+    })),
+    isP1Player: true,
+    isP2Player: !is1P(),
+    p1Pills: PillIDsToMakers(_toConsumableArray(gPillIDs)),
+    p2Pills: PillIDsToMakers(_toConsumableArray(gPillIDs)),
     paddleP1: paddleP1,
     paddleP2: paddleP2
   });
@@ -53,9 +82,6 @@ function MakeZen(paddleP1, paddleP2) {
 function MakeLevel(index, paddleP1, paddleP2) {
   Assert(index > 0, "index is 1-based");
   var splitsCount = MakeSplitsCount(index);
-  var pills = ChoosePillIDs(index).map(function (pid) {
-    return gPillInfo[pid].maker;
-  });
   var level = new Level({
     index: index,
     isSpawning: true,
@@ -69,7 +95,8 @@ function MakeLevel(index, paddleP1, paddleP2) {
     splitsCount: splitsCount,
     isP1Player: true,
     isP2Player: !is1P(),
-    pills: pills,
+    p1Pills: PillIDsToMakers(gP1Pills),
+    p2Pills: PillIDsToMakers(gP2Pills),
     paddleP1: paddleP1,
     paddleP2: paddleP2
   });
@@ -90,59 +117,13 @@ function MakeSplitsCount(index) {
     return 200 + extra;
   }
 }
-var gChosenPillIDsCache;
-function ChoosePillIDs(index) {
-  var _gChosenPillIDsCache;
-  Assert(index != kAttractLevelIndex);
-  if (index === kZenLevelIndex) {
-    return _toConsumableArray(gPillIDs);
+function ChooseRewards(excluding) {
+  var deck = gPillIDs.filter(function (pid) {
+    return !excluding.includes(pid);
+  });
+  if (deck.length > 0) {
+    deck = deck.slice(0, Math.min(2, deck.length));
   }
-  var i0 = index - 1;
-  if (((_gChosenPillIDsCache = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache.index) === index) {
-    var _gChosenPillIDsCache2;
-    return (_gChosenPillIDsCache2 = gChosenPillIDsCache) == null ? void 0 : _gChosenPillIDsCache2.pids;
-  }
-  var pids = ChoosePillIDsUncached(index);
-  console.log("Pids", index, pids);
-  gChosenPillIDsCache = {
-    index: index,
-    pids: pids
-  };
-  return pids;
-}
-function ChoosePillIDsUncached(index) {
-  var pids = [];
-  var i0 = index - 1;
-
-  // attract and first level have no pills.
-  if (i0 > 0) {
-    // the first n levels get 2 pills in order.
-    if (i0 <= gPillIDs.length / 2) {
-      Assert(i0 > 0, "attract and level 1 should not have pills", index);
-      var i = (i0 - 1) * 2;
-      pids = gPillIDs.slice(i, i + 2);
-      console.log("ChoosePillIDsUncached by 2", index, pids, pids.map(function (i) {
-        var _gPillInfo$i;
-        return (_gPillInfo$i = gPillInfo[i]) == null ? void 0 : _gPillInfo$i.name;
-      }));
-      Assert(pids.length === 2);
-    }
-    // after those first n levels, for another n levels, 4 random pills per level.
-    else if (i0 <= gPillIDs.length) {
-      var r = new Random(index);
-      var p = _toConsumableArray(gPillIDs);
-      pids = [p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0], p.splice(r.RandomRangeInt(0, p.length - 1), 1)[0]];
-      console.log("ChoosePillIDsUncached random 4", index, pids, pids.map(function (i) {
-        var _gPillInfo$i2;
-        return (_gPillInfo$i2 = gPillInfo[i]) == null ? void 0 : _gPillInfo$i2.name;
-      }));
-      Assert(pids.length === 4);
-    }
-    // after all that, dump in all powerups!
-    else {
-      pids = _toConsumableArray(gPillIDs);
-    }
-    Assert(pids.length > 0);
-  }
-  return pids;
+  console.log("ChooseRewards", deck);
+  return deck;
 }

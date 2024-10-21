@@ -65,19 +65,17 @@ var kXtraPill = 5;
 var kNeoPill = 6;
 var kChaosPill = 7;
 
-// levels are 1-based, and level 1 has no powerups.
-// levels with powerup pills have 2 types of pill.
+// note: order matters.
 var gPillIDs = [kForcePushPill, kDecimatePill, kEngorgePill, kChaosPill, kDefendPill, kSplitPill, kXtraPill, kNeoPill];
-// there should be 2 per level
-// for the first n levels.
-Assert(gPillIDs.length % 2 === 0);
 
-// note: width and height are functions
+// note:
+// 1) width and height are functions
 // because they need to be evaluated after
 // all the display resizing is done.
 // see: width and height in GetReadyState.DrawPills().
+// 2) keep the names short, for the get ready screen.
 var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty({}, kForcePushPill, {
-  name: "FORCE PUSH",
+  name: "PUSH",
   maker: MakeForcePushProps,
   drawer: DrawForcePushPill,
   wfn: function wfn() {
@@ -87,7 +85,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(20);
   }
 }), kDecimatePill, {
-  name: "DECIMATE",
+  name: "KILL",
   maker: MakeDecimateProps,
   drawer: DrawDecimatePill,
   wfn: function wfn() {
@@ -97,7 +95,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(20);
   }
 }), kEngorgePill, {
-  name: "ENGORGE",
+  name: "PHAT",
   maker: MakeEngorgeProps,
   drawer: DrawEngorgePill,
   wfn: function wfn() {
@@ -108,7 +106,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
   }
 }), kSplitPill, {
   // "SPLIT" could be a confusing name since
-  // the level msg says "n splits remaining".
+  // the level msg says "n splits remaining" ha ha.
   name: "ZPLT",
   maker: MakeSplitProps,
   drawer: DrawSplitPill,
@@ -119,7 +117,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(20);
   }
 }), kDefendPill, {
-  name: "DEFEND",
+  name: "SHLD",
   maker: MakeDefendProps,
   drawer: DrawDefendPill,
   wfn: function wfn() {
@@ -149,7 +147,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(20);
   }
 }), kChaosPill, {
-  name: "CHAOS",
+  name: "CRZY",
   maker: MakeChaosProps,
   drawer: DrawChaosPill,
   wfn: function wfn() {
@@ -382,7 +380,8 @@ function MakeForcePushProps(maker) {
     testFn: function testFn(gameState) {
       return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
     },
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawForcePushPill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -420,7 +419,8 @@ function MakeDecimateProps(maker) {
       return gDebug || gPucks.A.length > 20;
     },
     canSkip: true,
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawDecimatePill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -482,7 +482,8 @@ function MakeEngorgeProps(maker) {
       return !maker.paddle.engorged;
     },
     canSkip: true,
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawEngorgePill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -510,7 +511,8 @@ function MakeSplitProps(maker) {
     testFn: function testFn(gameState) {
       return true;
     },
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawSplitPill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -559,20 +561,24 @@ function MakeDefendProps(maker) {
       return gameState.level.IsMidGame() && maker.paddle.barriers.A.length == 0 && (gDebug || gPucks.A.length > 10);
     },
     canSkip: true,
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawDefendPill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();
       var n = 4; // match: kBarriersArrayInitialSize.
       // zen is more crazy so upping the hp and thus also scaling drawing so they aren't too wide.
+      var pc = T01(gPucks.A.length, kPuckPoolSize);
       var hp = ForGameMode({
         regular: 15,
-        zen: 45
+        hard: 20,
+        zen: 50 + pc * 100,
+        z2p: 20
       });
+      console.log("defend pc=".concat(pc, " hp=").concat(F(hp)));
       var drawScale = ForGameMode({
         regular: 1,
-        hard: 1,
         zen: 0.5
       });
       var width = sx1(hp / 3);
@@ -622,7 +628,8 @@ function MakeXtraProps(maker) {
       return gameState.level.IsMidGame() && maker.paddle.xtras.A.length == 0 && (gDebug || gPucks.A.length > 20);
     },
     canSkip: true,
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawXtraPill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -631,7 +638,14 @@ function MakeXtraProps(maker) {
       var yy = (gHeight - gYInset * 2) / n;
       var width = gPaddleWidth * 2 / 3;
       var height = Math.min(gPaddleHeight / 2, yy / 2);
-      var hp = 30;
+      var pc = T01(gPucks.A.length, kPuckPoolSize);
+      var hp = ForGameMode({
+        regular: 30,
+        hard: 50,
+        zen: 50 + pc * 100,
+        z2p: 50
+      });
+      console.log("xtra pc=".concat(pc, " hp=").concat(F(hp)));
       ForCount(n, function (i) {
         var x = ForSide(maker.side, gw(0.15), gw(0.85));
         var xoff = isEven(i) ? 0 : gw(0.02);
@@ -669,7 +683,8 @@ function MakeNeoProps(maker) {
       return gameState.level.IsMidGame() && (gDebug || gPucks.A.length > 20) && isU(maker.paddle.neo);
     },
     canSkip: true,
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawNeoPill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
@@ -698,7 +713,8 @@ function MakeChaosProps(maker) {
     testFn: function testFn(gameState) {
       return (gDebug || gPucks.A.length > 10) && isU(maker.paddle.neo);
     },
-    drawFn: function drawFn(self, alpha) {
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawChaosPill(maker.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {

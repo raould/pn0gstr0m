@@ -6,8 +6,10 @@
 * cmds vs. targets vs. button polling is a buggy mess, needs to be unified.
 * the general coding suck of not knowing which things must/not be done via property functions.
 * the level index, game mode, single player stuff is now a nightmare.
+* the level should live longer than just the GameState.
 * 2 player mode should not have levels, just be zen mode.
 * high score totalling across levels (esp. for zen single player).
+* funny how many different ways of doing a timeout there are.
 * gLevelIndex is a code smell, but is a nightmare to fix. i tried.
 * the ownership graph is heck even if done right.
 * figure out per-game high score ui ux.
