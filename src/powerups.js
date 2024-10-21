@@ -506,8 +506,15 @@ function MakeDefendProps(maker) {
             PlayPowerupBoom();
             var n = 4; // match: kBarriersArrayInitialSize.
             // zen is more crazy so upping the hp and thus also scaling drawing so they aren't too wide.
-            var hp = ForGameMode({regular: 15, zen: 45});
-	    var drawScale = ForGameMode({regular: 1, hard: 1, zen: 0.5});
+            var pc = T01(gPucks.A.length, kPuckPoolSize);
+            var hp = ForGameMode({
+                regular: 15,
+                hard: 20,
+                zen: 50 + (pc*100),
+                z2p: 20,
+            });
+            console.log(`defend pc=${pc} hp=${F(hp)}`);
+	    var drawScale = ForGameMode({ regular: 1, zen: 0.5 });
             var width = sx1(hp/3);
             var height = (gHeight-gYInset*2) / n;
             var x = gw(ForSide(maker.side, 0.1, 0.9));

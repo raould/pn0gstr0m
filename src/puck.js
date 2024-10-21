@@ -190,12 +190,12 @@ function Puck() {
             // some variety in vy.
             let vy = self.vy;
             const pvx = T01(Math.abs(self.vx), maxVX);
-            // todo: test and refine this.
-            // only want 'streaming' possible in zen mode.
+            // todo: test and refine this... eternally not quite right, hard to test.
+            // sort of want 'streaming' possible mainly in zen mode.
             const vyf = ForGameMode({
                 regular: 1.1,
                 hard: 1.2,
-                zen: 1.05,
+                zen: 1.08,
                 // the faster things get, the more spread out, i hope, but,
                 // not too much since it can be fun to be 'streaming' until neo.
                 z2p: 1.15 + pvx * 0.2,

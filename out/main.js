@@ -32,7 +32,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1346,7 +1346,7 @@ function GameState(props) {
     self.isCpuPillAllowed = !is1P();
     // also, neither side gets too many pills before the other.
     self.unfairPillCount = 0;
-    self.unfairPillDiffMax = 1;
+    self.unfairPillDiffMax = 2;
     if (!self.isAttract) {
       PlayStart();
     }
