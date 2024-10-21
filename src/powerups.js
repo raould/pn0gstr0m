@@ -563,7 +563,14 @@ function MakeXtraProps(maker) {
             var yy = (gHeight-gYInset*2)/n;
             var width = gPaddleWidth*2/3;
             var height = Math.min(gPaddleHeight/2, yy/2);
-            var hp = 30;
+            var pc = T01(gPucks.A.length, kPuckPoolSize);
+            var hp = ForGameMode({
+                regular: 30,
+                hard: 50,
+                zen: 50 + (pc*100),
+                z2p: 50,
+            });
+            console.log(`xtra pc=${pc} hp=${F(hp)}`);
             ForCount(n, (i) => {
                 var x = ForSide(maker.side, gw(0.15), gw(0.85));
                 var xoff = isEven(i) ? 0 : gw(0.02);
