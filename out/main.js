@@ -2414,7 +2414,7 @@ function GameOverSummaryState() {
       var p2x = ForP2Side(gw(0.2), gw(0.8));
       DrawText("P2: ".concat(gP2Score.game), p2a, p2x, gh(0.22), gRegularFontSizePt);
       gCx.fillStyle = RandomBlue();
-      DrawText("*** WINNER ***", "center", gw(0.5), gh(0.3), gReducedFontSizePt);
+      DrawText("*** WINNER ***", "center", gw(0.5), gh(0.35), gReducedFontSizePt);
       gCx.fillStyle = RandomGreen();
       DrawText(
       // leading space to visually center player 1.

@@ -2535,7 +2535,7 @@ function UpdateLocalStorage() {
             DrawText(
                 "*** WINNER ***",
                 "center",
-                gw(0.5), gh(0.3),
+                gw(0.5), gh(0.35),
                 gReducedFontSizePt
             );
 
