@@ -9,8 +9,8 @@
 var gP1Pills;
 var gP2Pills;
 function ResetLevelsPills() {
-    gP1Pills = []; //[...gPillIDs].slice(0,8);
-    gP2Pills = []; //[...gPillIDs].slice(0,2);
+    gP1Pills = [];//[...gPillIDs].slice(0,8);
+    gP2Pills = [];//[...gPillIDs].slice(0,8);
 }
 function PillIDsToMakers(pids) {
     return pids.map(pid => gPillInfo[pid].maker);

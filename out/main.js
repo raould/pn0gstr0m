@@ -1407,7 +1407,6 @@ function GameState(props) {
     (_self$theMenu3 = self.theMenu) == null || _self$theMenu3.Step(); // fyi this doesn't process menu inputs, that is below.
     self.level.Step(dt);
     self.maxVX = self.level.maxVX; // todo: code smell global.
-    //logOnDelta("maxVX", self.maxVX, 1);
     self.MaybeSpawnPills(dt);
     self.ProcessAllInput();
     if (self.quit) {
@@ -2078,7 +2077,7 @@ function LevelFinChooseState() {
     var count = p1Rewards.length;
 
     // skip the whole sceen if all pills have been rewarded.
-    var goOn = count === 0;
+    self.goOn = count === 0;
     self.p1Specs = [];
     self.p2Specs = [];
     var sy = gHeight * 0.6 / count;
@@ -2106,7 +2105,7 @@ function LevelFinChooseState() {
   };
   self.Step = function (dt) {
     self.timeout -= dt;
-    self.goOn = self.timeout <= -1000; // neg 1 sec to show '0'.
+    self.goOn |= self.timeout <= -1000; // neg 1 sec to show '0'.
     if (self.goOn) {
       self.SaveIndices();
       return kGetReady;
@@ -2122,8 +2121,12 @@ function LevelFinChooseState() {
     return nextState;
   };
   self.SaveIndices = function () {
-    gP1Pills.push(self.p1Specs[self.p1Highlight].pid);
-    gP2Pills.push(self.p2Specs[self.p2Highlight].pid);
+    if (self.p1Specs.length > 0) {
+      gP1Pills.push(self.p1Specs[self.p1Highlight].pid);
+    }
+    if (self.p2Specs.length > 0) {
+      gP2Pills.push(self.p2Specs[self.p2Highlight].pid);
+    }
   };
   self.ProcessOneInput = function () {
     if (self.goOn) {
