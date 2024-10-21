@@ -954,8 +954,7 @@ function TitleState() {
     self.timeout = gDebug ? 1 : 1000 * 1.5;
     self.started = gGameTime;
     self.done = false;
-    // at one point i guess it felt nicer to not start music immediately?
-    self.musicTimer = setTimeout(BeginMusic, 1000);
+    self.musicTimer = setTimeout(BeginMusic, 1000); // avoid bugs? dunno.
     self.theMenu = self.MakeMenu();
     console.log("TitleState", is1P(), gGameMode);
   };
@@ -1955,7 +1954,7 @@ function LevelFinState() {
   self.Init = function () {
     ResetInput();
     self.levelIndex = gLevelIndex;
-    self.timeout = 1000 * 2;
+    self.timeout = 1000 * (gDebug ? 0 : 2);
     self.started = gGameTime;
     self.levelHigh = gLevelHighScores[self.levelIndex];
     self.isNewHighScore = false;
@@ -2064,7 +2063,8 @@ function LevelFinChooseState() {
   var self = this;
   self.Init = function () {
     ResetInput();
-    self.timeout = 1000 * (gDebug ? 5 : 15);
+    self.timeout = 1000 * 10;
+    self.started = gGameTime;
 
     // might be empty if you already got them all!
     var p1Rewards = ChooseRewards(gP1Pills);
@@ -2103,13 +2103,16 @@ function LevelFinChooseState() {
     self.p1Highlight = 0;
     self.p2Highlight = is1P() ? gR.RandomRangeInt(0, count - 1) : 0;
   };
+  self.RemainingTime = function () {
+    return self.started + self.timeout - gGameTime;
+  };
   self.Step = function (dt) {
-    self.timeout -= dt;
-    self.goOn |= self.timeout <= -1000; // neg 1 sec to show '0'.
+    self.goOn |= self.RemainingTime() <= -1000; // neg 1 sec to show '0'.
     if (self.goOn) {
       self.SaveIndices();
       return kGetReady;
     }
+    self.StepCpu();
     var nextState;
     gEventQueue.forEach(function (event, i) {
       var cmds = {};
@@ -2119,6 +2122,15 @@ function LevelFinChooseState() {
       }
     });
     return nextState;
+  };
+  self.StepCpu = function () {
+    if (is1P()) {
+      var r = self.RemainingTime();
+      var b = gR.RandomBool(T01(r, self.timeout * 1.5) * 0.1);
+      if (b) {
+        self.p2Highlight = (self.p2Highlight + 1) % self.p2Specs.length;
+      }
+    }
   };
   self.SaveIndices = function () {
     if (self.p1Specs.length > 0) {
@@ -2205,8 +2217,8 @@ function LevelFinChooseState() {
     Cxdo(function () {
       gCx.fillStyle = RandomGreen();
       DrawText("CHOOSE YOUR PRIZE!", "center", gw(0.5), gh(0.2), gRegularFontSizePt);
-      var timeStr = String(Math.ceil(Math.max(0, self.timeout / 1000)));
-      DrawText(timeStr, "center", gw(0.5), gh(0.35), gRegularFontSizePt);
+      var timeStr = String(Math.ceil(Math.max(0, self.RemainingTime() / 1000)));
+      DrawText(timeStr, "center", gw(0.5), gh(0.6), gBigFontSizePt);
     });
   };
   self.DrawPills = function () {
