@@ -1115,7 +1115,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        var seconds = gDebug ? (gP1Pills.length > 0 ? 3 : 1) : 5;
+        var seconds = gP1Pills.length > 0 ? 5 : (gDebug ? 1 : 3);
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
