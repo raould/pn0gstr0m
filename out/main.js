@@ -1448,7 +1448,6 @@ function GameState(props) {
       var toolongago = self.pillP1SpawnCountdown < -self.pillSpawnCooldown * 2;
       var must = forced || toolongago;
       self.level.p1Pill = self.MaybeSpawnPill(must, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups);
-      console.log("p1", must, exists(self.level.p1Pill));
       if (exists(self.level.p1Pill)) {
         self.pillP1SpawnCountdown = self.pillSpawnCooldown;
         if (!forced) {
@@ -1466,7 +1465,6 @@ function GameState(props) {
       var _toolongago = self.pillP2SpawnCountdown < -self.pillSpawnCooldown * 2;
       var must = forced || _toolongago;
       self.level.p2Pill = self.MaybeSpawnPill(must, self.level.p2Pill, factor, self.level.p2Powerups);
-      console.log("p2", must, exists(self.level.p2Pill));
       if (exists(self.level.p2Pill)) {
         self.pillP2SpawnCountdown = self.pillSpawnCooldown;
         if (!forced) {
