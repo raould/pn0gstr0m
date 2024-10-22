@@ -18,12 +18,12 @@ var gP1Pills;
 var gP2Pills;
 function ResetLevelsPills() {
   gP1Pills = {
-    deck: gPillIDs.slice(0, 7),
-    remaining: gPillIDs.slice(7, 8)
+    deck: [],
+    remaining: _toConsumableArray(gPillIDs)
   };
   gP2Pills = {
-    deck: gPillIDs.slice(0, 7),
-    remaining: gPillIDs.slice(7, 8)
+    deck: [],
+    remaining: _toConsumableArray(gPillIDs)
   };
 }
 ResetLevelsPills();

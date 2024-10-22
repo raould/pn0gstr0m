@@ -9,8 +9,8 @@
 var gP1Pills;
 var gP2Pills;
 function ResetLevelsPills() {
-    gP1Pills = { deck: gPillIDs.slice(0,7), remaining: gPillIDs.slice(7,8) };
-    gP2Pills = { deck: gPillIDs.slice(0,7), remaining: gPillIDs.slice(7,8) };
+    gP1Pills = { deck: [], remaining: [...gPillIDs] };
+    gP2Pills = { deck: [], remaining: [...gPillIDs] };
 }
 ResetLevelsPills();
 function PillIDsToMakers(pids) {
