@@ -17,15 +17,21 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 var gP1Pills;
 var gP2Pills;
 function ResetLevelsPills() {
-  gP1Pills = []; //[...gPillIDs].slice(0,8);
-  gP2Pills = []; //[...gPillIDs].slice(0,8);
+  gP1Pills = {
+    deck: [],
+    remaining: _toConsumableArray(gPillIDs)
+  };
+  gP2Pills = {
+    deck: [],
+    remaining: _toConsumableArray(gPillIDs)
+  };
 }
+ResetLevelsPills();
 function PillIDsToMakers(pids) {
   return pids.map(function (pid) {
     return gPillInfo[pid].maker;
   });
 }
-ResetLevelsPills();
 function MakeAttract(paddleP1, paddleP2) {
   return new Level({
     index: kAttractLevelIndex,
@@ -95,8 +101,8 @@ function MakeLevel(index, paddleP1, paddleP2) {
     splitsCount: splitsCount,
     isP1Player: true,
     isP2Player: !is1P(),
-    p1Pills: PillIDsToMakers(gP1Pills),
-    p2Pills: PillIDsToMakers(gP2Pills),
+    p1Pills: PillIDsToMakers(gP1Pills.deck),
+    p2Pills: PillIDsToMakers(gP2Pills.deck),
     paddleP1: paddleP1,
     paddleP2: paddleP2
   });
@@ -117,13 +123,8 @@ function MakeSplitsCount(index) {
     return 200 + extra;
   }
 }
-function ChooseRewards(excluding) {
-  var deck = gPillIDs.filter(function (pid) {
-    return !excluding.includes(pid);
-  });
-  if (deck.length > 0) {
-    deck = deck.slice(0, Math.min(2, deck.length));
-  }
-  console.log("ChooseRewards", deck);
-  return deck;
+function ChooseRewards(state) {
+  var rewards = state.remaining.splice(0, Math.min(2, state.remaining.length));
+  console.log("ChooseRewards", rewards);
+  return rewards;
 }
