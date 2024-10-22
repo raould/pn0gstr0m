@@ -242,6 +242,50 @@ var gP1Keys = new WrapState({
 var gP2Keys = new WrapState({
   resetFn: noKeysState
 });
+function isP1UpKey() {
+  var reset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  if (gP1Keys.$.up || gP2Keys.$.up) {
+    console.log("up");
+  }
+  var is = is1P() ? gP1Keys.$.up || gP2Keys.$.up : gP1Keys.$.up;
+  if (is && reset) {
+    gP1Keys.Reset();
+    if (is1P()) {
+      gP2Keys.Reset();
+    }
+  }
+  return is;
+}
+function isP1DownKey() {
+  var reset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  if (gP1Keys.$.down || gP2Keys.$.down) {
+    console.log("down");
+  }
+  var is = is1P() ? gP1Keys.$.down || gP2Keys.$.down : gP1Keys.$.down;
+  if (is && reset) {
+    gP1Keys.Reset();
+    if (is1P()) {
+      gP2Keys.Reset();
+    }
+  }
+  return is;
+}
+function isP2UpKey() {
+  var reset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  var is = is1P() ? false : gP2Keys.up;
+  if (is && reset) {
+    gP2Keys.Reset();
+  }
+  return is;
+}
+function isP2DownKey() {
+  var reset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  var is = is1P() ? false : gP2Keys.down;
+  if (is && reset) {
+    gP2Keys.Reset();
+  }
+  return is;
+}
 function isUpOrDownKeyPressed() {
   return gP1Keys.$.up || gP1Keys.$.down || gP2Keys.$.up || gP2Keys.$.down;
 }
@@ -281,16 +325,52 @@ var gGamepad2Buttons = new WrapState({
   resetFn: noButtonsState
 });
 function isGamepad1Up() {
-  return !!gGamepad1Buttons.$.up || !!gGamepad1Sticks.$.up;
+  var reset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  var g1up = !!gGamepad1Buttons.$.up || !!gGamepad1Sticks.$.up;
+  var g2up = !!gGamepad2Buttons.$.up || !!gGamepad2Sticks.$.up;
+  var is = is1P() ? g1up || g2up : g1up;
+  if (is && reset) {
+    gGamepad1Sticks.Reset();
+    gGamepad1Buttons.Reset();
+    if (is1P()) {
+      gGamepad2Sticks.Reset();
+      gGamepad2Buttons.Reset();
+    }
+  }
+  return is;
 }
 function isGamepad1Down() {
-  return !!gGamepad1Buttons.$.down || !!gGamepad1Sticks.$.down;
+  var reset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  var g1down = !!gGamepad1Buttons.$.down || !!gGamepad1Sticks.$.down;
+  var g2down = !!gGamepad2Buttons.$.down || !!gGamepad2Sticks.$.down;
+  var is = is1P() ? g1down || g2down : g1down;
+  if (is && reset) {
+    gGamepad1Sticks.Reset();
+    gGamepad1Buttons.Reset();
+    if (is1P()) {
+      gGamepad2Sticks.Reset();
+      gGamepad2Buttons.Reset();
+    }
+  }
+  return is;
 }
 function isGamepad2Up() {
-  return !!gGamepad2Buttons.$.up || !!gGamepad2Sticks.$.up;
+  var reset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  var is = !!gGamepad2Buttons.$.up || !!gGamepad2Sticks.$.up;
+  if (is && reset) {
+    gGamepad2Sticks.Reset();
+    gGamepad2Buttons.Reset();
+  }
+  return is;
 }
 function isGamepad2Down() {
-  return !!gGamepad2Buttons.$.down || !!gGamepad2Sticks.$.down;
+  var reset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  var is = !!gGamepad2Buttons.$.down || !!gGamepad2Sticks.$.down;
+  if (is && reset) {
+    gGamepad2Sticks.Reset();
+    gGamepad2Buttons.Reset();
+  }
+  return is;
 }
 function isGamepadActivatePressed() {
   var is = !!gGamepad1Buttons.$.activate || !!gGamepad2Buttons.$.activate;
@@ -1117,7 +1197,7 @@ function GetReadyState() {
   self.Init = function () {
     ResetInput();
     gStateMuted = false;
-    var seconds = gP1Pills.length > 0 ? 5 : gDebug ? 1 : 3;
+    var seconds = gDebug ? 2 : gP1Pills.deck.length > 0 ? 5 : 3;
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.animations = {};
@@ -1160,22 +1240,22 @@ function GetReadyState() {
     });
   };
   self.DrawPills = function () {
-    var whscale = Math.max(0.4, T10(Math.max(gP1Pills.length, gP2Pills.length), gPillIDs.length));
+    var whscale = Math.max(0.4, T10(Math.max(gP1Pills.deck.length, gP2Pills.deck.length), gPillIDs.length));
     var y = gh(0.7);
     var maxWidth = 0;
     var maxHeight = 0;
-    gP1Pills.map(function (pid) {
+    gP1Pills.deck.map(function (pid) {
       maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
       maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
     });
-    gP2Pills.map(function (pid) {
+    gP2Pills.deck.map(function (pid) {
       maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
       maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
     });
     var ox = maxWidth * 3 * whscale;
     var labelY = y + sy1(10) + maxHeight * whscale;
-    self.DrawPillsSide(gP1Side, gP1Pills, whscale, ox, y, labelY);
-    self.DrawPillsSide(gP2Side, gP2Pills, whscale, ox, y, labelY);
+    self.DrawPillsSide(gP1Side, gP1Pills.deck, whscale, ox, y, labelY);
+    self.DrawPillsSide(gP2Side, gP2Pills.deck, whscale, ox, y, labelY);
   };
   self.DrawPillsSide = function (side, pills, whscale, ox, y, labelY) {
     var count = pills.length;
@@ -1449,7 +1529,8 @@ function GameState(props) {
       var must = forced || toolongago;
       self.level.p1Pill = self.MaybeSpawnPill(must, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups);
       if (exists(self.level.p1Pill)) {
-        self.pillP1SpawnCountdown = self.pillSpawnCooldown;
+        // increased frequency after the first one.
+        self.pillP1SpawnCountdown = self.pillSpawnCooldown / 2;
         if (!forced) {
           self.unfairPillCount++;
         }
@@ -1466,7 +1547,8 @@ function GameState(props) {
       var must = forced || _toolongago;
       self.level.p2Pill = self.MaybeSpawnPill(must, self.level.p2Pill, factor, self.level.p2Powerups);
       if (exists(self.level.p2Pill)) {
-        self.pillP2SpawnCountdown = self.pillSpawnCooldown;
+        // increased frequency after the first one.
+        self.pillP2SpawnCountdown = self.pillSpawnCooldown / 2;
         if (!forced) {
           self.unfairPillCount--;
         }
@@ -2061,8 +2143,6 @@ function LevelFinChooseState() {
   var self = this;
   self.Init = function () {
     ResetInput();
-    self.timeout = 1000 * 10;
-    self.started = gGameTime;
 
     // might be empty if you already got them all!
     var p1Rewards = ChooseRewards(gP1Pills);
@@ -2072,14 +2152,19 @@ function LevelFinChooseState() {
     // of every level. it is only the order that might be different.
     // sure wish i could unit test this ha ha ha.
     Assert(p1Rewards.length === p2Rewards.length);
+    // the ui expects at most 2.
+    Assert(p1Rewards.length <= 2);
     var count = p1Rewards.length;
+    self.timeout = 1000 * (count === 1 ? 5 : 10);
+    self.started = gGameTime;
 
     // skip the whole sceen if all pills have been rewarded.
     self.goOn = count === 0;
     self.p1Specs = [];
     self.p2Specs = [];
     var sy = gHeight * 0.6 / count;
-    var s0 = gh(0.6) - sy / 2;
+    // ugly: handle y-centering the last choose from only 1 final pill.
+    var s0 = count === 1 ? gh(0.55) : gh(0.6) - sy / 2;
     for (var i = 0; i < count; ++i) {
       var cy = s0 + sy * i;
       var p1x = gw(ForP1Side(0.25, 0.75));
@@ -2131,11 +2216,21 @@ function LevelFinChooseState() {
     }
   };
   self.SaveIndices = function () {
+    Assert(self.p1Specs.length <= 2);
+    Assert(self.p2Specs.length <= 2);
     if (self.p1Specs.length > 0) {
-      gP1Pills.push(self.p1Specs[self.p1Highlight].pid);
+      var p1yes = self.p1Specs.splice(self.p1Highlight, 1)[0];
+      gP1Pills.deck.push(p1yes.pid);
+      if (self.p1Specs.length > 0) {
+        gP1Pills.remaining.push(self.p1Specs.shift().pid);
+      }
     }
     if (self.p2Specs.length > 0) {
-      gP2Pills.push(self.p2Specs[self.p2Highlight].pid);
+      var p2yes = self.p2Specs.splice(self.p2Highlight, 1)[0];
+      gP2Pills.deck.push(p2yes.pid);
+      if (self.p2Specs.length > 0) {
+        gP2Pills.remaining.push(self.p2Specs.shift().pid);
+      }
     }
   };
   self.ProcessOneInput = function () {
@@ -2147,26 +2242,18 @@ function LevelFinChooseState() {
     self.p2Highlight = self.ProcessTouch(gP2Target, self.p2Specs, self.p2Highlight);
   };
   self.ProcessButtons = function () {
-    if (gP1Keys.$.up || isGamepad1Up()) {
+    if (isP1UpKey(true) || isGamepad1Up()) {
       self.p1Highlight = Math.max(0, self.p1Highlight - 1);
-      gP1Keys.Reset();
-      gGamepad1Sticks.Reset();
     }
-    if (gP1Keys.$.down || isGamepad1Down()) {
+    if (isP1DownKey(true) || isGamepad1Down()) {
       self.p1Highlight = Math.min(self.p1Specs.length - 1, self.p1Highlight + 1);
-      gP1Keys.Reset();
-      gGamepad1Sticks.Reset();
     }
     if (!is1P()) {
-      if (gP2Keys.$.up || isGamepad2Up()) {
+      if (isP2UpKey(true) || isGamepad2Up()) {
         self.p2Highlight = Math.max(0, self.p2Highlight - 1);
-        gP2Keys.Reset();
-        gGamepad2Sticks.Reset();
       }
-      if (gP2Keys.$.down || isGamepad2Down()) {
+      if (isP2DownKey(true) || isGamepad2Down()) {
         self.p2Highlight = Math.min(self.p2Specs.length - 1, self.p2Highlight + 1);
-        gP2Keys.Reset();
-        gGamepad2Sticks.Reset();
       }
     }
     return undefined;
