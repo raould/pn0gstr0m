@@ -1117,7 +1117,7 @@ function GetReadyState() {
   self.Init = function () {
     ResetInput();
     gStateMuted = false;
-    var seconds = gP1Pills.length > 0 ? 5 : gDebug ? 1 : 3;
+    var seconds = gP1Pills.deck.length > 0 ? 5 : gDebug ? 1 : 3;
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.animations = {};
@@ -1160,22 +1160,22 @@ function GetReadyState() {
     });
   };
   self.DrawPills = function () {
-    var whscale = Math.max(0.4, T10(Math.max(gP1Pills.length, gP2Pills.length), gPillIDs.length));
+    var whscale = Math.max(0.4, T10(Math.max(gP1Pills.deck.length, gP2Pills.deck.length), gPillIDs.length));
     var y = gh(0.7);
     var maxWidth = 0;
     var maxHeight = 0;
-    gP1Pills.map(function (pid) {
+    gP1Pills.deck.map(function (pid) {
       maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
       maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
     });
-    gP2Pills.map(function (pid) {
+    gP2Pills.deck.map(function (pid) {
       maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
       maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
     });
     var ox = maxWidth * 3 * whscale;
     var labelY = y + sy1(10) + maxHeight * whscale;
-    self.DrawPillsSide(gP1Side, gP1Pills, whscale, ox, y, labelY);
-    self.DrawPillsSide(gP2Side, gP2Pills, whscale, ox, y, labelY);
+    self.DrawPillsSide(gP1Side, gP1Pills.deck, whscale, ox, y, labelY);
+    self.DrawPillsSide(gP2Side, gP2Pills.deck, whscale, ox, y, labelY);
   };
   self.DrawPillsSide = function (side, pills, whscale, ox, y, labelY) {
     var count = pills.length;
@@ -2063,7 +2063,7 @@ function LevelFinChooseState() {
   var self = this;
   self.Init = function () {
     ResetInput();
-    self.timeout = 1000 * 10;
+    self.timeout = 1000 * (gDebug ? 2 : 10);
     self.started = gGameTime;
 
     // might be empty if you already got them all!
@@ -2133,11 +2133,21 @@ function LevelFinChooseState() {
     }
   };
   self.SaveIndices = function () {
+    Assert(self.p1Specs.length <= 2);
+    Assert(self.p2Specs.length <= 2);
     if (self.p1Specs.length > 0) {
-      gP1Pills.push(self.p1Specs[self.p1Highlight].pid);
+      var p1yes = self.p1Specs.splice(self.p1Highlight, 1)[0];
+      gP1Pills.deck.push(p1yes.pid);
+      if (self.p1Specs.length > 0) {
+        gP1Pills.remaining.push(self.p1Specs.shift().pid);
+      }
     }
     if (self.p2Specs.length > 0) {
-      gP2Pills.push(self.p2Specs[self.p2Highlight].pid);
+      var p2yes = self.p2Specs.splice(self.p2Highlight, 1)[0];
+      gP2Pills.deck.push(p2yes.pid);
+      if (self.p2Specs.length > 0) {
+        gP2Pills.remaining.push(self.p2Specs.shift().pid);
+      }
     }
   };
   self.ProcessOneInput = function () {
