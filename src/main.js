@@ -2248,7 +2248,7 @@ function UpdateLocalStorage() {
 
         self.p1Specs = [];
         self.p2Specs = [];
-        const sy = (gHeight * 0.6) / count;
+        const sy = (gHeight * 0.45) / count;
         // ugly: handle y-centering the last choose from only 1 final pill.
         const s0 = (count === 1) ? gh(0.55) : gh(0.6) - sy/2;
         for (let i = 0; i < count; ++i) {
@@ -2380,7 +2380,7 @@ function UpdateLocalStorage() {
             gCx.fillStyle = RandomGreen();
             DrawText("CHOOSE YOUR PRIZE!", "center", gw(0.5), gh(0.2), gRegularFontSizePt);
             var timeStr = String(Math.ceil(Math.max(0, self.RemainingTime() / 1000)));
-            DrawText(timeStr, "center", gw(0.5), gh(0.6), gBigFontSizePt);
+            DrawText(timeStr, "center", gw(0.5), gh(0.4), gBigFontSizePt);
         });
     };
 
