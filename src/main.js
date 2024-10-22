@@ -233,10 +233,38 @@ var nokeys = { up: false, down: false };
 function noKeysState() { return {...nokeys}; }
 var gP1Keys = new WrapState({resetFn: noKeysState });
 var gP2Keys = new WrapState({resetFn: noKeysState });
-function isP1UpKey() { return is1P() ? (gP1Keys.$.up || gP2Keys.$.up) : gP1Keys.$.up; }
-function isP1DownKey() { return is1P() ? (gP1Keys.$.up || gP2Keys.$.down) : gP1Keys.$.down; }
-function isP2UpKey() { return is1P() ? false : gP2Keys.up; }
-function isP2DownKey() { return is1P() ? false : gP2Keys.down; }
+function isP1UpKey(reset=false) {
+    if (gP1Keys.$.up || gP2Keys.$.up) {
+        console.log("up");
+    }
+    var is = is1P() ? (gP1Keys.$.up || gP2Keys.$.up) : gP1Keys.$.up;
+    if (is && reset) {
+        gP1Keys.Reset();
+        if (is1P()) { gP2Keys.Reset(); }
+    }
+    return is;
+}
+function isP1DownKey(reset=false) {
+    if (gP1Keys.$.down || gP2Keys.$.down) {
+        console.log("down");
+    }
+    var is = is1P() ? (gP1Keys.$.down || gP2Keys.$.down) : gP1Keys.$.down;
+    if (is && reset) {
+        gP1Keys.Reset();
+        if (is1P()) { gP2Keys.Reset(); }
+    }
+    return is;
+}
+function isP2UpKey(reset=false) {
+    var is = is1P() ? false : gP2Keys.up;
+    if (is && reset) { gP2Keys.Reset(); }
+    return is;
+}
+function isP2DownKey(reset=false) {
+    var is = is1P() ? false : gP2Keys.down;
+    if (is && reset) { gP2Keys.Reset(); }
+    return is;
+}
 function isUpOrDownKeyPressed() {
     return gP1Keys.$.up || gP1Keys.$.down ||
         gP2Keys.$.up || gP2Keys.$.down;
@@ -257,22 +285,53 @@ function noButtonsState() { return {...nobuttons}; }
 var gGamepad1Buttons = new WrapState({resetFn: noButtonsState});
 var gGamepad2Buttons = new WrapState({resetFn: noButtonsState});
 
-function isGamepad1Up() {
-    const g1up = !!gGamepad1Buttons.$.up || !!gGamepad1Sticks.$.up;
-    const g2up = !!gGamepad2Buttons.$.up || !!gGamepad2Sticks.$.up;
-    return is1P() ? (g1up || g2up) : g1up;
+function isGamepad1Up(reset=false) {
+    var g1up = !!gGamepad1Buttons.$.up || !!gGamepad1Sticks.$.up;
+    var g2up = !!gGamepad2Buttons.$.up || !!gGamepad2Sticks.$.up;
+    var is = is1P() ? (g1up || g2up) : g1up;
+    if (is && reset) { 
+        gGamepad1Sticks.Reset();
+        gGamepad1Buttons.Reset()
+        if (is1P()) {
+            gGamepad2Sticks.Reset();
+            gGamepad2Buttons.Reset();
+        }
+    }
+    return is;
 }
-function isGamepad1Down() {
-    const g1down = !!gGamepad1Buttons.$.down || !!gGamepad1Sticks.$.down;
-    const g2down = !!gGamepad2Buttons.$.down || !!gGamepad2Sticks.$.down;
-    return is1P() ? (g1down || g2down) : g1down;
+function isGamepad1Down(reset=false) {
+    var g1down = !!gGamepad1Buttons.$.down || !!gGamepad1Sticks.$.down;
+    var g2down = !!gGamepad2Buttons.$.down || !!gGamepad2Sticks.$.down;
+    var is = is1P() ? (g1down || g2down) : g1down;
+    if (is && reset) { 
+        gGamepad1Sticks.Reset();
+        gGamepad1Buttons.Reset()
+        if (is1P()) {
+            gGamepad2Sticks.Reset();
+            gGamepad2Buttons.Reset();
+        }
+    }
+    return is;
 }
-function isGamepad2Up() { return !!gGamepad2Buttons.$.up || !!gGamepad2Sticks.$.up; }
-function isGamepad2Down() { return !!gGamepad2Buttons.$.down || !!gGamepad2Sticks.$.down; }
+function isGamepad2Up(reset=false) {
+    var is = !!gGamepad2Buttons.$.up || !!gGamepad2Sticks.$.up;
+    if (is && reset) {
+        gGamepad2Sticks.Reset();
+        gGamepad2Buttons.Reset();
+    }
+    return is;
+}
+function isGamepad2Down(reset=false) {
+    var is = !!gGamepad2Buttons.$.down || !!gGamepad2Sticks.$.down;
+    if (is && reset) {
+        gGamepad2Sticks.Reset();
+        gGamepad2Buttons.Reset();
+    }
+    return is;
+}
 
 function isGamepadActivatePressed() {
-    var is = !!gGamepad1Buttons.$.activate ||
-        !!gGamepad2Buttons.$.activate;
+    var is = !!gGamepad1Buttons.$.activate || !!gGamepad2Buttons.$.activate;
     return is;
 }
 
@@ -2260,41 +2319,18 @@ function UpdateLocalStorage() {
     };
 
     self.ProcessButtons = function() {
-        // todo: abstract this complexity, sooooo baaaaad.
-        if (isP1UpKey() || isGamepad1Up()) {
+        if (isP1UpKey(true) || isGamepad1Up()) {
             self.p1Highlight = Math.max(0, self.p1Highlight-1);
-            gP1Keys.Reset();
-            gGamepad1Buttons.Reset();
-            gGamepad1Sticks.Reset();
-            if (is1P()) {
-                gP2Keys.Reset();
-                gGamepad2Buttons.Reset();
-                gGamepad2Sticks.Reset();
-            }
         }
-        if (isP1DownKey() || isGamepad1Down()) {
+        if (isP1DownKey(true) || isGamepad1Down()) {
             self.p1Highlight = Math.min(self.p1Specs.length-1, self.p1Highlight+1);
-            gP1Keys.Reset();
-            gGamepad1Buttons.Reset();
-            gGamepad1Sticks.Reset();
-            if (is1P()) {
-                gP2Keys.Reset();
-                gGamepad2Buttons.Reset();
-                gGamepad2Sticks.Reset();
-            }
         }
         if (!is1P()) {
-            if (isP2UpKey() || isGamepad2Up()) {
+            if (isP2UpKey(true) || isGamepad2Up()) {
                 self.p2Highlight = Math.max(0, self.p2Highlight-1);
-                gP2Keys.Reset();
-                gGamepad2Buttons.Reset();
-                gGamepad2Sticks.Reset();
             }
-            if (isP2DownKey() || isGamepad2Down()) {
+            if (isP2DownKey(true) || isGamepad2Down()) {
                 self.p2Highlight = Math.min(self.p2Specs.length-1, self.p2Highlight+1);
-                gP2Keys.Reset();
-                gGamepad2Buttons.Reset();
-                gGamepad2Sticks.Reset();
             }
         }
         return undefined;
