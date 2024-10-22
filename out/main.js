@@ -32,7 +32,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1449,7 +1449,8 @@ function GameState(props) {
       var must = forced || toolongago;
       self.level.p1Pill = self.MaybeSpawnPill(must, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups);
       if (exists(self.level.p1Pill)) {
-        self.pillP1SpawnCountdown = self.pillSpawnCooldown;
+        // increased frequency after the first one.
+        self.pillP1SpawnCountdown = self.pillSpawnCooldown / 2;
         if (!forced) {
           self.unfairPillCount++;
         }
@@ -1466,7 +1467,8 @@ function GameState(props) {
       var must = forced || _toolongago;
       self.level.p2Pill = self.MaybeSpawnPill(must, self.level.p2Pill, factor, self.level.p2Powerups);
       if (exists(self.level.p2Pill)) {
-        self.pillP2SpawnCountdown = self.pillSpawnCooldown;
+        // increased frequency after the first one.
+        self.pillP2SpawnCountdown = self.pillSpawnCooldown / 2;
         if (!forced) {
           self.unfairPillCount--;
         }
