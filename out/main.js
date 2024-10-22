@@ -293,10 +293,14 @@ var gGamepad2Buttons = new WrapState({
   resetFn: noButtonsState
 });
 function isGamepad1Up() {
-  return !!gGamepad1Buttons.$.up || !!gGamepad1Sticks.$.up;
+  var g1up = !!gGamepad1Buttons.$.up || !!gGamepad1Sticks.$.up;
+  var g2up = !!gGamepad2Buttons.$.up || !!gGamepad2Sticks.$.up;
+  return is1P() ? g1up || g2up : g1up;
 }
 function isGamepad1Down() {
-  return !!gGamepad1Buttons.$.down || !!gGamepad1Sticks.$.down;
+  var g1down = !!gGamepad1Buttons.$.down || !!gGamepad1Sticks.$.down;
+  var g2down = !!gGamepad2Buttons.$.down || !!gGamepad2Sticks.$.down;
+  return is1P() ? g1down || g2down : g1down;
 }
 function isGamepad2Up() {
   return !!gGamepad2Buttons.$.up || !!gGamepad2Sticks.$.up;
@@ -2174,22 +2178,26 @@ function LevelFinChooseState() {
     self.p2Highlight = self.ProcessTouch(gP2Target, self.p2Specs, self.p2Highlight);
   };
   self.ProcessButtons = function () {
-    // todo: abstract this complexity.
+    // todo: abstract this complexity, sooooo baaaaad.
     if (isP1UpKey() || isGamepad1Up()) {
       self.p1Highlight = Math.max(0, self.p1Highlight - 1);
       gP1Keys.Reset();
+      gGamepad1Buttons.Reset();
       gGamepad1Sticks.Reset();
       if (is1P()) {
         gP2Keys.Reset();
+        gGamepad2Buttons.Reset();
         gGamepad2Sticks.Reset();
       }
     }
     if (isP1DownKey() || isGamepad1Down()) {
       self.p1Highlight = Math.min(self.p1Specs.length - 1, self.p1Highlight + 1);
       gP1Keys.Reset();
+      gGamepad1Buttons.Reset();
       gGamepad1Sticks.Reset();
       if (is1P()) {
         gP2Keys.Reset();
+        gGamepad2Buttons.Reset();
         gGamepad2Sticks.Reset();
       }
     }
@@ -2197,11 +2205,13 @@ function LevelFinChooseState() {
       if (isP2UpKey() || isGamepad2Up()) {
         self.p2Highlight = Math.max(0, self.p2Highlight - 1);
         gP2Keys.Reset();
+        gGamepad2Buttons.Reset();
         gGamepad2Sticks.Reset();
       }
       if (isP2DownKey() || isGamepad2Down()) {
         self.p2Highlight = Math.min(self.p2Specs.length - 1, self.p2Highlight + 1);
         gP2Keys.Reset();
+        gGamepad2Buttons.Reset();
         gGamepad2Sticks.Reset();
       }
     }
