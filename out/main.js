@@ -242,6 +242,18 @@ var gP1Keys = new WrapState({
 var gP2Keys = new WrapState({
   resetFn: noKeysState
 });
+function isP1UpKey() {
+  return is1P() ? gP1Keys.$.up || gP2Keys.$.up : gP1Keys.$.up;
+}
+function isP1DownKey() {
+  return is1P() ? gP1Keys.$.up || gP2Keys.$.down : gP1Keys.$.down;
+}
+function isP2UpKey() {
+  return is1P() ? false : gP2Keys.up;
+}
+function isP2DownKey() {
+  return is1P() ? false : gP2Keys.down;
+}
 function isUpOrDownKeyPressed() {
   return gP1Keys.$.up || gP1Keys.$.down || gP2Keys.$.up || gP2Keys.$.down;
 }
@@ -2162,23 +2174,32 @@ function LevelFinChooseState() {
     self.p2Highlight = self.ProcessTouch(gP2Target, self.p2Specs, self.p2Highlight);
   };
   self.ProcessButtons = function () {
-    if (gP1Keys.$.up || isGamepad1Up()) {
+    // todo: abstract this complexity.
+    if (isP1UpKey() || isGamepad1Up()) {
       self.p1Highlight = Math.max(0, self.p1Highlight - 1);
       gP1Keys.Reset();
       gGamepad1Sticks.Reset();
+      if (is1P()) {
+        gP2Keys.Reset();
+        gGamepad2Sticks.Reset();
+      }
     }
-    if (gP1Keys.$.down || isGamepad1Down()) {
+    if (isP1DownKey() || isGamepad1Down()) {
       self.p1Highlight = Math.min(self.p1Specs.length - 1, self.p1Highlight + 1);
       gP1Keys.Reset();
       gGamepad1Sticks.Reset();
+      if (is1P()) {
+        gP2Keys.Reset();
+        gGamepad2Sticks.Reset();
+      }
     }
     if (!is1P()) {
-      if (gP2Keys.$.up || isGamepad2Up()) {
+      if (isP2UpKey() || isGamepad2Up()) {
         self.p2Highlight = Math.max(0, self.p2Highlight - 1);
         gP2Keys.Reset();
         gGamepad2Sticks.Reset();
       }
-      if (gP2Keys.$.down || isGamepad2Down()) {
+      if (isP2DownKey() || isGamepad2Down()) {
         self.p2Highlight = Math.min(self.p2Specs.length - 1, self.p2Highlight + 1);
         gP2Keys.Reset();
         gGamepad2Sticks.Reset();
