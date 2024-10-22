@@ -1115,7 +1115,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        var seconds = gP1Pills.deck.length > 0 ? 5 : (gDebug ? 1 : 3);
+        var seconds = gDebug ? 2 : (gP1Pills.deck.length > 0 ? 5 : 3);
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
@@ -2146,8 +2146,6 @@ function UpdateLocalStorage() {
 
     self.Init = function() {
         ResetInput();
-        self.timeout = 1000 * (gDebug ? 2 : 10);
-        self.started = gGameTime;
 
         // might be empty if you already got them all!
         const p1Rewards = ChooseRewards(gP1Pills);
@@ -2157,7 +2155,12 @@ function UpdateLocalStorage() {
         // of every level. it is only the order that might be different.
         // sure wish i could unit test this ha ha ha.
         Assert(p1Rewards.length === p2Rewards.length);
+        // the ui expects at most 2.
+        Assert(p1Rewards.length <= 2);
+
         const count = p1Rewards.length;
+        self.timeout = 1000 * ((count === 1) ? 5 : 10);
+        self.started = gGameTime;
 
         // skip the whole sceen if all pills have been rewarded.
         self.goOn = count === 0;
@@ -2165,7 +2168,8 @@ function UpdateLocalStorage() {
         self.p1Specs = [];
         self.p2Specs = [];
         const sy = (gHeight * 0.6) / count;
-        const s0 = gh(0.6) - sy/2;
+        // ugly: handle y-centering the last choose from only 1 final pill.
+        const s0 = (count === 1) ? gh(0.55) : gh(0.6) - sy/2;
         for (let i = 0; i < count; ++i) {
             const cy = s0 + (sy*i);
             const p1x = gw(ForP1Side(0.25, 0.75));
