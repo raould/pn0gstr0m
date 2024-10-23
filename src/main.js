@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -2240,7 +2240,7 @@ function UpdateLocalStorage() {
         Assert(p1Rewards.length <= 2);
 
         const count = p1Rewards.length;
-        self.timeout = 1000 * ((count === 1) ? 5 : 10);
+        self.timeout = 1000 * ((count === 1) ? 5 : (gDebug ? 3 : 10));
         self.started = gGameTime;
 
         // skip the whole sceen if all pills have been rewarded.

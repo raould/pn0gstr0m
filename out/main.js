@@ -32,7 +32,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -2164,7 +2164,7 @@ function LevelFinChooseState() {
     // the ui expects at most 2.
     Assert(p1Rewards.length <= 2);
     var count = p1Rewards.length;
-    self.timeout = 1000 * (count === 1 ? 5 : 10);
+    self.timeout = 1000 * (count === 1 ? 5 : gDebug ? 3 : 10);
     self.started = gGameTime;
 
     // skip the whole sceen if all pills have been rewarded.

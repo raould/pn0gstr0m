@@ -164,7 +164,6 @@ function Powerups(props) {
     self.side = props.side;
     self.paddle = props.paddle;
     self.pillState = props.pillState;
-    self.powerupLocks = {};
   };
   self.MakeRandomPill = function (gameState) {
     var propsBase = self.NextPropsBase(gameState);
@@ -191,6 +190,7 @@ function Powerups(props) {
     // keep looping through the pills.
     var pid = self.pillState.deck.shift();
     self.pillState.deck.push(pid);
+    console.log(pid, self.pillState.deck);
     var newFn = gPillInfo[pid].maker;
     Assert(exists(newFn));
     Assert(typeof newFn == "function", "newFn()? ".concat(self.pillState, " ").concat(_typeof(newFn)));
