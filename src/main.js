@@ -291,7 +291,7 @@ function isGamepad1Up(reset=false) {
     var is = is1P() ? (g1up || g2up) : g1up;
     if (is && reset) { 
         gGamepad1Sticks.Reset();
-        gGamepad1Buttons.Reset()
+        gGamepad1Buttons.Reset();
         if (is1P()) {
             gGamepad2Sticks.Reset();
             gGamepad2Buttons.Reset();
@@ -305,7 +305,7 @@ function isGamepad1Down(reset=false) {
     var is = is1P() ? (g1down || g2down) : g1down;
     if (is && reset) { 
         gGamepad1Sticks.Reset();
-        gGamepad1Buttons.Reset()
+        gGamepad1Buttons.Reset();
         if (is1P()) {
             gGamepad2Sticks.Reset();
             gGamepad2Buttons.Reset();
@@ -990,7 +990,7 @@ function UpdateLocalStorage() {
         ResetInput();
         ResetP1Side();
         ResetScores();
-        ResetLevelsPills();
+        ResetLevelsPillStates();
         SetGameMode(gGameMode);
 
         if (!kAppMode) {
@@ -1187,7 +1187,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        var seconds = gDebug ? 2 : (gP1Pills.deck.length > 0 ? 5 : 3);
+        var seconds = gDebug ? 2 : (gP1PillState.deck.length > 0 ? 5 : 3);
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
@@ -1234,25 +1234,25 @@ function UpdateLocalStorage() {
         var whscale = Math.max(
             0.4,
             T10(
-                Math.max(gP1Pills.deck.length, gP2Pills.deck.length),
+                Math.max(gP1PillState.deck.length, gP2PillState.deck.length),
                 gPillIDs.length
             )
         );
         var y = gh(0.7);
         let maxWidth = 0;
         let maxHeight = 0;
-        gP1Pills.deck.map(pid => {
+        gP1PillState.deck.map(pid => {
             maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
             maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
         });
-        gP2Pills.deck.map(pid => {
+        gP2PillState.deck.map(pid => {
             maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
             maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
         });
         const ox = maxWidth * 3 * whscale;
         const labelY = y + sy1(10) + (maxHeight * whscale);
-        self.DrawPillsSide(gP1Side, gP1Pills.deck, whscale, ox, y, labelY);
-        self.DrawPillsSide(gP2Side, gP2Pills.deck, whscale, ox, y, labelY);
+        self.DrawPillsSide(gP1Side, gP1PillState.deck, whscale, ox, y, labelY);
+        self.DrawPillsSide(gP2Side, gP2PillState.deck, whscale, ox, y, labelY);
     };
 
     self.DrawPillsSide = function(side, pills, whscale, ox, y, labelY) {
@@ -2229,8 +2229,8 @@ function UpdateLocalStorage() {
         ResetInput();
 
         // might be empty if you already got them all!
-        const p1Rewards = ChooseRewards(gP1Pills);
-        const p2Rewards = ChooseRewards(gP2Pills);
+        const p1Rewards = ChooseRewards(gP1PillState);
+        const p2Rewards = ChooseRewards(gP2PillState);
         // theoretically the # of rewards should match because
         // all paddles are forced to get 1 reward at the end
         // of every level. it is only the order that might be different.
@@ -2240,7 +2240,7 @@ function UpdateLocalStorage() {
         Assert(p1Rewards.length <= 2);
 
         const count = p1Rewards.length;
-        self.timeout = 1000 * ((count === 1) ? 5 : 10);
+        self.timeout = 1000 * ((count === 1) ? 5 : (gDebug ? 3 : 10));
         self.started = gGameTime;
 
         // skip the whole sceen if all pills have been rewarded.
@@ -2306,16 +2306,16 @@ function UpdateLocalStorage() {
         Assert(self.p2Specs.length <= 2);
         if (self.p1Specs.length > 0) {
             var p1yes = self.p1Specs.splice(self.p1Highlight, 1)[0];
-            gP1Pills.deck.push(p1yes.pid);
+            gP1PillState.deck.push(p1yes.pid);
             if (self.p1Specs.length > 0) {
-                gP1Pills.remaining.push(self.p1Specs.shift().pid);
+                gP1PillState.remaining.push(self.p1Specs.shift().pid);
             }
         }
         if (self.p2Specs.length > 0) {
             var p2yes = self.p2Specs.splice(self.p2Highlight, 1)[0];
-            gP2Pills.deck.push(p2yes.pid);
+            gP2PillState.deck.push(p2yes.pid);
             if (self.p2Specs.length > 0) {
-                gP2Pills.remaining.push(self.p2Specs.shift().pid);
+                gP2PillState.remaining.push(self.p2Specs.shift().pid);
             }
         }
     };
@@ -2595,7 +2595,7 @@ function UpdateLocalStorage() {
             );
 
             var msg = `FINAL SCORE: ${gP1Score.game}`;
-            DrawText( msg, "center", gw(0.5), gh(0.5), gBigFontSizePt );
+            DrawText( msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt );
 
             if (self.isNewHighScore) {
                 gCx.fillStyle = ColorCycle();

@@ -6,15 +6,25 @@
 // yes this is really hard to playtest.
 
 // no, i am not proud of all the globals.
-var gP1Pills;
-var gP2Pills;
-function ResetLevelsPills() {
-    gP1Pills = { deck: [], remaining: [...gPillIDs] };
-    gP2Pills = { deck: [], remaining: [...gPillIDs] };
+var gP1PillState;
+var gP2PillState;
+function ResetLevelsPillStates() {
+    gP1PillState = { deck: [], remaining: [...gPillIDs] };
+    gP2PillState = { deck: [], remaining: [...gPillIDs] };
+    /* just for testing:
+    gP1PillState = { deck: gPillIDs.slice(0,2), remaining: gPillIDs.slice(2) };
+    gP2PillState = { deck: gPillIDs.slice(0,2), remaining: gPillIDs.slice(2) };
+    */
 }
-ResetLevelsPills();
+ResetLevelsPillStates();
 function PillIDsToMakers(pids) {
     return pids.map(pid => gPillInfo[pid].maker);
+}
+function MakeAllPillState() {
+    return { deck: [...gPillIDs], remaining: [] };
+}
+function MakeNoPillState() {
+    return { deck: [], remaining: [] };
 }
 
 function MakeAttract(paddleP1, paddleP2) {
@@ -26,7 +36,8 @@ function MakeAttract(paddleP1, paddleP2) {
         maxVX: sxi(14),
         isP1Player: false,
         isP2Player: false,
-        pills: [],
+        p1PillState: MakeNoPillState(),
+        p2PillState: MakeNoPillState(),
         paddleP1: paddleP1,
         paddleP2: paddleP2,
     });
@@ -40,8 +51,8 @@ function MakeZen(paddleP1, paddleP2) {
         maxVX: sxi(ForGameMode({zen: 18, z2p: 22})),
         isP1Player: true,
         isP2Player: !is1P(),
-        p1Pills: PillIDsToMakers([...gPillIDs]),
-        p2Pills: PillIDsToMakers([...gPillIDs]),
+        p1PillState: MakeAllPillState(),
+        p2PillState: MakeAllPillState(),
         paddleP1: paddleP1,
         paddleP2: paddleP2,
     });
@@ -55,8 +66,8 @@ function MakeZ2P(paddleP1, paddleP2) {
         maxVX: sxi(ForGameMode({zen: 18, z2p: 22})),
         isP1Player: true,
         isP2Player: !is1P(),
-        p1Pills: PillIDsToMakers([...gPillIDs]),
-        p2Pills: PillIDsToMakers([...gPillIDs]),
+        p1PillState: MakeAllPillState(),
+        p2PillState: MakeAllPillState(),
         paddleP1: paddleP1,
         paddleP2: paddleP2,
     });
@@ -77,8 +88,8 @@ function MakeLevel(index, paddleP1, paddleP2) {
         splitsCount,
         isP1Player: true,
         isP2Player: !is1P(),
-        p1Pills: PillIDsToMakers(gP1Pills.deck),
-        p2Pills: PillIDsToMakers(gP2Pills.deck),
+        p1PillState: gP1PillState,
+        p2PillState: gP2PillState,
         paddleP1: paddleP1,
         paddleP2: paddleP2,
     });
@@ -87,20 +98,18 @@ function MakeLevel(index, paddleP1, paddleP2) {
 
 function MakeSplitsCount(index) {
     Assert(index !== 0, "index is 1-based");
+    // todo: so ugly bad that the index overlaps with the game mode.
     if (index === kAttractLevelIndex) {
 	return 0;
     }
     else if (index === kZenLevelIndex) {
         return undefined;
     }
-    else if (index === 1) {
-	return 100;
-    }
     else {
-	// level 2 is 200.
 	// note: this is just a big bad random swag.
-	var extra = Math.max(0, index-2) * 50;
-	return 200 + extra;
+        // at least need enough splits to let the powerups come out.
+	var extra = index * 250;
+	return 400 + extra;
     }
 }
 

@@ -1,11 +1,5 @@
 "use strict";
 
-function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
-function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
@@ -159,6 +153,9 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
 });
 Assert(gPillInfo);
 
+// cycle through the powerups in order
+// so we have some control over when they
+// are presented in the course of the game.
 /*class*/
 function Powerups(props) {
   var self = this;
@@ -166,19 +163,14 @@ function Powerups(props) {
     self.isPlayer = props.isPlayer;
     self.side = props.side;
     self.paddle = props.paddle;
-    self.specs = props.specs;
-    // cycle through the powerups in order
-    // so we have some control over when they
-    // are presented in the course of the game.
-    self.powerupDeck = [];
-    self.powerupLocks = {};
+    self.pillState = props.pillState;
   };
   self.MakeRandomPill = function (gameState) {
     var propsBase = self.NextPropsBase(gameState);
     if (exists(propsBase)) {
-      // fyi allow pills to have different lifespans, tho currently they are all the same.
+      // todo: pills can have different lifespans, but currently they are all the same.
       Assert(exists(propsBase.lifespan), "lifespan");
-      var y = gR.RandomChoice(gh(0.1), gh(0.9) - propsBase.height);
+      var y = gR.RandomChoice(gh(0.1), gh(0.9) - propsBase.height); // top or bottom spawn.
       var props = _objectSpread(_objectSpread({}, propsBase), {}, {
         name: propsBase.name,
         x: ForSide(self.side, gw(0.35), gw(0.65)),
@@ -191,16 +183,22 @@ function Powerups(props) {
     return undefined;
   };
   self.NextPropsBase = function (gameState) {
-    self.UpdateDeck();
-    var newFn = Peek(self.powerupDeck);
-    if (isU(newFn)) {
+    if (self.pillState.deck.length === 0) {
       return undefined;
     }
-    Assert(typeof newFn == "function", "newFn()? ".concat(self.powerupDeck, " ").concat(_typeof(newFn)));
-    var s = newFn(self);
-    Assert(exists(s), "newFn?");
 
-    // the order of these conditionals does matter.
+    // keep looping through the pills. also keeps
+    // the state across levels so you don't have to
+    // run through the exact same progression every time.
+    var pid = self.pillState.deck.shift();
+    self.pillState.deck.push(pid);
+    var newFn = gPillInfo[pid].maker;
+    Assert(exists(newFn));
+    Assert(typeof newFn == "function", "newFn()? ".concat(self.pillState, " ").concat(_typeof(newFn)));
+    var s = newFn(self);
+    Assert(exists(s), "wtf newFn?");
+
+    // the order of these conditionals does matter!
     if (self.isPlayerOnly(s)) {
       s = undefined;
     } else if (self.isApplicable(s, gameState)) {
@@ -208,15 +206,7 @@ function Powerups(props) {
     } else if (self.isSkippable(s)) {
       s = undefined;
     }
-    self.powerupDeck.pop();
     return s;
-  };
-  self.UpdateDeck = function () {
-    // used them all, restart deck.
-    if (self.powerupDeck.length <= 0 && self.specs.length > 0) {
-      self.powerupDeck = _toConsumableArray(self.specs).reverse();
-      Assert(self.powerupDeck.length > 0, "invalid powerup deck length");
-    }
   };
   self.isPlayerOnly = function (spec) {
     // e.g. radar only really makes sense for the player.

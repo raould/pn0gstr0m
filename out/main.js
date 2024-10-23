@@ -1022,7 +1022,7 @@ function TitleState() {
     ResetInput();
     ResetP1Side();
     ResetScores();
-    ResetLevelsPills();
+    ResetLevelsPillStates();
     SetGameMode(gGameMode);
     if (!kAppMode) {
       // reset to 1 player every time for clarity.
@@ -1197,7 +1197,7 @@ function GetReadyState() {
   self.Init = function () {
     ResetInput();
     gStateMuted = false;
-    var seconds = gDebug ? 2 : gP1Pills.deck.length > 0 ? 5 : 3;
+    var seconds = gDebug ? 2 : gP1PillState.deck.length > 0 ? 5 : 3;
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.animations = {};
@@ -1240,22 +1240,22 @@ function GetReadyState() {
     });
   };
   self.DrawPills = function () {
-    var whscale = Math.max(0.4, T10(Math.max(gP1Pills.deck.length, gP2Pills.deck.length), gPillIDs.length));
+    var whscale = Math.max(0.4, T10(Math.max(gP1PillState.deck.length, gP2PillState.deck.length), gPillIDs.length));
     var y = gh(0.7);
     var maxWidth = 0;
     var maxHeight = 0;
-    gP1Pills.deck.map(function (pid) {
+    gP1PillState.deck.map(function (pid) {
       maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
       maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
     });
-    gP2Pills.deck.map(function (pid) {
+    gP2PillState.deck.map(function (pid) {
       maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
       maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
     });
     var ox = maxWidth * 3 * whscale;
     var labelY = y + sy1(10) + maxHeight * whscale;
-    self.DrawPillsSide(gP1Side, gP1Pills.deck, whscale, ox, y, labelY);
-    self.DrawPillsSide(gP2Side, gP2Pills.deck, whscale, ox, y, labelY);
+    self.DrawPillsSide(gP1Side, gP1PillState.deck, whscale, ox, y, labelY);
+    self.DrawPillsSide(gP2Side, gP2PillState.deck, whscale, ox, y, labelY);
   };
   self.DrawPillsSide = function (side, pills, whscale, ox, y, labelY) {
     var count = pills.length;
@@ -2154,8 +2154,8 @@ function LevelFinChooseState() {
     ResetInput();
 
     // might be empty if you already got them all!
-    var p1Rewards = ChooseRewards(gP1Pills);
-    var p2Rewards = ChooseRewards(gP2Pills);
+    var p1Rewards = ChooseRewards(gP1PillState);
+    var p2Rewards = ChooseRewards(gP2PillState);
     // theoretically the # of rewards should match because
     // all paddles are forced to get 1 reward at the end
     // of every level. it is only the order that might be different.
@@ -2164,7 +2164,7 @@ function LevelFinChooseState() {
     // the ui expects at most 2.
     Assert(p1Rewards.length <= 2);
     var count = p1Rewards.length;
-    self.timeout = 1000 * (count === 1 ? 5 : 10);
+    self.timeout = 1000 * (count === 1 ? 5 : gDebug ? 3 : 10);
     self.started = gGameTime;
 
     // skip the whole sceen if all pills have been rewarded.
@@ -2229,16 +2229,16 @@ function LevelFinChooseState() {
     Assert(self.p2Specs.length <= 2);
     if (self.p1Specs.length > 0) {
       var p1yes = self.p1Specs.splice(self.p1Highlight, 1)[0];
-      gP1Pills.deck.push(p1yes.pid);
+      gP1PillState.deck.push(p1yes.pid);
       if (self.p1Specs.length > 0) {
-        gP1Pills.remaining.push(self.p1Specs.shift().pid);
+        gP1PillState.remaining.push(self.p1Specs.shift().pid);
       }
     }
     if (self.p2Specs.length > 0) {
       var p2yes = self.p2Specs.splice(self.p2Highlight, 1)[0];
-      gP2Pills.deck.push(p2yes.pid);
+      gP2PillState.deck.push(p2yes.pid);
       if (self.p2Specs.length > 0) {
-        gP2Pills.remaining.push(self.p2Specs.shift().pid);
+        gP2PillState.remaining.push(self.p2Specs.shift().pid);
       }
     }
   };
@@ -2492,7 +2492,7 @@ function GameOverSummaryState() {
       DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       DrawText("P2 GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       var msg = "FINAL SCORE: ".concat(gP1Score.game);
-      DrawText(msg, "center", gw(0.5), gh(0.5), gBigFontSizePt);
+      DrawText(msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt);
       if (self.isNewHighScore) {
         gCx.fillStyle = ColorCycle();
         DrawText("NEW HIGH: ".concat(self.maxScore), "center", gw(0.5), gh(0.65), gSmallFontSizePt);
