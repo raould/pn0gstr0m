@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = true;
+var gDebug = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -2595,7 +2595,7 @@ function UpdateLocalStorage() {
             );
 
             var msg = `FINAL SCORE: ${gP1Score.game}`;
-            DrawText( msg, "center", gw(0.5), gh(0.5), gBigFontSizePt );
+            DrawText( msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt );
 
             if (self.isNewHighScore) {
                 gCx.fillStyle = ColorCycle();

@@ -32,7 +32,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = true;
+var gDebug = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -2492,7 +2492,7 @@ function GameOverSummaryState() {
       DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       DrawText("P2 GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       var msg = "FINAL SCORE: ".concat(gP1Score.game);
-      DrawText(msg, "center", gw(0.5), gh(0.5), gBigFontSizePt);
+      DrawText(msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt);
       if (self.isNewHighScore) {
         gCx.fillStyle = ColorCycle();
         DrawText("NEW HIGH: ".concat(self.maxScore), "center", gw(0.5), gh(0.65), gSmallFontSizePt);
