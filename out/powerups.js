@@ -187,10 +187,11 @@ function Powerups(props) {
       return undefined;
     }
 
-    // keep looping through the pills.
+    // keep looping through the pills. also keeps
+    // the state across levels so you don't have to
+    // run through the exact same progression every time.
     var pid = self.pillState.deck.shift();
     self.pillState.deck.push(pid);
-    console.log(pid, self.pillState.deck);
     var newFn = gPillInfo[pid].maker;
     Assert(exists(newFn));
     Assert(typeof newFn == "function", "newFn()? ".concat(self.pillState, " ").concat(_typeof(newFn)));
