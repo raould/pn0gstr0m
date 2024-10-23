@@ -75,7 +75,7 @@ function SafeDiv(num, denom) {
 }
 
 // not the best name if you ask me (now).
-function Peek(a) {
+function PeekLast(a) {
     if (Array.isArray(a) && a.length > 0) {
         return a[a.length-1];
     }
