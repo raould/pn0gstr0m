@@ -123,6 +123,9 @@ var gPillInfo = {
 };
 Assert(gPillInfo);
 
+// cycle through the powerups in order
+// so we have some control over when they
+// are presented in the course of the game.
 /*class*/ function Powerups( props ) {
 
     var self = this;
@@ -131,20 +134,15 @@ Assert(gPillInfo);
         self.isPlayer = props.isPlayer;
         self.side = props.side;
         self.paddle = props.paddle;
-        self.specs = props.specs;
-        // cycle through the powerups in order
-        // so we have some control over when they
-        // are presented in the course of the game.
-        self.powerupDeck = [];
-        self.powerupLocks = {};
+        self.pillState = props.pillState;
     };
 
     self.MakeRandomPill = function(gameState) {
         var propsBase = self.NextPropsBase(gameState);
         if (exists(propsBase)) {
-            // fyi allow pills to have different lifespans, tho currently they are all the same.
+            // todo: pills can have different lifespans, but currently they are all the same.
             Assert(exists(propsBase.lifespan), "lifespan");
-            var y = gR.RandomChoice(gh(0.1), gh(0.9)-propsBase.height);
+            var y = gR.RandomChoice(gh(0.1), gh(0.9)-propsBase.height); // top or bottom spawn.
             var props = {
                 ...propsBase,
                 name: propsBase.name,
@@ -159,18 +157,23 @@ Assert(gPillInfo);
     };
 
     self.NextPropsBase = function(gameState) {
-        self.UpdateDeck();
-
-        var newFn = Peek(self.powerupDeck);
-        if (isU(newFn)) {
+        if (self.pillState.deck.length === 0) {
             return undefined;
         }
 
-        Assert(typeof newFn == "function", `newFn()? ${self.powerupDeck} ${typeof newFn}`);
-        var s = newFn(self);
-        Assert(exists(s), "newFn?");
+        // keep looping through the pills. also keeps
+        // the state across levels so you don't have to
+        // run through the exact same progression every time.
+        var pid = self.pillState.deck.shift();
+        self.pillState.deck.push(pid);
 
-        // the order of these conditionals does matter.
+        var newFn = gPillInfo[pid].maker;
+        Assert(exists(newFn));
+        Assert(typeof newFn == "function", `newFn()? ${self.pillState} ${typeof newFn}`);
+        var s = newFn(self);
+        Assert(exists(s), "wtf newFn?");
+
+        // the order of these conditionals does matter!
         if (self.isPlayerOnly(s)) {
             s = undefined;
         }
@@ -180,17 +183,7 @@ Assert(gPillInfo);
         else if (self.isSkippable(s)) {
             s = undefined;
         }
-
-        self.powerupDeck.pop();
         return s;
-    };
-
-    self.UpdateDeck = function() {
-        // used them all, restart deck.
-        if (self.powerupDeck.length <= 0 && self.specs.length > 0) {
-            self.powerupDeck = [...self.specs].reverse();
-            Assert(self.powerupDeck.length > 0, "invalid powerup deck length");
-        }
     };
 
     self.isPlayerOnly = function( spec ) {

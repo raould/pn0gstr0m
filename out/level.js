@@ -39,20 +39,18 @@ function Level(props) {
     self.paddleP2 = props.paddleP2;
 
     // powerup code is split very nastily across many files.
-    self.p1Pills = props.p1Pills;
-    self.p2Pills = props.p2Pills;
     self.p1Powerups = new Powerups({
       isPlayer: props.isP1Player,
       paddle: self.paddleP1,
       side: ForSide(gP1Side, "left", "right"),
-      specs: self.p1Pills
+      pillState: props.p1PillState
     });
     self.p1Pill = undefined;
     self.p2Powerups = new Powerups({
       isPlayer: props.isP2Player,
       paddle: self.paddleP2,
       side: ForSide(gP1Side, "right", "left"),
-      specs: self.p2Pills
+      pillState: props.p2PillState
     });
     self.p2Pill = undefined;
   };
