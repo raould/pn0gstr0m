@@ -33,6 +33,7 @@ const kEnglishStep = 0.01;
 
         self.splitsMax = props.splitsCount; // undefined means unlimited.
         self.splitsRemaining = self.splitsMax;
+        self.midGameInflection = self.splitsMax / 4;
         self.isSpawning = props.isSpawning;
 
         // todo: maybe GameState shouldn't own the paddles.
@@ -88,7 +89,7 @@ const kEnglishStep = 0.01;
             );
 
 	    // heuristics to increase english, all fairly arbitrary hacky values.
-	    var boostFactor = (1 - (self.EnergyFactor() ?? 1));
+	    var boostFactor = T10(self.splitsRemaining, self.midGameInflection);
 	    // increase over time, more so for human players.
 	    self.englishFactorPlayer += (dt / kTimeStep) * kEnglishStep * boostFactor;
 
@@ -104,7 +105,7 @@ const kEnglishStep = 0.01;
     self.IsMidGame = function() {
         var isMidGame = true;
         if (exists(self.splitsRemaining)) {
-            isMidGame = self.splitsRemaining > (self.splitsMax/4);
+            isMidGame = self.splitsRemaining > self.midGameInflection;
         }
         return isMidGame;
     };

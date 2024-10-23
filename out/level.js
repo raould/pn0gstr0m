@@ -32,6 +32,7 @@ function Level(props) {
     self.englishFactorCPU = 0.5;
     self.splitsMax = props.splitsCount; // undefined means unlimited.
     self.splitsRemaining = self.splitsMax;
+    self.midGameInflection = self.splitsMax / 4;
     self.isSpawning = props.isSpawning;
 
     // todo: maybe GameState shouldn't own the paddles.
@@ -75,14 +76,13 @@ function Level(props) {
   self.Step = function (dt) {
     // boost things at level end to prevent getting stuck on the level for ever.
     if (!self.IsMidGame() && exists(self.speedupFactor)) {
-      var _self$EnergyFactor;
       Assert(gGameMode !== kGameModeZen);
 
       // allow future spawned pucks to go faster, up to a hard limit.
       self.maxVX = MinSigned(self.maxVX + self.speedupFactor * dt / kTimeStep, kMaxVX);
 
       // heuristics to increase english, all fairly arbitrary hacky values.
-      var boostFactor = 1 - ((_self$EnergyFactor = self.EnergyFactor()) != null ? _self$EnergyFactor : 1);
+      var boostFactor = T10(self.splitsRemaining, self.midGameInflection);
       // increase over time, more so for human players.
       self.englishFactorPlayer += dt / kTimeStep * kEnglishStep * boostFactor;
 
@@ -96,7 +96,7 @@ function Level(props) {
   self.IsMidGame = function () {
     var isMidGame = true;
     if (exists(self.splitsRemaining)) {
-      isMidGame = self.splitsRemaining > self.splitsMax / 4;
+      isMidGame = self.splitsRemaining > self.midGameInflection;
     }
     return isMidGame;
   };
