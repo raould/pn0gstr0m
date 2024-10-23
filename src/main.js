@@ -1694,7 +1694,7 @@ function UpdateLocalStorage() {
         if (self.pauseButtonEnabled && isAnyPointerDown()) {
             var pxyr = { x: gPauseCenterX,
                          y: gPauseCenterY,
-                         r: gPauseRadius*1.5 };
+                         r: gPauseRadius * 2.5 };
             // match: DrawPauseButton();
             var p1p = isPointInCircle(gP1Target.position, pxyr);
             var p2p = isPointInCircle(gP2Target.position, pxyr);
