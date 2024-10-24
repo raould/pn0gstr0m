@@ -83,12 +83,15 @@ function Level(props) {
 
       // heuristics to increase english, all fairly arbitrary hacky values.
       var boostFactor = T10(self.splitsRemaining, self.midGameInflection);
+      var bfn = Math.pow(boostFactor, 5);
       // increase over time, more so for human players.
-      self.englishFactorPlayer += dt / kTimeStep * kEnglishStep * boostFactor;
+      self.englishFactorPlayer += dt / kTimeStep * kEnglishStep * bfn;
+      logOnChange("player", F(boostFactor), F(bfn), F(self.englishFactorPlayer));
 
       // cpu doesn't get as much english because if they are the
       // first one to hit a puck with a lot of english it looks like cheating.
       self.englishFactorCPU += dt / kTimeStep * kEnglishStep;
+      logOnChange("cpu", 0, 0, F(self.englishFactorCPU));
       self.paddleP1.englishFactor = self.paddleP1.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
       self.paddleP2.englishFactor = self.paddleP2.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
     }

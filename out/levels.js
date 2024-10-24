@@ -126,6 +126,7 @@ function MakeLevel(index, paddleP1, paddleP2) {
   return level;
 }
 function MakeSplitsCount(index) {
+  return 200;
   Assert(index !== 0, "index is 1-based");
   // todo: so ugly bad that the index overlaps with the game mode.
   if (index === kAttractLevelIndex) {

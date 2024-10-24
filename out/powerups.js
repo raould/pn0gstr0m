@@ -561,10 +561,10 @@ function MakeDefendProps(maker) {
       // zen is more crazy so upping the hp and thus also scaling drawing so they aren't too wide.
       var pc = T01(gPucks.A.length, kPuckPoolSize);
       var hp = ForGameMode({
-        regular: 15,
-        hard: 20,
+        regular: 50,
+        hard: 70,
         zen: 50 + pc * 100,
-        z2p: 20
+        z2p: 50
       });
       console.log("defend pc=".concat(pc, " hp=").concat(F(hp)));
       var drawScale = ForGameMode({
