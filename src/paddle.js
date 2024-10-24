@@ -81,7 +81,7 @@ function Paddle(props) {
 
         // ugh, this gets modified & used elsewhere. match: level, puck.
         // todo: test this.
-        self.englishFactor = ForGameMode({ regular: 1, zen: 0.1 }); 
+        self.englishFactor = ForGameMode({ regular: 1, zen: 0 }); 
     };
 
     self.ForEachPaddle = function(fn) {

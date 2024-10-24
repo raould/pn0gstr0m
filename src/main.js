@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1633,7 +1633,7 @@ function UpdateLocalStorage() {
         var p = gPuckPool.Alloc();
         if (exists(p)) {
             p.PlacementInit({ x: gw(gR.RandomRange(1/8, 7/8)),
-                              y: gh(gR.RandomRange(1/8, 7/8)),
+                              y: gh(gR.RandomRange(3.5/8, 4/8)),
                               vx: gR.RandomRange(0.2, 0.3) * self.maxVX,
                               vy: gR.RandomCentered(1, 0.5),
                               ur: true });

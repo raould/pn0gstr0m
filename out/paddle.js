@@ -87,7 +87,7 @@ function Paddle(props) {
     // todo: test this.
     self.englishFactor = ForGameMode({
       regular: 1,
-      zen: 0.1
+      zen: 0
     });
   };
   self.ForEachPaddle = function (fn) {

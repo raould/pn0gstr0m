@@ -270,7 +270,7 @@ function Puck() {
 	// (but see also: SplitPuck()'s algorithm for culling.)
         // note that englishFactor increases as level ends.
         var dy = self.midY - paddle.GetMidY();
-        var mody = gR.RandomFloat(0.02) * (Math.abs(dy)*0.3) * paddle.englishFactor;
+        var mody = gR.RandomFloat(0.02) * (Math.abs(dy)*0.2) * paddle.englishFactor;
 
         // try to avoid getting boringly stuck at top or bottom, especially in zen.
         // but, don't want to utterly lose 'streaming'.

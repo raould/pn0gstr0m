@@ -6,7 +6,7 @@
  */
 
 // see also: english in puck.js
-var kEnglishStep = 0.01;
+var kEnglishStep = 0.05;
 
 /*class*/
 function Level(props) {
@@ -32,7 +32,6 @@ function Level(props) {
     self.englishFactorCPU = 0.5;
     self.splitsMax = props.splitsCount; // undefined means unlimited.
     self.splitsRemaining = self.splitsMax;
-    self.midGameInflection = self.splitsMax / 4;
     self.isSpawning = props.isSpawning;
 
     // todo: maybe GameState shouldn't own the paddles.
@@ -75,31 +74,38 @@ function Level(props) {
   };
   self.Step = function (dt) {
     // boost things at level end to prevent getting stuck on the level for ever.
-    if (!self.IsMidGame() && exists(self.speedupFactor)) {
+    if (!self.IsHalfGame() && exists(self.speedupFactor)) {
       Assert(gGameMode !== kGameModeZen);
 
       // allow future spawned pucks to go faster, up to a hard limit.
       self.maxVX = MinSigned(self.maxVX + self.speedupFactor * dt / kTimeStep, kMaxVX);
 
       // heuristics to increase english, all fairly arbitrary hacky values.
-      var boostFactor = T10(self.splitsRemaining, self.midGameInflection);
-      var bfn = Math.pow(boostFactor, 5);
-      // increase over time, more so for human players.
-      self.englishFactorPlayer += dt / kTimeStep * kEnglishStep * bfn;
-      logOnChange("player", F(boostFactor), F(bfn), F(self.englishFactorPlayer));
+      var boostFactor = Clip01(1 - Math.pow(self.EnergyFactor(), 3));
+      // also increase over time, more so for human players.
+      self.englishFactorPlayer += dt / kTimeStep * kEnglishStep * boostFactor;
+      logOnChange("player", F(boostFactor), F(self.englishFactorPlayer));
 
       // cpu doesn't get as much english because if they are the
       // first one to hit a puck with a lot of english it looks like cheating.
       self.englishFactorCPU += dt / kTimeStep * kEnglishStep;
       logOnChange("cpu", 0, 0, F(self.englishFactorCPU));
+
+      // store the new values on the paddles, the pucks read from them.
       self.paddleP1.englishFactor = self.paddleP1.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
       self.paddleP2.englishFactor = self.paddleP2.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
     }
   };
+  self.IsHalfGame = function () {
+    return self.IsNGame(self.splitsMax * 0.5);
+  };
   self.IsMidGame = function () {
+    return self.IsNGame(self.splitsMax * 0.7);
+  };
+  self.IsNGame = function (n) {
     var isMidGame = true;
     if (exists(self.splitsRemaining)) {
-      isMidGame = self.splitsRemaining > self.midGameInflection;
+      isMidGame = self.splitsRemaining > n;
     }
     return isMidGame;
   };

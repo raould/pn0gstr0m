@@ -49,6 +49,7 @@ function MakeZen(paddleP1, paddleP2) {
         isSpawning: true, // but no limit on how many.
 	vx0: sxi(2.5),
         maxVX: sxi(ForGameMode({zen: 18, z2p: 22})),
+        speedupFactor: undefined, // no english progression.
         isP1Player: true,
         isP2Player: !is1P(),
         p1PillState: MakeAllPillState(),
@@ -64,6 +65,7 @@ function MakeZ2P(paddleP1, paddleP2) {
         isSpawning: true, // but no limit on how many.
 	vx0: sxi(2.5),
         maxVX: sxi(ForGameMode({zen: 18, z2p: 22})),
+        speedupFactor: undefined, // no english progression.
         isP1Player: true,
         isP2Player: !is1P(),
         p1PillState: MakeAllPillState(),
@@ -97,7 +99,8 @@ function MakeLevel(index, paddleP1, paddleP2) {
 }
 
 function MakeSplitsCount(index) {
-    return 200;
+    return 1000; // todo: remove testing hack.
+
     Assert(index !== 0, "index is 1-based");
     // todo: so ugly bad that the index overlaps with the game mode.
     if (index === kAttractLevelIndex) {
