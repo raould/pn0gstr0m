@@ -78,7 +78,9 @@ function Paddle(props) {
         self.scanCount = 10;
         self.attackingNearCount = 0;
         self.nudgeX();
-        self.englishFactor = 0; // ugh, this gets modified & used elsewhere. match: level, puck.
+
+        // ugh, see: level, puck.
+        self.englishFactor = ForGameMode({ regular: 0.3, zen: 0.08 }); 
     };
 
     self.ForEachPaddle = function(fn) {

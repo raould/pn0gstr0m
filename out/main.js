@@ -1629,7 +1629,7 @@ function GameState(props) {
     if (exists(p)) {
       p.PlacementInit({
         x: gw(gR.RandomRange(1 / 8, 7 / 8)),
-        y: gh(gR.RandomRange(1 / 8, 7 / 8)),
+        y: gh(gR.RandomRange(3.5 / 8, 4 / 8)),
         vx: gR.RandomRange(0.2, 0.3) * self.maxVX,
         vy: gR.RandomCentered(1, 0.5),
         ur: true
@@ -1827,23 +1827,16 @@ function GameState(props) {
       });
       var range = bottom - top;
       var e = ((_self$level$EnergyFac = self.level.EnergyFactor()) != null ? _self$level$EnergyFac : 0) * range;
-      var yInflection = top + range - e;
+      var gotfat = false;
       Cxdo(function () {
         gCx.beginPath();
-        // of course, -y is top, +y is bottom.
-        for (var y = top; y < yInflection; y += dashStep * 2) {
+        for (var y = top; y < bottom; y += dashStep * 2) {
           var ox = gR.RandomCentered(0, 0.5);
-          var width = gMidLineDashWidth;
+          var fat = y - top >= range - e;
+          var width = fat ? gMidLineDashWidth * 2 : gMidLineDashWidth;
           gCx.rect(gw(0.5) + ox - width / 2, y, width, dashStep);
         }
-        gCx.fillStyle = RandomGreen(0.6);
-        gCx.fill();
-        for (var y = bottom; y > yInflection; y -= dashStep * 2) {
-          var ox = gR.RandomCentered(0, 0.5);
-          var width = gMidLineDashWidth * 2;
-          gCx.rect(gw(0.5) + ox - width / 2, y, width, dashStep);
-        }
-        gCx.fillStyle = RandomCyan(0.6);
+        gCx.fillStyle = RandomGreen(0.5);
         gCx.fill();
       });
     }

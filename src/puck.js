@@ -137,6 +137,7 @@ function Puck() {
     };
 
     // anybody calling this should also eventually follow up with level.OnPuckSplit() for bookkeeping.
+    // ugh, see: level, paddle.
     self.SplitPuck = function({ forced=false, isSuddenDeath=false, maxVX }) {
         if (!forced && self.impotentTime > 0) {
             return;
@@ -190,17 +191,17 @@ function Puck() {
             // some variety in vy.
             let vy = self.vy;
             const pvx = T01(Math.abs(self.vx), maxVX);
-            // todo: test and refine this... eternally not quite right, hard to test.
-            // sort of want 'streaming' possible mainly in zen mode.
-            const vyf = ForGameMode({
-                regular: 1.1,
-                hard: 1.2,
-                zen: 1.08,
+            // some modes allow more for linear streaming of the pucks.
+            const vyfc = ForGameMode({
+                regular: 0.1,
+                hard: 0.2,
+                zen: 0.1,
                 // the faster things get, the more spread out, i hope, but,
                 // not too much since it can be fun to be 'streaming' until neo.
-                z2p: 1.15 + pvx * 0.2,
+                z2p: 0.1 + pvx * 0.2,
             });
-            vy = self.vy * AvoidZero(vyf, 0.05);
+            const vyf = 1 + gR.RandomRange(-vyfc, vyfc);
+            vy = self.vy * vyf;
 
             // code smell: because SplitPuck is called during MovePucks,
             // we return the new puck to go onto gPucks.B,
@@ -262,7 +263,7 @@ function Puck() {
     };
 
     self.ApplyEnglish = function( paddle ) {
-        // see also: level.js (!) that updates paddle.englishFactor (!)
+        // ugh, see: paddle, level.
 
         // smallest bit of vertical english.
         // too much means you never get to 'streaming'.
@@ -270,25 +271,20 @@ function Puck() {
 	// (but see also: SplitPuck()'s algorithm for culling.)
         // note that englishFactor increases as level ends.
         var dy = self.midY - paddle.GetMidY();
-        var mody = gR.RandomFloat(0.02) * Math.abs(dy) * paddle.englishFactor;
+        var mody = gR.RandomFloat(0.02) * (Math.abs(dy)*0.05) * paddle.englishFactor;
 
         // try to avoid getting boringly stuck at top or bottom, especially in zen.
         // but, don't want to utterly lose 'streaming'.
 	// note: this isn't really working all that well.
-	var calc_fy = (y) => {
-	    var dy = Math.abs(y - gh(0.5));
-            var t01 = T01(dy, gh(0.5));
-            var fy = Math.pow(t01, 2);
-	    return fy;
-	};
 	var rf = Math.pow(T01(gPucks.A.length, kEjectCountThreshold/2), 1.5);
         if (gR.RandomBool(rf)) {
-	    mody *= calc_fy(self.y);
+	    var dy = Math.abs(self.y - gh(0.5));
+            var t01 = T01(dy, gh(0.5));
+            var fy = Math.pow(t01, 2);
+	    mody *= fy;
 	}
 
-        // todo: er, maybe don't let the english reduce the
-        // angle of reflection to less than the angle of attack?
-
+        // actually apply the english based on top or bottom paddle collision.
         let nvy = self.vy;
         if( self.midY < paddle.GetMidY() ) {
             nvy -= mody;
