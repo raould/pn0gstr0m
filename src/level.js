@@ -4,7 +4,7 @@
  */
 
 // see also: english in puck.js
-const kEnglishStep = 0.01;
+const kEnglishStep = 0.05;
 
 /*class*/ function Level(props) {
 
@@ -77,34 +77,50 @@ const kEnglishStep = 0.01;
     };
 
     self.Step = function( dt ) {
-        // boost things at level end to prevent getting stuck on the level for ever.
-        if (!self.IsMidGame() && exists(self.speedupFactor)) {
+        // boost maxVX & english to prevent getting stuck on the level for ever.
+        // ugh, see: paddle, puck.
+        if (!self.IsHalfGame() && exists(self.speedupFactor)) {
 	    Assert(gGameMode !== kGameModeZen);
-
-            // allow future spawned pucks to go faster, up to a hard limit.
-            self.maxVX = MinSigned(
-                self.maxVX + self.speedupFactor * dt / kTimeStep,
-                kMaxVX
-            );
-
-	    // heuristics to increase english, all fairly arbitrary hacky values.
-	    var boostFactor = (1 - (self.EnergyFactor() ?? 1));
-	    // increase over time, more so for human players.
-	    self.englishFactorPlayer += (dt / kTimeStep) * kEnglishStep * boostFactor;
-
-	    // cpu doesn't get as much english because if they are the
-	    // first one to hit a puck with a lot of english it looks like cheating.
-	    self.englishFactorCPU += (dt / kTimeStep) * kEnglishStep;
-
-            self.paddleP1.englishFactor = self.paddleP1.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
-            self.paddleP2.englishFactor = self.paddleP2.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
+            self.StepMaxVX(dt);
+            self.StepEnglish(dt);
         }
     };
 
+    self.StepMaxVX = function( dt ) {
+        // allow future spawned pucks to go faster, up to a hard limit.
+        self.maxVX = MinSigned(
+            self.maxVX + self.speedupFactor * dt / kTimeStep,
+            kMaxVX
+        );
+    };
+
+    self.StepEnglish = function( dt ) {
+	// heuristics to increase english, all fairly arbitrary hacky values.
+	// increases over time, more so for human players.
+        var de = (dt / kTimeStep) * kEnglishStep
+	var boostFactor = Clip01((1-0.25) - Math.pow(self.EnergyFactor(), 3));
+	self.englishFactorPlayer += de * boostFactor;
+
+	// cpu doesn't get as much english, it looks strange to me otherwise.
+	self.englishFactorCPU += (dt / kTimeStep) * kEnglishStep;
+
+        // store the new values on the paddles, the pucks read from them.
+        self.paddleP1.englishFactor = self.paddleP1.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
+        self.paddleP2.englishFactor = self.paddleP2.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
+    };
+
+    self.IsHalfGame = function() {
+        return self.IsNGame(self.splitsMax * 0.5);
+    };
+
     self.IsMidGame = function() {
+        return self.IsNGame(self.splitsMax * 0.7);
+    };
+
+    self.IsNGame = function(n) {
         var isMidGame = true;
         if (exists(self.splitsRemaining)) {
-            isMidGame = self.splitsRemaining > (self.splitsMax/4);
+            isMidGame = self.splitsRemaining > n;
         }
         return isMidGame;
     };
