@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -140,7 +140,7 @@ var gHighScore = LoadLocal(LocalStorageKeys.gameHighScore, 0);
 // although i did try to compensate in the run loop.
 var kFPS = 30;
 var kTimeStep = 1000/kFPS;
-var kTimeStepThreshold = kTimeStep * 0.7;
+var kTimeStepThreshold = kTimeStep * 0.8;
 var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
 var gLevelTime = 0;
 var gGameTime = 0;
@@ -1187,7 +1187,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        var seconds = gDebug ? 2 : (gP1PillState.deck.length > 0 ? 5 : 3);
+        var seconds = gDebug ? 2 : (gP1PillState.order.length > 0 ? 5 : 3);
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
@@ -1234,25 +1234,25 @@ function UpdateLocalStorage() {
         var whscale = Math.max(
             0.4,
             T10(
-                Math.max(gP1PillState.deck.length, gP2PillState.deck.length),
+                Math.max(gP1PillState.order.length, gP2PillState.order.length),
                 gPillIDs.length
             )
         );
         var y = gh(0.7);
         let maxWidth = 0;
         let maxHeight = 0;
-        gP1PillState.deck.map(pid => {
+        gP1PillState.order.map(pid => {
             maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
             maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
         });
-        gP2PillState.deck.map(pid => {
+        gP2PillState.order.map(pid => {
             maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
             maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
         });
         const ox = maxWidth * 3 * whscale;
         const labelY = y + sy1(10) + (maxHeight * whscale);
-        self.DrawPillsSide(gP1Side, gP1PillState.deck, whscale, ox, y, labelY);
-        self.DrawPillsSide(gP2Side, gP2PillState.deck, whscale, ox, y, labelY);
+        self.DrawPillsSide(gP1Side, gP1PillState.order, whscale, ox, y, labelY);
+        self.DrawPillsSide(gP2Side, gP2PillState.order, whscale, ox, y, labelY);
     };
 
     self.DrawPillsSide = function(side, pills, whscale, ox, y, labelY) {
@@ -2299,14 +2299,16 @@ function UpdateLocalStorage() {
         Assert(self.p2Specs.length <= 2);
         if (self.p1Specs.length > 0) {
             var p1yes = self.p1Specs.splice(self.p1Highlight, 1)[0];
-            gP1PillState.deck.push(p1yes.pid);
+            gP1PillState.deck.unshift(p1yes.pid); // faster gratification.
+            gP1PillState.order.push(p1yes.pid);
             if (self.p1Specs.length > 0) {
                 gP1PillState.remaining.push(self.p1Specs.shift().pid);
             }
         }
         if (self.p2Specs.length > 0) {
             var p2yes = self.p2Specs.splice(self.p2Highlight, 1)[0];
-            gP2PillState.deck.push(p2yes.pid);
+            gP2PillState.deck.unshift(p2yes.pid); // faster gratification.
+            gP2PillState.order.push(p2yes.pid);
             if (self.p2Specs.length > 0) {
                 gP2PillState.remaining.push(self.p2Specs.shift().pid);
             }

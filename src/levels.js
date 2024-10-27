@@ -9,12 +9,11 @@
 var gP1PillState;
 var gP2PillState;
 function ResetLevelsPillStates() {
-    gP1PillState = { deck: [], remaining: [...gPillIDs] };
-    gP2PillState = { deck: [], remaining: [...gPillIDs] };
-    /* just for testing:
-    gP1PillState = { deck: gPillIDs.slice(0,2), remaining: gPillIDs.slice(2) };
-    gP2PillState = { deck: gPillIDs.slice(0,2), remaining: gPillIDs.slice(2) };
-    */
+    // deck: ring buffer of owned pills.
+    // remaining: unowned pills, for rewarding.
+    // order: original order in which owned pills were obtained.
+    gP1PillState = { deck: [], remaining: [...gPillIDs], order: [] };
+    gP2PillState = { deck: [], remaining: [...gPillIDs], order: [] };
 }
 ResetLevelsPillStates();
 function PillIDsToMakers(pids) {

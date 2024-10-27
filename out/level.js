@@ -103,14 +103,15 @@ function Level(props) {
     return self.IsNGame(self.splitsMax * 0.5);
   };
   self.IsMidGame = function () {
+    // well, "IsNotEndGame" maybe. :-\
     return self.IsNGame(self.splitsMax * 0.7);
   };
   self.IsNGame = function (n) {
-    var isMidGame = true;
+    var is = true;
     if (exists(self.splitsRemaining)) {
-      isMidGame = self.splitsRemaining > n;
+      is = self.splitsRemaining > n;
     }
-    return isMidGame;
+    return is;
   };
   self.IsSuddenDeath = function () {
     return exists(self.splitsRemaining) && self.splitsRemaining <= 0;

@@ -17,18 +17,19 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 var gP1PillState;
 var gP2PillState;
 function ResetLevelsPillStates() {
+  // deck: ring buffer of owned pills.
+  // remaining: unowned pills, for rewarding.
+  // order: original order in which owned pills were obtained.
   gP1PillState = {
     deck: [],
-    remaining: _toConsumableArray(gPillIDs)
+    remaining: _toConsumableArray(gPillIDs),
+    order: []
   };
   gP2PillState = {
     deck: [],
-    remaining: _toConsumableArray(gPillIDs)
+    remaining: _toConsumableArray(gPillIDs),
+    order: []
   };
-  /* just for testing:
-  gP1PillState = { deck: gPillIDs.slice(0,2), remaining: gPillIDs.slice(2) };
-  gP2PillState = { deck: gPillIDs.slice(0,2), remaining: gPillIDs.slice(2) };
-  */
 }
 ResetLevelsPillStates();
 function PillIDsToMakers(pids) {
