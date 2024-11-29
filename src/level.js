@@ -97,7 +97,7 @@ const kEnglishStep = 0.05;
     self.StepEnglish = function( dt ) {
 	// heuristics to increase english, all fairly arbitrary hacky values.
 	// increases over time, more so for human players.
-        var de = (dt / kTimeStep) * kEnglishStep
+        var de = (dt / kTimeStep) * kEnglishStep;
 	var boostFactor = Clip01((1-0.25) - Math.pow(self.EnergyFactor(), 3));
 	self.englishFactorPlayer += de * boostFactor;
 

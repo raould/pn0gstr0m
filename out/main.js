@@ -2194,7 +2194,7 @@ function LevelFinChooseState() {
   self.Step = function (dt) {
     self.goOn |= self.RemainingTime() <= -1000; // neg 1 sec to show '0'.
     if (self.goOn) {
-      self.SaveIndices();
+      self.SaveHighlighted();
       return kGetReady;
     }
     self.StepCpu();
@@ -2217,21 +2217,27 @@ function LevelFinChooseState() {
       }
     }
   };
-  self.SaveIndices = function () {
+  self.SaveHighlighted = function () {
     Assert(self.p1Specs.length <= 2);
     Assert(self.p2Specs.length <= 2);
     if (self.p1Specs.length > 0) {
-      var p1yes = self.p1Specs.splice(self.p1Highlight, 1)[0];
-      gP1PillState.deck.push(p1yes.pid);
+      var _self$p1Specs$splice;
+      var p1yes = (_self$p1Specs$splice = self.p1Specs.splice(self.p1Highlight, 1)) == null ? void 0 : _self$p1Specs$splice[0];
+      Assert(exists(p1yes));
+      gP1PillState.deck.unshift(p1yes.pid);
       if (self.p1Specs.length > 0) {
-        gP1PillState.remaining.push(self.p1Specs.shift().pid);
+        var p1no = self.p1Specs.shift();
+        gP1PillState.remaining.push(p1no.pid);
       }
     }
     if (self.p2Specs.length > 0) {
-      var p2yes = self.p2Specs.splice(self.p2Highlight, 1)[0];
-      gP2PillState.deck.push(p2yes.pid);
+      var _self$p2Specs$splice;
+      var p2yes = (_self$p2Specs$splice = self.p2Specs.splice(self.p2Highlight, 1)) == null ? void 0 : _self$p2Specs$splice[0];
+      Assert(exists(p2yes));
+      gP2PillState.deck.unshift(p2yes.pid);
       if (self.p2Specs.length > 0) {
-        gP2PillState.remaining.push(self.p2Specs.shift().pid);
+        var p2no = self.p2Specs.shift();
+        gP2PillState.remaining.push(p2no.pido);
       }
     }
   };
