@@ -14,7 +14,8 @@ const kEnglishStep = 0.05;
         self.isAttract = aub(props.isAttract, false);
         self.startTime = gGameTime;
 
-        // could be kAttractLevelIndex.
+        // for the regular 1 player game, index is 1-based.
+        // see also: main.js k*LevelIndex values.
         self.index = props.index;
 
         // note: some of these are allowed to be undefined,
@@ -97,7 +98,7 @@ const kEnglishStep = 0.05;
     self.StepEnglish = function( dt ) {
 	// heuristics to increase english, all fairly arbitrary hacky values.
 	// increases over time, more so for human players.
-        var de = (dt / kTimeStep) * kEnglishStep
+        var de = (dt / kTimeStep) * kEnglishStep;
 	var boostFactor = Clip01((1-0.25) - Math.pow(self.EnergyFactor(), 3));
 	self.englishFactorPlayer += de * boostFactor;
 
