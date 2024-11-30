@@ -99,8 +99,6 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(35);
   }
 }), kSplitPill, {
-  // "SPLIT" could be a confusing name since
-  // the level msg says "n splits remaining" ha ha.
   name: "ZPLT",
   maker: MakeSplitProps,
   drawer: DrawSplitPill,
@@ -111,7 +109,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(20);
   }
 }), kDefendPill, {
-  name: "SHLD",
+  name: "SHIELD",
   maker: MakeDefendProps,
   drawer: DrawDefendPill,
   wfn: function wfn() {
@@ -141,7 +139,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(20);
   }
 }), kChaosPill, {
-  name: "CRZY",
+  name: "CRAZY",
   maker: MakeChaosProps,
   drawer: DrawChaosPill,
   wfn: function wfn() {

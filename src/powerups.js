@@ -89,15 +89,13 @@ var gPillInfo = {
         wfn: () => sxi(20), hfn: () => syi(35),
     },
     [kSplitPill]: {
-        // "SPLIT" could be a confusing name since
-        // the level msg says "n splits remaining" ha ha.
         name: "ZPLT",
 	maker: MakeSplitProps,
         drawer: DrawSplitPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kDefendPill]: {
-        name: "SHLD",
+        name: "SHIELD",
 	maker: MakeDefendProps,
         drawer: DrawDefendPill,
         wfn: () => sxi(20), hfn: () => syi(40),
@@ -115,7 +113,7 @@ var gPillInfo = {
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kChaosPill]: {
-        name: "CRZY",
+        name: "CRAZY",
 	maker: MakeChaosProps,
         drawer: DrawChaosPill,
         wfn: () => sxi(20), hfn: () => syi(20),
