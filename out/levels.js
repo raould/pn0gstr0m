@@ -150,6 +150,6 @@ function MakeSplitsCount(index) {
 }
 function ChooseRewards(state) {
   var rewards = state.remaining.splice(0, Math.min(2, state.remaining.length));
-  console.log("ChooseRewards", rewards);
+  console.log("ChooseRewards: rewards", rewards == null ? void 0 : rewards.toString());
   return rewards;
 }
