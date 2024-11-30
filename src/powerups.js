@@ -68,7 +68,8 @@ const gPillIDs = [
 // because they need to be evaluated after
 // all the display resizing is done.
 // see: width and height in GetReadyState.DrawPills().
-// 2) keep the names short, for the get ready screen.
+// 2) keep the names short, to avoid overlapping
+// on the Get Ready screen.
 var gPillInfo = {
     [kForcePushPill]: {
         name: "PUSH",
@@ -95,7 +96,7 @@ var gPillInfo = {
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kDefendPill]: {
-        name: "SHIELD",
+        name: "SHLD",
 	maker: MakeDefendProps,
         drawer: DrawDefendPill,
         wfn: () => sxi(20), hfn: () => syi(40),
@@ -113,7 +114,7 @@ var gPillInfo = {
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kChaosPill]: {
-        name: "CRAZY",
+        name: "KRZY",
 	maker: MakeChaosProps,
         drawer: DrawChaosPill,
         wfn: () => sxi(20), hfn: () => syi(20),

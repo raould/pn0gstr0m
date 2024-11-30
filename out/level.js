@@ -15,7 +15,8 @@ function Level(props) {
     self.isAttract = aub(props.isAttract, false);
     self.startTime = gGameTime;
 
-    // could be kAttractLevelIndex.
+    // for the regular 1 player game, index is 1-based.
+    // see also: main.js k*LevelIndex values.
     self.index = props.index;
 
     // note: some of these are allowed to be undefined,

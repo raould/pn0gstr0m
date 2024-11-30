@@ -1408,6 +1408,12 @@ function GameState(props) {
     })();
     self.MakeLevel();
     self.CreateStartingPuck(self.level.vx0);
+    // make it look more interesting as the 1P levels increase.
+    if (is1P()) {
+      for (var pi = 1; pi < Math.min(self.level.index, gPillIDs.length); ++pi) {
+        self.CreateStartingPuck(self.level.vx0);
+      }
+    }
 
     // this countdown is a block on both player & cpu ill spawning.
     // first wait is longer before the very first pill.
@@ -1604,21 +1610,19 @@ function GameState(props) {
     });
   };
   self.CreateStartingPuck = function (vx) {
-    var x;
-    var sign;
-    var toLeft = [gw(0.7), -1];
-    var toRight = [gw(0.3), 1];
-    var _ForSide = ForSide(gP1Side, toRight, toLeft);
-    var _ForSide2 = _slicedToArray(_ForSide, 2);
-    x = _ForSide2[0];
-    sign = _ForSide2[1];
+    var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
+    var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
+    var _ForSide = ForSide(gP1Side, toRight, toLeft),
+      _ForSide2 = _slicedToArray(_ForSide, 2),
+      x = _ForSide2[0],
+      sign = _ForSide2[1];
     var p = gPuckPool.Alloc();
     Assert(exists(p), "CreateStartingPuck");
     console.log("CreateStartingPuck", vx);
     p.PlacementInit({
       x: x,
-      y: self.isAttract ? gh(gR.RandomRange(0.4, 0.6)) : gh(0.3),
-      vx: sign * vx,
+      y: gR.RandomCentered(gh(0.3), gh(0.1)),
+      vx: gR.RandomCentered(sign * vx, sign * vx * 0.2),
       vy: self.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
       ur: true
     });
@@ -2149,6 +2153,7 @@ function LevelFinChooseState() {
     // might be empty if you already got them all!
     var p1Rewards = ChooseRewards(gP1PillState);
     var p2Rewards = ChooseRewards(gP2PillState);
+
     // theoretically the # of rewards should match because
     // all paddles are forced to get 1 reward at the end
     // of every level. it is only the order that might be different.
@@ -2227,6 +2232,7 @@ function LevelFinChooseState() {
       gP1PillState.deck.unshift(p1yes.pid);
       if (self.p1Specs.length > 0) {
         var p1no = self.p1Specs.shift();
+        Assert(exists(p1no));
         gP1PillState.remaining.push(p1no.pid);
       }
     }
@@ -2237,7 +2243,8 @@ function LevelFinChooseState() {
       gP2PillState.deck.unshift(p2yes.pid);
       if (self.p2Specs.length > 0) {
         var p2no = self.p2Specs.shift();
-        gP2PillState.remaining.push(p2no.pido);
+        Assert(exists(p2no));
+        gP2PillState.remaining.push(p2no.pid);
       }
     }
   };
