@@ -186,7 +186,7 @@ function Puck() {
                 z2p: slow?slowF:fastF
             });
             const vxf = self.vx * scaleF;
-            const vx = gR.RandomCentered(vxf, vxf/10);
+            var vx = gR.RandomCentered(vxf, vxf/10);
 
             // some variety in vy.
             let vy = self.vy;
@@ -202,6 +202,14 @@ function Puck() {
             });
             const vyf = 1 + gR.RandomRange(-vyfc, vyfc);
             vy = self.vy * vyf;
+
+            // finally, case the first split to (try to) make it
+            // always obvious that it split - avoid the new puck
+            // being co-located with the original.
+            if (gPucks.A.length === 1) {
+                vx += sx(0.1) * Sign(vx);
+                vy += sy(0.1) * Sign(vy);
+            }
 
             // code smell: because SplitPuck is called during MovePucks,
             // we return the new puck to go onto gPucks.B,
