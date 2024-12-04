@@ -234,10 +234,10 @@ function DrawForcePushPill(side, xywh, alpha) {
     var mx = wx + xywh.width / 2;
     var my = wy + xywh.height / 2;
     gCx.beginPath();
-    gCx.arc(mx, my, xywh.width / 2, 0, k2Pi);
+    gCx.arc(mx, my, xywh.width / 2 + sx1(1), 0, k2Pi);
     gCx.closePath();
     gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-    gCx.lineWidth = sx1(2);
+    gCx.lineWidth = sx1(3);
     gCx.stroke();
   });
 }

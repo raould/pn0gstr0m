@@ -88,14 +88,28 @@ var backgroundColorStr = "black";
 var scanlineColorStr = "rgba(0, 0, 0, 0.15)";
 var puckColorStr = "cyan";
 
+// meh! doubt/dunno that this does anything enough
+// to reduce the sheer number of color strings
+// such that javascript engines can optimize.
+var kChannelQuantizeStep = 255 / 8;
+function quantizeChannel(c) {
+  if (c >= 255) {
+    return 255;
+  }
+  if (c <= 0) {
+    return 0;
+  }
+  return Math.floor(c / kChannelQuantizeStep) * kChannelQuantizeStep;
+}
+
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 var _tc = Array(4);
 function rgba255s(array, alpha) {
   // detect any old style code that called this function.
   Assert(Array.isArray(array), "expected array as first parameter");
-  _tc[0] = array[0];
-  _tc[1] = array[1];
-  _tc[2] = array[2];
+  _tc[0] = quantizeChannel(array[0]);
+  _tc[1] = quantizeChannel(array[1]);
+  _tc[2] = quantizeChannel(array[2]);
 
   // alpha is, in order of highest precedence:
   // array[4], or the 'alpha' argument, or the default value of 1.
