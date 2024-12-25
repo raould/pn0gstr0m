@@ -148,7 +148,7 @@ const kEnglishStep = 0.05;
 	if (self.index >= 1) {
 	    Cxdo(() => {
 		gCx.fillStyle = RandomForColor( cyanSpec, alpha );
-		DrawText(`LVL${self.index}`, "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
+		DrawText(`LEVEL ${self.index}`, "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
 	    });
 	}
     };

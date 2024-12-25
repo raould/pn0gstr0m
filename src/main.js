@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -192,8 +192,8 @@ function RecalculateConstants() {
     gPaddleWidth = sxi(6);
     gPaddleStepSize = gPaddleHeight * 0.15;
     gPuckHeight = gPuckWidth = gh(0.012);
-    gPauseCenterX = gw(0.58);
-    gPauseCenterY = gh(0.1);
+    gPauseCenterX = ForP1Side(gw(0.92), gw(0.08));
+    gPauseCenterY = gh(0.12);
     gPauseRadius = sxi(12);
     gSparkWidth = sxi(3);
     gSparkHeight = syi(3);
@@ -1363,7 +1363,7 @@ function UpdateLocalStorage() {
     var self = this;
 
     self.Init = function() {
-        var seconds = gDebug ? 2 : 3;
+        var seconds = gDebug ? 1 : 3;
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
@@ -2006,7 +2006,7 @@ function UpdateLocalStorage() {
                 gCx.beginPath();
                 gCx.RoundRect(cx-gPauseRadius, cy-gPauseRadius,
                               gPauseRadius*2, gPauseRadius*2,
-                              8);
+                              gPauseRadius);
                 gCx.lineWidth = sx1(1.5);
                 gCx.stroke();
                 if (gDebug) {
