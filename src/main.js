@@ -491,11 +491,12 @@ var kRoot = -1;
 var kWarning = 0; // audio permission via user interaction effing eff.
 var kTitle = 1;
 var kGetReady = 2; // includes 'level splash' for levels 2+.
-var kGame = 3;
-var kLevelFin = 4; // todo: deprecate for LevelFinChoose.
-var kLevelFinChoose = 5;
-var kGameOver = 6;
-var kGameOverSummary = 7;
+var kChargeUp = 3;
+var kGame = 4;
+var kLevelFin = 5; // todo: deprecate for LevelFinChoose.
+var kLevelFinChoose = 6;
+var kGameOver = 7;
+var kGameOverSummary = 8;
 
 var gCanvas;
 var gCx;
@@ -1267,7 +1268,7 @@ function UpdateLocalStorage() {
             PlayBlip();
             self.lastSec = sec;
         }
-        return self.timeout > 0 ? undefined : kGame;
+        return self.timeout > 0 ? undefined : kChargeUp;
     };
 
     self.StepAnimations = function( dt ) {
@@ -1336,7 +1337,6 @@ function UpdateLocalStorage() {
 
     self.DrawText = function() {
         var t = Math.ceil(self.timeout/1000);
-        var zpt = MakeSplitsCount(gLevelIndex);
         Cxdo(() => {
             // match: GameState.DrawScoreHeader() et. al.
             gCx.fillStyle = RandomGreen(0.3);
@@ -1353,12 +1353,54 @@ function UpdateLocalStorage() {
 
             gCx.fillStyle = RandomGreen();
             DrawText(`GET READY! ${t}`, "center", gw(0.5), gh(0.55), gBigFontSizePt);
+        });
+    };
 
-            if (exists(zpt)) {
-                gCx.fillStyle = RandomForColor(cyanSpec);
-                DrawText(`ZERO POINT ENERGY: ${zpt}`, "center", gw(0.5), gh(0.9), gSmallFontSizePt);
+    self.Init();
+}
+
+/*class*/ function ChargeUpState() {
+    var self = this;
+
+    self.Init = function() {
+        var seconds = gDebug ? 2 : 3;
+        self.timeout = 1000 * seconds - 1;
+        self.lastSec = Math.floor((self.timeout+1)/1000);
+        self.animations = {};
+        self.AddAnimation(MakeChargeUpTextAnimation(self.timeout));
+        self.AddAnimation(MakeChargeUpMeterAnimation(self.timeout));
+    };
+
+    self.AddAnimation = function( a ) {
+        self.animations[gNextID++] = a;
+    };
+
+    self.Step = function( dt ) {
+        self.StepAnimations( dt );
+        self.timeout -= dt;
+        var sec = Math.floor(self.timeout/1000);
+        if (sec < self.lastSec) {
+            PlayBlip();
+            self.lastSec = sec;
+        }
+        return self.timeout > 0 ? undefined : kGame;
+    };
+
+    self.StepAnimations = function( dt ) {
+        Object.entries(self.animations).forEach(([id, anim]) => {
+            var done = anim.Step( dt, self );
+            if (done) {
+                delete self.animations[id];
             }
         });
+    };
+
+    self.Draw = function() {
+        self.DrawAnimations();
+    };
+
+    self.DrawAnimations = function() {
+        Object.values(self.animations).forEach(a => a.Draw());
     };
 
     self.Init();
@@ -1880,11 +1922,13 @@ function UpdateLocalStorage() {
 
     // note: this really has to be z-under everything.
     // match: level.Draw().
+    // match: MakeChargeUpMeterAnimation().
     self.DrawMidLine = function() {
         if (!self.isAttract) {
             // note: this is all a tweaky hacky heuristic mess.
             var dashStep = gh() / (gMidLineDashCount*2);
             var top = ForGameMode({regular: gYInset*1.5, zen: gYInset}) + dashStep/2;
+	    // match: Level.DrawText().
             var txo = gSmallFontSize;
             var bottom = ForGameMode({regular: gh() - gYInset*1.05 - txo, zen: gh()-gYInset});
             var range = bottom - top;
@@ -2027,7 +2071,8 @@ function UpdateLocalStorage() {
             }
 
             if (!isEndScreenshot) {
-                self.DrawAnimations(); // late/high z order so the animations can clear the screen if desired.
+		// late/high z order so the animations can clear the screen if desired.
+                self.DrawAnimations();
             }
 
             if (!isEndScreenshot) {
@@ -3123,6 +3168,7 @@ function Start() {
     handlerMap[kWarning] = () => new WarningState();
     handlerMap[kTitle] = () => new TitleState();
     handlerMap[kGetReady] = () => new GetReadyState();
+    handlerMap[kChargeUp] = () => new ChargeUpState();
     handlerMap[kGame] = () => new GameState();
     handlerMap[kLevelFin] = () => new LevelFinState();
     handlerMap[kLevelFinChoose] = () => new LevelFinChooseState();

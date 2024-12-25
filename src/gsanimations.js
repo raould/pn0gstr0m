@@ -70,7 +70,7 @@ function MakePoofAnimation(x, y, radius) {
             r += dt/kTimeStep*1.5;
         },
         drawFn: (anim) => {
-            var alpha = T01(anim.lifespan, anim.lifespan0);
+            var alpha = T01(anim.life, anim.lifespan0);
             Cxdo(() => {
                 gCx.strokeStyle = RandomForColor(redSpec, alpha);
                 gCx.lineWidth = sx1(1);
@@ -105,7 +105,7 @@ function MakeCrawlingLightningAnimation(props) {
         name: "crawllightning",
         lifespan,
         animFn: (anim, dt, gameState) => {
-            var t = T01(anim.lifespan0-anim.lifespan, anim.lifespan0);
+            var t = T01(anim.lifespan0-anim.life, anim.lifespan0);
             var ti = ii(points.length * t);
             for (var i = 0; i < substeps; ++i) {
                 var index = Clip(ti+i, 0, points.length-1);
@@ -219,7 +219,7 @@ function MakeWaveAnimation(props) {
         name: "wave",
         lifespan,
         animFn: (anim, dt, gameState) => {
-            t = T10(anim.lifespan, anim.lifespan0);
+            t = T10(anim.life, anim.lifespan0);
         },
         drawFn: (anim) => {
             Cxdo(() => {
@@ -247,7 +247,7 @@ function MakeEngorgeAnimation(props) {
         name: "engorge",
         lifespan,
         animFn: (anim, dt, gameState) => {
-            t10 = T10(anim.lifespan0-anim.lifespan, anim.lifespan0);
+            t10 = T10(anim.lifespan0-anim.life, anim.lifespan0);
         },
         drawFn: () => {
             AddLightningPath({
