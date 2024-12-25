@@ -414,6 +414,7 @@ function LatchP1Side(side) {
     // the first call wins and everything thereafter is ignored, on purpose.
     if (gP1Side == undefined) {
         // todo: seems risky that 'side' exists in so many places.
+	Assert(side != undefined);
         gP1Side = side;
         gP2Side = OtherSide(side);
         gP1Target.SetSide(gP1Side, is1P(), gw(0.5));
@@ -576,6 +577,15 @@ function RoundRect( x, y, w, h, r ) {
     }
     else {
         gCx.rect(x, y, w, h);
+    }
+}
+function StrokeRect( x, y, w, h ) {
+    gCx.strokeRect(x, y, w, h);
+    if (gDebug) {
+	gCx.moveTo(x, y);
+	gCx.lineTo(x+w, y+h);
+	gCx.moveTo(x+w, y);
+	gCx.lineTo(x, y+h);
     }
 }
 function RectXYWH( xywh ) {
@@ -804,6 +814,55 @@ function DrawDebugList() {
             }
         });
         gDebug_DrawList = dl2;
+    }
+}
+
+function DrawMoveTarget(target) {
+    // bug: yet another safari ios/ipados bug? the clipping doesn't
+    // actually correctly work and so the butt end of the pointer
+    // shows through a pixel or two, all very strange. so at least
+    // making this pointer color == crt outline color to be less obvi.
+    var side = target.side;
+    var moveTargetY = target.position?.y;
+    if (exists(side) && exists(moveTargetY)) {
+        var xsize = syi(12);
+        var ysize = syi(7);
+        var xoff = xyNudge(moveTargetY, ysize, 12, gP1Side);
+        ForSide(side,
+                () => {
+                    var left = xoff;
+                    var right = left + xsize;
+                    var y = WY(moveTargetY);
+                    Cxdo(() => {
+                        gCx.beginPath();
+                        gCx.moveTo( left, y-ysize );
+                        gCx.lineTo( left, y+ysize );
+                        gCx.lineTo( right, y );
+                        gCx.fillStyle = crtOutlineColorStr;
+                        gCx.fill();
+                    });
+                },
+                () => {
+                    var right = gw()+xoff;
+                    var left = right - xsize;
+                    var y = WY(moveTargetY);
+                    Cxdo(() => {
+                        gCx.beginPath();
+                        gCx.moveTo( right, y-ysize );
+                        gCx.lineTo( right, y+ysize );
+                        gCx.lineTo( left, y );
+                        gCx.fillStyle = crtOutlineColorStr;
+                        gCx.fill();
+                    });
+                }
+	       )();
+    }
+}
+
+function DrawMoveTargets() {
+    DrawMoveTarget(gP1Target);
+    if (!is1P()) {
+        DrawMoveTarget(gP2Target);
     }
 }
 
@@ -1886,46 +1945,10 @@ function UpdateLocalStorage() {
         });
     };
 
-    self.DrawMoveTarget = function(target) {
-        // bug: yet another safari ios/ipados bug? the clipping doesn't
-        // actually correctly work and so the butt end of the pointer
-        // shows through a pixel or two, all very strange. so at least
-        // making this pointer color == crt outline color to be less obvi.
-        var side = target.side;
-        var moveTargetY = target.position?.y;
-        if (exists(side) && exists(moveTargetY) && !self.isAttract) {
-            var xsize = syi(12);
-            var ysize = syi(7);
-            var xoff = xyNudge(moveTargetY, ysize, 12, gP1Side);
-            ForSide(side,
-                () => {
-                    var left = xoff;
-                    var right = left + xsize;
-                    var y = WY(moveTargetY);
-                    Cxdo(() => {
-                        gCx.beginPath();
-                        gCx.moveTo( left, y-ysize );
-                        gCx.lineTo( left, y+ysize );
-                        gCx.lineTo( right, y );
-                        gCx.fillStyle = crtOutlineColorStr;
-                        gCx.fill();
-                    });
-                },
-                () => {
-                    var right = gw()+xoff;
-                    var left = right - xsize;
-                    var y = WY(moveTargetY);
-                    Cxdo(() => {
-                        gCx.beginPath();
-                        gCx.moveTo( right, y-ysize );
-                        gCx.lineTo( right, y+ysize );
-                        gCx.lineTo( left, y );
-                        gCx.fillStyle = crtOutlineColorStr;
-                        gCx.fill();
-                    });
-                }
-            )();
-        }
+    self.DrawMoveTargets = function() {
+        if (!self.isAttract) {
+	    DrawMoveTargets();
+	}
     };
 
     self.DrawPauseButton = function() {
@@ -2000,10 +2023,7 @@ function UpdateLocalStorage() {
             }
 
             if (!isEndScreenshot) {
-                self.DrawMoveTarget(gP1Target);
-                if (!is1P()) {
-                    self.DrawMoveTarget(gP2Target);
-                }
+                self.DrawMoveTargets();
             }
 
             if (!isEndScreenshot) {
@@ -2241,6 +2261,7 @@ function UpdateLocalStorage() {
 
         // skip the whole sceen if all pills have been rewarded.
         self.goOn = count === 0;
+	self.updateInputs = true;
 
         self.p1Specs = [];
         self.p2Specs = [];
@@ -2267,23 +2288,22 @@ function UpdateLocalStorage() {
     };
     
     self.Step = function(dt) {
-        self.goOn |= (self.RemainingTime() <= -1000); // neg 1 sec to show '0'.
+        var nextState;
+	self.updateInput = (self.RemainingTime() >= 0);
+        self.goOn |= (self.RemainingTime() <= -3000); // neg seconds to show final choice.
         if (self.goOn) {
             self.SaveHighlighted();
-            return kGetReady;
-        }
-
-        self.StepCpu();
-
-        var nextState;
-        gEventQueue.forEach((event, i) => {
-            var cmds = {};
-            event.updateFn(cmds);
-            if (isU(nextState)) {
-                nextState = self.ProcessOneInput(cmds);
-            }
-        });
-
+            nextState = kGetReady;
+        } else if (self.updateInput) {
+            self.StepCpu();
+            gEventQueue.forEach((event, i) => {
+		var cmds = {};
+		event.updateFn(cmds);
+		if (isU(nextState)) {
+                    nextState = self.ProcessOneInput(cmds);
+		}
+            });
+	}
         return nextState;
     };
 
@@ -2325,8 +2345,8 @@ function UpdateLocalStorage() {
     self.ProcessOneInput = function() {
         if (self.goOn) { return; }
         self.ProcessButtons();
-        self.p1Highlight = self.ProcessTouch(gP1Target, self.p1Specs, self.p1Highlight);
-        self.p2Highlight = self.ProcessTouch(gP2Target, self.p2Specs, self.p2Highlight);
+        self.p1Highlight = self.ProcessTouch(gP1Target, self.p1Specs) ?? self.p1Highlight;
+        self.p2Highlight = self.ProcessTouch(gP2Target, self.p2Specs) ?? self.p2Highlight;
     };
 
     self.ProcessButtons = function() {
@@ -2347,18 +2367,17 @@ function UpdateLocalStorage() {
         return undefined;
     };
 
-    self.ProcessTouch = function(target, specs, ph) {
+    self.ProcessTouch = function(target, specs) {
         for (let i = 0; i < specs.length; ++i) {
             const spec = specs[i];
-            const ox = sx1(40);
+            const x = sx(0);
             const oy = sy1(20);
-            const x = spec.cx - ox;
             const y = spec.cy - oy;
-            const rect = { x: x, y: y, width: ox*2, height: oy*2 };
+            const rect = { x, y, width: gw(1), height: oy*2 };
             gDebug && gDebug_DrawList.push({
                 fn: () => {
-                    gCx.strokeStyle = RandomColor();
-                    gCx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+                    gCx.strokeStyle = "red";
+                    StrokeRect(rect.x, rect.y, rect.width, rect.height);
                 }
             });
             const hit = target.isDown() ?
@@ -2368,21 +2387,29 @@ function UpdateLocalStorage() {
                 return i;
             }
         }
-        return ph;
+        return undefined;
     };
 
     self.Draw = function() {
-        if (self.goOn) { return; }
-        self.DrawText();
-        self.DrawPills();
+        if (!self.goOn) {
+            self.DrawText();
+            self.DrawPills();
+	    if (self.updateInput) {
+		DrawMoveTargets();
+	    }
+	}
     };
     
     self.DrawText = function() {
         Cxdo(() => {
             gCx.fillStyle = RandomGreen();
-            DrawText("CHOOSE YOUR PRIZE!", "center", gw(0.5), gh(0.2), gRegularFontSizePt);
-            var timeStr = String(Math.ceil(Math.max(0, self.RemainingTime() / 1000)));
-            DrawText(timeStr, "center", gw(0.5), gh(0.4), gBigFontSizePt);
+	    var countdown = Math.ceil(Math.max(0, self.RemainingTime() / 1000));
+	    var text = countdown > 0 ? "CHOOSE YOUR PRIZE!" : "CHOICE SAVED!";
+            DrawText(text, "center", gw(0.5), gh(0.2), gRegularFontSizePt);
+	    if (countdown > 0) {
+		var timeStr = String(countdown);
+		DrawText(timeStr, "center", gw(0.5), gh(0.4), gBigFontSizePt);
+	    }
         });
     };
 
@@ -2398,10 +2425,12 @@ function UpdateLocalStorage() {
                 const cx = spec.cx;
                 const cy = spec.cy;
                 const highlighted = highlight === i;
-                self.DrawPill(side, spec, highlighted);
-                if (highlighted) {
-                    self.DrawArrow(side, cx, cy, label);
-                }
+		if (self.updateInput || highlighted) {
+                    self.DrawPill(side, spec, highlighted);
+                    if (highlighted) {
+			self.DrawArrow(side, cx, cy, label);
+                    }
+		}
             }
         });
     };
