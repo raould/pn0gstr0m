@@ -106,17 +106,17 @@ function MakeModeButtons({constants:k, modeRadios}) {
             font_size: k.font_size,
             is_checkbox: true,
             is_checked: gGameMode === kGameModeHard,
-            hidden: !is1P(),
+            disabled: !is1P(),
             step_fn: (bself) => {
                 if (is1P()) {
                     var was_checked = bself.is_checked;
                     bself.is_checked = gGameMode === kGameModeHard;
                     bself.wants_focus = bself.is_checked && !was_checked;
-                    bself.hidden = false;
+                    bself.disabled = false;
                 }
                 else {
                     bself.wants_focus = false;
-                    bself.hidden = true;
+                    bself.disabled = true;
                 }
             },
             click_fn: (bself) => {
@@ -134,17 +134,17 @@ function MakeModeButtons({constants:k, modeRadios}) {
             font_size: k.font_size,
             is_checkbox: true,
             is_checked: gGameMode === kGameModeZen,
-            hidden: !is1P(),
+            disabled: !is1P(),
             step_fn: (bself) => {
 		if (is1P()) {
                     var was_checked = bself.is_checked;
                     bself.is_checked = gGameMode === kGameModeZen;
                     bself.wants_focus = bself.is_checked && !was_checked;
-		    bself.hidden = false;
+		    bself.disabled = false;
 		}
 		else {
 		    bself.wants_focus = false;
-		    bself.hidden = true;
+		    bself.disabled = true;
 		}
             },
             click_fn: (bself) => {

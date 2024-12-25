@@ -64,30 +64,26 @@ function Button(props) {
     self.is_checkbox = aub(props.is_checkbox, false);
     self.is_checked = aub(props.is_checked, false);
     self.has_focus = aub(props.has_focus, false);
-    self.hidden = aub(props.hidden, false);
+    self.disabled = aub(props.disabled, false);
     self.wants_focus = false;
   };
   self.Step = function () {
     self.step_fn(self);
   };
   self.Click = function () {
-    if (!self.hidden) {
+    if (!self.disabled) {
       self.click_fn(self);
     }
   };
   self.ProcessTarget = function (target) {
-    if (self.hidden) {
-      return false;
-    } else {
-      var hit = target.isDown() ? isPointInRect(target.position, self.rect, self.margin) : false;
-      if (hit) {
-        target.ClearPointer();
-      }
-      return hit;
+    var hit = target.isDown() ? isPointInRect(target.position, self.rect, self.margin) : false;
+    if (hit) {
+      target.ClearPointer();
     }
+    return hit;
   };
   self.Focus = function () {
-    if (!self.hidden) {
+    if (!self.disabled) {
       self.has_focus = true;
       self.wants_focus = false;
     }
@@ -100,6 +96,8 @@ function Button(props) {
     if (isU(self.color)) {
       if (self.has_focus) {
         color = RandomForColor(cyanSpec);
+      } else if (self.disabled) {
+        color = rgba255s(greyDarkSpec.regular);
       } else {
         color = RandomForColor(greySpec);
       }
@@ -107,9 +105,6 @@ function Button(props) {
     gCx.strokeStyle = gCx.fillStyle = color;
   };
   self.Draw = function () {
-    if (self.hidden) {
-      return;
-    }
     Cxdo(function () {
       var wx = WX(self.x);
       var wy = WY(self.y);

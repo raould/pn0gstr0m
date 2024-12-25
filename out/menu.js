@@ -210,7 +210,7 @@ function Menu(_ref2) {
       var nspec = self.Spec(nid);
       if (exists(nspec)) {
         Assert(exists(nspec.button));
-        return nspec.button.hidden ? self.FocusDirectionUnhidden(nspec, dkey) : nid;
+        return nspec.button.disabled ? self.FocusDirectionUnhidden(nspec, dkey) : nid;
       }
     }
   };
@@ -230,19 +230,21 @@ function Menu(_ref2) {
     if (target.isDown()) {
       // the menu is open so check buttons.
       if (self.isOpen()) {
+        // clicking on disabled button should do nothing:
+        // no action, no closing the menu.
         var found = Object.entries(self.Navigation()).find(function (e) {
           return e[1].button.ProcessTarget(target);
         });
-        if (exists(found)) {
-          if (found != self.bMenu) {
-            self.Focus(found[0]);
-          }
-          found[1].button.Click();
-        }
         hit = exists(found);
-
-        // touching outside the menu closes it.
-        if (!hit) {
+        if (hit) {
+          if (!found[1].button.disabled) {
+            if (found != self.bMenu) {
+              self.Focus(found[0]);
+            }
+            found[1].button.Click();
+          }
+        } else {
+          // touching outside the menu closes it.
           self.bMenu.Click();
           target.ClearPointer();
           hit = true;
