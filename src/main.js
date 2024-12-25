@@ -33,8 +33,8 @@ var gLifecycle;
 // which title menu to show:
 // if true, which is the expected shipping state,
 // the title menu has more options.
-// if false, then we are in "arcade/demo
-// night" mode and the menu is just 1p, 2p, start
+// if false, then we are in "arcade/demo night"
+// mode and the menu is just 1p, 2p, start
 // and the only way to start the game is to click start.
 // (for demo nights played with game controllers.)
 // and !kAppMode 1p is only ever kGameModeRegular.
@@ -1131,13 +1131,13 @@ function UpdateLocalStorage() {
 
     self.ProcessOneInput = function(cmds) {
         if (cmds.singlePlayer) {
-            // match: title_menu.bp1.click
+            // match: app_menu.bp1.click
             SetGameMode(kGameModeRegular);
             return undefined;
         }
 
         if (cmds.doublePlayer) {
-            // match: title_menu.bp2.click
+            // match: app_menu.bp2.click
             SetGameMode(kGameMode2P);
             return undefined;
         }
@@ -1162,8 +1162,8 @@ function UpdateLocalStorage() {
         // * touching the menu button on-screen.
         if ((!self.isLoading() &&
              !self.theMenu.isOpen()) &&
-            !(self.theMenu.ProcessTarget(gP1Target) ||
-              self.theMenu.ProcessTarget(gP2Target)) &&
+            (self.theMenu.ProcessTarget(gP1Target) == false &&
+             self.theMenu.ProcessTarget(gP2Target) == false) &&
             (isAnyUpOrDownPressed() ||
              isAnyActivatePressed(cmds) ||
              isAnyPointerDown())) {
@@ -1268,7 +1268,10 @@ function UpdateLocalStorage() {
             PlayBlip();
             self.lastSec = sec;
         }
-        return self.timeout > 0 ? undefined : kChargeUp;
+        if (self.timeout <= 0) {
+	    return is1P() ? kChargeUp : kGame;
+	}
+	return undefined;
     };
 
     self.StepAnimations = function( dt ) {
@@ -1336,12 +1339,13 @@ function UpdateLocalStorage() {
     };
 
     self.DrawText = function() {
+	var p2txt = is1P() ? "" : "P2";
         var t = Math.ceil(self.timeout/1000);
         Cxdo(() => {
             // match: GameState.DrawScoreHeader() et. al.
             gCx.fillStyle = RandomGreen(0.3);
-            DrawText(ForP1Side("P1","P2"), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
-            DrawText(ForP1Side("P2","P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
+            DrawText(ForP1Side("P1",p2txt), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
+            DrawText(ForP1Side(p2txt,"P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
 
             ForGameMode({
                 regular: () => {
@@ -1396,7 +1400,19 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function() {
+	self.DrawText();
         self.DrawAnimations();
+    };
+
+    self.DrawText = function() {
+	var p2txt = is1P() ? "" : "P2";
+        var t = Math.ceil(self.timeout/1000);
+        Cxdo(() => {
+            // match: GameState.DrawScoreHeader() et. al.
+            gCx.fillStyle = RandomGreen(0.3);
+            DrawText(ForP1Side("P1",p2txt), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
+            DrawText(ForP1Side(p2txt,"P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
+	});
     };
 
     self.DrawAnimations = function() {
@@ -2564,7 +2580,7 @@ function UpdateLocalStorage() {
 
     self.Draw = function() {
         Cxdo(() => {
-            gCx.globalAlpha = 0.35;
+            gCx.globalAlpha = 0.1;
             gCx.drawImage(gCanvas2, 0, 0);
             gCx.globalAlpha = 1;
             gCx.fillStyle = RandomForColor(redSpec);
