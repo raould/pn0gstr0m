@@ -11,7 +11,7 @@ function MakeGameStartAnimation() {
     name: "gamestart",
     lifespan: lifespan,
     drawFn: function drawFn(anim) {
-      var t = T10(anim.lifespan, anim.lifespan0);
+      var t = T10(anim.life, anim.lifespan0);
       var h = gh(0.05);
       var c = 10;
       var ybase = -(h * c);
@@ -41,6 +41,66 @@ function MakeGameStartAnimation() {
           gCx.fill();
         }
       });
+    }
+  });
+}
+function MakeChargeUpTextAnimation(timeout) {
+  var lifespan = timeout;
+  return new Animation({
+    name: "gamestart",
+    lifespan: lifespan,
+    drawFn: function drawFn(anim) {
+      // match: Level.Draw().
+      // todo: gLevelIndex use here is evil.
+      var zpt = MakeSplitsCount(gLevelIndex);
+      if (exists(zpt)) {
+        var t = T01(anim.lifespan0 - anim.life, anim.lifespan0 / 2);
+        var zptT = Math.ceil(zpt * t);
+        Cxdo(function () {
+          gCx.fillStyle = RandomForColor(cyanSpec);
+          DrawText("SPLIT ENERGY: ".concat(zptT), "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
+        });
+      }
+    }
+  });
+}
+function MakeChargeUpMeterAnimation(timeout) {
+  var lifespan = timeout;
+  return new Animation({
+    name: "gamestart",
+    lifespan: lifespan,
+    drawFn: function drawFn(anim) {
+      // match: GameState.DrawMidLine().
+      // todo: gLevelIndex use here is evil.
+      var zpt = MakeSplitsCount(gLevelIndex);
+      if (exists(zpt)) {
+        var t = T01(anim.lifespan0 - anim.life, anim.lifespan0 / 2);
+        var zptT = Math.ceil(zpt * t);
+        var dashStep = gh() / (gMidLineDashCount * 2);
+        var top = ForGameMode({
+          regular: gYInset * 1.5,
+          zen: gYInset
+        }) + dashStep / 2;
+        // match: Level.DrawText().
+        var txo = gSmallFontSize;
+        var bottom = gh() - gYInset * 1.05 - txo;
+        var range = bottom - top;
+        var e = zptT / zpt * range;
+        var gotfat = false;
+        Cxdo(function () {
+          gCx.beginPath();
+          for (var y = top; y < bottom; y += dashStep * 2) {
+            var ox = gR.RandomCentered(0, 0.5);
+            var fat = y - top >= range - e;
+            if (fat) {
+              var width = gMidLineDashWidth * 2;
+              gCx.rect(gw(0.5) + ox - width / 2, y, width, dashStep);
+            }
+          }
+          gCx.fillStyle = RandomGreen(0.5);
+          gCx.fill();
+        });
+      }
     }
   });
 }

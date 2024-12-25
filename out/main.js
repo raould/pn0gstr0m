@@ -535,11 +535,12 @@ var kRoot = -1;
 var kWarning = 0; // audio permission via user interaction effing eff.
 var kTitle = 1;
 var kGetReady = 2; // includes 'level splash' for levels 2+.
-var kGame = 3;
-var kLevelFin = 4; // todo: deprecate for LevelFinChoose.
-var kLevelFinChoose = 5;
-var kGameOver = 6;
-var kGameOverSummary = 7;
+var kChargeUp = 3;
+var kGame = 4;
+var kLevelFin = 5; // todo: deprecate for LevelFinChoose.
+var kLevelFinChoose = 6;
+var kGameOver = 7;
+var kGameOverSummary = 8;
 var gCanvas;
 var gCx;
 var gCanvas2;
@@ -1271,7 +1272,7 @@ function GetReadyState() {
       PlayBlip();
       self.lastSec = sec;
     }
-    return self.timeout > 0 ? undefined : kGame;
+    return self.timeout > 0 ? undefined : kChargeUp;
   };
   self.StepAnimations = function (dt) {
     Object.entries(self.animations).forEach(function (_ref2) {
@@ -1342,7 +1343,6 @@ function GetReadyState() {
   };
   self.DrawText = function () {
     var t = Math.ceil(self.timeout / 1000);
-    var zpt = MakeSplitsCount(gLevelIndex);
     Cxdo(function () {
       // match: GameState.DrawScoreHeader() et. al.
       gCx.fillStyle = RandomGreen(0.3);
@@ -1357,10 +1357,52 @@ function GetReadyState() {
       })();
       gCx.fillStyle = RandomGreen();
       DrawText("GET READY! ".concat(t), "center", gw(0.5), gh(0.55), gBigFontSizePt);
-      if (exists(zpt)) {
-        gCx.fillStyle = RandomForColor(cyanSpec);
-        DrawText("ZERO POINT ENERGY: ".concat(zpt), "center", gw(0.5), gh(0.9), gSmallFontSizePt);
+    });
+  };
+  self.Init();
+}
+
+/*class*/
+function ChargeUpState() {
+  var self = this;
+  self.Init = function () {
+    var seconds = gDebug ? 2 : 3;
+    self.timeout = 1000 * seconds - 1;
+    self.lastSec = Math.floor((self.timeout + 1) / 1000);
+    self.animations = {};
+    self.AddAnimation(MakeChargeUpTextAnimation(self.timeout));
+    self.AddAnimation(MakeChargeUpMeterAnimation(self.timeout));
+  };
+  self.AddAnimation = function (a) {
+    self.animations[gNextID++] = a;
+  };
+  self.Step = function (dt) {
+    self.StepAnimations(dt);
+    self.timeout -= dt;
+    var sec = Math.floor(self.timeout / 1000);
+    if (sec < self.lastSec) {
+      PlayBlip();
+      self.lastSec = sec;
+    }
+    return self.timeout > 0 ? undefined : kGame;
+  };
+  self.StepAnimations = function (dt) {
+    Object.entries(self.animations).forEach(function (_ref4) {
+      var _ref5 = _slicedToArray(_ref4, 2),
+        id = _ref5[0],
+        anim = _ref5[1];
+      var done = anim.Step(dt, self);
+      if (done) {
+        delete self.animations[id];
       }
+    });
+  };
+  self.Draw = function () {
+    self.DrawAnimations();
+  };
+  self.DrawAnimations = function () {
+    Object.values(self.animations).forEach(function (a) {
+      return a.Draw();
     });
   };
   self.Init();
@@ -1654,10 +1696,10 @@ function GameState(props) {
     return nextState;
   };
   self.StepAnimations = function (dt) {
-    Object.entries(self.animations).forEach(function (_ref4) {
-      var _ref5 = _slicedToArray(_ref4, 2),
-        id = _ref5[0],
-        anim = _ref5[1];
+    Object.entries(self.animations).forEach(function (_ref6) {
+      var _ref7 = _slicedToArray(_ref6, 2),
+        id = _ref7[0],
+        anim = _ref7[1];
       var done = anim.Step(dt, self);
       if (done) {
         delete self.animations[id];
@@ -1814,8 +1856,8 @@ function GameState(props) {
 
         // note: splits are pushed before parent, match: Draw()'s revEach() z order.
         if (self.level.isSpawning) {
-          for (var _i = 0; (_ref6 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref6 : 0; ++_i) {
-            var _ref6;
+          for (var _i = 0; (_ref8 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref8 : 0; ++_i) {
+            var _ref8;
             var _p = gPuckPool.Alloc();
             if (exists(_p)) {
               _p.PlacementInit(splits[_i]);
@@ -1870,6 +1912,7 @@ function GameState(props) {
 
   // note: this really has to be z-under everything.
   // match: level.Draw().
+  // match: MakeChargeUpMeterAnimation().
   self.DrawMidLine = function () {
     if (!self.isAttract) {
       var _self$level$EnergyFac;
@@ -1879,6 +1922,7 @@ function GameState(props) {
         regular: gYInset * 1.5,
         zen: gYInset
       }) + dashStep / 2;
+      // match: Level.DrawText().
       var txo = gSmallFontSize;
       var bottom = ForGameMode({
         regular: gh() - gYInset * 1.05 - txo,
@@ -2012,7 +2056,8 @@ function GameState(props) {
         self.DrawMoveTargets();
       }
       if (!isEndScreenshot) {
-        self.DrawAnimations(); // late/high z order so the animations can clear the screen if desired.
+        // late/high z order so the animations can clear the screen if desired.
+        self.DrawAnimations();
       }
       if (!isEndScreenshot) {
         var _self$theMenu6;
@@ -2980,6 +3025,9 @@ function Start() {
   };
   handlerMap[kGetReady] = function () {
     return new GetReadyState();
+  };
+  handlerMap[kChargeUp] = function () {
+    return new ChargeUpState();
   };
   handlerMap[kGame] = function () {
     return new GameState();

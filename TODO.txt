@@ -25,6 +25,7 @@
 * playtest all the speedup/timeout/english factors, sheesh.
 * animate the menu opening/closing?
 * my other metal band name really is The Wrong Abstractions. :-(
+* clean up var t = T01(anim.lifespan0-anim.life, anim.lifespan0);
 * deperately need to refactor so many globals away (re: events, below).
 * what the heck is the difference of Step() vs. Draw() vs. Process*().
   * especially since they seem different for buttons vs. *States. :-(

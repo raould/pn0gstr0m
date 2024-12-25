@@ -118,6 +118,8 @@ function Level(props) {
   };
 
   // match: main.GameState,Draw().
+  // todo: Draw is too split up, kind of
+  // confusing that midline is in game state.
   self.Draw = function (_ref) {
     var alpha = _ref.alpha,
       isEndScreenshot = _ref.isEndScreenshot;
@@ -127,7 +129,7 @@ function Level(props) {
       self.DrawPills(alpha);
       // todo: you'd maybe kind of expect lots of
       // other things like paddles and pucks to be
-      // drawn by the level too, huh? ...
+      // drawn by the level too, huh? ... :-(
     }
   };
   self.DrawTitle = function (alpha) {

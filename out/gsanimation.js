@@ -7,14 +7,14 @@
 
 // note: Animations are hardcoded to only work in GameState.
 
+// "Game State" Animations, require access to the game state.
 function GSAnimation(props) {
   var self = this;
   self.Init = function () {
     self.id = gNextID++;
     self.name = props.name;
     // undefined lifespan means never ending.
-    self.lifespan0 = props.lifespan;
-    self.lifespan = self.lifespan0;
+    self.life = self.lifespan0 = props.lifespan;
     self.startFn = props.startFn; // ( gameState )
     self.animFn = props.animFn; // ( anim.self, dt, gameState )
     self.endFn = props.endFn; // ( gameState )
@@ -30,19 +30,19 @@ function GSAnimation(props) {
     self.startFn = undefined;
 
     // anim.
-    if (isU(self.lifespan) || self.lifespan > 0) {
+    if (isU(self.life) || self.life > 0) {
       exists(self.animFn) && self.animFn(self, dt, gameState);
     }
-    if (exists(self.lifespan)) {
-      self.lifespan -= dt;
+    if (exists(self.life)) {
+      self.life -= dt;
     }
 
     // end.
-    if (exists(self.lifespan) && self.lifespan <= 0) {
+    if (exists(self.life) && self.life <= 0) {
       exists(self.endFn) && self.endFn(gameState);
       self.endFn = undefined;
     }
-    return exists(self.lifespan) && self.lifespan <= 0;
+    return exists(self.life) && self.life <= 0;
   };
   self.Init();
 }

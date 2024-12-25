@@ -5,14 +5,14 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+// Animations that do not require access to the game state.
 function Animation(props) {
   var self = this;
   self.Init = function () {
     self.id = gNextID++;
     self.name = props.name;
-    // undefined lifespan means never ending.
-    self.lifespan0 = props.lifespan;
-    self.lifespan = self.lifespan0;
+    // undefined life means never ending.
+    self.life = self.lifespan0 = props.lifespan;
     self.startFn = props.startFn; // ()
     self.animFn = props.animFn; // (anim.self, dt)
     self.endFn = props.endFn; // ()
@@ -28,19 +28,19 @@ function Animation(props) {
     self.startFn = undefined;
 
     // anim.
-    if (isU(self.lifespan) || self.lifespan > 0) {
+    if (isU(self.life) || self.life > 0) {
       exists(self.animFn) && self.animFn(self, dt);
     }
-    if (exists(self.lifespan)) {
-      self.lifespan -= dt;
+    if (exists(self.life)) {
+      self.life -= dt;
     }
 
     // end.
-    if (exists(self.lifespan) && self.lifespan <= 0) {
+    if (exists(self.life) && self.life <= 0) {
       exists(self.endFn) && self.endFn();
       self.endFn = undefined;
     }
-    return exists(self.lifespan) && self.lifespan <= 0;
+    return exists(self.life) && self.life <= 0;
   };
   self.Init();
 }
