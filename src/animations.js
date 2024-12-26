@@ -51,7 +51,8 @@ function MakeChargeUpTextAnimation(timeout) {
 	    // todo: gLevelIndex use here is evil.
             var zpt = MakeSplitsCount(gLevelIndex);
 	    if (exists(zpt)) {
-		var t = T01(anim.lifespan0-anim.life, anim.lifespan0 / 2);
+		// match: MakeChargeUpMeterAnimation t.
+		var t = T01(anim.lifespan0-anim.life, anim.lifespan0 * 0.6);
 		var zptT = Math.ceil(zpt * t);
 		Cxdo(() => {
 		    gCx.fillStyle = RandomForColor(cyanSpec);
@@ -72,7 +73,8 @@ function MakeChargeUpMeterAnimation(timeout) {
 	    // todo: gLevelIndex use here is evil.
             var zpt = MakeSplitsCount(gLevelIndex);
 	    if (exists(zpt)) {
-		var t = T01(anim.lifespan0-anim.life, anim.lifespan0 / 2);
+		// match: MakeChargeUpTextAnimation t.
+		var t = T01(anim.lifespan0-anim.life, anim.lifespan0 * 0.6);
 		var zptT = Math.ceil(zpt * t);
 		var dashStep = gh() / (gMidLineDashCount*2);
 		var top = ForGameMode({regular: gYInset*1.5, zen: gYInset}) + dashStep/2;
