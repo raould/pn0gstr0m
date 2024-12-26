@@ -94,10 +94,8 @@ function MakeChargeUpMeterAnimation(timeout) {
           for (var y = top; y < bottom; y += dashStep * 2) {
             var ox = gR.RandomCentered(0, 0.5);
             var fat = y - top >= range - e;
-            if (fat) {
-              var width = gMidLineDashWidth * 2;
-              gCx.rect(gw(0.5) + ox - width / 2, y, width, dashStep);
-            }
+            var width = fat ? gMidLineDashWidth * 3 : gMidLineDashWidth;
+            gCx.rect(gw(0.5) + ox - width / 2, y, width, dashStep);
           }
           gCx.fillStyle = RandomGreen(0.5);
           gCx.fill();

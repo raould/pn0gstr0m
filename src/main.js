@@ -186,7 +186,7 @@ var kMaxVY = syi(30);
 
 function RecalculateConstants() {
     gMidLineDashCount = syi(16);
-    gMidLineDashWidth = sx1(2);
+    gMidLineDashWidth = sx1(1);
     gXInset = sxi(20);
     gYInset = sxi(20);
     gPaddleHeight = gh(0.11);
@@ -1967,7 +1967,7 @@ function UpdateLocalStorage() {
                 for( var y = top; y < bottom; y += dashStep*2 ) {
                     var ox = gR.RandomCentered(0, 0.5);
                     var fat = y-top >= (range-e);
-                    var width = fat ? gMidLineDashWidth*2 : gMidLineDashWidth;
+                    var width = fat ? gMidLineDashWidth*3 : gMidLineDashWidth;
                     gCx.rect( gw(0.5)+ ox -(width/2), y, width, dashStep );
                 }
                 gCx.fillStyle = RandomGreen(0.5);
