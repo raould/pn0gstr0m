@@ -2252,7 +2252,7 @@ function LevelFinChooseState() {
     // the ui expects at most 2.
     Assert(p1Rewards.length <= 2);
     var count = p1Rewards.length;
-    self.timeout = 1000 * (count === 1 ? 5 : gDebug ? 3 : 10);
+    self.timeout = 1000 * (count === 1 ? 5 : gDebug ? 100 : 10);
     self.started = gGameTime;
 
     // skip the whole sceen if all pills have been rewarded.
@@ -2368,34 +2368,15 @@ function LevelFinChooseState() {
     return undefined;
   };
   self.ProcessTouch = function (target, specs) {
-    var _loop = function _loop() {
-        var spec = specs[i];
-        var x = sx(0);
-        var oy = sy1(20);
-        var y = spec.cy - oy;
-        var rect = {
-          x: x,
-          y: y,
-          width: gw(1),
-          height: oy * 2
-        };
-        gDebug && gDebug_DrawList.push({
-          fn: function fn() {
-            gCx.strokeStyle = "red";
-            StrokeRect(rect.x, rect.y, rect.width, rect.height);
-          }
-        });
-        var hit = target.isDown() ? isPointInRect(target.position, rect) : false;
-        if (hit) {
-          return {
-            v: i
-          };
-        }
-      },
-      _ret;
     for (var i = 0; i < specs.length; ++i) {
-      _ret = _loop();
-      if (_ret) return _ret.v;
+      var spec = specs[i];
+      var oy = sy1(20);
+      var y0 = spec.cy - oy;
+      var y1 = spec.cy + oy;
+      var hit = target.isDown() ? target.position.y >= y0 && target.position.y <= y1 : false;
+      if (hit) {
+        return i;
+      }
     }
     return undefined;
   };
@@ -2888,7 +2869,7 @@ function MouseUp(e) {
 }
 function TouchStart(e) {
   e.preventDefault();
-  var _loop2 = function _loop2() {
+  var _loop = function _loop() {
     var t = e.touches[i];
     var pid = t.identifier;
     PointerProcess(t, function (x, y) {
@@ -2903,12 +2884,12 @@ function TouchStart(e) {
     });
   };
   for (var i = 0; i < e.touches.length; ++i) {
-    _loop2();
+    _loop();
   }
 }
 function TouchMove(e) {
   e.preventDefault();
-  var _loop3 = function _loop3() {
+  var _loop2 = function _loop2() {
     var t = e.touches[i];
     var pid = t.identifier;
     PointerProcess(t, function (x, y) {
@@ -2922,12 +2903,12 @@ function TouchMove(e) {
     });
   };
   for (var i = 0; i < e.touches.length; ++i) {
-    _loop3();
+    _loop2();
   }
 }
 function TouchEnd(e) {
   e.preventDefault();
-  var _loop4 = function _loop4() {
+  var _loop3 = function _loop3() {
     var t = e.changedTouches[i];
     var pid = t.identifier;
     PointerProcess(e, function (x, y) {
@@ -2941,7 +2922,7 @@ function TouchEnd(e) {
     });
   };
   for (var i = 0; i < e.changedTouches.length; ++i) {
-    _loop4();
+    _loop3();
   }
 }
 function ResetGlobalStorage() {
