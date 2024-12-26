@@ -2329,7 +2329,7 @@ function UpdateLocalStorage() {
         Assert(p1Rewards.length <= 2);
 
         const count = p1Rewards.length;
-        self.timeout = 1000 * ((count === 1) ? 5 : (gDebug ? 3 : 10));
+        self.timeout = 1000 * ((count === 1) ? 5 : (gDebug ? 100 : 10));
         self.started = gGameTime;
 
         // skip the whole sceen if all pills have been rewarded.
@@ -2443,18 +2443,11 @@ function UpdateLocalStorage() {
     self.ProcessTouch = function(target, specs) {
         for (let i = 0; i < specs.length; ++i) {
             const spec = specs[i];
-            const x = sx(0);
             const oy = sy1(20);
-            const y = spec.cy - oy;
-            const rect = { x, y, width: gw(1), height: oy*2 };
-            gDebug && gDebug_DrawList.push({
-                fn: () => {
-                    gCx.strokeStyle = "red";
-                    StrokeRect(rect.x, rect.y, rect.width, rect.height);
-                }
-            });
+            const y0 = spec.cy - oy;
+            const y1 = spec.cy + oy;
             const hit = target.isDown() ?
-                  isPointInRect(target.position, rect) :
+                  target.position.y >= y0 && target.position.y <= y1 :
                   false;
             if (hit) {
                 return i;
