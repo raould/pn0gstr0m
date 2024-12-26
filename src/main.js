@@ -57,6 +57,7 @@ function incrScore(pscore, amount) {
 
 // mutually exclusive enum.
 // regular & hard & zen are single player.
+// hard is the ame as 1P but zen is different!
 var kGameModeRegular = "regular";
 var kGameModeHard = "hard";
 var kGameModeZen = "zen";
@@ -1269,7 +1270,12 @@ function UpdateLocalStorage() {
             self.lastSec = sec;
         }
         if (self.timeout <= 0) {
-	    return is1P() ? kChargeUp : kGame;
+	    return ForGameMode({
+		regular: kChargeUp,
+		hard: kChargeUp,
+		zen: kGame,
+		z2p: kGame
+	    });
 	}
 	return undefined;
     };
@@ -1409,9 +1415,15 @@ function UpdateLocalStorage() {
         var t = Math.ceil(self.timeout/1000);
         Cxdo(() => {
             // match: GameState.DrawScoreHeader() et. al.
-            gCx.fillStyle = RandomGreen(0.3);
+            gCx.fillStyle = RandomGreen( 0.3 );
             DrawText(ForP1Side("P1",p2txt), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
             DrawText(ForP1Side(p2txt,"P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
+
+	    // match: Level.DrawTitle().
+	    if (gLevelIndex >= 1) {
+		gCx.fillStyle = RandomForColor( cyanSpec );
+		DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
+	    }
 	});
     };
 
