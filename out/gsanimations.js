@@ -196,19 +196,24 @@ function MakeTargetsLightningAnimation(props) {
     name: "targetslightning",
     lifespan: lifespan,
     drawFn: function drawFn() {
+      var px, py;
       targets.forEach(function (xy) {
-        AddLightningPath({
+        var _px, _py;
+        var spec = {
           color: gR.RandomBool(0.4) ? RandomMagenta() : RandomBlue(),
-          // todo: er, ahem, there's maybe some bug where the last leg of lightning is
-          // very short e.g. decimate, so i am reversing start and end
+          // todo: er, ahem, there's maybe some bug where the last leg of lightning
+          // can be short due to subdividing, so i am reversing start and end
           // on purpose to compensate because it looks less bad for now.
           x0: xy.x,
           y0: xy.y,
-          x1: paddle.GetMidX(),
-          y1: paddle.GetMidY(),
+          x1: (_px = px) != null ? _px : paddle.GetMidX(),
+          y1: (_py = py) != null ? _py : paddle.GetMidY(),
           steps: 10,
           range: aub(props.range, sx1(15))
-        });
+        };
+        AddLightningPath(spec);
+        px = spec.x0;
+        py = spec.y0;
       });
     },
     endFn: endFn
