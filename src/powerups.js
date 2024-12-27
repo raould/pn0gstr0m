@@ -383,33 +383,47 @@ function MakeDecimateProps(maker) {
         lifespan: kPillLifespan,
         testFn: (gameState) => {
             // looks unfun if there aren't enough pucks to destroy.
-            return gDebug || gPucks.A.length > 20;
+	    // by the time the powerup is activated there might be even less.
+	    // e.g. consider that the other player might also be doing their decimate.
+            return gDebug || gPucks.A.length > 30;
         },
         canSkip: true,
         drawFn: (self, alpha=1) => DrawDecimatePill(maker.side, self, alpha),
         boomFn: (gameState) => {
-            // try to destroy at least 1, but leave at least 1 still alive.
-            // prefer destroying the ones closest to the player.
-            var count = Math.max(1, Math.floor(gPucks.A.length*0.4)); // not deci-mate, i know.
-            if (gPucks.A.length > 1 && count === 0) {
-                count = 1;
-            }
-            if (gPucks.A.length - count > 0) {
-                PlayPowerupBoom();
-                var byd = gPucks.A.
-                    map((p) => { return {d:Math.abs(p.x-maker.paddle.x), p:p}; }).
-                    sort((a,b) => { return a.d - b.d; });
-                var targets = byd.slice(0, count).map((e) => { return e.p; });
-                Assert(targets.length < gPucks.A.length);
-                targets.forEach(p => {
-                    p.alive = false;
-                    AddSparks({ x:p.x, y:p.y, vx:p.vx, vy:p.vy, count:2, rx:sx(1), ry:sy(1) });
-                });
-                gameState.AddAnimation(MakeTargetsLightningAnimation({
-                    lifespan: 200,
-                    targets,
-                    paddle: maker.paddle,
-                }));
+            // try to destroy at least 1, but leave at least enough alive to avoid(ish) game over.
+	    var minSaved = 3;
+	    if (gPucks.A.length > minSaved) {
+		var count = Clip(gPucks.A.length - minSaved, 0, 20);
+		if (count > 0) {
+                    PlayPowerupBoom();
+                    var targets = gPucks.A.
+			map((p) => { return {d:Math.abs(p.x - maker.paddle.x), p} }).
+			filter((e) => { return e.d > gPaddleWidth * 3 }). // todo: not really working!?
+			sort((a,b) => { return a.d - b.d; }).
+			slice(0, count).
+			map((e) => { return e.p; });
+                    Assert(targets.length < gPucks.A.length);
+		    console.log("targets", targets.length);
+		    if (targets.length === 0 && gPucks.A.length > 1) {
+			targets = gPucks.A.slice(0, 1);
+			console.log("targets'", targets.length);
+		    }
+                    targets.forEach(p => {
+			p.alive = false;
+			AddSparks({
+			    x:p.x, y:p.y,
+			    vx:p.vx/3, vy:p.vy*3,
+			    count:10,
+			    rx:sx(1), ry:sy(1),
+			    colorSpec: whiteSpec
+			});
+                    });
+                    gameState.AddAnimation(MakeTargetsLightningAnimation({
+			lifespan: 200,
+			targets,
+			paddle: maker.paddle,
+                    }));
+		}
             }
         },
     };
