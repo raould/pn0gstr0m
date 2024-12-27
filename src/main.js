@@ -1252,8 +1252,7 @@ function UpdateLocalStorage() {
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
-        self.AddAnimation(MakeGameStartAnimation());
-        PlayBlip();
+        self.AddAnimation(MakeWipedownAnimation());
         console.log("GetReadyState", is1P(), gGameMode);
     };
 
@@ -1264,11 +1263,6 @@ function UpdateLocalStorage() {
     self.Step = function( dt ) {
         self.StepAnimations( dt );
         self.timeout -= dt;
-        var sec = Math.floor(self.timeout/1000);
-        if (sec < self.lastSec) {
-            PlayBlip();
-            self.lastSec = sec;
-        }
         if (self.timeout <= 0) {
 	    return ForGameMode({
 		regular: kChargeUp,
@@ -1276,8 +1270,15 @@ function UpdateLocalStorage() {
 		zen: kGame,
 		z2p: kGame
 	    });
+	} else {
+	    // one-second-at-a-time countdown.
+            var sec = Math.floor(self.timeout/1000);
+            if (sec < self.lastSec) {
+		PlayBlip(2);
+		self.lastSec = sec;
+            }
+	    return undefined;
 	}
-	return undefined;
     };
 
     self.StepAnimations = function( dt ) {
@@ -1356,7 +1357,7 @@ function UpdateLocalStorage() {
             ForGameMode({
                 regular: () => {
                     gCx.fillStyle = RandomForColor(cyanSpec);
-                    DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.3), gSmallFontSizePt);
+                    DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
                 },
                 zen: () => {}, // only 1 level.
             })();
@@ -1379,6 +1380,7 @@ function UpdateLocalStorage() {
         self.animations = {};
         self.AddAnimation(MakeChargeUpTextAnimation(self.timeout));
         self.AddAnimation(MakeChargeUpMeterAnimation(self.timeout));
+	PlayChargeup();
     };
 
     self.AddAnimation = function( a ) {
@@ -1388,11 +1390,6 @@ function UpdateLocalStorage() {
     self.Step = function( dt ) {
         self.StepAnimations( dt );
         self.timeout -= dt;
-        var sec = Math.floor(self.timeout/1000);
-        if (sec < self.lastSec) {
-            PlayBlip();
-            self.lastSec = sec;
-        }
         return self.timeout > 0 ? undefined : kGame;
     };
 

@@ -188,7 +188,7 @@ function Puck() {
       var pvx = T01(Math.abs(self.vx), maxVX);
       // some modes allow more for linear streaming of the pucks.
       var vyfc = ForGameMode({
-        regular: 0.1,
+        regular: 0.15,
         hard: 0.2,
         zen: 0.1,
         // the faster things get, the more spread out, i hope, but,

@@ -5,7 +5,7 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-function MakeGameStartAnimation() {
+function MakeWipedownAnimation() {
   var lifespan = 700;
   return new Animation({
     name: "gamestart",
