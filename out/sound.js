@@ -224,7 +224,7 @@ function LoadAudio() {
   });
   RegisterSfx("start1", "start");
   RegisterSfx("chargeup1", "chargeup", {
-    volume: 0.2
+    volume: 0.3
   });
   RegisterSfx("powerupboom1", "powerUp");
   RegisterSfx("gameover1", "gameover");

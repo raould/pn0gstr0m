@@ -208,7 +208,7 @@ function LoadAudio() {
     RegisterSfx("blip2", "blipSelectB", { volume: 0.3 });
     RegisterSfx("blip3", "blipSelectC", { volume: 0.3 });
     RegisterSfx("start1", "start");
-    RegisterSfx("chargeup1", "chargeup", { volume: 0.2 });
+    RegisterSfx("chargeup1", "chargeup", { volume: 0.3 });
     RegisterSfx("powerupboom1", "powerUp");
     RegisterSfx("gameover1", "gameover");
     RegisterMusic("music1", "nervouslynx");
