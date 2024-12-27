@@ -13,7 +13,7 @@ function MakeWipedownAnimation() {
     drawFn: function drawFn(anim) {
       var t = T10(anim.life, anim.lifespan0);
       var h = gh(0.05);
-      var c = 10;
+      var c = 14;
       var ybase = -(h * c);
       var yrange = gHeight + 2 * (h * c);
       var y = ybase + t * yrange;
@@ -24,7 +24,7 @@ function MakeWipedownAnimation() {
           var yo = y + i * h;
           gCx.beginPath();
           gCx.rect(0, yo, gWidth, h * 0.8);
-          gCx.fillStyle = RandomForColor(greenSpec, 1 / c * i);
+          gCx.fillStyle = RandomForColor(greenSpec, 1 / c * i, true);
           gCx.fill();
           lastY = yo + h * 0.8;
         }
@@ -37,7 +37,7 @@ function MakeWipedownAnimation() {
           var yo = y + i * h;
           gCx.beginPath();
           gCx.rect(0, yo, gWidth, h * 0.8);
-          gCx.fillStyle = RandomForColor(greenSpec, 1 - 1 / c * i);
+          gCx.fillStyle = RandomForColor(greenSpec, 1 - 1 / c * i, true);
           gCx.fill();
         }
       });

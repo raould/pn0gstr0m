@@ -46,7 +46,7 @@ function Puck() {
     var wy = self.y - dh / 2;
 
     // fade things that aren't close and coming toward you.
-    var avx = 0.8;
+    var avx = 0.65; // not at all sure exactly how this quantizes, tho.
     var avxt = 1 - avx;
     var mid = gw(0.5);
     var range = gw(0.5) - gXInset;

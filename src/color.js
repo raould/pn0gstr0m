@@ -73,25 +73,36 @@ const backgroundColorStr = "black";
 const scanlineColorStr = "rgba(0, 0, 0, 0.15)";
 const puckColorStr = "cyan";
 
-// meh! doubt/dunno that this does anything enough
-// to reduce the sheer number of color strings
-// such that javascript engines can optimize.
-const kChannelQuantizeStep = 255/8;
-function quantizeChannel(c) {
+// meh! doubt/dunno that this does enough
+// to reduce the sheer number of color strings,
+// to reduce the js garbage collection load.
+const kChannelQuantizeStep8 = 255/8;
+const kChannelQuantizeStep4 = 255/4;
+function quantizeChannel(c, step=kChannelQuantizeStep8) {
     if (c >= 255) { return 255; }
     if (c <= 0) { return 0; }
-    return Math.floor( c / kChannelQuantizeStep ) * kChannelQuantizeStep;
+    var q = Math.floor((c+0.5)/step) * step;
+    if (c > 0 && q <= 0) {
+	q = step;
+    }
+    if (c < 255 && q >= 255) {
+	q = 255-step;
+    }
+    return q;
+}
+function quantizeAlpha(c, step=kChannelQuantizeStep4) {
+    return Clip(quantizeChannel(c * 255, step)/255, 0, 255);
 }
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 const _tc = Array(4);
-function rgba255s(array, alpha) {
+function rgba255s(array, alpha, fullres=false) {
     // detect any old style code that called this function.
     Assert(Array.isArray(array), "expected array as first parameter");
 
-    _tc[0] = quantizeChannel(array[0]);
-    _tc[1] = quantizeChannel(array[1]);
-    _tc[2] = quantizeChannel(array[2]);
+    _tc[0] = fullres ? array[0] : quantizeChannel(array[0]);
+    _tc[1] = fullres ? array[1] : quantizeChannel(array[1]);
+    _tc[2] = fullres ? array[2] : quantizeChannel(array[2]);
 
     // alpha is, in order of highest precedence:
     // array[4], or the 'alpha' argument, or the default value of 1.
@@ -99,6 +110,7 @@ function rgba255s(array, alpha) {
     if (array.length == 4) {
         _tc[3] = array[3];
     }
+    if (!fullres) { _tc[3] = quantizeAlpha(_tc[3]); }
 
     var joined = _tc.map((ch,i) => ((i < 3) ? Clip255(ch) : ch)).join(",");
     var str = ((array.length == 4 || exists(alpha)) ? "rgba(" : "rgb(") + joined + ")";
@@ -152,9 +164,9 @@ function RandomColor(alpha=1) {
     );
 }
 
-function RandomForColor(spec, alpha=1) {
+function RandomForColor(spec, alpha=1, fullres=false) {
     if (gR.RandomBool(0.05)) {
-        return rgba255s(spec.strong, alpha);
+        return rgba255s(spec.strong, alpha, fullres);
     }
     else {
         // "NTSC" ha ha.
@@ -164,7 +176,8 @@ function RandomForColor(spec, alpha=1) {
                 0,
                 255
             )),
-            alpha
+            alpha,
+	    fullres
         );
     }
 }

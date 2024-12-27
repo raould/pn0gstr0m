@@ -88,34 +88,51 @@ var backgroundColorStr = "black";
 var scanlineColorStr = "rgba(0, 0, 0, 0.15)";
 var puckColorStr = "cyan";
 
-// meh! doubt/dunno that this does anything enough
-// to reduce the sheer number of color strings
-// such that javascript engines can optimize.
-var kChannelQuantizeStep = 255 / 8;
+// meh! doubt/dunno that this does enough
+// to reduce the sheer number of color strings,
+// to reduce the js garbage collection load.
+var kChannelQuantizeStep8 = 255 / 8;
+var kChannelQuantizeStep4 = 255 / 4;
 function quantizeChannel(c) {
+  var step = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : kChannelQuantizeStep8;
   if (c >= 255) {
     return 255;
   }
   if (c <= 0) {
     return 0;
   }
-  return Math.floor(c / kChannelQuantizeStep) * kChannelQuantizeStep;
+  var q = Math.floor((c + 0.5) / step) * step;
+  if (c > 0 && q <= 0) {
+    q = step;
+  }
+  if (c < 255 && q >= 255) {
+    q = 255 - step;
+  }
+  return q;
+}
+function quantizeAlpha(c) {
+  var step = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : kChannelQuantizeStep4;
+  return Clip(quantizeChannel(c * 255, step) / 255, 0, 255);
 }
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 var _tc = Array(4);
 function rgba255s(array, alpha) {
+  var fullres = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
   // detect any old style code that called this function.
   Assert(Array.isArray(array), "expected array as first parameter");
-  _tc[0] = quantizeChannel(array[0]);
-  _tc[1] = quantizeChannel(array[1]);
-  _tc[2] = quantizeChannel(array[2]);
+  _tc[0] = fullres ? array[0] : quantizeChannel(array[0]);
+  _tc[1] = fullres ? array[1] : quantizeChannel(array[1]);
+  _tc[2] = fullres ? array[2] : quantizeChannel(array[2]);
 
   // alpha is, in order of highest precedence:
   // array[4], or the 'alpha' argument, or the default value of 1.
   _tc[3] = alpha != null ? alpha : 1;
   if (array.length == 4) {
     _tc[3] = array[3];
+  }
+  if (!fullres) {
+    _tc[3] = quantizeAlpha(_tc[3]);
   }
   var joined = _tc.map(function (ch, i) {
     return i < 3 ? Clip255(ch) : ch;
@@ -154,13 +171,14 @@ function RandomColor() {
 }
 function RandomForColor(spec) {
   var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+  var fullres = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
   if (gR.RandomBool(0.05)) {
-    return rgba255s(spec.strong, alpha);
+    return rgba255s(spec.strong, alpha, fullres);
   } else {
     // "NTSC" ha ha.
     return rgba255s(spec.regular.map(function (ch) {
       return Clip(gR.RandomCentered(ch, 16), 0, 255);
-    }), alpha);
+    }), alpha, fullres);
   }
 }
 function FadeIn(alpha) {
