@@ -166,7 +166,6 @@ function Puck() {
             if (doeject) {
                 self.vy *= 1.1;
             }
-            PlayBlip();
         }
         else {
             const slowCountFactor = ForGameMode({
@@ -216,9 +215,9 @@ function Puck() {
             // vs. MoveSparks happens after so it goes onto gSparks.A.
 	    np = { x: self.x, y: self.y, vx, vy, ur: false, forced, maxVX };
             AddSparks({ x:self.x, y:self.y, vx:sx(0.5), vy:sy(1), count: 3, rx:sx(1), ry:sy(1) });
-
-            PlayExplosion();
         }
+
+        PlayExplosion();
 
         // try to hurry up when the level has no more pucks.
         const nvx = MinSigned(

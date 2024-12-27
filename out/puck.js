@@ -162,7 +162,6 @@ function Puck() {
       if (doeject) {
         self.vy *= 1.1;
       }
-      PlayBlip();
     } else {
       var slowCountFactor = ForGameMode({
         regular: Math.pow(countFactor, 1.5),
@@ -227,8 +226,8 @@ function Puck() {
         rx: sx(1),
         ry: sy(1)
       });
-      PlayExplosion();
     }
+    PlayExplosion();
 
     // try to hurry up when the level has no more pucks.
     var nvx = MinSigned(self.vx * (isSuddenDeath ? 1.1 : 1), maxVX);
