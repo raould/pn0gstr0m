@@ -205,13 +205,13 @@ var PlayBlip = MakePlayFn(kBlipSfxCount, "blip", PlaySfxDebounced);
 function LoadAudio() {
   // these will load in order 1 by 1 via onload().
   RegisterSfx("explosion1", "explosionA", {
-    volume: 0.5
+    volume: 0.35
   });
   RegisterSfx("explosion2", "explosionB", {
-    volume: 0.5
+    volume: 0.35
   });
   RegisterSfx("explosion3", "explosionC", {
-    volume: 0.5
+    volume: 0.35
   });
   RegisterSfx("blip1", "blipSelectA", {
     volume: 0.3
