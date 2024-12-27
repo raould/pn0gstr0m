@@ -183,8 +183,8 @@ function PlaySound(name) {
 function MakePlayFn(count, basename, playfn) {
     Assert(count >= 0, count, `MakePlayFn ${basename}`);
     const gNames = Array(count).fill().map((e,i) => `${basename}${i+1}`);
-    return () => {
-        const index = gR.RandomRangeInt(0, count-1);
+    return (index) => {
+        index = index ?? gR.RandomRangeInt(0, count-1);
         const name = gNames[index];
         return playfn(name);
     };
@@ -192,12 +192,12 @@ function MakePlayFn(count, basename, playfn) {
 
 const PlayStart = MakePlayFn(1, "start", PlaySfx);
 const PlayGameOver = MakePlayFn(1, "gameover", PlaySfx);
+const PlayChargeup = MakePlayFn(1, "chargeup", PlaySfx);
+const PlayPowerupBoom = MakePlayFn(1, "powerupboom", PlaySfxDebounced);
 const kExplosionSfxCount = 3;
 const PlayExplosion = MakePlayFn(kExplosionSfxCount, "explosion", PlaySfxDebounced);
 const kBlipSfxCount = 3;
 const PlayBlip = MakePlayFn(kBlipSfxCount, "blip", PlaySfxDebounced);
-const kPowerupSfxCount = 1;
-const PlayPowerupBoom = MakePlayFn(kPowerupSfxCount, "powerupboom", PlaySfxDebounced);
 
 function LoadAudio() {
     // these will load in order 1 by 1 via onload().
@@ -208,6 +208,7 @@ function LoadAudio() {
     RegisterSfx("blip2", "blipSelectB", { volume: 0.3 });
     RegisterSfx("blip3", "blipSelectC", { volume: 0.3 });
     RegisterSfx("start1", "start");
+    RegisterSfx("chargeup1", "chargeup", { volume: 0.2 });
     RegisterSfx("powerupboom1", "powerUp");
     RegisterSfx("gameover1", "gameover");
     RegisterMusic("music1", "nervouslynx");
@@ -238,7 +239,6 @@ function LoadAudio() {
     Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("music")).length == kMusicSfxCount, "music count");
     Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("explosion")).length == kExplosionSfxCount, "explosion count");
     Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("blip")).length == kBlipSfxCount, "blip count");
-    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("powerupboom")).length == kPowerupSfxCount, "powerupboom count");
 
     // kick off loading chain.
     gAudio.name2meta[gAudio.names[0]].howl.load();

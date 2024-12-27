@@ -1258,8 +1258,7 @@ function GetReadyState() {
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.animations = {};
-    self.AddAnimation(MakeGameStartAnimation());
-    PlayBlip();
+    self.AddAnimation(MakeWipedownAnimation());
     console.log("GetReadyState", is1P(), gGameMode);
   };
   self.AddAnimation = function (a) {
@@ -1268,11 +1267,6 @@ function GetReadyState() {
   self.Step = function (dt) {
     self.StepAnimations(dt);
     self.timeout -= dt;
-    var sec = Math.floor(self.timeout / 1000);
-    if (sec < self.lastSec) {
-      PlayBlip();
-      self.lastSec = sec;
-    }
     if (self.timeout <= 0) {
       return ForGameMode({
         regular: kChargeUp,
@@ -1280,8 +1274,15 @@ function GetReadyState() {
         zen: kGame,
         z2p: kGame
       });
+    } else {
+      // one-second-at-a-time countdown.
+      var sec = Math.floor(self.timeout / 1000);
+      if (sec < self.lastSec) {
+        PlayBlip(2);
+        self.lastSec = sec;
+      }
+      return undefined;
     }
-    return undefined;
   };
   self.StepAnimations = function (dt) {
     Object.entries(self.animations).forEach(function (_ref2) {
@@ -1361,7 +1362,7 @@ function GetReadyState() {
       ForGameMode({
         regular: function regular() {
           gCx.fillStyle = RandomForColor(cyanSpec);
-          DrawText("LEVEL ".concat(gLevelIndex), "center", gw(0.5), gh(0.3), gSmallFontSizePt);
+          DrawText("LEVEL ".concat(gLevelIndex), "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
         },
         zen: function zen() {} // only 1 level.
       })();
@@ -1382,6 +1383,7 @@ function ChargeUpState() {
     self.animations = {};
     self.AddAnimation(MakeChargeUpTextAnimation(self.timeout));
     self.AddAnimation(MakeChargeUpMeterAnimation(self.timeout));
+    PlayChargeup();
   };
   self.AddAnimation = function (a) {
     self.animations[gNextID++] = a;
@@ -1389,11 +1391,6 @@ function ChargeUpState() {
   self.Step = function (dt) {
     self.StepAnimations(dt);
     self.timeout -= dt;
-    var sec = Math.floor(self.timeout / 1000);
-    if (sec < self.lastSec) {
-      PlayBlip();
-      self.lastSec = sec;
-    }
     return self.timeout > 0 ? undefined : kGame;
   };
   self.StepAnimations = function (dt) {

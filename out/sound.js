@@ -187,20 +187,21 @@ function MakePlayFn(count, basename, playfn) {
   var gNames = Array(count).fill().map(function (e, i) {
     return "".concat(basename).concat(i + 1);
   });
-  return function () {
-    var index = gR.RandomRangeInt(0, count - 1);
+  return function (index) {
+    var _index;
+    index = (_index = index) != null ? _index : gR.RandomRangeInt(0, count - 1);
     var name = gNames[index];
     return playfn(name);
   };
 }
 var PlayStart = MakePlayFn(1, "start", PlaySfx);
 var PlayGameOver = MakePlayFn(1, "gameover", PlaySfx);
+var PlayChargeup = MakePlayFn(1, "chargeup", PlaySfx);
+var PlayPowerupBoom = MakePlayFn(1, "powerupboom", PlaySfxDebounced);
 var kExplosionSfxCount = 3;
 var PlayExplosion = MakePlayFn(kExplosionSfxCount, "explosion", PlaySfxDebounced);
 var kBlipSfxCount = 3;
 var PlayBlip = MakePlayFn(kBlipSfxCount, "blip", PlaySfxDebounced);
-var kPowerupSfxCount = 1;
-var PlayPowerupBoom = MakePlayFn(kPowerupSfxCount, "powerupboom", PlaySfxDebounced);
 function LoadAudio() {
   // these will load in order 1 by 1 via onload().
   RegisterSfx("explosion1", "explosionA", {
@@ -222,6 +223,9 @@ function LoadAudio() {
     volume: 0.3
   });
   RegisterSfx("start1", "start");
+  RegisterSfx("chargeup1", "chargeup", {
+    volume: 0.2
+  });
   RegisterSfx("powerupboom1", "powerUp");
   RegisterSfx("gameover1", "gameover");
   RegisterMusic("music1", "nervouslynx");
@@ -257,9 +261,6 @@ function LoadAudio() {
   Assert(Object.keys(gAudio.name2meta).filter(function (k) {
     return k.includes("blip");
   }).length == kBlipSfxCount, "blip count");
-  Assert(Object.keys(gAudio.name2meta).filter(function (k) {
-    return k.includes("powerupboom");
-  }).length == kPowerupSfxCount, "powerupboom count");
 
   // kick off loading chain.
   gAudio.name2meta[gAudio.names[0]].howl.load();
