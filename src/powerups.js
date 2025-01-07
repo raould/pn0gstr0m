@@ -114,7 +114,7 @@ var gPillInfo = {
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kChaosPill]: {
-        name: "KRZY",
+        name: "WILD",
 	maker: MakeChaosProps,
         drawer: DrawChaosPill,
         wfn: () => sxi(20), hfn: () => syi(20),

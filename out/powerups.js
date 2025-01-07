@@ -140,7 +140,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(20);
   }
 }), kChaosPill, {
-  name: "KRZY",
+  name: "WILD",
   maker: MakeChaosProps,
   drawer: DrawChaosPill,
   wfn: function wfn() {
