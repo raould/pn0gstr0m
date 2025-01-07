@@ -1254,7 +1254,7 @@ function GetReadyState() {
   self.Init = function () {
     ResetInput();
     gStateMuted = false;
-    var seconds = gDebug ? 2 : gP1PillState.deck.length > 0 ? 5 : 3;
+    var seconds = gP1PillState.deck.length > 0 ? 5 : 3;
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.animations = {};
@@ -1377,7 +1377,7 @@ function GetReadyState() {
 function ChargeUpState() {
   var self = this;
   self.Init = function () {
-    var seconds = gDebug ? 1 : 3;
+    var seconds = 3;
     self.timeout = 1000 * seconds - 1;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.animations = {};
@@ -1529,12 +1529,6 @@ function GameState(props) {
     })();
     self.MakeLevel();
     self.CreateStartingPuck(self.level.vx0);
-    // make it look more interesting as the 1P levels increase.
-    if (is1P()) {
-      for (var pi = 1; pi < Math.min(self.level.index, gPillIDs.length); ++pi) {
-        self.CreateStartingPuck(self.level.vx0);
-      }
-    }
 
     // this countdown is a block on both player & cpu ill spawning.
     // first wait is longer before the very first pill.
@@ -2127,7 +2121,7 @@ function LevelFinState() {
   self.Init = function () {
     ResetInput();
     self.levelIndex = gLevelIndex;
-    self.timeout = 1000 * (gDebug ? 0 : 2);
+    self.timeout = 1000 * 2;
     self.started = gGameTime;
     self.levelHigh = gLevelHighScores[self.levelIndex];
     self.isNewHighScore = false;
@@ -2249,8 +2243,9 @@ function LevelFinChooseState() {
     // the ui expects at most 2.
     Assert(p1Rewards.length <= 2);
     var count = p1Rewards.length;
-    self.timeout = 1000 * (count === 1 ? 5 : gDebug ? 100 : 10);
+    self.timeout = 1000 * (count === 1 ? 5 : 10) - 1;
     self.started = gGameTime;
+    self.lastSec = Math.floor((self.timeout + 1) / 1000);
 
     // skip the whole sceen if all pills have been rewarded.
     self.goOn = count === 0;
@@ -2300,6 +2295,14 @@ function LevelFinChooseState() {
           nextState = self.ProcessOneInput(cmds);
         }
       });
+    }
+    if (self.RemainingTime() > 0) {
+      // one-second-at-a-time countdown.
+      var sec = Math.floor(self.RemainingTime() / 1000);
+      if (sec < self.lastSec) {
+        PlayBlip(2);
+        self.lastSec = sec;
+      }
     }
     return nextState;
   };
