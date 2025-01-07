@@ -110,11 +110,13 @@ function MakeSplitsCount(index) {
     else if (index === kZenLevelIndex) {
         return undefined;
     }
+    else if (index === 1) {
+        return 150;
+    }
     else {
 	// note: this is just a big bad random swag.
         // at least need enough splits to let the powerups come out.
-	var extra = index * 250;
-	return 700 + extra;
+	return 150 + (index * 250);
     }
 }
 
