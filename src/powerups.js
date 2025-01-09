@@ -377,12 +377,12 @@ function MakeDecimateProps(context) {
 		var count = Clip(gPucks.A.length - minSaved, 0, 20);
 		if (count > 0) {
                     PlayPowerupBoom();
-                    var targets = gPucks.A.
-			map((p) => { return {d:Math.abs(p.x - context.paddle.x), p} }).
-			filter((e) => { return e.d > gPaddleWidth * 3 }). // todo: not really working!?
-			sort((a,b) => { return a.d - b.d; }).
-			slice(0, count).
-			map((e) => { return e.p; });
+                    var targets = gPucks.A
+			.map((p) => { return {d:Math.abs(p.x - context.paddle.x), p}; })
+			.filter((e) => { return e.d > gPaddleWidth * 3; })
+			.sort((a,b) => { return a.d - b.d; })
+			.slice(0, count)
+			.map((e) => { return e.p; });
                     Assert(targets.length < gPucks.A.length);
 		    console.log("targets", targets.length);
 		    if (targets.length === 0 && gPucks.A.length > 1) {
@@ -452,7 +452,7 @@ function MakeSplitProps(context) {
             });
             targets.forEach(t => {
                 var maxVX = gameState.level.maxVX;
-                var split = t.SplitPuck({ forced: true, maxVX });
+                var split = t.MaybeSplitPuck({ forced: true, maxVX });
                 gameState.level.OnPuckSplits(1);
                 var p = gPuckPool.Alloc();
 		if (exists(p)) {
