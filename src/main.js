@@ -1329,8 +1329,9 @@ function UpdateLocalStorage() {
     };
 
     self.DrawPillsSide = function(side, pills, whscale, ox, y, labelY) {
-	var yoff = -sy1(4);
         var count = pills.length;
+	// zig-zag to avoid overlapping when crowded.
+	var yoff = count >= 5 ? -sy1(4) : 0;
         if (count > 0) {
             var mx = gw(ForSide(side, 0.25, 0.75));
             var lx = mx - (count-1)/2 * ox;
@@ -1344,7 +1345,7 @@ function UpdateLocalStorage() {
                     drawer(side, { x:x-width/2, y:y-height/2+yoff, width, height }, 1);		    
                     gCx.fillStyle = RandomForColor(blueSpec);
                     DrawText(name, "center", x, labelY+yoff, gSmallestFontSizePt);
-		    yoff *= -1; // zig-zag to avoid overlapping.
+		    yoff *= -1;
                 }
             });
         }
@@ -2136,7 +2137,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         self.levelIndex = gLevelIndex;
-        self.timeout = 1000 * 2;
+        self.timeout = 1000 * (gDebug ? 1 : 2);
         self.started = gGameTime;
         self.levelHigh = gLevelHighScores[self.levelIndex];
         self.isNewHighScore = false;
@@ -2360,7 +2361,7 @@ function UpdateLocalStorage() {
         Assert(p1Rewards.length <= 2);
 
         const count = p1Rewards.length;
-        self.timeout = (1000 * (count === 1 ? 5 : 10)) - 1;
+        self.timeout = (1000 * gDebug ? 1 : (count === 1 ? 5 : 10)) - 1;
         self.started = gGameTime;
         self.lastSec = Math.floor((self.timeout+1)/1000);
 
