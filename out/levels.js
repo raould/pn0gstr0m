@@ -26,8 +26,8 @@ function ResetLevelsPillStates() {
     remaining: _toConsumableArray(gPillIDs)
   };
   /* just for testing:
-  gP1PillState = { deck: gPillIDs.slice(0,2), remaining: gPillIDs.slice(2) };
-  gP2PillState = { deck: gPillIDs.slice(0,2), remaining: gPillIDs.slice(2) };
+     gP1PillState = { deck: [...gPillIDs], remaining: [] };
+     gP2PillState = { deck: [...gPillIDs], remaining: [] };
   */
 }
 ResetLevelsPillStates();

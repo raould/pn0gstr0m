@@ -10,8 +10,8 @@ function MakeWipedownAnimation() {
   return new Animation({
     name: "gamestart",
     lifespan: lifespan,
-    drawFn: function drawFn(anim) {
-      var t = T10(anim.life, anim.lifespan0);
+    drawFn: function drawFn(self) {
+      var t = T10(self.life, self.lifespan0);
       var h = gh(0.05);
       var c = 10;
       var ybase = -(h * c);
@@ -44,18 +44,18 @@ function MakeWipedownAnimation() {
     }
   });
 }
-function MakeChargeUpTextAnimation(timeout) {
-  var lifespan = timeout;
+function MakeChargeUpTextAnimation(duration) {
+  var lifespan = duration;
   return new Animation({
-    name: "gamestart",
+    name: "chargeup_text",
     lifespan: lifespan,
-    drawFn: function drawFn(anim) {
+    drawFn: function drawFn(self) {
       // match: Level.Draw().
       // todo: gLevelIndex use here is evil.
       var zpt = MakeSplitsCount(gLevelIndex);
       if (exists(zpt)) {
         // match: MakeChargeUpMeterAnimation t.
-        var t = T01(anim.lifespan0 - anim.life, anim.lifespan0 * 0.6);
+        var t = T01(self.lifespan0 - self.life, self.lifespan0 * 0.6);
         var zptT = Math.ceil(zpt * t);
         Cxdo(function () {
           gCx.fillStyle = RandomForColor(cyanSpec);
@@ -65,18 +65,18 @@ function MakeChargeUpTextAnimation(timeout) {
     }
   });
 }
-function MakeChargeUpMeterAnimation(timeout) {
-  var lifespan = timeout;
+function MakeChargeUpMeterAnimation(duration) {
+  var lifespan = duration;
   return new Animation({
-    name: "gamestart",
+    name: "chargeup_meter",
     lifespan: lifespan,
-    drawFn: function drawFn(anim) {
+    drawFn: function drawFn(self) {
       // match: GameState.DrawMidLine().
       // todo: gLevelIndex use here is evil.
       var zpt = MakeSplitsCount(gLevelIndex);
       if (exists(zpt)) {
         // match: MakeChargeUpTextAnimation t.
-        var t = T01(anim.lifespan0 - anim.life, anim.lifespan0 * 0.6);
+        var t = T01(self.lifespan0 - self.life, self.lifespan0 * 0.6);
         var zptT = Math.ceil(zpt * t);
         var dashStep = gh() / (gMidLineDashCount * 2);
         var top = ForGameMode({
@@ -101,6 +101,20 @@ function MakeChargeUpMeterAnimation(timeout) {
           gCx.fill();
         });
       }
+    }
+  });
+}
+function MakeLastPuckWonAnimation(duration, cx) {
+  var lifespan = duration;
+  return new Animation({
+    name: "lastpuckwon",
+    lifespan: lifespan,
+    drawFn: function drawFn(self) {
+      var t = T01(self.lifespan0 - self.life, self.lifespan0 * 0.6);
+      Cxdo(function () {
+        gCx.fillStyle = RandomForColor(yellowSpec, easeOutExpo(1 - t));
+        DrawText("+".concat(kScoreLastPuckIncrement, " LAST PUCK!"), "center", cx, gh(1) - t * gh(0.3), gSmallFontSizePt);
+      });
     }
   });
 }
