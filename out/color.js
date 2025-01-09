@@ -81,7 +81,7 @@ function makeRandomSpec() {
 }
 ;
 var warningColorStr = "white";
-var crtOutlineColorStr = "rgb(16, 64, 16)";
+var crtOutlineColorStr = "rgb(4, 32, 8)";
 // match: index.html.
 var backgroundColorStr = "black";
 // match: backgroundColorStr, index.html
