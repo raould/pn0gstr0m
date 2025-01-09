@@ -66,11 +66,11 @@ function MakePoofAnimation(x, y, radius) {
     return new GSAnimation({
         name: "poof",
         lifespan,
-        animFn: (anim, dt, gameState) => {
+        animFn: (self, dt, gameState) => {
             r += dt/kTimeStep*1.5;
         },
-        drawFn: (anim) => {
-            var alpha = T01(anim.life, anim.lifespan0);
+        drawFn: (self) => {
+            var alpha = T01(self.life, self.lifespan0);
             Cxdo(() => {
                 gCx.strokeStyle = RandomForColor(redSpec, alpha);
                 gCx.lineWidth = sx1(1);
@@ -104,15 +104,15 @@ function MakeCrawlingLightningAnimation(props) {
     return new GSAnimation({
         name: "crawllightning",
         lifespan,
-        animFn: (anim, dt, gameState) => {
-            var t = T01(anim.lifespan0-anim.life, anim.lifespan0);
+        animFn: (self, dt, gameState) => {
+            var t = T01(self.lifespan0-self.life, self.lifespan0);
             var ti = ii(points.length * t);
             for (var i = 0; i < substeps; ++i) {
                 var index = Clip(ti+i, 0, points.length-1);
                 pz[i] = points[index];
             }
         },
-        drawFn: (anim) => {
+        drawFn: (self) => {
             Cxdo(() => {
                 gCx.strokeStyle = color;
 
@@ -222,10 +222,10 @@ function MakeWaveAnimation(props) {
     return new GSAnimation({
         name: "wave",
         lifespan,
-        animFn: (anim, dt, gameState) => {
-            t = T10(anim.life, anim.lifespan0);
+        animFn: (self, dt, gameState) => {
+            t = T10(self.life, self.lifespan0);
         },
-        drawFn: (anim) => {
+        drawFn: (self) => {
             Cxdo(() => {
                 gCx.lineWidth = sx1(2);
                 gCx.strokeStyle = "magenta";
@@ -250,8 +250,8 @@ function MakeEngorgeAnimation(props) {
     return new GSAnimation({
         name: "engorge",
         lifespan,
-        animFn: (anim, dt, gameState) => {
-            t10 = T10(anim.lifespan0-anim.life, anim.lifespan0);
+        animFn: (self, dt, gameState) => {
+            t10 = T10(self.lifespan0-self.life, self.lifespan0);
         },
         drawFn: () => {
             AddLightningPath({
