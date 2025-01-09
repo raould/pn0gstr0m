@@ -1661,8 +1661,7 @@ function UpdateLocalStorage() {
                 must, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups
             );
             if (exists(self.level.p1Pill)) {
-                // increased frequency after the first one.
-                self.pillP1SpawnCountdown = self.pillSpawnCooldown/2;
+                self.pillP1SpawnCountdown = self.pillSpawnCooldown;
                 if (!forced) { self.unfairPillCount++; }
                 self.isCpuPillAllowed = true;
                 self.AddPillSparks(self.level.p1Pill.x, self.level.p1Pill.y);
@@ -1683,8 +1682,7 @@ function UpdateLocalStorage() {
                 must, self.level.p2Pill, factor, self.level.p2Powerups
             );
             if (exists(self.level.p2Pill)) {
-                // increased frequency after the first one.
-                self.pillP2SpawnCountdown = self.pillSpawnCooldown/2;
+                self.pillP2SpawnCountdown = self.pillSpawnCooldown;
                 if (!forced) { self.unfairPillCount--; }
                 self.AddPillSparks(self.level.p2Pill.x, self.level.p2Pill.y);
             }
