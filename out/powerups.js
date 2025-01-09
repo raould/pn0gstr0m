@@ -410,9 +410,7 @@ function MakeDecimateProps(context) {
             };
           }).filter(function (e) {
             return e.d > gPaddleWidth * 3;
-          }).
-          // todo: not really working!?
-          sort(function (a, b) {
+          }).sort(function (a, b) {
             return a.d - b.d;
           }).slice(0, count).map(function (e) {
             return e.p;
@@ -502,7 +500,7 @@ function MakeSplitProps(context) {
       });
       targets.forEach(function (t) {
         var maxVX = gameState.level.maxVX;
-        var split = t.SplitPuck({
+        var split = t.MaybeSplitPuck({
           forced: true,
           maxVX: maxVX
         });

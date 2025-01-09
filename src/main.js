@@ -1655,7 +1655,8 @@ function UpdateLocalStorage() {
                 must, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups
             );
             if (exists(self.level.p1Pill)) {
-                self.pillP1SpawnCountdown = self.pillSpawnCooldown;
+		var factor = gP1PillState.deck.length <= 1 ? 2 : 1;
+                self.pillP1SpawnCountdown = self.pillSpawnCooldown * factor;
                 if (!forced) { self.unfairPillCount++; }
                 self.isCpuPillAllowed = true;
                 self.AddPillSparks(self.level.p1Pill.x, self.level.p1Pill.y);
@@ -1669,14 +1670,15 @@ function UpdateLocalStorage() {
              self.isCpuPillAllowed &&
              self.unfairPillCount > -self.unfairPillDiffMax)) {
             // bias powerup creation toward the single player, no proof how much this does anything though.
-            const factor = kSpawnPlayerPillFactor * (is1P() ? 0.5 : 1 );
-            const toolongago = (self.pillP2SpawnCountdown < -self.pillSpawnCooldown*2);
+            var factor = kSpawnPlayerPillFactor * (is1P() ? 0.5 : 1 );
+            var toolongago = (self.pillP2SpawnCountdown < -self.pillSpawnCooldown*2);
             var must = forced || toolongago;
             self.level.p2Pill = self.MaybeSpawnPill(
                 must, self.level.p2Pill, factor, self.level.p2Powerups
             );
             if (exists(self.level.p2Pill)) {
-                self.pillP2SpawnCountdown = self.pillSpawnCooldown;
+		var factor = gP2PillState.deck.length <= 1 ? 2 : 1;
+                self.pillP2SpawnCountdown = self.pillSpawnCooldown * factor;
                 if (!forced) { self.unfairPillCount--; }
                 self.AddPillSparks(self.level.p2Pill.x, self.level.p2Pill.y);
             }
