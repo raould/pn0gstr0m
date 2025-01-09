@@ -11,10 +11,10 @@ var gP2PillState;
 function ResetLevelsPillStates() {
     gP1PillState = { deck: [], remaining: [...gPillIDs] };
     gP2PillState = { deck: [], remaining: [...gPillIDs] };
-/* testing only
-    gP1PillState = { deck: gPillIDs.slice(0,1), remaining: gPillIDs.slice(1) };
-    gP2PillState = { deck: gPillIDs.slice(0,1), remaining: gPillIDs.slice(1) };
-*/
+//    gP1PillState = { deck: gPillIDs.slice(0,1), remaining: gPillIDs.slice(1) };
+//    gP2PillState = { deck: gPillIDs.slice(0,1), remaining: gPillIDs.slice(1) };
+    console.log("gP1PillState", gP1PillState);
+    console.log("gP2PillState", gP2PillState);
 }
 ResetLevelsPillStates();
 function PillIDsToMakers(pids) {

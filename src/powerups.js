@@ -49,7 +49,9 @@ const kXtraPill = 5;
 const kNeoPill = 6;
 const kChaosPill = 7;
 
-// note: order matters.
+// note: order matters, this is the
+// canonical progression through the pills.
+// match: gPillInfo length.
 const gPillIDs = [
     kForcePushPill,
     kDecimatePill,
@@ -68,6 +70,7 @@ const gPillIDs = [
 // see: width and height in GetReadyState.DrawPills().
 // 2) keep the names short, to avoid overlapping
 // on the Get Ready screen.
+// match: gPillIDs length.
 var gPillInfo = {
     [kForcePushPill]: {
         name: "PUSH",
@@ -87,10 +90,10 @@ var gPillInfo = {
         drawer: DrawEngorgePill,
         wfn: () => sxi(20), hfn: () => syi(35),
     },
-    [kSplitPill]: {
-        name: "ZPLT",
-	maker: MakeSplitProps,
-        drawer: DrawSplitPill,
+    [kChaosPill]: {
+        name: "WILD",
+	maker: MakeChaosProps,
+        drawer: DrawChaosPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kDefendPill]: {
@@ -98,6 +101,12 @@ var gPillInfo = {
 	maker: MakeDefendProps,
         drawer: DrawDefendPill,
         wfn: () => sxi(20), hfn: () => syi(40),
+    },
+    [kSplitPill]: {
+        name: "ZPLT",
+	maker: MakeSplitProps,
+        drawer: DrawSplitPill,
+        wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kXtraPill]: {
         name: "XTRA",
@@ -111,14 +120,9 @@ var gPillInfo = {
         drawer: DrawNeoPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
-    [kChaosPill]: {
-        name: "WILD",
-	maker: MakeChaosProps,
-        drawer: DrawChaosPill,
-        wfn: () => sxi(20), hfn: () => syi(20),
-    },
 };
 Assert(gPillInfo);
+Assert(Object.keys(gPillInfo).length === gPillIDs.length);
 
 // cycle through the powerups in order
 // so we have some control over when they
@@ -161,10 +165,8 @@ Assert(gPillInfo);
             return undefined;
         }
 
-        // keep looping through the pills. also keeps the 
-        // state across levels so you aren't retreading.
+	console.log("before", self.side, self.pillState.deck);
         var pid = self.pillState.deck.shift();
-        self.pillState.deck.push(pid);
 
         var info = gPillInfo[pid];
         var maker = info.maker;
@@ -176,7 +178,18 @@ Assert(gPillInfo);
 
         if (!spec.testFn(gameState)) {
 	    spec = undefined;
+	    // try the failed powerup again after the next one
+	    // in order to attempt to spawn the new ones soon even
+	    // if they were skipped i.e. at the start of the level when
+	    // there aren't many pucks.
+	    self.pillState.deck.splice(1, 0, pid);
         }
+	else {
+            // keep looping through the pills. also keeps the 
+            // state across levels so you aren't retreading.
+            self.pillState.deck.push(pid);
+	}
+	console.log("after", self.side, self.pillState.deck);
 
         return spec;
     };
@@ -331,7 +344,7 @@ function MakeForcePushProps(context) {
         width, height,
         lifespan: kPillLifespan,
         testFn: (gameState) => {
-            return (gDebug || gPucks.A.length > 5) &&
+            return gPucks.A.length > 5 &&
 		isU(context.paddle.neo);
         },
         drawFn: (self, alpha=1) => DrawForcePushPill(context.side, self, alpha),
@@ -367,7 +380,7 @@ function MakeDecimateProps(context) {
             // looks unfun if there aren't enough pucks to destroy.
 	    // by the time the powerup is activated there might be even less.
 	    // e.g. consider that the other player might also be doing their decimate.
-            return gDebug || gPucks.A.length > 30;
+            return gPucks.A.length > 30;
         },
         drawFn: (self, alpha=1) => DrawDecimatePill(context.side, self, alpha),
         boomFn: (gameState) => {
@@ -482,8 +495,8 @@ function MakeDefendProps(context) {
         testFn: (gameState) => {
             // todo: there is a bug here that let one paddle
             // have 2 defend powerups active at the same time wtf.
-            return (gDebug || gameState.level.IsMidGame()) &&
-                (gDebug || gPucks.A.length > 10) &&
+            return gameState.level.IsMidGame() &&
+                gPucks.A.length > 10 &&
                 context.paddle.barriers.A.length == 0;
         },
         drawFn: (self, alpha=1) => DrawDefendPill(context.side, self, alpha),
@@ -536,8 +549,8 @@ function MakeXtraProps(context) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            return (gDebug || gameState.level.IsMidGame()) &&
-                (gDebug || gPucks.A.length > 20) &&
+            return gameState.level.IsMidGame() &&
+                gPucks.A.length > 20 &&
                 context.paddle.xtras.A.length == 0;
         },
         drawFn: (self, alpha=1) => DrawXtraPill(context.side, self, alpha),
@@ -583,8 +596,8 @@ function MakeNeoProps(context) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            return (gDebug || gameState.level.IsMidGame()) &&
-                (gDebug || gPucks.A.length > 20) &&
+            return gameState.level.IsMidGame() &&
+                gPucks.A.length > 20 &&
                 isU(context.paddle.neo);
         },
         drawFn: (self, alpha=1) => DrawNeoPill(context.side, self, alpha),
@@ -609,7 +622,7 @@ function MakeChaosProps(context) {
         width, height,
         lifespan: kPillLifespan,
         testFn: (gameState) => {
-            return (gDebug || gPucks.A.length > 10) &&
+            return gPucks.A.length > 10 &&
 		isU(context.paddle.neo);
         },
         drawFn: (self, alpha=1) => DrawChaosPill(context.side, self, alpha),

@@ -73,6 +73,8 @@
   * if ai has no line of sight through barrier, ignore pucks on that row.
   * fix the crt outline drawing order to not leave those little corner gaps.
   * a pause menu command to swap sides (proably only in single player mode).
+* (note that gDebug is not gospel the way it is used, it is always just a hack
+  that is changed however the inevitably different modes are needed for testing.)
 
 ----------------------------------------
 

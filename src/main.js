@@ -2363,7 +2363,7 @@ function UpdateLocalStorage() {
         Assert(p1Rewards.length <= 2);
 
         const count = p1Rewards.length;
-        self.timeout = (1000 * (count === 1 ? 5 : 10)) - 1;
+        self.timeout = gDebug ? 1 : (1000 * (count === 1 ? 5 : 10)) - 1;
         self.started = gGameTime;
         self.lastSec = Math.floor((self.timeout+1)/1000);
 
