@@ -2160,6 +2160,12 @@ function UpdateLocalStorage() {
         }
 
         self.animations = {};
+	/* todo: i would like some motivation for the player to try to win the
+	   last puck, but that ends up being strange because if the bonus for
+	   the final puck goes to the cpu, that could cause it's score to be
+	   the winner, which is potentially very confusing to the player.
+	   an option would be to only ever give the bonus to the player.
+	   but for now i am just disabling this while i percolate.
 	if (exists(gLastPuckSide)) {
 	    var anim = ForSide(
 		gLastPuckSide,
@@ -2173,6 +2179,7 @@ function UpdateLocalStorage() {
 		() => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreLastPuckIncrement) },
 	    )();
 	}
+	*/
 
         self.goOn = false;
         PlayGameOver();
