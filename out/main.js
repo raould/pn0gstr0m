@@ -1657,8 +1657,7 @@ function GameState(props) {
       var must = forced || toolongago;
       self.level.p1Pill = self.MaybeSpawnPill(must, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups);
       if (exists(self.level.p1Pill)) {
-        // increased frequency after the first one.
-        self.pillP1SpawnCountdown = self.pillSpawnCooldown / 2;
+        self.pillP1SpawnCountdown = self.pillSpawnCooldown;
         if (!forced) {
           self.unfairPillCount++;
         }
@@ -1675,8 +1674,7 @@ function GameState(props) {
       var must = forced || _toolongago;
       self.level.p2Pill = self.MaybeSpawnPill(must, self.level.p2Pill, factor, self.level.p2Powerups);
       if (exists(self.level.p2Pill)) {
-        // increased frequency after the first one.
-        self.pillP2SpawnCountdown = self.pillSpawnCooldown / 2;
+        self.pillP2SpawnCountdown = self.pillSpawnCooldown;
         if (!forced) {
           self.unfairPillCount--;
         }
