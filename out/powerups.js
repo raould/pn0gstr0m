@@ -198,7 +198,6 @@ function Powerups(props) {
     var spec = maker(self);
     Assert(exists(spec), "wtf maker? ".concat(info.name));
     if (!spec.testFn(gameState)) {
-      console.log("powerup ".concat(info.name, " canceled, inhospitable gameState"));
       spec = undefined;
     }
     return spec;

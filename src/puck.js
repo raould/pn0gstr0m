@@ -28,7 +28,7 @@ function Puck() {
         self.startTime = self.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
         self.splitStyle = aub(props.forced, false) ? "yellow" : "white";        
         self.isLocked = false;
-        // avoid buggy case of one puck spawn then spawning immediately etc.
+        // avoid buggy case of one puck spawn then colliding and spawning another immediately etc. :-(
         self.impotentTime = 1000;
     };
 
@@ -138,13 +138,13 @@ function Puck() {
 
     // anybody calling this should also eventually follow up with level.OnPuckSplit() for bookkeeping.
     // ugh, see: level, paddle.
-    self.SplitPuck = function({ forced=false, isSuddenDeath=false, maxVX }) {
+    self.MaybeSplitPuck = function({ forced=false, isSuddenDeath=false, maxVX }) {
         if (!forced && self.impotentTime > 0) {
             return;
         }
 
         Assert(exists(maxVX));
-        let np = undefined;
+        let newprops = undefined;
         const count = gPucks.A.length;
         const dosplit = forced || (count < ii(kEjectCountThreshold*0.7) || (count < kEjectCountThreshold && gR.RandomBool(1.05-Clip01(Math.abs(self.vx/maxVX)))));
 
@@ -152,18 +152,17 @@ function Puck() {
         // BUT I SORT OF NO LONGER HAVE ANY IDEA
 	// WHAT/WHY THEY DO WHAT THEY DO. HA HA. 
 
-        // sometimes force ejection to avoid too many pucks.
-        // if there are already too many pucks to allow for a split-spawned-puck,
-        // then we also want to sometimes eject the existing 'self' puck
-        // to avoid ending up with just a linear stream of pucks.
-        const r = gR.RandomFloat();
         const countFactor = Clip01(count/kEjectSpeedCountThreshold);
+        const r = gR.RandomFloat();
         const ejectCountFactor = Math.pow(countFactor, 3);
         const doejectCount = (count > kEjectCountThreshold) && (r < 0.1);
         const doejectSpeed = (self.vx > maxVX*0.9) && (r < ejectCountFactor);
-        const doeject = doejectCount || doejectSpeed;
-        if (!(forced || dosplit)) {
-            if (doeject) {
+        if (!forced && !dosplit) {
+            // sometimes force ejection to avoid too many pucks.
+            // if there are already too many pucks to allow for a split-spawned-puck,
+            // then we also want to sometimes eject the existing 'self' puck
+            // to avoid ending up with just a linear stream of pucks.
+	    if (doejectCount || doejectSpeed) {
                 self.vy *= 1.1;
             }
         }
@@ -210,11 +209,7 @@ function Puck() {
                 vy += sy(0.1) * Sign(vy);
             }
 
-            // code smell: because SplitPuck is called during MovePucks,
-            // we return the new puck to go onto gPucks.B,
-            // vs. MoveSparks happens after so it goes onto gSparks.A.
-	    np = { x: self.x, y: self.y, vx, vy, ur: false, forced, maxVX };
-            AddSparks({ x:self.x, y:self.y, vx:sx(0.5), vy:sy(1), count: 3, rx:sx(1), ry:sy(1) });
+	    newprops = { x: self.x, y: self.y, vx, vy, ur: false, forced, maxVX };
         }
 
         PlayExplosion();
@@ -226,7 +221,7 @@ function Puck() {
         );
         self.vx = nvx;
 
-        return np;
+        return newprops;
     };
 
     self.CollisionTest = function( xywh, blockvx ) {
@@ -275,7 +270,7 @@ function Puck() {
         // smallest bit of vertical english.
         // too much means you never get to 'streaming'.
         // too little means you maybe crash the machine :-)
-	// (but see also: SplitPuck()'s algorithm for culling.)
+	// (but see also: MaybeSplitPuck()'s algorithm for culling.)
         // note that englishFactor increases as level ends.
         var dy = self.midY - paddle.GetMidY();
         var mody = gR.RandomFloat(0.02) * (Math.abs(dy)*0.05) * paddle.englishFactor;
@@ -312,7 +307,7 @@ function Puck() {
             self.ApplyEnglish( paddle );
             // explicitly not calling PlayBlip(), gets too noisy.
             if (paddle.isSplitter) {
-                newprops = self.SplitPuck({ isSuddenDeath, maxVX });
+                newprops = self.MaybeSplitPuck({ isSuddenDeath, maxVX });
             }
         }
         return newprops;
