@@ -1871,8 +1871,6 @@ function GameState(props) {
         // xtras, barriers, neos do not split pucks,
         // only the main player & cpu paddles.
         var splits = p.AllPaddlesCollision(self.level.IsSuddenDeath(), self.maxVX, self.paddleP1, self.paddleP2);
-        self.level.OnPuckSplits(splits);
-
         // note: splits are pushed before parent, match: Draw()'s revEach() z order.
         if (self.level.isSpawning) {
           for (var _i = 0; (_ref8 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref8 : 0; ++_i) {
@@ -1881,9 +1879,20 @@ function GameState(props) {
             if (exists(_p)) {
               _p.PlacementInit(splits[_i]);
               gPucks.B.push(_p);
+              AddSparks({
+                x: _p.x,
+                y: _p.y,
+                vx: sx(0.5),
+                vy: sy(1),
+                count: 3,
+                rx: sx(1),
+                ry: sy(1)
+              });
             }
           }
         }
+        // this has to be called after adding the pucks, else off by 1.
+        self.level.OnPuckSplits(splits);
         p.WallsCollision(self.maxVX);
         p.BarriersCollision(self.paddleP1.barriers.A);
         p.BarriersCollision(self.paddleP2.barriers.A);

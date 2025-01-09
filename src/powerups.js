@@ -175,7 +175,6 @@ Assert(gPillInfo);
         Assert(exists(spec), `wtf maker? ${info.name}`);
 
         if (!spec.testFn(gameState)) {
-	    console.log(`powerup ${info.name} canceled, inhospitable gameState`);
 	    spec = undefined;
         }
 

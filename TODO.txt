@@ -13,6 +13,7 @@
 * high score totalling across levels (esp. for zen single player).
 * funny how many different ways of doing a timeout there are.
 * gLevelIndex is a code smell, but is a nightmare to fix. i tried.
+* the logic of puck splits is split up across too many files.
 * the ownership graph is heck even if done right.
 * figure out per-game high score ui ux.
 * need to specify first puck speed specifically rather than ratio?

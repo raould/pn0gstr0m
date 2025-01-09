@@ -1878,8 +1878,6 @@ function UpdateLocalStorage() {
                     self.paddleP1,
                     self.paddleP2,
                 );
-                self.level.OnPuckSplits(splits);
-                
                 // note: splits are pushed before parent, match: Draw()'s revEach() z order.
                 if(self.level.isSpawning) {
                     for (let i = 0; i < splits?.length ?? 0; ++i) {
@@ -1887,9 +1885,13 @@ function UpdateLocalStorage() {
                         if (exists(p)) {
                             p.PlacementInit(splits[i]);
                             gPucks.B.push(p);
+			    AddSparks({ x:p.x, y:p.y, vx:sx(0.5), vy:sy(1), count: 3, rx:sx(1), ry:sy(1) });
                         }
                     }
                 }
+		// this has to be called after adding the pucks, else off by 1.
+                self.level.OnPuckSplits(splits);
+
                 p.WallsCollision(self.maxVX);
                 p.BarriersCollision(self.paddleP1.barriers.A);
                 p.BarriersCollision(self.paddleP2.barriers.A);
