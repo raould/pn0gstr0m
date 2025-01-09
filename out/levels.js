@@ -17,20 +17,18 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 var gP1PillState;
 var gP2PillState;
 function ResetLevelsPillStates() {
-  /*
-  gP1PillState = { deck: [], remaining: [...gPillIDs] };
-  gP2PillState = { deck: [], remaining: [...gPillIDs] };
-  */
-  //    /* just for testing:
   gP1PillState = {
-    deck: _toConsumableArray(gPillIDs),
-    remaining: []
+    deck: [],
+    remaining: _toConsumableArray(gPillIDs)
   };
   gP2PillState = {
-    deck: _toConsumableArray(gPillIDs),
-    remaining: []
+    deck: [],
+    remaining: _toConsumableArray(gPillIDs)
   };
-  //    */
+  /* just for testing:
+     gP1PillState = { deck: [...gPillIDs], remaining: [] };
+     gP2PillState = { deck: [...gPillIDs], remaining: [] };
+  */
 }
 ResetLevelsPillStates();
 function PillIDsToMakers(pids) {
