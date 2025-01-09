@@ -3,6 +3,7 @@
 * warning: things in code tend to not be simply what they seem / what you'd expect, even for me.
 * support webgl (e.g. via pixijs) to get performance (vs. e.g. cavas color string hell).
 * comment out asserts in out/* somehow, for perf.
+* step broken when paused e.g. wrt animations.js, i think?
 * pill/powerup code is across too many files, i am so confused.
 * cmds vs. targets vs. button polling is a buggy mess, needs to be unified.
 * the general coding suck of not knowing which things must/not be done via property functions.

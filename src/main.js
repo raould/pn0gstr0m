@@ -41,6 +41,7 @@ var gLifecycle;
 var kAppMode = true;
 
 var kScoreIncrement = 1;
+var kScoreLastPuckIncrement = 100;
 // note: see GameState.Init().
 var kZeroScore = {game: 0, level: 0};
 var gP1Score;
@@ -54,6 +55,8 @@ function incrScore(pscore, amount) {
     pscore.level += amount;
     pscore.game += amount;
 }
+// give bonus points to whoever wins the final puck (if it isn't game over).
+var gLastPuckSide;
 
 // mutually exclusive enum.
 // regular & hard & zen are single player.
@@ -1248,7 +1251,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        var seconds = gP1PillState.deck.length > 0 ? 5 : 3;
+        var seconds = gDebug ? 1 : (gP1PillState.deck.length > 0 ? 5 : 3);
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
@@ -1326,6 +1329,7 @@ function UpdateLocalStorage() {
     };
 
     self.DrawPillsSide = function(side, pills, whscale, ox, y, labelY) {
+	var yoff = -sy1(4);
         var count = pills.length;
         if (count > 0) {
             var mx = gw(ForSide(side, 0.25, 0.75));
@@ -1337,9 +1341,10 @@ function UpdateLocalStorage() {
                     const { name, drawer, wfn, hfn } = gPillInfo[pid];
                     const width = wfn() * whscale;
                     const height = hfn() * whscale;
-                    drawer(side, { x:x-width/2, y:y-height/2, width, height }, 1);
+                    drawer(side, { x:x-width/2, y:y-height/2+yoff, width, height }, 1);		    
                     gCx.fillStyle = RandomForColor(blueSpec);
-                    DrawText(name, "center", x, labelY, gSmallestFontSizePt);
+                    DrawText(name, "center", x, labelY+yoff, gSmallestFontSizePt);
+		    yoff *= -1; // zig-zag to avoid overlapping.
                 }
             });
         }
@@ -1374,7 +1379,7 @@ function UpdateLocalStorage() {
     var self = this;
 
     self.Init = function() {
-        var seconds = 3;
+        var seconds = gDebug ? 1 : 3;
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
@@ -1452,6 +1457,7 @@ function UpdateLocalStorage() {
         ResetInput();
         gP1Score.level = 0;
         gP2Score.level = 0;
+	gLastPuckSide = undefined;
 
         gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
         gLevelTime = gGameTime;
@@ -1516,15 +1522,15 @@ function UpdateLocalStorage() {
         self.MakeLevel();
         self.CreateStartingPuck(self.level.vx0);
 
-        // this countdown is a block on both player & cpu ill spawning.
+        // this countdown is a block on both player & cpu pill spawning.
         // first wait is longer before the very first pill.
         // also see the 'must' check later on.
         // prevent pills from showing up too often, or too early - but not too late.
         self.pillSpawnCooldown = ForGameMode({
-            regular: 1000 * 10,
-            hard: 1000 * 15,
-            zen: 1000 * 20,
-            zp2: 1000 * 15,
+            regular: 1000 * 6,
+            hard: 1000 * 10,
+            zen: 1000 * 15,
+            zp2: 1000 * 10,
         });
         self.pillP1SpawnCountdown = self.pillSpawnCooldown;
         self.pillP2SpawnCountdown = self.pillSpawnCooldown;
@@ -1692,6 +1698,7 @@ function UpdateLocalStorage() {
     };
 
     self.StepNextState = function() {
+	// things are a big ball of mud.
         if (self.isAttract) {
             if (gPucks.A.length === 0) {
                 // attract never ends until dismissed.
@@ -1843,18 +1850,11 @@ function UpdateLocalStorage() {
 
     self.UpdateScore = function(p) {
         var wasLeft = p.x < gw(0.5);
-        if (wasLeft) {
-            ForP1Side(
-                    () => { incrScore(gP2Score, kScoreIncrement); },
-                    () => { incrScore(gP1Score, kScoreIncrement); }
-                   )();
-        }
-        else {
-            ForP1Side(
-                    () => { incrScore(gP1Score, kScoreIncrement); },
-                    () => { incrScore(gP2Score, kScoreIncrement); }
-                   )();
-        }
+	gLastPuckSide = wasLeft ? "left" : "right";
+        ForP1Side(
+            () => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreIncrement); },
+            () => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreIncrement); }
+        )();
     };
 
     self.MovePucks = function( dt ) {
@@ -2159,11 +2159,31 @@ function UpdateLocalStorage() {
             SaveLocal(LocalStorageKeys.levelHighScores, gLevelHighScores, true);
         }
 
+        self.animations = {};
+	if (exists(gLastPuckSide)) {
+	    var anim = ForSide(
+		gLastPuckSide,
+		() => { return MakeLastPuckWonAnimation(self.timeout, gw(0.75)) },
+		() => { return MakeLastPuckWonAnimation(self.timeout, gw(0.25)) },
+	    )();
+	    self.AddAnimation(anim);
+	    var wasLeft = gLastPuckSide === "left";
+	    ForP1Side(
+		() => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreLastPuckIncrement) },
+		() => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreLastPuckIncrement) },
+	    )();
+	}
+
         self.goOn = false;
         PlayGameOver();
     };
 
-    self.Step = function() {
+    self.AddAnimation = function( a ) {
+        self.animations[gNextID++] = a;
+    };
+
+    self.Step = function( dt ) {
+        self.StepAnimations( dt );
         self.goOn = gGameTime - self.started > self.timeout;
         var nextState;
         gEventQueue.forEach((event, i) => {
@@ -2174,6 +2194,15 @@ function UpdateLocalStorage() {
             }
         });
         return nextState;
+    };
+
+    self.StepAnimations = function( dt ) {
+        Object.entries(self.animations).forEach(([id, anim]) => {
+            var done = anim.Step( dt, self );
+            if (done) {
+                delete self.animations[id];
+            }
+        });
     };
 
     self.ProcessOneInput = function(cmds) {
@@ -2199,6 +2228,11 @@ function UpdateLocalStorage() {
     self.Draw = function() {
         is1P() ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
         self.DrawLevelHighScore();
+        self.DrawAnimations();
+    };
+
+    self.DrawAnimations = function() {
+        Object.values(self.animations).forEach(a => a.Draw());
     };
 
     self.DrawLevelHighScore = function() {

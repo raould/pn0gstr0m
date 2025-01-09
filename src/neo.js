@@ -39,7 +39,9 @@ function Neo( props /*{x, normalX, lifespan, side}*/ ) {
             );
             self.locked.forEach(p => {
                 p.isLocked = false;
-                p.vx = Math.abs(p.vx) * self.normalX * gR.RandomRange(1,1.5);
+		// neo ejects the pucks pretty hard.
+		var nvx = Math.abs(p.vx) * self.normalX * gR.RandomRange(1,1.5);
+                p.vx = MaxSigned(nvx, gameState.level.maxVX/2);
                 p.vy = p.vy * gR.RandomRange(1, 2);
                 // funny how sparks are global but animations aren't because history.
                 AddSparks({ x:p.x, y:p.y, vx:p.vx, vy:p.vy, count: 3, rx:sx(1), ry:sy(1) });
