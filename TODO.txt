@@ -5,6 +5,7 @@
 * comment out asserts in out/* somehow, for perf.
 * step broken when paused e.g. wrt animations.js, i think?
 * pill/powerup code is across too many files, i am so confused.
+* there is a lot of similar/copied but not shared code for e.g. drawing score header.
 * cmds vs. targets vs. button polling is a buggy mess, needs to be unified.
 * the general coding suck of not knowing which things must/not be done via property functions.
 * the level index, game mode, single player stuff is now a nightmare.
@@ -29,6 +30,9 @@
 * my other metal band name really is The Wrong Abstractions. :-(
 * clean up var t = T01(anim.lifespan0-anim.life, anim.lifespan0);
 * deperately need to refactor so many globals away (re: events, below).
+* canvas implementations are empirically all buggy crap.
+  * crt clip and draw is buggy on firefox at least.
+  * see safari issues below.
 * what the heck is the difference of Step() vs. Draw() vs. Process*().
   * especially since they seem different for buttons vs. *States. :-(
 * also nice how Process*Input don't all have the same signature.
