@@ -2290,7 +2290,7 @@ function UpdateLocalStorage() {
                     gSmallFontSizePt
                 );
                 DrawText(
-                    `P2 GAME: ${gP2Score.game}`,
+                    `GPT GAME: ${gP2Score.game}`,
                     ForP2Side("left", "right"),
                     ForP2Side(gw(0.2), gw(0.8)),
                     gh(0.3),
@@ -2629,10 +2629,44 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function() {
+	self.DrawScores();
+	self.DrawText();
+    };
+
+    self.DrawScores = function() {
+	// see GameOverSummaryState.Draw*()
+	Cxdo(() => {
+	    gCx.fillStyle = RandomGreen(0.3);
+	    if (is1P()) {
+		DrawText(
+                    `P1 GAME: ${gP1Score.game}`,
+                    ForP1Side("left", "right"),
+                    ForP1Side(gw(0.2), gw(0.8)),
+                    gh(0.2),
+                    gSmallFontSizePt
+		);
+
+		DrawText(
+                    `GPT GAME: ${gP2Score.game}`,
+                    ForP2Side("left", "right"),
+                    ForP2Side(gw(0.2), gw(0.8)),
+                    gh(0.2),
+                    gSmallFontSizePt
+		);
+	    }
+	    else {
+		var p1a = ForP1Side("left", "right");
+		var p1x = ForP1Side(gw(0.2), gw(0.8));
+		DrawText( `P1: ${gP1Score.game}`, p1a, p1x, gh(0.22), gRegularFontSizePt );
+		var p2a = ForP2Side("left", "right");
+		var p2x = ForP2Side(gw(0.2), gw(0.8));
+		DrawText( `P2: ${gP2Score.game}`, p2a, p2x, gh(0.22), gRegularFontSizePt );
+	    }
+	});
+    };
+
+    self.DrawText = function() {
         Cxdo(() => {
-            gCx.globalAlpha = 0.1;
-            gCx.drawImage(gCanvas2, 0, 0);
-            gCx.globalAlpha = 1;
             gCx.fillStyle = RandomForColor(redSpec);
             DrawText(
                 "GAME OVER",
@@ -2718,8 +2752,7 @@ function UpdateLocalStorage() {
 
     self.DrawSinglePlayer = function() {
         Cxdo(() => {
-            gCx.fillStyle = RandomForColor(magentaSpec);
-
+            gCx.fillStyle = RandomGreen(0.3);
             DrawText(
                 `P1 GAME: ${gP1Score.game}`,
                 ForP1Side("left", "right"),
@@ -2727,15 +2760,15 @@ function UpdateLocalStorage() {
                 gh(0.2),
                 gSmallFontSizePt
             );
-
             DrawText(
-                `P2 GAME: ${gP2Score.game}`,
+                `GPT GAME: ${gP2Score.game}`,
                 ForP2Side("left", "right"),
                 ForP2Side(gw(0.2), gw(0.8)),
                 gh(0.2),
                 gSmallFontSizePt
             );
 
+            gCx.fillStyle = RandomForColor(magentaSpec);
             var msg = `FINAL SCORE: ${gP1Score.game}`;
             DrawText( msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt );
 
