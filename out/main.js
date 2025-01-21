@@ -1262,6 +1262,7 @@ function GetReadyState() {
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.animations = {};
     self.AddAnimation(MakeWipedownAnimation());
+    PlayStart();
     console.log("GetReadyState", is1P(), gGameMode);
   };
   self.AddAnimation = function (a) {
@@ -1555,9 +1556,6 @@ function GameState(props) {
     // also, neither side gets too many pills before the other.
     self.unfairPillCount = 0;
     self.unfairPillDiffMax = 2;
-    if (!self.isAttract) {
-      PlayStart();
-    }
   };
   self.MakeMenu = function () {
     return new Menu({
