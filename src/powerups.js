@@ -12,12 +12,10 @@
 // (the business about ForSide and paddle references is wugly.)
 /* {
    name,
-   isPlayerOnly,
    width, height,
    lifespan,
    isUrgent,
    testFn: (gameState) => {},
-   canSkip, // don't get stuck waiting on this one's testFn to pass.
    drawFn: (self, alpha) => {},
    boomFn: (gameState) => {},
    endFn: () => {},
@@ -51,7 +49,9 @@ const kXtraPill = 5;
 const kNeoPill = 6;
 const kChaosPill = 7;
 
-// note: order matters.
+// note: order matters, this is the
+// canonical progression through the pills.
+// match: gPillInfo length.
 const gPillIDs = [
     kForcePushPill,
     kDecimatePill,
@@ -70,6 +70,7 @@ const gPillIDs = [
 // see: width and height in GetReadyState.DrawPills().
 // 2) keep the names short, to avoid overlapping
 // on the Get Ready screen.
+// match: gPillIDs length.
 var gPillInfo = {
     [kForcePushPill]: {
         name: "PUSH",
@@ -89,10 +90,10 @@ var gPillInfo = {
         drawer: DrawEngorgePill,
         wfn: () => sxi(20), hfn: () => syi(35),
     },
-    [kSplitPill]: {
-        name: "ZPLT",
-	maker: MakeSplitProps,
-        drawer: DrawSplitPill,
+    [kChaosPill]: {
+        name: "WILD",
+	maker: MakeChaosProps,
+        drawer: DrawChaosPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kDefendPill]: {
@@ -100,6 +101,12 @@ var gPillInfo = {
 	maker: MakeDefendProps,
         drawer: DrawDefendPill,
         wfn: () => sxi(20), hfn: () => syi(40),
+    },
+    [kSplitPill]: {
+        name: "ZPLT",
+	maker: MakeSplitProps,
+        drawer: DrawSplitPill,
+        wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kXtraPill]: {
         name: "XTRA",
@@ -113,14 +120,9 @@ var gPillInfo = {
         drawer: DrawNeoPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
-    [kChaosPill]: {
-        name: "WILD",
-	maker: MakeChaosProps,
-        drawer: DrawChaosPill,
-        wfn: () => sxi(20), hfn: () => syi(20),
-    },
 };
 Assert(gPillInfo);
+Assert(Object.keys(gPillInfo).length === gPillIDs.length);
 
 // cycle through the powerups in order
 // so we have some control over when they
@@ -139,9 +141,12 @@ Assert(gPillInfo);
     self.MakeRandomPill = function(gameState) {
         var propsBase = self.NextPropsBase(gameState);
         if (exists(propsBase)) {
-            // todo: pills can have different lifespans, but currently they are all the same.
+            // todo: meh, pills can have different lifespans, but currently they are all the same.
             Assert(exists(propsBase.lifespan), "lifespan");
-            var y = gR.RandomChoice(gh(0.1), gh(0.9)-propsBase.height); // top or bottom spawn.
+	    // spawn on the vertically opposite side from the player, to make it more noticeable.
+            var yTop = gh(0.1);
+	    var yBottom = gh(0.9) - propsBase.height;
+	    var y = self.paddle.GetMidY() > gh(0.5) ? yTop : yBottom;
             var props = {
                 ...propsBase,
                 name: propsBase.name,
@@ -160,44 +165,33 @@ Assert(gPillInfo);
             return undefined;
         }
 
-        // keep looping through the pills. also keeps
-        // the state across levels so you don't have to
-        // run through the exact same progression every time.
+	console.log("before", self.side, self.pillState.deck);
         var pid = self.pillState.deck.shift();
-        self.pillState.deck.push(pid);
 
-        var newFn = gPillInfo[pid].maker;
-        Assert(exists(newFn));
-        Assert(typeof newFn == "function", `newFn()? ${self.pillState} ${typeof newFn}`);
-        var s = newFn(self);
-        Assert(exists(s), "wtf newFn?");
+        var info = gPillInfo[pid];
+        var maker = info.maker;
+        Assert(exists(maker));
+        Assert(typeof maker == "function", `maker()? ${info.name} ${self.pillState} ${typeof maker}`);
 
-        // the order of these conditionals does matter!
-        if (self.isPlayerOnly(s)) {
-            s = undefined;
+        var spec = maker(self);
+        Assert(exists(spec), `wtf maker? ${info.name}`);
+
+        if (!spec.testFn(gameState)) {
+	    spec = undefined;
+	    // try the failed powerup again after the next one
+	    // in order to attempt to spawn the new ones soon even
+	    // if they were skipped i.e. at the start of the level when
+	    // there aren't many pucks.
+	    self.pillState.deck.splice(1, 0, pid);
         }
-        else if (self.isApplicable(s, gameState)) {
-            // keep s.
-        }
-        else if (self.isSkippable(s)) {
-            s = undefined;
-        }
-        return s;
-    };
+	else {
+            // keep looping through the pills. also keeps the 
+            // state across levels so you aren't retreading.
+            self.pillState.deck.push(pid);
+	}
+	console.log("after", self.side, self.pillState.deck);
 
-    self.isPlayerOnly = function( spec ) {
-        // e.g. radar only really makes sense for the player.
-        return exists(spec.isPlayerOnly) && spec.isPlayerOnly && !self.isPlayer;
-    };
-
-    self.isApplicable = function( spec, gameState ) {
-        // is the current game state applicable?
-        return spec.testFn(gameState);
-    };
-
-    self.isSkippable = function( spec ) {
-        // don't get stuck on a powerup that might never happen.
-        return aub(spec.canSkip, false);
+        return spec;
     };
 
     self.Init();
@@ -217,7 +211,7 @@ function DrawForcePushPill(side, xywh, alpha) {
         gCx.arc(mx, my, xywh.width/2 + sx1(1), 0, k2Pi);
         gCx.closePath();
         gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-        gCx.lineWidth = sx1(3);
+        gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
@@ -237,7 +231,7 @@ function DrawDecimatePill(side, xywh, alpha) {
         gCx.lineTo(wx, my);
         gCx.closePath();
         gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-        gCx.lineWidth = sx1(3);
+        gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
@@ -250,7 +244,7 @@ function DrawEngorgePill(side, xywh, alpha) {
         gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
         gCx.beginPath();
         gCx.rect( wx, wy, xywh.width, xywh.height );
-        gCx.lineWidth = sx1(2);
+        gCx.lineWidth = sx1(1);
         gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
         gCx.stroke();
     });
@@ -265,7 +259,7 @@ function DrawSplitPill(side, xywh, alpha) {
         gCx.beginPath();
         gCx.RoundRect(wx, wy, xywh.width, xywh.height, 10);
         gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-        gCx.lineWidth = sx1(2);
+        gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
@@ -279,7 +273,7 @@ function DrawDefendPill(side, xywh, alpha) {
         gCx.beginPath();
         gCx.RoundRect(wx, wy, xywh.width, xywh.height, 14);
         gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-        gCx.lineWidth = sx1(4);
+        gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
@@ -293,7 +287,7 @@ function DrawXtraPill(side, xywh, alpha) {
         gCx.beginPath();
         gCx.RoundRect(wx, wy, xywh.width, xywh.height, 14);
         gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-        gCx.lineWidth = sx1(2);
+        gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
@@ -313,7 +307,7 @@ function DrawNeoPill(side, xywh, alpha) {
         gCx.lineTo(wx, my);
         gCx.closePath();
         gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-        gCx.lineWidth = sx1(2);
+        gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
@@ -334,14 +328,14 @@ function DrawChaosPill(side, xywh, alpha) {
         gCx.arc(mx, my, ww/2, 0, k2Pi);
         gCx.closePath();
         gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-        gCx.lineWidth = sx1(2);
+        gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
 
 // ----------------------------------------
 
-function MakeForcePushProps(maker) {
+function MakeForcePushProps(context) {
     var { name, wfn, hfn } = gPillInfo[kForcePushPill];
     var width = wfn();
     var height = hfn();
@@ -350,30 +344,31 @@ function MakeForcePushProps(maker) {
         width, height,
         lifespan: kPillLifespan,
         testFn: (gameState) => {
-            return (gDebug || gPucks.A.length > 5) && isU(maker.paddle.neo);
+            return gPucks.A.length > 5 &&
+		isU(context.paddle.neo);
         },
-        drawFn: (self, alpha=1) => DrawForcePushPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawForcePushPill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
-            var targetSign = ForSide(maker.side, -1, 1);
+            var targetSign = ForSide(context.side, -1, 1);
             gPucks.A.forEach(p => {
                 if (Sign(p.vx) == targetSign) {
                     p.vx *= -1;
                 }
-                else {
-                    p.vx = MinSigned(p.vx*1.15, gameState.maxVX);
-                }
+		else {
+		    p.vx = MinSigned(p.vx*1.15, gameState.maxVX);
+		}
             });
             gameState.AddAnimation(MakeWaveAnimation({
                 lifespan: 250,
-                side: maker.side,
-                paddle: maker.paddle,
+                side: context.side,
+                paddle: context.paddle,
             }));
         },
     };
 }
 
-function MakeDecimateProps(maker) {
+function MakeDecimateProps(context) {
     var { name, wfn, hfn } = gPillInfo[kDecimatePill];
     var width = wfn();
     var height = hfn();
@@ -385,10 +380,9 @@ function MakeDecimateProps(maker) {
             // looks unfun if there aren't enough pucks to destroy.
 	    // by the time the powerup is activated there might be even less.
 	    // e.g. consider that the other player might also be doing their decimate.
-            return gDebug || gPucks.A.length > 30;
+            return gPucks.A.length > 30;
         },
-        canSkip: true,
-        drawFn: (self, alpha=1) => DrawDecimatePill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawDecimatePill(context.side, self, alpha),
         boomFn: (gameState) => {
             // try to destroy at least 1, but leave at least enough alive to avoid(ish) game over.
 	    var minSaved = 3;
@@ -396,12 +390,12 @@ function MakeDecimateProps(maker) {
 		var count = Clip(gPucks.A.length - minSaved, 0, 20);
 		if (count > 0) {
                     PlayPowerupBoom();
-                    var targets = gPucks.A.
-			map((p) => { return {d:Math.abs(p.x - maker.paddle.x), p} }).
-			filter((e) => { return e.d > gPaddleWidth * 3 }). // todo: not really working!?
-			sort((a,b) => { return a.d - b.d; }).
-			slice(0, count).
-			map((e) => { return e.p; });
+                    var targets = gPucks.A
+			.map((p) => { return {d:Math.abs(p.x - context.paddle.x), p}; })
+			.filter((e) => { return e.d > gPaddleWidth * 3; })
+			.sort((a,b) => { return a.d - b.d; })
+			.slice(0, count)
+			.map((e) => { return e.p; });
                     Assert(targets.length < gPucks.A.length);
 		    console.log("targets", targets.length);
 		    if (targets.length === 0 && gPucks.A.length > 1) {
@@ -421,7 +415,7 @@ function MakeDecimateProps(maker) {
                     gameState.AddAnimation(MakeTargetsLightningAnimation({
 			lifespan: 200,
 			targets,
-			paddle: maker.paddle,
+			paddle: context.paddle,
                     }));
 		}
             }
@@ -429,7 +423,7 @@ function MakeDecimateProps(maker) {
     };
 }
 
-function MakeEngorgeProps(maker) {
+function MakeEngorgeProps(context) {
     var { name, wfn, hfn } = gPillInfo[kEngorgePill];
     var width = wfn();
     var height = hfn();
@@ -439,21 +433,20 @@ function MakeEngorgeProps(maker) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            return !maker.paddle.engorged;
+            return !context.paddle.engorged;
         },
-        canSkip: true,
-        drawFn: (self, alpha=1) => DrawEngorgePill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawEngorgePill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             gameState.AddAnimation(MakeEngorgeAnimation({
                 lifespan: 1000 * 12,
-                paddle: maker.paddle,
+                paddle: context.paddle,
             }));
         },
     };
 };
 
-function MakeSplitProps(maker) {
+function MakeSplitProps(context) {
     var { name, wfn, hfn } = gPillInfo[kSplitPill];
     var width = wfn();
     var height = hfn();
@@ -464,7 +457,7 @@ function MakeSplitProps(maker) {
         testFn: (gameState) => {
             return true;
         },
-        drawFn: (self, alpha=1) => DrawSplitPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawSplitPill(context.side, self, alpha),
         boomFn: (gameState) => {
             var r = 10/gPucks.A.length;
             var targets = gPucks.A.filter((p, i) => {
@@ -472,7 +465,7 @@ function MakeSplitProps(maker) {
             });
             targets.forEach(t => {
                 var maxVX = gameState.level.maxVX;
-                var split = t.SplitPuck({ forced: true, maxVX });
+                var split = t.MaybeSplitPuck({ forced: true, maxVX });
                 gameState.level.OnPuckSplits(1);
                 var p = gPuckPool.Alloc();
 		if (exists(p)) {
@@ -483,14 +476,14 @@ function MakeSplitProps(maker) {
             gameState.AddAnimation(MakeSplitAnimation({
                 lifespan: 250,
                 targets,
-                side: maker.side,
-                paddle: maker.paddle,
+                side: context.side,
+                paddle: context.paddle,
             }));
         },
     };
 }
 
-function MakeDefendProps(maker) {
+function MakeDefendProps(context) {
     var { name, wfn, hfn } = gPillInfo[kDefendPill];
     var width = wfn();
     var height = hfn();
@@ -503,11 +496,10 @@ function MakeDefendProps(maker) {
             // todo: there is a bug here that let one paddle
             // have 2 defend powerups active at the same time wtf.
             return gameState.level.IsMidGame() &&
-                maker.paddle.barriers.A.length == 0 &&
-                (gDebug || gPucks.A.length > 10);
+                gPucks.A.length > 10 &&
+                context.paddle.barriers.A.length == 0;
         },
-        canSkip: true,
-        drawFn: (self, alpha=1) => DrawDefendPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawDefendPill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var n = 4; // match: kBarriersArrayInitialSize.
@@ -523,31 +515,31 @@ function MakeDefendProps(maker) {
 	    var drawScale = ForGameMode({ regular: 1, zen: 0.5 });
             var width = sx1(hp/3);
             var height = (gHeight-gYInset*2) / n;
-            var x = gw(ForSide(maker.side, 0.1, 0.9));
+            var x = gw(ForSide(context.side, 0.1, 0.9));
             var targets = [];
             for (var i = 0; i < n; ++i) {
                 var y = gYInset + i * height;
-                var xoff = xyNudge(y, height, 10, maker.side);
-                maker.paddle.AddBarrier({
+                var xoff = xyNudge(y, height, 10, context.side);
+                context.paddle.AddBarrier({
                     x: x+xoff, y,
                     width, height,
                     hp,
 		    drawScale,
-                    side: maker.side,
+                    side: context.side,
                 });
                 targets.push({x: x+width/2, y: y+height/2});
             }
             gameState.AddAnimation(MakeTargetsLightningAnimation({
                 lifespan: 150,
                 targets,
-                paddle: maker.paddle,
+                paddle: context.paddle,
 		range: sx1(5),
             }));
         },
     };
 }
 
-function MakeXtraProps(maker) {
+function MakeXtraProps(context) {
     var { name, wfn, hfn } = gPillInfo[kXtraPill];
     var width = wfn();
     var height = hfn();
@@ -558,11 +550,10 @@ function MakeXtraProps(maker) {
         isUrgent: true,
         testFn: (gameState) => {
             return gameState.level.IsMidGame() &&
-                maker.paddle.xtras.A.length == 0 &&
-                (gDebug || gPucks.A.length > 20);
+                gPucks.A.length > 20 &&
+                context.paddle.xtras.A.length == 0;
         },
-        canSkip: true,
-        drawFn: (self, alpha=1) => DrawXtraPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawXtraPill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var n = 6; // match: kXtrasArrayInitialSize.
@@ -578,12 +569,12 @@ function MakeXtraProps(maker) {
             });
             console.log(`xtra pc=${pc} hp=${F(hp)}`);
             ForCount(n, (i) => {
-                var x = ForSide(maker.side, gw(0.15), gw(0.85));
+                var x = ForSide(context.side, gw(0.15), gw(0.85));
                 var xoff = isEven(i) ? 0 : gw(0.02);
                 var y = gYInset+yy*i;
                 var yMin = y;
                 var yMax = y+yy;
-                maker.paddle.AddXtra({
+                context.paddle.AddXtra({
                     x: x+xoff, y,
                     yMin, yMax,
                     width, height,
@@ -595,7 +586,7 @@ function MakeXtraProps(maker) {
     };
 }
 
-function MakeNeoProps(maker) {
+function MakeNeoProps(context) {
     var { name, wfn, hfn } = gPillInfo[kNeoPill];
     var width = wfn();
     var height = hfn();
@@ -606,24 +597,23 @@ function MakeNeoProps(maker) {
         isUrgent: true,
         testFn: (gameState) => {
             return gameState.level.IsMidGame() &&
-                (gDebug || gPucks.A.length > 20) &&
-                isU(maker.paddle.neo);
+                gPucks.A.length > 20 &&
+                isU(context.paddle.neo);
         },
-        canSkip: true,
-        drawFn: (self, alpha=1) => DrawNeoPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawNeoPill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
-            maker.paddle.AddNeo({
-                x: ForSide(maker.side, gw(0.4), gw(0.6)),
-                normalX: ForSide(maker.side, 1, -1),
+            context.paddle.AddNeo({
+                x: ForSide(context.side, gw(0.4), gw(0.6)),
+                normalX: ForSide(context.side, 1, -1),
                 lifespan: 1000 * 4,
-                side: maker.side,
+                side: context.side,
             });
         },
     };
 }
 
-function MakeChaosProps(maker) {
+function MakeChaosProps(context) {
     var { name, wfn, hfn } = gPillInfo[kChaosPill];
     var width = wfn();
     var height = hfn();
@@ -632,9 +622,10 @@ function MakeChaosProps(maker) {
         width, height,
         lifespan: kPillLifespan,
         testFn: (gameState) => {
-            return (gDebug || gPucks.A.length > 10) && isU(maker.paddle.neo);
+            return gPucks.A.length > 10 &&
+		isU(context.paddle.neo);
         },
-        drawFn: (self, alpha=1) => DrawChaosPill(maker.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawChaosPill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
             var targets = [];

@@ -66,7 +66,7 @@ function makeRandomSpec() {
 };
 
 const warningColorStr = "white";
-const crtOutlineColorStr = "rgb(16, 64, 16)";
+const crtOutlineColorStr = "rgb(4, 32, 8)";
 // match: index.html.
 const backgroundColorStr = "black";
 // match: backgroundColorStr, index.html

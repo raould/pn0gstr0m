@@ -44,6 +44,7 @@ var gLifecycle;
 var kAppMode = true;
 
 var kScoreIncrement = 1;
+var kScoreLastPuckIncrement = 100;
 // note: see GameState.Init().
 var kZeroScore = {game: 0, level: 0};
 var gP1Score;
@@ -57,6 +58,8 @@ function incrScore(pscore, amount) {
     pscore.level += amount;
     pscore.game += amount;
 }
+// give bonus points to whoever wins the final puck (if it isn't game over).
+var gLastPuckSide;
 
 // mutually exclusive enum.
 // regular & hard & zen are single player.
@@ -1253,7 +1256,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        var seconds = gP1PillState.deck.length > 0 ? 5 : 3;
+        var seconds = gDebug ? 1 : (gP1PillState.deck.length > 0 ? 5 : 3);
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
@@ -1333,6 +1336,8 @@ function UpdateLocalStorage() {
 
     self.DrawPillsSide = function(side, pills, whscale, ox, y, labelY) {
         var count = pills.length;
+	// zig-zag to avoid overlapping when crowded.
+	var yoff = count >= 5 ? -sy1(4) : 0;
         if (count > 0) {
             var mx = gw(ForSide(side, 0.25, 0.75));
             var lx = mx - (count-1)/2 * ox;
@@ -1343,9 +1348,10 @@ function UpdateLocalStorage() {
                     const { name, drawer, wfn, hfn } = gPillInfo[pid];
                     const width = wfn() * whscale;
                     const height = hfn() * whscale;
-                    drawer(side, { x:x-width/2, y:y-height/2, width, height }, 1);
+                    drawer(side, { x:x-width/2, y:y-height/2+yoff, width, height }, 1);		    
                     gCx.fillStyle = RandomForColor(blueSpec);
-                    DrawText(name, "center", x, labelY, gSmallestFontSizePt);
+                    DrawText(name, "center", x, labelY+yoff, gSmallestFontSizePt);
+		    yoff *= -1;
                 }
             });
         }
@@ -1380,7 +1386,7 @@ function UpdateLocalStorage() {
     var self = this;
 
     self.Init = function() {
-        var seconds = 3;
+        var seconds = gDebug ? 1 : 3;
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
@@ -1458,6 +1464,7 @@ function UpdateLocalStorage() {
         ResetInput();
         gP1Score.level = 0;
         gP2Score.level = 0;
+	gLastPuckSide = undefined;
 
         gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
         gLevelTime = gGameTime;
@@ -1522,15 +1529,15 @@ function UpdateLocalStorage() {
         self.MakeLevel();
         self.CreateStartingPuck(self.level.vx0);
 
-        // this countdown is a block on both player & cpu ill spawning.
+        // this countdown is a block on both player & cpu pill spawning.
         // first wait is longer before the very first pill.
         // also see the 'must' check later on.
         // prevent pills from showing up too often, or too early - but not too late.
         self.pillSpawnCooldown = ForGameMode({
-            regular: 1000 * 10,
-            hard: 1000 * 15,
-            zen: 1000 * 20,
-            zp2: 1000 * 15,
+            regular: 1000 * 6,
+            hard: 1000 * 10,
+            zen: 1000 * 15,
+            zp2: 1000 * 10,
         });
         self.pillP1SpawnCountdown = self.pillSpawnCooldown;
         self.pillP2SpawnCountdown = self.pillSpawnCooldown;
@@ -1654,8 +1661,8 @@ function UpdateLocalStorage() {
                 must, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups
             );
             if (exists(self.level.p1Pill)) {
-                // increased frequency after the first one.
-                self.pillP1SpawnCountdown = self.pillSpawnCooldown/2;
+		var factor = gP1PillState.deck.length <= 1 ? 2 : 1;
+                self.pillP1SpawnCountdown = self.pillSpawnCooldown * factor;
                 if (!forced) { self.unfairPillCount++; }
                 self.isCpuPillAllowed = true;
                 self.AddPillSparks(self.level.p1Pill.x, self.level.p1Pill.y);
@@ -1669,15 +1676,15 @@ function UpdateLocalStorage() {
              self.isCpuPillAllowed &&
              self.unfairPillCount > -self.unfairPillDiffMax)) {
             // bias powerup creation toward the single player, no proof how much this does anything though.
-            const factor = kSpawnPlayerPillFactor * (is1P() ? 0.5 : 1 );
-            const toolongago = (self.pillP2SpawnCountdown < -self.pillSpawnCooldown*2);
+            var factor = kSpawnPlayerPillFactor * (is1P() ? 0.5 : 1 );
+            var toolongago = (self.pillP2SpawnCountdown < -self.pillSpawnCooldown*2);
             var must = forced || toolongago;
             self.level.p2Pill = self.MaybeSpawnPill(
                 must, self.level.p2Pill, factor, self.level.p2Powerups
             );
             if (exists(self.level.p2Pill)) {
-                // increased frequency after the first one.
-                self.pillP2SpawnCountdown = self.pillSpawnCooldown/2;
+		var factor = gP2PillState.deck.length <= 1 ? 2 : 1;
+                self.pillP2SpawnCountdown = self.pillSpawnCooldown * factor;
                 if (!forced) { self.unfairPillCount--; }
                 self.AddPillSparks(self.level.p2Pill.x, self.level.p2Pill.y);
             }
@@ -1698,6 +1705,7 @@ function UpdateLocalStorage() {
     };
 
     self.StepNextState = function() {
+	// things are a big ball of mud.
         if (self.isAttract) {
             if (gPucks.A.length === 0) {
                 // attract never ends until dismissed.
@@ -1849,18 +1857,11 @@ function UpdateLocalStorage() {
 
     self.UpdateScore = function(p) {
         var wasLeft = p.x < gw(0.5);
-        if (wasLeft) {
-            ForP1Side(
-                    () => { incrScore(gP2Score, kScoreIncrement); },
-                    () => { incrScore(gP1Score, kScoreIncrement); }
-                   )();
-        }
-        else {
-            ForP1Side(
-                    () => { incrScore(gP1Score, kScoreIncrement); },
-                    () => { incrScore(gP2Score, kScoreIncrement); }
-                   )();
-        }
+	gLastPuckSide = wasLeft ? "left" : "right";
+        ForP1Side(
+            () => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreIncrement); },
+            () => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreIncrement); }
+        )();
     };
 
     self.MovePucks = function( dt ) {
@@ -1883,8 +1884,6 @@ function UpdateLocalStorage() {
                     self.paddleP1,
                     self.paddleP2,
                 );
-                self.level.OnPuckSplits(splits);
-                
                 // note: splits are pushed before parent, match: Draw()'s revEach() z order.
                 if(self.level.isSpawning) {
                     for (let i = 0; i < splits?.length ?? 0; ++i) {
@@ -1892,9 +1891,13 @@ function UpdateLocalStorage() {
                         if (exists(p)) {
                             p.PlacementInit(splits[i]);
                             gPucks.B.push(p);
+			    AddSparks({ x:p.x, y:p.y, vx:sx(0.5), vy:sy(1), count: 3, rx:sx(1), ry:sy(1) });
                         }
                     }
                 }
+		// this has to be called after adding the pucks, else off by 1.
+                self.level.OnPuckSplits(splits);
+
                 p.WallsCollision(self.maxVX);
                 p.BarriersCollision(self.paddleP1.barriers.A);
                 p.BarriersCollision(self.paddleP2.barriers.A);
@@ -2142,7 +2145,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         self.levelIndex = gLevelIndex;
-        self.timeout = 1000 * 2;
+        self.timeout = 1000 * (gDebug ? 1 : 2);
         self.started = gGameTime;
         self.levelHigh = gLevelHighScores[self.levelIndex];
         self.isNewHighScore = false;
@@ -2165,11 +2168,38 @@ function UpdateLocalStorage() {
             SaveLocal(LocalStorageKeys.levelHighScores, gLevelHighScores, true);
         }
 
+        self.animations = {};
+	/* todo: i would like some motivation for the player to try to win the
+	   last puck, but that ends up being strange because if the bonus for
+	   the final puck goes to the cpu, that could cause it's score to be
+	   the winner, which is potentially very confusing to the player.
+	   an option would be to only ever give the bonus to the player.
+	   but for now i am just disabling this while i percolate.
+	if (exists(gLastPuckSide)) {
+	    var anim = ForSide(
+		gLastPuckSide,
+		() => { return MakeLastPuckWonAnimation(self.timeout, gw(0.75)) },
+		() => { return MakeLastPuckWonAnimation(self.timeout, gw(0.25)) },
+	    )();
+	    self.AddAnimation(anim);
+	    var wasLeft = gLastPuckSide === "left";
+	    ForP1Side(
+		() => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreLastPuckIncrement) },
+		() => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreLastPuckIncrement) },
+	    )();
+	}
+	*/
+
         self.goOn = false;
         PlayGameOver();
     };
 
-    self.Step = function() {
+    self.AddAnimation = function( a ) {
+        self.animations[gNextID++] = a;
+    };
+
+    self.Step = function( dt ) {
+        self.StepAnimations( dt );
         self.goOn = gGameTime - self.started > self.timeout;
         var nextState;
         gEventQueue.forEach((event, i) => {
@@ -2180,6 +2210,15 @@ function UpdateLocalStorage() {
             }
         });
         return nextState;
+    };
+
+    self.StepAnimations = function( dt ) {
+        Object.entries(self.animations).forEach(([id, anim]) => {
+            var done = anim.Step( dt, self );
+            if (done) {
+                delete self.animations[id];
+            }
+        });
     };
 
     self.ProcessOneInput = function(cmds) {
@@ -2205,6 +2244,11 @@ function UpdateLocalStorage() {
     self.Draw = function() {
         is1P() ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
         self.DrawLevelHighScore();
+        self.DrawAnimations();
+    };
+
+    self.DrawAnimations = function() {
+        Object.values(self.animations).forEach(a => a.Draw());
     };
 
     self.DrawLevelHighScore = function() {
@@ -2252,7 +2296,7 @@ function UpdateLocalStorage() {
                     gSmallFontSizePt
                 );
                 DrawText(
-                    `P2 GAME: ${gP2Score.game}`,
+                    `GPT GAME: ${gP2Score.game}`,
                     ForP2Side("left", "right"),
                     ForP2Side(gw(0.2), gw(0.8)),
                     gh(0.3),
@@ -2325,7 +2369,7 @@ function UpdateLocalStorage() {
         Assert(p1Rewards.length <= 2);
 
         const count = p1Rewards.length;
-        self.timeout = (1000 * (count === 1 ? 5 : 10)) - 1;
+        self.timeout = gDebug ? 1 : (1000 * (count === 1 ? 5 : 10)) - 1;
         self.started = gGameTime;
         self.lastSec = Math.floor((self.timeout+1)/1000);
 
@@ -2591,10 +2635,44 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function() {
+	self.DrawScores();
+	self.DrawText();
+    };
+
+    self.DrawScores = function() {
+	// see GameOverSummaryState.Draw*()
+	Cxdo(() => {
+	    gCx.fillStyle = RandomGreen(0.3);
+	    if (is1P()) {
+		DrawText(
+                    `P1 GAME: ${gP1Score.game}`,
+                    ForP1Side("left", "right"),
+                    ForP1Side(gw(0.2), gw(0.8)),
+                    gh(0.2),
+                    gSmallFontSizePt
+		);
+
+		DrawText(
+                    `GPT GAME: ${gP2Score.game}`,
+                    ForP2Side("left", "right"),
+                    ForP2Side(gw(0.2), gw(0.8)),
+                    gh(0.2),
+                    gSmallFontSizePt
+		);
+	    }
+	    else {
+		var p1a = ForP1Side("left", "right");
+		var p1x = ForP1Side(gw(0.2), gw(0.8));
+		DrawText( `P1: ${gP1Score.game}`, p1a, p1x, gh(0.22), gRegularFontSizePt );
+		var p2a = ForP2Side("left", "right");
+		var p2x = ForP2Side(gw(0.2), gw(0.8));
+		DrawText( `P2: ${gP2Score.game}`, p2a, p2x, gh(0.22), gRegularFontSizePt );
+	    }
+	});
+    };
+
+    self.DrawText = function() {
         Cxdo(() => {
-            gCx.globalAlpha = 0.1;
-            gCx.drawImage(gCanvas2, 0, 0);
-            gCx.globalAlpha = 1;
             gCx.fillStyle = RandomForColor(redSpec);
             DrawText(
                 "GAME OVER",
@@ -2680,8 +2758,7 @@ function UpdateLocalStorage() {
 
     self.DrawSinglePlayer = function() {
         Cxdo(() => {
-            gCx.fillStyle = RandomForColor(magentaSpec);
-
+            gCx.fillStyle = RandomGreen(0.3);
             DrawText(
                 `P1 GAME: ${gP1Score.game}`,
                 ForP1Side("left", "right"),
@@ -2689,15 +2766,15 @@ function UpdateLocalStorage() {
                 gh(0.2),
                 gSmallFontSizePt
             );
-
             DrawText(
-                `P2 GAME: ${gP2Score.game}`,
+                `GPT GAME: ${gP2Score.game}`,
                 ForP2Side("left", "right"),
                 ForP2Side(gw(0.2), gw(0.8)),
                 gh(0.2),
                 gSmallFontSizePt
             );
 
+            gCx.fillStyle = RandomForColor(magentaSpec);
             var msg = `FINAL SCORE: ${gP1Score.game}`;
             DrawText( msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt );
 
