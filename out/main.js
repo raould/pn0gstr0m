@@ -40,7 +40,10 @@ var gShowToasts = gDebug;
 
 // screens auto-advance after this long.
 var kUITimeout = 1000 * (gDebug ? 5 : 20);
-var kCanvasName = "canvas"; // match: index.html
+
+// match: index.html
+var kCanvasName = "canvas";
+var kFullscreenIconName = "fullscreen";
 var gLifecycle;
 
 // which title menu to show:
@@ -1093,6 +1096,7 @@ function TitleState() {
     self.done = false;
     self.musicTimer = setTimeout(BeginMusic, 1000); // avoid bugs? dunno.
     self.theMenu = self.MakeMenu();
+    setFullscreenIconVisible(true);
     console.log("TitleState", is1P(), gGameMode);
   };
   self.MakeMenu = function () {
@@ -1259,6 +1263,7 @@ function GetReadyState() {
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.animations = {};
     self.AddAnimation(MakeWipedownAnimation());
+    setFullscreenIconVisible(false);
     console.log("GetReadyState", is1P(), gGameMode);
   };
   self.AddAnimation = function (a) {
@@ -2815,6 +2820,12 @@ function RemoveGamepad(e) {
 
 // ----------------------------------------
 
+function setFullscreenIconVisible(visible) {
+  var icon = document.getElementById(kFullscreenIconName);
+  if (icon != undefined) {
+    icon.style.visibility = visible ? 'visible' : 'hidden';
+  }
+}
 function handleFullscreen(e) {
   // so far there's only one <img> in the page.
   if (e.target.nodeName === "IMG") {
