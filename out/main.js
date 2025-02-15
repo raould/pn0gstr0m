@@ -2829,7 +2829,6 @@ function setFullscreenIconVisible(visible) {
 function handleFullscreen(e) {
   // so far there's only one <img> in the page.
   if (e.target.nodeName === "IMG") {
-    console.log("fullscreen!");
     if (!window.screenTop && !window.screenY) {
       var xfn = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullScreen;
       xfn && xfn.call(document);
