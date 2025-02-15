@@ -2949,6 +2949,29 @@ function RemoveGamepad(e) {
 
 // ----------------------------------------
 
+function handleFullscreen(e) {
+    // so far there's only one <img> in the page.
+    if (e.target.nodeName === "IMG") {
+        console.log("fullscreen!");
+        if (!window.screenTop && !window.screenY) {
+            var xfn = document.exitFullscreen ||
+                document.webkitExitFullscreen ||
+                document.mozCancelFullScreen ||
+                document.msExitFullScreen;
+            xfn && xfn.call(document);
+        }
+        else {
+            var fsfn = document.body.requestFullScreen ||
+                document.body.webkitRequestFullscreen ||
+                document.body.mozRequestFullScreen ||
+                document.body.msRequestFullScreen;
+            fsfn && fsfn.call(document.body);
+        }
+        return true;
+    }
+    return false;
+}
+
 function PointerProcess(e, updateFn) {
     var cvrect = gCanvas.getBoundingClientRect();
     var cvx = cvrect.x + window.scrollX;
@@ -2962,21 +2985,23 @@ function PointerProcess(e, updateFn) {
 }
 
 function MouseDown(e) {
-    e.preventDefault();
-    if (e.button === 0) {
-        PointerProcess(
-            e,
-            (x, y) => {
-                LatchP1Side(x < gw(0.5) ? "left" : "right");
-                gEventQueue.push({
-                    type: kEventPointerDown,
-                    updateFn: () => {
-                        gP1Target.OnDown(kMousePointerId, x, y);
-                        gP2Target.OnDown(kMousePointerId, x, y);
-                    }
-                });
-            }
-        );
+    if (!handleFullscreen(e)) {
+        e.preventDefault();
+        if (e.button === 0) {
+            PointerProcess(
+                e,
+                (x, y) => {
+                    LatchP1Side(x < gw(0.5) ? "left" : "right");
+                    gEventQueue.push({
+                        type: kEventPointerDown,
+                        updateFn: () => {
+                            gP1Target.OnDown(kMousePointerId, x, y);
+                            gP2Target.OnDown(kMousePointerId, x, y);
+                        }
+                    });
+                }
+            );
+        }
     }
 }
 
@@ -3016,23 +3041,25 @@ function MouseUp(e) {
 }
 
 function TouchStart(e) {
-    e.preventDefault();
-    for (let i = 0; i < e.touches.length; ++i) {
-        const t = e.touches[i];
-        const pid = t.identifier;
-        PointerProcess(
-            t,
-            (x, y) => {
-                LatchP1Side(x < gw(0.5) ? "left" : "right");
-                gEventQueue.push({
-                    type: kEventPointerDown,
-                    updateFn: () => {
-                        gP1Target.OnDown(pid, x, y);
-                        gP2Target.OnDown(pid, x, y);
-                    }
-                });
-            }
-        );
+    if (!handleFullscreen(e)) {
+        e.preventDefault();
+        for (let i = 0; i < e.touches.length; ++i) {
+            const t = e.touches[i];
+            const pid = t.identifier;
+            PointerProcess(
+                t,
+                (x, y) => {
+                    LatchP1Side(x < gw(0.5) ? "left" : "right");
+                    gEventQueue.push({
+                        type: kEventPointerDown,
+                        updateFn: () => {
+                            gP1Target.OnDown(pid, x, y);
+                            gP2Target.OnDown(pid, x, y);
+                        }
+                    });
+                }
+            );
+        }
     }
 }
 
