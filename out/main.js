@@ -1023,6 +1023,9 @@ function Lifecycle(handlerMap) {
 function RootState(nextState) {
   var self = this;
   self.Init = function () {
+    if (isAppleMobileHell()) {
+      setFullscreenIconVisible(false);
+    }
     self.nextState = nextState;
   };
   self.Step = function () {
@@ -3191,6 +3194,9 @@ function InitEvents() {
   document.addEventListener('pointercancel', function (e) {
     e.preventDefault();
   });
+  window.addEventListener('orientationChange', OnOrientationChange, false);
+  window.addEventListener('resize', OnResize, false);
+  window.addEventListener('blur', OnBlur, false);
   window.addEventListener('keydown', function (e) {
     if (e.repeat) {
       return;
@@ -3519,9 +3525,6 @@ function InitEvents() {
       });
     }
   });
-  window.addEventListener('orientationChange', OnOrientationChange, false);
-  window.addEventListener('resize', OnResize, false);
-  window.addEventListener('blur', OnBlur, false);
 }
 window.addEventListener('load', function () {
   Start();
