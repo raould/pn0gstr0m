@@ -989,6 +989,9 @@ function UpdateLocalStorage() {
 /*class*/ function RootState(nextState) {
     var self = this;
     self.Init = function() {
+        if (isAppleMobileHell()) {
+            setFullscreenIconVisible(false);
+        }
         self.nextState = nextState;
     };
     self.Step = function() { 
@@ -3343,6 +3346,10 @@ function InitEvents() {
     document.addEventListener('pointerend', (e) => {e.preventDefault();});
     document.addEventListener('pointercancel', (e) => {e.preventDefault();});
 
+    window.addEventListener( 'orientationChange', OnOrientationChange, false );
+    window.addEventListener( 'resize', OnResize, false );
+    window.addEventListener( 'blur', OnBlur, false );
+
     window.addEventListener('keydown', (e) => {
         if (e.repeat) { return; }
 
@@ -3627,10 +3634,6 @@ function InitEvents() {
             });
         }
     });
-
-    window.addEventListener( 'orientationChange', OnOrientationChange, false );
-    window.addEventListener( 'resize', OnResize, false );
-    window.addEventListener( 'blur', OnBlur, false );
 }
 
 window.addEventListener( 'load', () => { Start(); InitEvents(); }, false );

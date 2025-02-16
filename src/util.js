@@ -277,3 +277,17 @@ function easeOutExpo(n) {
 
     self.Init();
 }
+
+var kAppleMobileHellPlatforms = [
+    "ipad",
+    "iphone",
+    "ipod",
+    "mac",
+];
+function isAppleMobileHell() {
+    const plc = navigator.platform.toLowerCase()
+    return kAppleMobileHellPlatforms.reduce(
+        (h, p) => h || plc.includes(p),
+        false
+    );
+}
