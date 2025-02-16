@@ -1023,9 +1023,7 @@ function Lifecycle(handlerMap) {
 function RootState(nextState) {
   var self = this;
   self.Init = function () {
-    if (isAppleMobileHell()) {
-      setFullscreenIconVisible(false);
-    }
+    isAppleMobileHell() && setFullscreenIconVisible(false);
     self.nextState = nextState;
   };
   self.Step = function () {
@@ -1102,7 +1100,7 @@ function TitleState() {
     self.done = false;
     self.musicTimer = setTimeout(BeginMusic, 1000); // avoid bugs? dunno.
     self.theMenu = self.MakeMenu();
-    setFullscreenIconVisible(true);
+    !isAppleMobileHell() && setFullscreenIconVisible(true);
     console.log("TitleState", is1P(), gGameMode);
   };
   self.MakeMenu = function () {
