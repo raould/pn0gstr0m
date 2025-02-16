@@ -284,10 +284,11 @@ var kAppleMobileHellPlatforms = [
     "ipod",
     "mac",
 ];
-function isAppleMobileHell() {
+function supportsFullscreen() {
     const plc = navigator.platform.toLowerCase()
-    return kAppleMobileHellPlatforms.reduce(
+    const isAppleHell = kAppleMobileHellPlatforms.reduce(
         (h, p) => h || plc.includes(p),
         false
     );
+    return !isAppleHell;
 }
