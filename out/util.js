@@ -274,9 +274,10 @@ function TimedElements(_ref) {
   self.Init();
 }
 var kAppleMobileHellPlatforms = ["ipad", "iphone", "ipod", "mac"];
-function isAppleMobileHell() {
+function supportsFullscreen() {
   var plc = navigator.platform.toLowerCase();
-  return kAppleMobileHellPlatforms.reduce(function (h, p) {
+  var isAppleHell = kAppleMobileHellPlatforms.reduce(function (h, p) {
     return h || plc.includes(p);
   }, false);
+  return !isAppleHell;
 }

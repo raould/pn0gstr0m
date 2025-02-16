@@ -1023,7 +1023,7 @@ function Lifecycle(handlerMap) {
 function RootState(nextState) {
   var self = this;
   self.Init = function () {
-    isAppleMobileHell() && setFullscreenIconVisible(false);
+    setFullscreenIconVisible(supportsFullscreen());
     self.nextState = nextState;
   };
   self.Step = function () {
@@ -1100,7 +1100,7 @@ function TitleState() {
     self.done = false;
     self.musicTimer = setTimeout(BeginMusic, 1000); // avoid bugs? dunno.
     self.theMenu = self.MakeMenu();
-    !isAppleMobileHell() && setFullscreenIconVisible(true);
+    setFullscreenIconVisible(supportsFullscreen());
     console.log("TitleState", is1P(), gGameMode);
   };
   self.MakeMenu = function () {
@@ -1267,6 +1267,8 @@ function GetReadyState() {
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
     self.animations = {};
     self.AddAnimation(MakeWipedownAnimation());
+
+    // todo: support resizing mid-game.
     setFullscreenIconVisible(false);
     console.log("GetReadyState", is1P(), gGameMode);
   };
