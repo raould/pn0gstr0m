@@ -32,7 +32,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -46,14 +46,11 @@ var kCanvasName = "canvas";
 var kFullscreenIconName = "fullscreen";
 var gLifecycle;
 
-// which title menu to show:
-// if true, which is the expected shipping state,
-// the title menu has more options.
-// if false, then we are in "arcade/demo night"
-// mode and the menu is just 1p, 2p, start
-// and the only way to start the game is to click start.
-// (for demo nights played with game controllers.)
-// and !kAppMode 1p is only ever kGameModeRegular.
+// which title menu to show?
+// true: (which is the expected shipping state) the title menu has more options.
+// false: then we are in "arcade/demo night" so the menu is just 1p, 2p, start,
+// and the only way to start the game is to click start (game controllers),
+// and no hard or zen modes.
 var kAppMode = true;
 var kScoreIncrement = 1;
 var kScoreLastPuckIncrement = 100;
@@ -226,8 +223,13 @@ function RecalculateConstants() {
 
 var kFontName = "noyb2Regular";
 var kAvgSparkFrame = 20;
-var kEjectCountThreshold = 400;
+
+// hand-waving 'heuristic's abound!
+// all of these are kind of related...
+var kEjectCountThreshold = 350;
 var kEjectSpeedCountThreshold = 300;
+var kStreamingCountThreshold = 300; // must be <= kEjectCountThreshold i guess.
+var kStreamingCountTimeout = 1000 * 60;
 var kPuckPoolSize = 500;
 var kSparkPoolSize = 300;
 var kBarriersArrayInitialSize = 4;
@@ -302,6 +304,7 @@ function LeftKeys() {
 function RightKeys() {
   return ForP1Side(gP2Keys, gP1Keys);
 }
+var kJoystickDeadZone = 0.5;
 var nostick = {
   up: false,
   down: false,
@@ -409,19 +412,20 @@ function clearAnyMenuPressed() {
 // note: these are mainly (only) for keyboard input,
 // aren't specific to p1 vs. p2 or left vs. right.
 /* note: this is a list of what is supported, at runtime i just use {}.
-var nocmds = {
-    menu: false,
-    pause: false,
-    activate: false,
-    addPuck: false,
-    gameOver: false,
-    spawnPill: false,
-    clearHighScore: false,
-    step: false,
-    nextMusic: false,
-    singlePlayer: false,
-    doublePlayer: false,
-}
+   var nocmds = {
+   menu: false,
+   pause: false,
+   activate: false,
+   addPuck: false,
+   gameOver: false,
+   spawnPill: false,
+   spawnDarkMatter: false,
+   clearHighScore: false,
+   step: false,
+   nextMusic: false,
+   singlePlayer: false,
+   doublePlayer: false,
+   }
 */
 
 function ResetInput() {
@@ -483,19 +487,19 @@ var kEventGamepadButtonReleased = "gamepad_button_released";
 var kEventGamepadJoystickMove = "gamepad_joystick_move";
 
 /*
- must track down/up per pointer id
- otherwise we'll be confused?
- how to decide which player a pointer event controls?
+  must track down/up per pointer id
+  otherwise we'll be confused?
+  how to decide which player a pointer event controls?
 
- * single player: all for player.
+  * single player: all for player.
 
- * two player: based on which half the pointer was down.
+  * two player: based on which half the pointer was down.
 
- but in both cases, what do we do about multiple competing
- pointers, events? i guess we only allow one at a time.
- so we have to keep track of the pointerId.
+  but in both cases, what do we do about multiple competing
+  pointers, events? i guess we only allow one at a time.
+  so we have to keep track of the pointerId.
 
- in single player mode, both left and right control the player paddle.
+  in single player mode, both left and right control the player paddle.
 */
 
 var kMousePointerId = "__mouse";
@@ -555,7 +559,6 @@ var gCx2;
 var gToasts = [];
 var gGamepad1;
 var gGamepad2;
-var kJoystickDeadZone = 0.5;
 var gR = new Random(Math.round(Date.now()));
 
 // ----------------------------------------
@@ -732,6 +735,7 @@ function DrawResizing() {
   Cxdo(function () {
     gCx.fillStyle = RandomColor();
     DrawText("R E S I Z I N G", "center", gw(0.5), gh(0.3), gSmallestFontSizePt);
+    DrawText("R E S I Z I N G", "center", gw(0.5), gh(0.5), gSmallFontSizePt);
     DrawText("R E S I Z I N G", "center", gw(0.5), gh(0.7), gSmallestFontSizePt);
   });
 }
@@ -739,14 +743,15 @@ var gDrawTitleLatch = new RandomLatch(0.005, 250);
 function DrawTitle() {
   var flicker = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
   Cxdo(function () {
-    gCx.fillStyle = flicker ? ColorCycle(kAppMode ? 1 : 0.4) : rgba255s(cyanDarkSpec.regular);
-    DrawText("P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker);
+    gCx.fillStyle = flicker ? ColorCycle() : rgba255s(cyanDarkSpec.regular);
+    var y = kAppMode ? 0.4 : 0.25;
+    DrawText("P N 0 G S T R 0 M", "center", gw(0.5), gh(y), gBigFontSizePt, flicker);
     gCx.fillStyle = rgba255s(cyanDarkSpec.regular);
     var msg = "ETERNAL BETA";
     if (flicker && gDrawTitleLatch.MaybeLatch(gGameTime)) {
       msg = "ETERNAL BUGS";
     }
-    DrawText(msg, "right", gw(0.876), gh(0.45), gSmallestFontSizePt, flicker);
+    DrawText(msg, "right", gw(0.876), gh(y + 0.05), gSmallestFontSizePt, flicker);
   });
 }
 function DrawWarning() {
@@ -991,6 +996,13 @@ function Lifecycle(handlerMap) {
       cancelPointing();
     }
     self.DrawCRTScanlines();
+    if (!kAppMode && self.state == kTitle && !gResizing) {
+      var img = gImageCache["qr"];
+      var scale = 0.1;
+      var width = sx(img.width * scale);
+      var height = sy(img.height * scale);
+      gCx.drawImage(img, gw(0.7), gh(0.75), width, height);
+    }
     DrawDebugList();
     if (gDebug) {
       DrawBounds(0.3);
@@ -1083,6 +1095,9 @@ function WarningState() {
 function TitleState() {
   var self = this;
   self.Init = function () {
+    if (!kAppMode) {
+      LoadAudio();
+    }
     ResetInput();
     ResetP1Side();
     ResetScores();
@@ -1092,13 +1107,17 @@ function TitleState() {
       // reset to 1 player every time for clarity.
       gGameMode = kGameModeRegular;
     }
-    self.attract = new GameState({
+    self.attraction = new GameState({
       isAttract: true
     });
-    self.timeout = gDebug ? 1 : 1000 * 1.5;
+    self.timeout = gDebug ? 1 : (kAppMode ? 1000 : 0) * 1.5;
     self.started = gGameTime;
     self.done = false;
-    self.musicTimer = setTimeout(BeginMusic, 1000); // avoid bugs? dunno.
+    if (kAppMode) {
+      self.musicTimer = setTimeout(BeginMusic, 1000); // avoid bugs? dunno.
+    } else {
+      gMusicMuted = true;
+    }
     self.theMenu = self.MakeMenu();
     setFullscreenIconVisible(supportsFullscreen());
     console.log("TitleState", is1P(), gGameMode);
@@ -1122,12 +1141,15 @@ function TitleState() {
         self.done = true;
       };
       var menu = new Menu({
-        showButton: true,
+        showButton: false,
+        showStatus: false,
         OnClose: function OnClose() {
           ResetP1Side();
           // forget any extra in-menu state
           // like which button is default selected.
-          self.theMenu = self.MakeMenu();
+          if (!kAppMode) {
+            self.theMenu = self.MakeMenu();
+          }
         },
         MakeNavigation: function MakeNavigation(menu) {
           return MakeArcadeMenuButtons({
@@ -1139,11 +1161,11 @@ function TitleState() {
     }
   };
   self.isLoading = function () {
-    return gGameTime - self.started <= self.timeout;
+    return gGameTime - self.started < self.timeout;
   };
   self.Step = function (dt) {
     var nextState;
-    self.attract.Step(dt);
+    self.attraction.Step(dt);
     self.theMenu.Step(); // note: does not handle input, see below.
 
     nextState = self.ProcessAllInput();
@@ -1224,14 +1246,17 @@ function TitleState() {
       DrawResizing();
     } else {
       Cxdo(function () {
-        self.attract.Draw();
+        self.attraction.Draw();
         DrawTitle();
-        gCx.fillStyle = RandomGreen();
-        var msg = "CONTROLS: TOUCH / MOUSE / GAMEPAD / W,S / I,K / u,v";
+        gCx.fillStyle = ColorCycle(1, -200);
         if (self.isLoading()) {
           var msg = "LOADING...";
+          DrawText(msg, "center", gw(0.5), gh(0.6), gSmallFontSizePt);
+        } else {
+          var msg = kAppMode ? "CONTROLS: TOUCH / MOUSE / GAMEPAD / W,S / I,K / u,v" : "PRESS ANY BUTTON TO START";
+          var y = kAppMode ? gh(0.6) : gh(0.4);
+          DrawText(msg, "center", gw(0.5), y, gSmallFontSizePt);
         }
-        DrawText(msg, "center", gw(0.5), gh(0.6), gSmallFontSizePt);
       });
       self.theMenu.Draw();
       self.DrawMusicName();
@@ -1544,16 +1569,17 @@ function GameState(props) {
     })();
     self.MakeLevel();
     self.CreateStartingPuck(self.level.vx0);
+    //if (gDebug && !self.isAttract) { range(0,400).forEach((_) => self.CreateStartingPuck(self.level.vx0)); }
 
     // this countdown is a block on both player & cpu pill spawning.
     // first wait is longer before the very first pill.
     // also see the 'must' check later on.
     // prevent pills from showing up too often, or too early - but not too late.
     self.pillSpawnCooldown = ForGameMode({
-      regular: 1000 * 6,
-      hard: 1000 * 10,
-      zen: 1000 * 15,
-      zp2: 1000 * 10
+      regular: 1000 * 3,
+      hard: 1000 * 3,
+      zen: 1000 * 3,
+      zp2: 1000 * 3
     });
     self.pillP1SpawnCountdown = self.pillSpawnCooldown;
     self.pillP2SpawnCountdown = self.pillSpawnCooldown;
@@ -1563,6 +1589,12 @@ function GameState(props) {
     // also, neither side gets too many pills before the other.
     self.unfairPillCount = 0;
     self.unfairPillDiffMax = 2;
+
+    // only break up 'streaming' steady-state in 2P mode.
+    self.darkMatterGenerator = is1P() ? undefined : new DarkMatterGenerator({
+      timeout: kStreamingCountTimeout
+    });
+    self.darkMatter = undefined;
     if (!self.isAttract) {
       PlayStart();
     }
@@ -1623,6 +1655,7 @@ function GameState(props) {
     self.level.Step(dt);
     self.maxVX = self.level.maxVX; // todo: code smell global.
     self.MaybeSpawnPills(dt);
+    self.StepDarkMatter(dt);
     self.ProcessAllInput();
     if (self.quit) {
       SaveEndScreenshot(self);
@@ -1643,6 +1676,34 @@ function GameState(props) {
     var nextState = self.StepNextState();
     self.stepping = false;
     return nextState;
+  };
+  self.StepDarkMatter = function (dt) {
+    var forced = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    if (exists(self.darkMatterGenerator)) {
+      var _self$darkMatter, _self$darkMatter2;
+      self.darkMatterGenerator.Step(dt);
+      var spawnNaturally = isU(self.darkMatter) && self.darkMatterGenerator.triggered && gR.RandomBool(0.1);
+      var spawn = spawnNaturally || forced;
+      if (spawn) {
+        self.darkMatterGenerator.Reset();
+        var x = gR.RandomChoice(gw(0.2), gw(0.8));
+        var vx = (x < gw(0.5) ? 1 : -1) * sx(0.015);
+        var width = sx1(30);
+        var height = sx1(30);
+        self.darkMatter = new DarkMatter({
+          x: x,
+          y: gh(0.05) - height / 2,
+          width: width,
+          height: height,
+          vx: vx,
+          vy: sy(0.02)
+        });
+      }
+      (_self$darkMatter = self.darkMatter) == null || _self$darkMatter.Step(dt);
+      if (((_self$darkMatter2 = self.darkMatter) == null ? void 0 : _self$darkMatter2.alive) === false) {
+        self.darkMatter = undefined;
+      }
+    }
   };
   self.AddPillSparks = function (x, y) {
     AddSparks({
@@ -1693,12 +1754,12 @@ function GameState(props) {
     }
     Assert(Math.abs(self.unfairPillCount) <= self.unfairPillDiffMax, "unfairPillCount");
   };
-  self.MaybeSpawnPill = function (must, prev, spawnFactor, maker) {
+  self.MaybeSpawnPill = function (forced, prev, spawnFactor, maker) {
     var can_paused = !self.paused;
     var can_attract = !self.isAttract;
     var can_factor = gR.RandomBool(spawnFactor);
     var can_empty = isU(prev);
-    if (must || can_paused && can_attract && can_factor && can_empty) {
+    if (forced || can_paused && can_attract && can_factor && can_empty) {
       return maker.MakeRandomPill(self);
     }
     return undefined;
@@ -1766,7 +1827,7 @@ function GameState(props) {
         x: gw(gR.RandomRange(1 / 8, 7 / 8)),
         y: gh(gR.RandomRange(3.5 / 8, 4 / 8)),
         vx: gR.RandomRange(0.2, 0.3) * self.maxVX,
-        vy: gR.RandomCentered(1, 0.5),
+        vy: gR.RandomCentered(0.2, 0.1),
         ur: true
       });
       gPucks.A.push(p);
@@ -1799,6 +1860,11 @@ function GameState(props) {
       if (self.paused) {
         // todo: move more of the pill code to the Level.
         self.MaybeSpawnPills(0, true);
+      }
+    }
+    if (cmds.spawnDarkMatter) {
+      if (self.paused) {
+        self.StepDarkMatter(0, true);
       }
     }
     if (cmds.clearHighScore) {
@@ -1940,10 +2006,7 @@ function GameState(props) {
     }
   };
   self.Alpha = function (alpha) {
-    if (alpha == undefined) {
-      alpha = 1;
-    }
-    return alpha * (self.isAttract ? 0.6 : 1);
+    return (alpha != null ? alpha : 1) * (self.isAttract ? 0.6 : 1);
   };
 
   // note: this really has to be z-under everything.
@@ -2051,6 +2114,7 @@ function GameState(props) {
   self.Draw = function (props) {
     //if (!self.isAttract) { ClearScreen(); }
     if (!gResizing) {
+      var _self$darkMatter3;
       // painter's z order algorithm here below, keep important things last.
 
       self.DrawCRTOutline();
@@ -2083,6 +2147,7 @@ function GameState(props) {
           p.Draw(self.Alpha());
         }
       });
+      (_self$darkMatter3 = self.darkMatter) == null || _self$darkMatter3.Draw(self.Alpha());
       if (!isEndScreenshot) {
         gSparks.A.forEach(function (s) {
           s.Draw(self.Alpha());
@@ -2106,6 +2171,7 @@ function GameState(props) {
 
   // call this last so it is the top z layer.
   self.DrawDebug = function () {
+    var _self$darkMatterGener;
     if (!gDebug) {
       return;
     }
@@ -2129,6 +2195,7 @@ function GameState(props) {
       gCx.fillStyle = RandomForColor(blueSpec, 0.3);
       DrawText("D E B U G", "center", gw(0.5), gh(0.8), gBigFontSizePt);
     });
+    (_self$darkMatterGener = self.darkMatterGenerator) == null || _self$darkMatterGener.DrawDebug();
   };
   self.Init();
 }
@@ -2167,19 +2234,19 @@ function LevelFinState() {
        the winner, which is potentially very confusing to the player.
        an option would be to only ever give the bonus to the player.
        but for now i am just disabling this while i percolate.
-    if (exists(gLastPuckSide)) {
-        var anim = ForSide(
-    	gLastPuckSide,
-    	() => { return MakeLastPuckWonAnimation(self.timeout, gw(0.75)) },
-    	() => { return MakeLastPuckWonAnimation(self.timeout, gw(0.25)) },
-        )();
-        self.AddAnimation(anim);
-        var wasLeft = gLastPuckSide === "left";
-        ForP1Side(
-    	() => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreLastPuckIncrement) },
-    	() => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreLastPuckIncrement) },
-        )();
-    }
+       if (exists(gLastPuckSide)) {
+       var anim = ForSide(
+       gLastPuckSide,
+       () => { return MakeLastPuckWonAnimation(self.timeout, gw(0.75)) },
+       () => { return MakeLastPuckWonAnimation(self.timeout, gw(0.25)) },
+       )();
+       self.AddAnimation(anim);
+       var wasLeft = gLastPuckSide === "left";
+       ForP1Side(
+       () => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreLastPuckIncrement) },
+       () => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreLastPuckIncrement) },
+       )();
+       }
     */
 
     self.goOn = false;
@@ -3127,7 +3194,7 @@ function Start() {
   ResetClipping();
   var handlerMap = {};
   handlerMap[kRoot] = function () {
-    return new RootState(kWarning);
+    return new RootState(kAppMode ? kWarning : kTitle);
   };
   handlerMap[kWarning] = function () {
     return new WarningState();
@@ -3354,6 +3421,17 @@ function InitEvents() {
         }
       });
     }
+    if (e.keyCode == 68) {
+      // 'd'
+      gEventQueue.push({
+        type: kEventKeyDown,
+        updateFn: function updateFn(cmds) {
+          if (gDebug) {
+            cmds.spawnDarkMatter = true;
+          }
+        }
+      });
+    }
     if (e.keyCode == 69) {
       // 'e'
       gEventQueue.push({
@@ -3498,6 +3576,17 @@ function InitEvents() {
         updateFn: function updateFn(cmds) {
           if (gDebug) {
             cmds.spawnPill = false;
+          }
+        }
+      });
+    }
+    if (e.keyCode == 68) {
+      // 'd'
+      gEventQueue.push({
+        type: kEventKeyUp,
+        updateFn: function updateFn(cmds) {
+          if (gDebug) {
+            cmds.spawnDarkMatter = false;
           }
         }
       });

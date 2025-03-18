@@ -344,8 +344,7 @@ function MakeForcePushProps(context) {
         width, height,
         lifespan: kPillLifespan,
         testFn: (gameState) => {
-            return gPucks.A.length > 5 &&
-		isU(context.paddle.neo);
+            return gPucks.A.length > 5 && isU(context.paddle.neo);
         },
         drawFn: (self, alpha=1) => DrawForcePushPill(context.side, self, alpha),
         boomFn: (gameState) => {
