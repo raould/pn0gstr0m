@@ -41,7 +41,7 @@ var gLifecycle;
 // and the only way to start the game is to click start.
 // (for demo nights played with game controllers.)
 // and !kAppMode 1p is only ever kGameModeRegular.
-var kAppMode = true;
+var kAppMode = false;
 
 var kScoreIncrement = 1;
 var kScoreLastPuckIncrement = 100;
@@ -421,7 +421,7 @@ function LatchP1Side(side) {
     // the first call wins and everything thereafter is ignored, on purpose.
     if (gP1Side == undefined) {
         // todo: seems risky that 'side' exists in so many places.
-	Assert(side != undefined);
+  Assert(side != undefined);
         gP1Side = side;
         gP2Side = OtherSide(side);
         gP1Target.SetSide(gP1Side, is1P(), gw(0.5));
@@ -590,10 +590,10 @@ function RoundRect( x, y, w, h, r ) {
 function StrokeRect( x, y, w, h ) {
     gCx.strokeRect(x, y, w, h);
     if (gDebug) {
-	gCx.moveTo(x, y);
-	gCx.lineTo(x+w, y+h);
-	gCx.moveTo(x+w, y);
-	gCx.lineTo(x, y+h);
+  gCx.moveTo(x, y);
+  gCx.lineTo(x+w, y+h);
+  gCx.moveTo(x+w, y);
+  gCx.lineTo(x, y+h);
     }
 }
 function RectXYWH( xywh ) {
@@ -673,6 +673,7 @@ function DrawResizing() {
     Cxdo(() => {
         gCx.fillStyle = RandomColor();
         DrawText( "R E S I Z I N G", "center", gw(0.5), gh(0.3), gSmallestFontSizePt );
+        DrawText( "R E S I Z I N G", "center", gw(0.5), gh(0.5), gSmallFontSizePt );
         DrawText( "R E S I Z I N G", "center", gw(0.5), gh(0.7), gSmallestFontSizePt );
     });
 }
@@ -680,16 +681,14 @@ function DrawResizing() {
 var gDrawTitleLatch = new RandomLatch( 0.005, 250 );
 function DrawTitle(flicker=true) {
     Cxdo(() => {
-        gCx.fillStyle = flicker ?
-            ColorCycle(kAppMode ? 1 : 0.4) :
-            rgba255s(cyanDarkSpec.regular);
-        DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
+        gCx.fillStyle = flicker ? ColorCycle() : rgba255s(cyanDarkSpec.regular);
+				var y = kAppMode ? 0.4 : 0.25;
+        DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(y), gBigFontSizePt, flicker );
 
         gCx.fillStyle = rgba255s(cyanDarkSpec.regular);
         var msg = "ETERNAL BETA";
         if (flicker && gDrawTitleLatch.MaybeLatch(gGameTime)) { msg = "ETERNAL BUGS"; }
-        DrawText( msg, "right", gw(0.876), gh(0.45), gSmallestFontSizePt, flicker );
-
+        DrawText( msg, "right", gw(0.876), gh(y+0.05), gSmallestFontSizePt, flicker );
     });
 }
 
@@ -863,7 +862,7 @@ function DrawMoveTarget(target) {
                         gCx.fill();
                     });
                 }
-	       )();
+         )();
     }
 }
 
@@ -960,6 +959,13 @@ function UpdateLocalStorage() {
             cancelPointing();
         }
         self.DrawCRTScanlines();
+        if (!kAppMode && self.state == kTitle && !gResizing) {
+            const img = gImageCache["qr"];
+            const scale = 0.15;
+						const width = sx(img.width*scale);
+						const height = sy(img.height*scale);
+            gCx.drawImage(img, gw(0.7), gh(0.6), width, height);
+        }
         DrawDebugList();
         if (gDebug) { DrawBounds(0.3); }
         if (gShowToasts) { StepToasts(); }
@@ -1055,6 +1061,9 @@ function UpdateLocalStorage() {
     var self = this;
 
     self.Init = function() {
+        if (!kAppMode) {
+            LoadAudio();
+        }
         ResetInput();
         ResetP1Side();
         ResetScores();
@@ -1066,10 +1075,14 @@ function UpdateLocalStorage() {
             gGameMode = kGameModeRegular;
         }
         self.attract = new GameState({ isAttract: true });
-        self.timeout = gDebug ? 1 : (1000 * 1.5);
+        self.timeout = gDebug ? 1 : ((kAppMode ? 1000 : 0) * 1.5);
         self.started = gGameTime;
         self.done = false;
-        self.musicTimer = setTimeout( BeginMusic, 1000 ); // avoid bugs? dunno.
+        if (kAppMode) {
+            self.musicTimer = setTimeout( BeginMusic, 1000 ); // avoid bugs? dunno.
+        } else {
+            gMusicMuted = true;
+        }
         self.theMenu = self.MakeMenu();
 
         setFullscreenIconVisible(supportsFullscreen());
@@ -1094,12 +1107,15 @@ function UpdateLocalStorage() {
                 self.done = true;
             };
             const menu = new Menu({
-                showButton: true,
+                showButton: false,
+								showStatus: false,
                 OnClose: () => {
                     ResetP1Side();
                     // forget any extra in-menu state
                     // like which button is default selected.
-                    self.theMenu = self.MakeMenu();
+                    if (!kAppMode) {
+                        self.theMenu = self.MakeMenu();
+                    }
                 },
                 MakeNavigation: (menu) => MakeArcadeMenuButtons({ OnStart }),
             });
@@ -1108,7 +1124,7 @@ function UpdateLocalStorage() {
     };
 
     self.isLoading = function() {
-        return (gGameTime - self.started) <= self.timeout;
+        return (gGameTime - self.started) < self.timeout;
     };
 
     self.Step = function( dt ) {
@@ -1214,12 +1230,15 @@ function UpdateLocalStorage() {
             Cxdo(() => {
                 self.attract.Draw();
                 DrawTitle();
-                gCx.fillStyle = RandomGreen();
-                var msg = "CONTROLS: TOUCH / MOUSE / GAMEPAD / W,S / I,K / u,v";
+                gCx.fillStyle = ColorCycle(1, -200);
                 if (self.isLoading()) {
                     var msg = "LOADING...";
+                    DrawText( msg, "center", gw(0.5), gh(0.6), gSmallFontSizePt );
+                } else {
+                    var msg = kAppMode ? "CONTROLS: TOUCH / MOUSE / GAMEPAD / W,S / I,K / u,v" : "PRESS ANY BUTTON TO START";
+										var y = kAppMode ? gh(0.6) : gh(0.4);
+                    DrawText( msg, "center", gw(0.5), y, gSmallFontSizePt);
                 }
-                DrawText( msg, "center", gw(0.5), gh(0.6), gSmallFontSizePt );
             });
             self.theMenu.Draw();
             self.DrawMusicName();
@@ -1277,20 +1296,20 @@ function UpdateLocalStorage() {
         self.StepAnimations( dt );
         self.timeout -= dt;
         if (self.timeout <= 0) {
-	    return ForGameMode({
-		regular: kChargeUp,
-		hard: kChargeUp,
-		zen: kGame,
-		z2p: kGame
-	    });
+      return ForGameMode({
+    regular: kChargeUp,
+    hard: kChargeUp,
+    zen: kGame,
+    z2p: kGame
+      });
         } else {
             // one-second-at-a-time countdown.
             var sec = Math.floor(self.timeout/1000);
             if (sec < self.lastSec) {
-	        PlayBlip(2);
-	        self.lastSec = sec;
+          PlayBlip(2);
+          self.lastSec = sec;
             }
-	    return undefined;
+      return undefined;
         }
     };
 
@@ -1340,8 +1359,8 @@ function UpdateLocalStorage() {
 
     self.DrawPillsSide = function(side, pills, whscale, ox, y, labelY) {
         var count = pills.length;
-	// zig-zag to avoid overlapping when crowded.
-	var yoff = count >= 5 ? -sy1(4) : 0;
+  // zig-zag to avoid overlapping when crowded.
+  var yoff = count >= 5 ? -sy1(4) : 0;
         if (count > 0) {
             var mx = gw(ForSide(side, 0.25, 0.75));
             var lx = mx - (count-1)/2 * ox;
@@ -1352,17 +1371,17 @@ function UpdateLocalStorage() {
                     const { name, drawer, wfn, hfn } = gPillInfo[pid];
                     const width = wfn() * whscale;
                     const height = hfn() * whscale;
-                    drawer(side, { x:x-width/2, y:y-height/2+yoff, width, height }, 1);		    
+                    drawer(side, { x:x-width/2, y:y-height/2+yoff, width, height }, 1);       
                     gCx.fillStyle = RandomForColor(blueSpec);
                     DrawText(name, "center", x, labelY+yoff, gSmallestFontSizePt);
-		    yoff *= -1;
+        yoff *= -1;
                 }
             });
         }
     };
 
     self.DrawText = function() {
-	var p2txt = is1P() ? "" : "P2";
+  var p2txt = is1P() ? "" : "P2";
         var t = Math.ceil(self.timeout/1000);
         Cxdo(() => {
             // match: GameState.DrawScoreHeader() et. al.
@@ -1396,7 +1415,7 @@ function UpdateLocalStorage() {
         self.animations = {};
         self.AddAnimation(MakeChargeUpTextAnimation(self.timeout));
         self.AddAnimation(MakeChargeUpMeterAnimation(self.timeout));
-	PlayChargeup();
+  PlayChargeup();
     };
 
     self.AddAnimation = function( a ) {
@@ -1419,12 +1438,12 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function() {
-	self.DrawText();
+  self.DrawText();
         self.DrawAnimations();
     };
 
     self.DrawText = function() {
-	var p2txt = is1P() ? "" : "P2";
+  var p2txt = is1P() ? "" : "P2";
         var t = Math.ceil(self.timeout/1000);
         Cxdo(() => {
             // match: GameState.DrawScoreHeader() et. al.
@@ -1432,12 +1451,12 @@ function UpdateLocalStorage() {
             DrawText(ForP1Side("P1",p2txt), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
             DrawText(ForP1Side(p2txt,"P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
 
-	    // match: Level.DrawTitle().
-	    if (gLevelIndex >= 1) {
-		gCx.fillStyle = RandomForColor( cyanSpec );
-		DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
-	    }
-	});
+      // match: Level.DrawTitle().
+      if (gLevelIndex >= 1) {
+    gCx.fillStyle = RandomForColor( cyanSpec );
+    DrawText(`LEVEL ${gLevelIndex}`, "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
+      }
+  });
     };
 
     self.DrawAnimations = function() {
@@ -1468,7 +1487,7 @@ function UpdateLocalStorage() {
         ResetInput();
         gP1Score.level = 0;
         gP2Score.level = 0;
-	gLastPuckSide = undefined;
+  gLastPuckSide = undefined;
 
         gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
         gLevelTime = gGameTime;
@@ -1665,7 +1684,7 @@ function UpdateLocalStorage() {
                 must, self.level.p1Pill, kSpawnPlayerPillFactor, self.level.p1Powerups
             );
             if (exists(self.level.p1Pill)) {
-		var factor = gP1PillState.deck.length <= 1 ? 2 : 1;
+    var factor = gP1PillState.deck.length <= 1 ? 2 : 1;
                 self.pillP1SpawnCountdown = self.pillSpawnCooldown * factor;
                 if (!forced) { self.unfairPillCount++; }
                 self.isCpuPillAllowed = true;
@@ -1687,7 +1706,7 @@ function UpdateLocalStorage() {
                 must, self.level.p2Pill, factor, self.level.p2Powerups
             );
             if (exists(self.level.p2Pill)) {
-		var factor = gP2PillState.deck.length <= 1 ? 2 : 1;
+    var factor = gP2PillState.deck.length <= 1 ? 2 : 1;
                 self.pillP2SpawnCountdown = self.pillSpawnCooldown * factor;
                 if (!forced) { self.unfairPillCount--; }
                 self.AddPillSparks(self.level.p2Pill.x, self.level.p2Pill.y);
@@ -1709,7 +1728,7 @@ function UpdateLocalStorage() {
     };
 
     self.StepNextState = function() {
-	// things are a big ball of mud.
+  // things are a big ball of mud.
         if (self.isAttract) {
             if (gPucks.A.length === 0) {
                 // attract never ends until dismissed.
@@ -1861,7 +1880,7 @@ function UpdateLocalStorage() {
 
     self.UpdateScore = function(p) {
         var wasLeft = p.x < gw(0.5);
-	gLastPuckSide = wasLeft ? "left" : "right";
+  gLastPuckSide = wasLeft ? "left" : "right";
         ForP1Side(
             () => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreIncrement); },
             () => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreIncrement); }
@@ -1895,11 +1914,11 @@ function UpdateLocalStorage() {
                         if (exists(p)) {
                             p.PlacementInit(splits[i]);
                             gPucks.B.push(p);
-			    AddSparks({ x:p.x, y:p.y, vx:sx(0.5), vy:sy(1), count: 3, rx:sx(1), ry:sy(1) });
+          AddSparks({ x:p.x, y:p.y, vx:sx(0.5), vy:sy(1), count: 3, rx:sx(1), ry:sy(1) });
                         }
                     }
                 }
-		// this has to be called after adding the pucks, else off by 1.
+    // this has to be called after adding the pucks, else off by 1.
                 self.level.OnPuckSplits(splits);
 
                 p.WallsCollision(self.maxVX);
@@ -1959,7 +1978,7 @@ function UpdateLocalStorage() {
             // note: this is all a tweaky hacky heuristic mess.
             var dashStep = gh() / (gMidLineDashCount*2);
             var top = ForGameMode({regular: gYInset*1.5, zen: gYInset}) + dashStep/2;
-	    // match: Level.DrawText().
+      // match: Level.DrawText().
             var txo = gSmallFontSize;
             var bottom = ForGameMode({regular: gh() - gYInset*1.05 - txo, zen: gh()-gYInset});
             var range = bottom - top;
@@ -2022,8 +2041,8 @@ function UpdateLocalStorage() {
 
     self.DrawMoveTargets = function() {
         if (!self.isAttract) {
-	    DrawMoveTargets();
-	}
+      DrawMoveTargets();
+  }
     };
 
     self.DrawPauseButton = function() {
@@ -2102,7 +2121,7 @@ function UpdateLocalStorage() {
             }
 
             if (!isEndScreenshot) {
-		// late/high z order so the animations can clear the screen if desired.
+    // late/high z order so the animations can clear the screen if desired.
                 self.DrawAnimations();
             }
 
@@ -2173,26 +2192,26 @@ function UpdateLocalStorage() {
         }
 
         self.animations = {};
-	/* todo: i would like some motivation for the player to try to win the
-	   last puck, but that ends up being strange because if the bonus for
-	   the final puck goes to the cpu, that could cause it's score to be
-	   the winner, which is potentially very confusing to the player.
-	   an option would be to only ever give the bonus to the player.
-	   but for now i am just disabling this while i percolate.
-	if (exists(gLastPuckSide)) {
-	    var anim = ForSide(
-		gLastPuckSide,
-		() => { return MakeLastPuckWonAnimation(self.timeout, gw(0.75)) },
-		() => { return MakeLastPuckWonAnimation(self.timeout, gw(0.25)) },
-	    )();
-	    self.AddAnimation(anim);
-	    var wasLeft = gLastPuckSide === "left";
-	    ForP1Side(
-		() => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreLastPuckIncrement) },
-		() => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreLastPuckIncrement) },
-	    )();
-	}
-	*/
+  /* todo: i would like some motivation for the player to try to win the
+     last puck, but that ends up being strange because if the bonus for
+     the final puck goes to the cpu, that could cause it's score to be
+     the winner, which is potentially very confusing to the player.
+     an option would be to only ever give the bonus to the player.
+     but for now i am just disabling this while i percolate.
+  if (exists(gLastPuckSide)) {
+      var anim = ForSide(
+    gLastPuckSide,
+    () => { return MakeLastPuckWonAnimation(self.timeout, gw(0.75)) },
+    () => { return MakeLastPuckWonAnimation(self.timeout, gw(0.25)) },
+      )();
+      self.AddAnimation(anim);
+      var wasLeft = gLastPuckSide === "left";
+      ForP1Side(
+    () => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreLastPuckIncrement) },
+    () => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreLastPuckIncrement) },
+      )();
+  }
+  */
 
         self.goOn = false;
         PlayGameOver();
@@ -2379,7 +2398,7 @@ function UpdateLocalStorage() {
 
         // skip the whole sceen if all pills have been rewarded.
         self.goOn = count === 0;
-	self.updateInputs = true;
+  self.updateInputs = true;
 
         self.p1Specs = [];
         self.p2Specs = [];
@@ -2407,7 +2426,7 @@ function UpdateLocalStorage() {
     
     self.Step = function(dt) {
         var nextState;
-	self.updateInput = (self.RemainingTime() >= 0);
+  self.updateInput = (self.RemainingTime() >= 0);
         self.goOn |= (self.RemainingTime() <= -3000); // neg seconds to show final choice.
         if (self.goOn) {
             self.SaveHighlighted();
@@ -2415,22 +2434,22 @@ function UpdateLocalStorage() {
         } else if (self.updateInput) {
             self.StepCpu();
             gEventQueue.forEach((event, i) => {
-		var cmds = {};
-		event.updateFn(cmds);
-		if (isU(nextState)) {
+    var cmds = {};
+    event.updateFn(cmds);
+    if (isU(nextState)) {
                     nextState = self.ProcessOneInput(cmds);
-		}
+    }
             });
-	}
+  }
 
         if(self.RemainingTime() > 0) {
-	    // one-second-at-a-time countdown.
+      // one-second-at-a-time countdown.
             var sec = Math.floor(self.RemainingTime()/1000);
             if (sec < self.lastSec) {
-		PlayBlip(2);
-		self.lastSec = sec;
+    PlayBlip(2);
+    self.lastSec = sec;
             }
-	}
+  }
 
         return nextState;
     };
@@ -2515,22 +2534,22 @@ function UpdateLocalStorage() {
         if (!self.goOn) {
             self.DrawText();
             self.DrawPills();
-	    if (self.updateInput) {
-		DrawMoveTargets();
-	    }
-	}
+      if (self.updateInput) {
+    DrawMoveTargets();
+      }
+  }
     };
     
     self.DrawText = function() {
         Cxdo(() => {
             gCx.fillStyle = RandomGreen();
-	    var countdown = Math.ceil(Math.max(0, self.RemainingTime() / 1000));
-	    var text = countdown > 0 ? "CHOOSE YOUR PRIZE!" : "CHOICE SAVED!";
+      var countdown = Math.ceil(Math.max(0, self.RemainingTime() / 1000));
+      var text = countdown > 0 ? "CHOOSE YOUR PRIZE!" : "CHOICE SAVED!";
             DrawText(text, "center", gw(0.5), gh(0.2), gRegularFontSizePt);
-	    if (countdown > 0) {
-		var timeStr = String(countdown);
-		DrawText(timeStr, "center", gw(0.5), gh(0.4), gBigFontSizePt);
-	    }
+      if (countdown > 0) {
+    var timeStr = String(countdown);
+    DrawText(timeStr, "center", gw(0.5), gh(0.4), gBigFontSizePt);
+      }
         });
     };
 
@@ -2546,12 +2565,12 @@ function UpdateLocalStorage() {
                 const cx = spec.cx;
                 const cy = spec.cy;
                 const highlighted = highlight === i;
-		if (self.updateInput || highlighted) {
+    if (self.updateInput || highlighted) {
                     self.DrawPill(side, spec, highlighted);
                     if (highlighted) {
-			self.DrawArrow(side, cx, cy, label);
+      self.DrawArrow(side, cx, cy, label);
                     }
-		}
+    }
             }
         });
     };
@@ -2639,40 +2658,40 @@ function UpdateLocalStorage() {
     };
 
     self.Draw = function() {
-	self.DrawScores();
-	self.DrawText();
+  self.DrawScores();
+  self.DrawText();
     };
 
     self.DrawScores = function() {
-	// see GameOverSummaryState.Draw*()
-	Cxdo(() => {
-	    gCx.fillStyle = RandomGreen(0.3);
-	    if (is1P()) {
-		DrawText(
+  // see GameOverSummaryState.Draw*()
+  Cxdo(() => {
+      gCx.fillStyle = RandomGreen(0.3);
+      if (is1P()) {
+    DrawText(
                     `P1 GAME: ${gP1Score.game}`,
                     ForP1Side("left", "right"),
                     ForP1Side(gw(0.2), gw(0.8)),
                     gh(0.2),
                     gSmallFontSizePt
-		);
+    );
 
-		DrawText(
+    DrawText(
                     `GPT GAME: ${gP2Score.game}`,
                     ForP2Side("left", "right"),
                     ForP2Side(gw(0.2), gw(0.8)),
                     gh(0.2),
                     gSmallFontSizePt
-		);
-	    }
-	    else {
-		var p1a = ForP1Side("left", "right");
-		var p1x = ForP1Side(gw(0.2), gw(0.8));
-		DrawText( `P1: ${gP1Score.game}`, p1a, p1x, gh(0.22), gRegularFontSizePt );
-		var p2a = ForP2Side("left", "right");
-		var p2x = ForP2Side(gw(0.2), gw(0.8));
-		DrawText( `P2: ${gP2Score.game}`, p2a, p2x, gh(0.22), gRegularFontSizePt );
-	    }
-	});
+    );
+      }
+      else {
+    var p1a = ForP1Side("left", "right");
+    var p1x = ForP1Side(gw(0.2), gw(0.8));
+    DrawText( `P1: ${gP1Score.game}`, p1a, p1x, gh(0.22), gRegularFontSizePt );
+    var p2a = ForP2Side("left", "right");
+    var p2x = ForP2Side(gw(0.2), gw(0.8));
+    DrawText( `P2: ${gP2Score.game}`, p2a, p2x, gh(0.22), gRegularFontSizePt );
+      }
+  });
     };
 
     self.DrawText = function() {
@@ -3306,7 +3325,7 @@ function Start() {
     ResetClipping();
 
     var handlerMap = {};
-    handlerMap[kRoot] = () => new RootState(kWarning);
+    handlerMap[kRoot] = () => new RootState(kAppMode ? kWarning : kTitle);
     handlerMap[kWarning] = () => new WarningState();
     handlerMap[kTitle] = () => new TitleState();
     handlerMap[kGetReady] = () => new GetReadyState();

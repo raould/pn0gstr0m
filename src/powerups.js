@@ -177,19 +177,19 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
         Assert(exists(spec), `wtf maker? ${info.name}`);
 
         if (!spec.testFn(gameState)) {
-	    spec = undefined;
-	    // try the failed powerup again after the next one
-	    // in order to attempt to spawn the new ones soon even
-	    // if they were skipped i.e. at the start of the level when
-	    // there aren't many pucks.
-	    self.pillState.deck.splice(1, 0, pid);
+						spec = undefined;
+						// try the failed powerup again after the next one
+						// in order to attempt to spawn the new ones soon even
+						// if they were skipped i.e. at the start of the level when
+						// there aren't many pucks.
+						self.pillState.deck.splice(1, 0, pid);
         }
-	else {
+				else {
             // keep looping through the pills. also keeps the 
             // state across levels so you aren't retreading.
             self.pillState.deck.push(pid);
-	}
-	console.log("after", self.side, self.pillState.deck);
+				}
+				console.log("after", self.side, self.pillState.deck);
 
         return spec;
     };

@@ -275,6 +275,9 @@ function TimedElements(_ref) {
 }
 var kAppleMobileHellPlatforms = ["ipad", "iphone", "ipod", "mac"];
 function supportsFullscreen() {
+  if (!kAppMode) {
+    return false;
+  }
   var plc = navigator.platform.toLowerCase();
   var isAppleHell = kAppleMobileHellPlatforms.reduce(function (h, p) {
     return h || plc.includes(p);

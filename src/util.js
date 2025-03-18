@@ -285,6 +285,7 @@ var kAppleMobileHellPlatforms = [
     "mac",
 ];
 function supportsFullscreen() {
+		if (!kAppMode) { return false; }
     const plc = navigator.platform.toLowerCase()
     const isAppleHell = kAppleMobileHellPlatforms.reduce(
         (h, p) => h || plc.includes(p),

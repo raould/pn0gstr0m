@@ -88,12 +88,14 @@ function MakeMenuButton(_ref) {
 /*class*/
 function Menu(_ref2) {
   var showButton = _ref2.showButton,
+    showStatus = _ref2.showStatus,
     OnClose = _ref2.OnClose,
     MakeNavigation = _ref2.MakeNavigation;
   var self = this;
   self.Init = function () {
     var _self$Focused;
     self.showButton = showButton;
+    self.showStatus = showStatus;
     self.OnClose = OnClose;
     self.bMenu = MakeMenuButton({
       OnClose: OnClose
@@ -137,7 +139,7 @@ function Menu(_ref2) {
         }
       });
     }
-    if (self.isOpen() || self.showButton) {
+    if (self.isOpen() && self.showStatus !== false || self.showButton) {
       self.bMenu.Step();
     }
     if (exists(wants_focusId) && wants_focusId != self.focusId) {
@@ -279,7 +281,7 @@ function Menu(_ref2) {
       });
     }
     // esc.
-    if (self.isOpen() || self.showButton) {
+    if (self.isOpen() && self.showStatus !== false || self.showButton) {
       self.bMenu.Draw();
     }
   };

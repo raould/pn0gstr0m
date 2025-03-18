@@ -54,7 +54,7 @@ var gLifecycle;
 // and the only way to start the game is to click start.
 // (for demo nights played with game controllers.)
 // and !kAppMode 1p is only ever kGameModeRegular.
-var kAppMode = true;
+var kAppMode = false;
 var kScoreIncrement = 1;
 var kScoreLastPuckIncrement = 100;
 // note: see GameState.Init().
@@ -732,6 +732,7 @@ function DrawResizing() {
   Cxdo(function () {
     gCx.fillStyle = RandomColor();
     DrawText("R E S I Z I N G", "center", gw(0.5), gh(0.3), gSmallestFontSizePt);
+    DrawText("R E S I Z I N G", "center", gw(0.5), gh(0.5), gSmallFontSizePt);
     DrawText("R E S I Z I N G", "center", gw(0.5), gh(0.7), gSmallestFontSizePt);
   });
 }
@@ -739,14 +740,15 @@ var gDrawTitleLatch = new RandomLatch(0.005, 250);
 function DrawTitle() {
   var flicker = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
   Cxdo(function () {
-    gCx.fillStyle = flicker ? ColorCycle(kAppMode ? 1 : 0.4) : rgba255s(cyanDarkSpec.regular);
-    DrawText("P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker);
+    gCx.fillStyle = flicker ? ColorCycle() : rgba255s(cyanDarkSpec.regular);
+    var y = kAppMode ? 0.4 : 0.25;
+    DrawText("P N 0 G S T R 0 M", "center", gw(0.5), gh(y), gBigFontSizePt, flicker);
     gCx.fillStyle = rgba255s(cyanDarkSpec.regular);
     var msg = "ETERNAL BETA";
     if (flicker && gDrawTitleLatch.MaybeLatch(gGameTime)) {
       msg = "ETERNAL BUGS";
     }
-    DrawText(msg, "right", gw(0.876), gh(0.45), gSmallestFontSizePt, flicker);
+    DrawText(msg, "right", gw(0.876), gh(y + 0.05), gSmallestFontSizePt, flicker);
   });
 }
 function DrawWarning() {
@@ -991,6 +993,13 @@ function Lifecycle(handlerMap) {
       cancelPointing();
     }
     self.DrawCRTScanlines();
+    if (!kAppMode && self.state == kTitle && !gResizing) {
+      var img = gImageCache["qr"];
+      var scale = 0.15;
+      var width = sx(img.width * scale);
+      var height = sy(img.height * scale);
+      gCx.drawImage(img, gw(0.7), gh(0.6), width, height);
+    }
     DrawDebugList();
     if (gDebug) {
       DrawBounds(0.3);
@@ -1083,6 +1092,9 @@ function WarningState() {
 function TitleState() {
   var self = this;
   self.Init = function () {
+    if (!kAppMode) {
+      LoadAudio();
+    }
     ResetInput();
     ResetP1Side();
     ResetScores();
@@ -1095,10 +1107,14 @@ function TitleState() {
     self.attract = new GameState({
       isAttract: true
     });
-    self.timeout = gDebug ? 1 : 1000 * 1.5;
+    self.timeout = gDebug ? 1 : (kAppMode ? 1000 : 0) * 1.5;
     self.started = gGameTime;
     self.done = false;
-    self.musicTimer = setTimeout(BeginMusic, 1000); // avoid bugs? dunno.
+    if (kAppMode) {
+      self.musicTimer = setTimeout(BeginMusic, 1000); // avoid bugs? dunno.
+    } else {
+      gMusicMuted = true;
+    }
     self.theMenu = self.MakeMenu();
     setFullscreenIconVisible(supportsFullscreen());
     console.log("TitleState", is1P(), gGameMode);
@@ -1122,12 +1138,15 @@ function TitleState() {
         self.done = true;
       };
       var menu = new Menu({
-        showButton: true,
+        showButton: false,
+        showStatus: false,
         OnClose: function OnClose() {
           ResetP1Side();
           // forget any extra in-menu state
           // like which button is default selected.
-          self.theMenu = self.MakeMenu();
+          if (!kAppMode) {
+            self.theMenu = self.MakeMenu();
+          }
         },
         MakeNavigation: function MakeNavigation(menu) {
           return MakeArcadeMenuButtons({
@@ -1139,7 +1158,7 @@ function TitleState() {
     }
   };
   self.isLoading = function () {
-    return gGameTime - self.started <= self.timeout;
+    return gGameTime - self.started < self.timeout;
   };
   self.Step = function (dt) {
     var nextState;
@@ -1226,12 +1245,15 @@ function TitleState() {
       Cxdo(function () {
         self.attract.Draw();
         DrawTitle();
-        gCx.fillStyle = RandomGreen();
-        var msg = "CONTROLS: TOUCH / MOUSE / GAMEPAD / W,S / I,K / u,v";
+        gCx.fillStyle = ColorCycle(1, -200);
         if (self.isLoading()) {
           var msg = "LOADING...";
+          DrawText(msg, "center", gw(0.5), gh(0.6), gSmallFontSizePt);
+        } else {
+          var msg = kAppMode ? "CONTROLS: TOUCH / MOUSE / GAMEPAD / W,S / I,K / u,v" : "PRESS ANY BUTTON TO START";
+          var y = kAppMode ? gh(0.6) : gh(0.4);
+          DrawText(msg, "center", gw(0.5), y, gSmallFontSizePt);
         }
-        DrawText(msg, "center", gw(0.5), gh(0.6), gSmallFontSizePt);
       });
       self.theMenu.Draw();
       self.DrawMusicName();
@@ -2169,15 +2191,15 @@ function LevelFinState() {
        but for now i am just disabling this while i percolate.
     if (exists(gLastPuckSide)) {
         var anim = ForSide(
-    	gLastPuckSide,
-    	() => { return MakeLastPuckWonAnimation(self.timeout, gw(0.75)) },
-    	() => { return MakeLastPuckWonAnimation(self.timeout, gw(0.25)) },
+      gLastPuckSide,
+      () => { return MakeLastPuckWonAnimation(self.timeout, gw(0.75)) },
+      () => { return MakeLastPuckWonAnimation(self.timeout, gw(0.25)) },
         )();
         self.AddAnimation(anim);
         var wasLeft = gLastPuckSide === "left";
         ForP1Side(
-    	() => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreLastPuckIncrement) },
-    	() => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreLastPuckIncrement) },
+      () => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreLastPuckIncrement) },
+      () => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreLastPuckIncrement) },
         )();
     }
     */
@@ -3127,7 +3149,7 @@ function Start() {
   ResetClipping();
   var handlerMap = {};
   handlerMap[kRoot] = function () {
-    return new RootState(kWarning);
+    return new RootState(kAppMode ? kWarning : kTitle);
   };
   handlerMap[kWarning] = function () {
     return new WarningState();
