@@ -32,7 +32,8 @@ function Random() {
   self.RandomSign = function (cutoff) {
     return self.RandomBool(cutoff) ? 1 : -1;
   };
-  self.RandomChoice = function (a, b, chooseA) {
+  self.RandomChoice = function (a, b) {
+    var chooseA = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.5;
     return self.RandomBool(chooseA) ? a : b;
   };
   self.RandomChoices = function (choices) {

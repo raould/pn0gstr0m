@@ -128,10 +128,10 @@ function lerp_rgba255s(src255, dst255, alpha, t) {
     }
 }
 
-function ColorCycle(alpha=1) {
-    var r = Math.sin(gGameTime * 3 / 7000);
-    var g = Math.sin(gGameTime * 11 / 7000);
-    var b = Math.sin(gGameTime * 31 / 7000);
+function ColorCycle(alpha=1, offset=0) {
+    var r = Math.sin((offset+gGameTime) * 3 / 7000);
+    var g = Math.sin((offset+gGameTime) * 11 / 7000);
+    var b = Math.sin((offset+gGameTime) * 31 / 7000);
     if (r + g + b < 0.2) { g = 0.4; }
     return rgba255s(
         [Math.floor(r*255),

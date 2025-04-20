@@ -186,12 +186,12 @@ function Puck() {
       var pvx = T01(Math.abs(self.vx), maxVX);
       // some modes allow more for linear streaming of the pucks.
       var vyfc = ForGameMode({
-        regular: 0.15,
-        hard: 0.2,
-        zen: 0.1,
+        regular: 0.3,
+        hard: 0.3,
+        zen: 0.3,
         // the faster things get, the more spread out, i hope, but,
         // not too much since it can be fun to be 'streaming' until neo.
-        z2p: 0.1 + pvx * 0.2
+        z2p: 0.3 + pvx * 0.2
       });
       var vyf = 1 + gR.RandomRange(-vyfc, vyfc);
       vy = self.vy * vyf;
@@ -240,7 +240,7 @@ function Puck() {
         var postSign = Sign(self.x - xywh.x);
         var dxSkipped = preSign != postSign;
         if (dxSkipped && !xOverlaps && yOverlaps) {
-          console.log("x skipped over collision");
+          //console.log("x skipped over collision");
         }
         return yOverlaps && (xOverlaps || dxSkipped);
       }

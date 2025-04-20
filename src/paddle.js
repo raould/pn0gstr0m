@@ -80,7 +80,7 @@ function Paddle(props) {
         self.nudgeX();
 
         // ugh, see: level, puck.
-        self.englishFactor = ForGameMode({ regular: 0.3, zen: 0.08 }); 
+        self.englishFactor = ForGameMode({ regular: 0.3, zen: 0.08 });
     };
 
     self.ForEachPaddle = function(fn) {

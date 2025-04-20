@@ -46,3 +46,18 @@ function WX( v ) {
 function WY( v ) {
     return v + sy(gR.RandomBool() ? 0 : (gR.RandomBool() ? 0.1 : -0.1));
 }
+
+function InGameBounds(xywh) {
+    var left = xywh.x;
+    var top = xywh.y;
+    var width = xywh.width;
+    var height = xywh.height;
+    Assert(left != undefined);
+    Assert(top != undefined);
+    Assert(width != undefined);
+    Assert(height != undefined);
+    return (left+width >= 0) &&
+	(left <= gWidth) &&
+	(top+height >= 0) &&
+	(top <=gHeight);
+};

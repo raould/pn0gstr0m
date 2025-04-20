@@ -6,6 +6,7 @@
  */
 
 function AddImageToCache(name, path, cache) {
+  Assert(isU(cache[name]), name);
   var img = new Image();
   img.src = path;
   cache[name] = img;
@@ -20,3 +21,4 @@ AddImageToCache("defend", "images/defend.png", gImageCache);
 AddImageToCache("xtra", "images/xtra.png", gImageCache);
 AddImageToCache("neo", "images/neo.png", gImageCache);
 AddImageToCache("chaos", "images/chaos.png", gImageCache);
+AddImageToCache("qr", "images/pn0g_qr.png", gImageCache);

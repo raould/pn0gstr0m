@@ -28,7 +28,7 @@
         return self.RandomBool(cutoff) ? 1 : -1;
     };
 
-    self.RandomChoice = function(a, b, chooseA) {
+    self.RandomChoice = function(a, b, chooseA=0.5) {
         return self.RandomBool(chooseA) ? a : b;
     };
 

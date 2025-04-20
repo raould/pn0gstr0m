@@ -18,35 +18,32 @@
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
 
 // screens auto-advance after this long.
-var kUITimeout = 1000 * (gDebug ? 5 : 20);
+const kUITimeout = 1000 * (gDebug ? 5 : 20);
 
 // match: index.html
-var kCanvasName = "canvas";
-var kFullscreenIconName = "fullscreen";
+const kCanvasName = "canvas";
+const kFullscreenIconName = "fullscreen";
 
 var gLifecycle;
 
-// which title menu to show:
-// if true, which is the expected shipping state,
-// the title menu has more options.
-// if false, then we are in "arcade/demo night"
-// mode and the menu is just 1p, 2p, start
-// and the only way to start the game is to click start.
-// (for demo nights played with game controllers.)
-// and !kAppMode 1p is only ever kGameModeRegular.
-var kAppMode = true;
+// which title menu to show?
+// true: (which is the expected shipping state) the title menu has more options.
+// false: then we are in "arcade/demo night" so the menu is just 1p, 2p, start,
+// and the only way to start the game is to click start (game controllers),
+// and no hard or zen modes.
+const kAppMode = true;
 
-var kScoreIncrement = 1;
-var kScoreLastPuckIncrement = 100;
+const kScoreIncrement = 1;
+const kScoreLastPuckIncrement = 100;
 // note: see GameState.Init().
-var kZeroScore = {game: 0, level: 0};
+const kZeroScore = {game: 0, level: 0};
 var gP1Score;
 var gP2Score;
 function ResetScores() {
@@ -64,10 +61,10 @@ var gLastPuckSide;
 // mutually exclusive enum.
 // regular & hard & zen are single player.
 // hard is the ame as 1P but zen is different!
-var kGameModeRegular = "regular";
-var kGameModeHard = "hard";
-var kGameModeZen = "zen";
-var kGameMode2P = "2p";
+const kGameModeRegular = "regular";
+const kGameModeHard = "hard";
+const kGameModeZen = "zen";
+const kGameMode2P = "2p";
 var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
 function is1P() {
     return gGameMode != kGameMode2P;
@@ -130,30 +127,30 @@ function SetGameMode(mode=gGameMode) {
 // slightly useful for testing collisions when enabled
 // but carries some hacky tech debt
 // and can mislead about regular behaviour?!
-var kDrawAIPuckTarget = true;
+const kDrawAIPuckTarget = true;
 
 // i.e. attract mode.
 var gMonochrome = false;
 
 // "fade" from all-green to specified colors. see: GameTime01 and color.js
-var kGreenFadeInMsec = 7000;
+const kGreenFadeInMsec = 7000;
 // "fade" in from 0 alpha to specified alphas.
-var kAlphaFadeInMsec = 700;
+const kAlphaFadeInMsec = 700;
 
 var gLevelHighScores = LoadLocal(LocalStorageKeys.levelHighScores, {});
 var gHighScore = LoadLocal(LocalStorageKeys.gameHighScore, 0);
 
 // note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
 // although i did try to compensate in the run loop.
-var kFPS = 30;
-var kTimeStep = 1000/kFPS;
-var kTimeStepThreshold = kTimeStep * 0.7;
-var kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
+const kFPS = 30;
+const kTimeStep = 1000/kFPS;
+const kTimeStepThreshold = kTimeStep * 0.7;
+const kMaybeWasPausedInTheDangedDebuggerMsec = 1000 * 1; // whatevez!
 var gLevelTime = 0;
 var gGameTime = 0;
 var gFrameCount = 0;
-var kPhysicsStepScale = 0.04;
-var kAIPeriod = 5;
+const kPhysicsStepScale = 0.04;
+const kAIPeriod = 5;
 
 var gMidLineDashCount;
 var gMidLineDashWidth;
@@ -184,11 +181,11 @@ var gSmallestFontSizePt;
 var gPillTextY;
 
 // try to avoid huge visual puck steps jumps per frame.
-var kMaxVX = sxi(19);
+const kMaxVX = sxi(19);
 
 // bug: if vy gets too big then the pucks escape vertically,
 // so hard coding a limit to work around that.
-var kMaxVY = syi(30);
+const kMaxVY = syi(30);
 
 function RecalculateConstants() {
     gMidLineDashCount = syi(16);
@@ -222,16 +219,22 @@ function RecalculateConstants() {
 // anything here below that ends up depending on
 // gWidth or gHeight must got up into RecalculateConstants().
 
-var kFontName = "noyb2Regular";
-var kAvgSparkFrame = 20;
-var kEjectCountThreshold = 400;
-var kEjectSpeedCountThreshold = 300;
-var kPuckPoolSize = 500;
-var kSparkPoolSize = 300;
-var kBarriersArrayInitialSize = 4;
-var kXtrasArrayInitialSize = 6;
+const kFontName = "noyb2Regular";
+const kAvgSparkFrame = 20;
 
-var kSpawnPlayerPillFactor = 0.003;
+// hand-waving 'heuristic's abound!
+// all of these are kind of related...
+const kEjectCountThreshold = 350;
+const kEjectSpeedCountThreshold = 300;
+const kStreamingCountThreshold = 300; // must be <= kEjectCountThreshold i guess.
+const kStreamingCountTimeout = 1000 * 60;
+const kPuckPoolSize = 500;
+const kSparkPoolSize = 300;
+
+const kBarriersArrayInitialSize = 4;
+const kXtrasArrayInitialSize = 6;
+
+const kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
 var gNextID = 0;
@@ -283,6 +286,7 @@ function RightKeys() {
     return ForP1Side(gP2Keys, gP1Keys);
 }
 
+const kJoystickDeadZone = 0.5;
 var nostick = { up: false, down: false, dz: kJoystickDeadZone };
 function noStickState() { return {...nostick}; }
 var gGamepad1Sticks = new WrapState({resetFn: noStickState});
@@ -373,19 +377,20 @@ function clearAnyMenuPressed() {
 // note: these are mainly (only) for keyboard input,
 // aren't specific to p1 vs. p2 or left vs. right.
 /* note: this is a list of what is supported, at runtime i just use {}.
-var nocmds = {
-    menu: false,
-    pause: false,
-    activate: false,
-    addPuck: false,
-    gameOver: false,
-    spawnPill: false,
-    clearHighScore: false,
-    step: false,
-    nextMusic: false,
-    singlePlayer: false,
-    doublePlayer: false,
-}
+   var nocmds = {
+   menu: false,
+   pause: false,
+   activate: false,
+   addPuck: false,
+   gameOver: false,
+   spawnPill: false,
+   spawnDarkMatter: false,
+   clearHighScore: false,
+   step: false,
+   nextMusic: false,
+   singlePlayer: false,
+   doublePlayer: false,
+   }
 */
 
 function ResetInput() { // todo: code smell.
@@ -431,34 +436,34 @@ function LatchP1Side(side) {
     }
 }
 
-var kNoopEvent = { updateFn: () => ({}) };
+const kNoopEvent = { updateFn: () => ({}) };
 var gEventQueue = [];
-var kEventKeyDown = "key_down";
-var kEventKeyUp = "key_up";
-var kEventPointerDown = "pointer_down";
-var kEventPointerMove = "pointer_move";
-var kEventPointerUp = "pointer_up";
-var kEventGamepadButtonPressed = "gamepad_button_pressed";
-var kEventGamepadButtonReleased = "gamepad_button_released";
-var kEventGamepadJoystickMove = "gamepad_joystick_move";
+const kEventKeyDown = "key_down";
+const kEventKeyUp = "key_up";
+const kEventPointerDown = "pointer_down";
+const kEventPointerMove = "pointer_move";
+const kEventPointerUp = "pointer_up";
+const kEventGamepadButtonPressed = "gamepad_button_pressed";
+const kEventGamepadButtonReleased = "gamepad_button_released";
+const kEventGamepadJoystickMove = "gamepad_joystick_move";
 
 /*
- must track down/up per pointer id
- otherwise we'll be confused?
- how to decide which player a pointer event controls?
+  must track down/up per pointer id
+  otherwise we'll be confused?
+  how to decide which player a pointer event controls?
 
- * single player: all for player.
+  * single player: all for player.
 
- * two player: based on which half the pointer was down.
+  * two player: based on which half the pointer was down.
 
- but in both cases, what do we do about multiple competing
- pointers, events? i guess we only allow one at a time.
- so we have to keep track of the pointerId.
+  but in both cases, what do we do about multiple competing
+  pointers, events? i guess we only allow one at a time.
+  so we have to keep track of the pointerId.
 
- in single player mode, both left and right control the player paddle.
+  in single player mode, both left and right control the player paddle.
 */
 
-var kMousePointerId = "__mouse";
+const kMousePointerId = "__mouse";
 var gP1Target = new MoveTarget({name: "p1"});
 var gP2Target = new MoveTarget({name: "p2"});
 function ForPointerId(pid) {
@@ -493,17 +498,17 @@ var gSparkPool;
 var gSparks; // { A: reuseArray, B: reuseArray }
 
 // i just love not having an enum type.
-var kDebug = -2;
-var kRoot = -1;
-var kWarning = 0; // audio permission via user interaction effing eff.
-var kTitle = 1;
-var kGetReady = 2; // includes 'level splash' for levels 2+.
-var kChargeUp = 3;
-var kGame = 4;
-var kLevelFin = 5; // todo: deprecate for LevelFinChoose.
-var kLevelFinChoose = 6;
-var kGameOver = 7;
-var kGameOverSummary = 8;
+const kDebug = -2;
+const kRoot = -1;
+const kWarning = 0; // audio permission via user interaction effing eff.
+const kTitle = 1;
+const kGetReady = 2; // includes 'level splash' for levels 2+.
+const kChargeUp = 3;
+const kGame = 4;
+const kLevelFin = 5; // todo: deprecate for LevelFinChoose.
+const kLevelFinChoose = 6;
+const kGameOver = 7;
+const kGameOverSummary = 8;
 
 var gCanvas;
 var gCx;
@@ -512,7 +517,6 @@ var gCx2;
 var gToasts = [];
 var gGamepad1;
 var gGamepad2;
-var kJoystickDeadZone = 0.5;
 var gR = new Random( Math.round(Date.now()) );
 
 // ----------------------------------------
@@ -673,6 +677,7 @@ function DrawResizing() {
     Cxdo(() => {
         gCx.fillStyle = RandomColor();
         DrawText( "R E S I Z I N G", "center", gw(0.5), gh(0.3), gSmallestFontSizePt );
+        DrawText( "R E S I Z I N G", "center", gw(0.5), gh(0.5), gSmallFontSizePt );
         DrawText( "R E S I Z I N G", "center", gw(0.5), gh(0.7), gSmallestFontSizePt );
     });
 }
@@ -680,16 +685,14 @@ function DrawResizing() {
 var gDrawTitleLatch = new RandomLatch( 0.005, 250 );
 function DrawTitle(flicker=true) {
     Cxdo(() => {
-        gCx.fillStyle = flicker ?
-            ColorCycle(kAppMode ? 1 : 0.4) :
-            rgba255s(cyanDarkSpec.regular);
-        DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(0.4), gBigFontSizePt, flicker );
+        gCx.fillStyle = flicker ? ColorCycle() : rgba255s(cyanDarkSpec.regular);
+	var y = kAppMode ? 0.4 : 0.25;
+        DrawText( "P N 0 G S T R 0 M", "center", gw(0.5), gh(y), gBigFontSizePt, flicker );
 
         gCx.fillStyle = rgba255s(cyanDarkSpec.regular);
         var msg = "ETERNAL BETA";
         if (flicker && gDrawTitleLatch.MaybeLatch(gGameTime)) { msg = "ETERNAL BUGS"; }
-        DrawText( msg, "right", gw(0.876), gh(0.45), gSmallestFontSizePt, flicker );
-
+        DrawText( msg, "right", gw(0.876), gh(y+0.05), gSmallestFontSizePt, flicker );
     });
 }
 
@@ -863,7 +866,7 @@ function DrawMoveTarget(target) {
                         gCx.fill();
                     });
                 }
-	       )();
+               )();
     }
 }
 
@@ -960,6 +963,13 @@ function UpdateLocalStorage() {
             cancelPointing();
         }
         self.DrawCRTScanlines();
+        if (!kAppMode && self.state == kTitle && !gResizing) {
+            const img = gImageCache["qr"];
+            const scale = 0.1;
+	    const width = sx(img.width*scale);
+	    const height = sy(img.height*scale);
+            gCx.drawImage(img, gw(0.7), gh(0.75), width, height);
+        }
         DrawDebugList();
         if (gDebug) { DrawBounds(0.3); }
         if (gShowToasts) { StepToasts(); }
@@ -1055,6 +1065,9 @@ function UpdateLocalStorage() {
     var self = this;
 
     self.Init = function() {
+        if (!kAppMode) {
+            LoadAudio();
+        }
         ResetInput();
         ResetP1Side();
         ResetScores();
@@ -1065,11 +1078,15 @@ function UpdateLocalStorage() {
             // reset to 1 player every time for clarity.
             gGameMode = kGameModeRegular;
         }
-        self.attract = new GameState({ isAttract: true });
-        self.timeout = gDebug ? 1 : (1000 * 1.5);
+        self.attraction = new GameState({ isAttract: true });
+        self.timeout = gDebug ? 1 : ((kAppMode ? 1000 : 0) * 1.5);
         self.started = gGameTime;
         self.done = false;
-        self.musicTimer = setTimeout( BeginMusic, 1000 ); // avoid bugs? dunno.
+        if (kAppMode) {
+            self.musicTimer = setTimeout( BeginMusic, 1000 ); // avoid bugs? dunno.
+        } else {
+            gMusicMuted = true;
+        }
         self.theMenu = self.MakeMenu();
 
         setFullscreenIconVisible(supportsFullscreen());
@@ -1094,12 +1111,15 @@ function UpdateLocalStorage() {
                 self.done = true;
             };
             const menu = new Menu({
-                showButton: true,
+                showButton: false,
+		showStatus: false,
                 OnClose: () => {
                     ResetP1Side();
                     // forget any extra in-menu state
                     // like which button is default selected.
-                    self.theMenu = self.MakeMenu();
+                    if (!kAppMode) {
+                        self.theMenu = self.MakeMenu();
+                    }
                 },
                 MakeNavigation: (menu) => MakeArcadeMenuButtons({ OnStart }),
             });
@@ -1108,13 +1128,13 @@ function UpdateLocalStorage() {
     };
 
     self.isLoading = function() {
-        return (gGameTime - self.started) <= self.timeout;
+        return (gGameTime - self.started) < self.timeout;
     };
 
     self.Step = function( dt ) {
         var nextState;
 
-        self.attract.Step( dt );
+        self.attraction.Step( dt );
         self.theMenu.Step(); // note: does not handle input, see below.
 
         nextState = self.ProcessAllInput();
@@ -1212,14 +1232,17 @@ function UpdateLocalStorage() {
         }
         else {
             Cxdo(() => {
-                self.attract.Draw();
+                self.attraction.Draw();
                 DrawTitle();
-                gCx.fillStyle = RandomGreen();
-                var msg = "CONTROLS: TOUCH / MOUSE / GAMEPAD / W,S / I,K / u,v";
+                gCx.fillStyle = ColorCycle(1, -200);
                 if (self.isLoading()) {
                     var msg = "LOADING...";
+                    DrawText( msg, "center", gw(0.5), gh(0.6), gSmallFontSizePt );
+                } else {
+                    var msg = kAppMode ? "CONTROLS: TOUCH / MOUSE / GAMEPAD / W,S / I,K / u,v" : "PRESS ANY BUTTON TO START";
+		    var y = kAppMode ? gh(0.6) : gh(0.4);
+                    DrawText( msg, "center", gw(0.5), y, gSmallFontSizePt);
                 }
-                DrawText( msg, "center", gw(0.5), gh(0.6), gSmallFontSizePt );
             });
             self.theMenu.Draw();
             self.DrawMusicName();
@@ -1287,8 +1310,8 @@ function UpdateLocalStorage() {
             // one-second-at-a-time countdown.
             var sec = Math.floor(self.timeout/1000);
             if (sec < self.lastSec) {
-	        PlayBlip(2);
-	        self.lastSec = sec;
+		PlayBlip(2);
+		self.lastSec = sec;
             }
 	    return undefined;
         }
@@ -1352,7 +1375,7 @@ function UpdateLocalStorage() {
                     const { name, drawer, wfn, hfn } = gPillInfo[pid];
                     const width = wfn() * whscale;
                     const height = hfn() * whscale;
-                    drawer(side, { x:x-width/2, y:y-height/2+yoff, width, height }, 1);		    
+                    drawer(side, { x:x-width/2, y:y-height/2+yoff, width, height }, 1);       
                     gCx.fillStyle = RandomForColor(blueSpec);
                     DrawText(name, "center", x, labelY+yoff, gSmallestFontSizePt);
 		    yoff *= -1;
@@ -1532,16 +1555,17 @@ function UpdateLocalStorage() {
 
         self.MakeLevel();
         self.CreateStartingPuck(self.level.vx0);
+	//if (gDebug && !self.isAttract) { range(0,400).forEach((_) => self.CreateStartingPuck(self.level.vx0)); }
 
         // this countdown is a block on both player & cpu pill spawning.
         // first wait is longer before the very first pill.
         // also see the 'must' check later on.
         // prevent pills from showing up too often, or too early - but not too late.
         self.pillSpawnCooldown = ForGameMode({
-            regular: 1000 * 6,
-            hard: 1000 * 10,
-            zen: 1000 * 15,
-            zp2: 1000 * 10,
+            regular: 1000 * 3,
+            hard: 1000 * 3,
+            zen: 1000 * 3,
+            zp2: 1000 * 3,
         });
         self.pillP1SpawnCountdown = self.pillSpawnCooldown;
         self.pillP2SpawnCountdown = self.pillSpawnCooldown;
@@ -1551,6 +1575,10 @@ function UpdateLocalStorage() {
         // also, neither side gets too many pills before the other.
         self.unfairPillCount = 0;
         self.unfairPillDiffMax = 2;
+
+	// only break up 'streaming' steady-state in 2P mode.
+	self.darkMatterGenerator = is1P() ? undefined : new DarkMatterGenerator({timeout: kStreamingCountTimeout});
+	self.darkMatter = undefined;
 
         if (!self.isAttract) {
             PlayStart();
@@ -1615,6 +1643,7 @@ function UpdateLocalStorage() {
         self.level.Step( dt );
         self.maxVX = self.level.maxVX; // todo: code smell global.
         self.MaybeSpawnPills( dt );
+	self.StepDarkMatter( dt );
 
         self.ProcessAllInput();
         if (self.quit) {
@@ -1638,6 +1667,30 @@ function UpdateLocalStorage() {
         var nextState = self.StepNextState();
         self.stepping = false;
         return nextState;
+    };
+
+    self.StepDarkMatter = function( dt, forced=false ) {
+	if (exists(self.darkMatterGenerator)) {
+	    self.darkMatterGenerator.Step( dt );
+	    var spawnNaturally = isU(self.darkMatter) && self.darkMatterGenerator.triggered && gR.RandomBool(0.1);
+	    var spawn = spawnNaturally || forced;
+	    if (spawn) {
+		self.darkMatterGenerator.Reset();
+		var x = gR.RandomChoice(gw(0.2), gw(0.8));
+		var vx = (x < gw(0.5) ? 1 : -1) * sx(0.015);
+		var width = sx1(30);
+		var height = sx1(30);
+		self.darkMatter = new DarkMatter({
+		    x: x, y: gh(0.05) - height/2,
+		    width, height,
+		    vx, vy: sy(0.02),
+		});
+	    }
+	    self.darkMatter?.Step( dt );
+	    if (self.darkMatter?.alive === false) {
+		self.darkMatter = undefined;
+	    }
+	}
     };
 
     self.AddPillSparks = function(x, y) {
@@ -1697,12 +1750,12 @@ function UpdateLocalStorage() {
         Assert(Math.abs(self.unfairPillCount) <= self.unfairPillDiffMax, "unfairPillCount");
     };
 
-    self.MaybeSpawnPill = function( must, prev, spawnFactor, maker ) {
+    self.MaybeSpawnPill = function( forced, prev, spawnFactor, maker ) {
         var can_paused = !self.paused;
         var can_attract = !self.isAttract;
         var can_factor = gR.RandomBool(spawnFactor);
         var can_empty = isU(prev);
-        if (must || (can_paused && can_attract && can_factor && can_empty)) {
+        if (forced || (can_paused && can_attract && can_factor && can_empty)) {
             return maker.MakeRandomPill(self);
         }
         return undefined;
@@ -1774,7 +1827,7 @@ function UpdateLocalStorage() {
             p.PlacementInit({ x: gw(gR.RandomRange(1/8, 7/8)),
                               y: gh(gR.RandomRange(3.5/8, 4/8)),
                               vx: gR.RandomRange(0.2, 0.3) * self.maxVX,
-                              vy: gR.RandomCentered(1, 0.5),
+                              vy: gR.RandomCentered(0.2, 0.1),
                               ur: true });
             gPucks.A.push(p);
         }
@@ -1809,6 +1862,11 @@ function UpdateLocalStorage() {
                 self.MaybeSpawnPills(0, true);
             }
         }
+	if (cmds.spawnDarkMatter) {
+	    if (self.paused) {
+		self.StepDarkMatter(0, true);
+	    }
+	}
         if (cmds.clearHighScore) {
             if (self.paused) {
                 gLevelHighScores = {};
@@ -1947,8 +2005,7 @@ function UpdateLocalStorage() {
     };
 
     self.Alpha = function( alpha ) {
-        if (alpha == undefined) { alpha = 1; }
-        return alpha * (self.isAttract ? 0.6 : 1);
+        return (alpha ?? 1) * (self.isAttract ? 0.6 : 1);
     };
 
     // note: this really has to be z-under everything.
@@ -2091,6 +2148,8 @@ function UpdateLocalStorage() {
                 }
             });
 
+	    self.darkMatter?.Draw( self.Alpha() );
+
             if (!isEndScreenshot) {
                 gSparks.A.forEach(s => {
                     s.Draw( self.Alpha() );
@@ -2138,6 +2197,7 @@ function UpdateLocalStorage() {
             gCx.fillStyle = RandomForColor(blueSpec, 0.3);
             DrawText( "D E B U G", "center", gw(0.5), gh(0.8), gBigFontSizePt );
         });
+	self.darkMatterGenerator?.DrawDebug();
     };
 
     self.Init();
@@ -2179,19 +2239,19 @@ function UpdateLocalStorage() {
 	   the winner, which is potentially very confusing to the player.
 	   an option would be to only ever give the bonus to the player.
 	   but for now i am just disabling this while i percolate.
-	if (exists(gLastPuckSide)) {
-	    var anim = ForSide(
-		gLastPuckSide,
-		() => { return MakeLastPuckWonAnimation(self.timeout, gw(0.75)) },
-		() => { return MakeLastPuckWonAnimation(self.timeout, gw(0.25)) },
-	    )();
-	    self.AddAnimation(anim);
-	    var wasLeft = gLastPuckSide === "left";
-	    ForP1Side(
-		() => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreLastPuckIncrement) },
-		() => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreLastPuckIncrement) },
-	    )();
-	}
+	   if (exists(gLastPuckSide)) {
+	   var anim = ForSide(
+	   gLastPuckSide,
+	   () => { return MakeLastPuckWonAnimation(self.timeout, gw(0.75)) },
+	   () => { return MakeLastPuckWonAnimation(self.timeout, gw(0.25)) },
+	   )();
+	   self.AddAnimation(anim);
+	   var wasLeft = gLastPuckSide === "left";
+	   ForP1Side(
+	   () => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreLastPuckIncrement) },
+	   () => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreLastPuckIncrement) },
+	   )();
+	   }
 	*/
 
         self.goOn = false;
@@ -3234,8 +3294,8 @@ function OnBlur() {
 var gResizing = false;
 var gLastArea = 0;
 var gMatchedAreaCount = 0;
-var kMatchedAreaRequirement = 10;
-var kResizeAllowedStates = [kDebug, kRoot, kWarning, kTitle];
+const kMatchedAreaRequirement = 10;
+const kResizeAllowedStates = [kDebug, kRoot, kWarning, kTitle];
 function OnResize() {
     if (exists(gLifecycle)) {
         if (gLifecycle.state == kGame) {
@@ -3306,7 +3366,7 @@ function Start() {
     ResetClipping();
 
     var handlerMap = {};
-    handlerMap[kRoot] = () => new RootState(kWarning);
+    handlerMap[kRoot] = () => new RootState(kAppMode ? kWarning : kTitle);
     handlerMap[kWarning] = () => new WarningState();
     handlerMap[kTitle] = () => new TitleState();
     handlerMap[kGetReady] = () => new GetReadyState();
@@ -3489,6 +3549,15 @@ function InitEvents() {
             });
         }
 
+	if( e.keyCode == 68) { // 'd'
+            gEventQueue.push({
+                type: kEventKeyDown,
+                updateFn: (cmds) => {
+                    if (gDebug) { cmds.spawnDarkMatter = true; }
+                }
+            });
+	}
+
         if( e.keyCode == 69 ) { // 'e'
             gEventQueue.push({
                 type: kEventKeyDown,
@@ -3616,6 +3685,15 @@ function InitEvents() {
                 }
             });
         }
+
+	if( e.keyCode == 68) { // 'd'
+            gEventQueue.push({
+                type: kEventKeyUp,
+                updateFn: (cmds) => {
+                    if (gDebug) { cmds.spawnDarkMatter = false; }
+                }
+            });
+	}
 
         if( e.keyCode == 69 ) { // 'e'
             gEventQueue.push({
