@@ -77,11 +77,12 @@ function MakeMenuButton({ OnClose }) {
     return bMenu;
 }
 
-/*class*/ function Menu({ showButton, OnClose, MakeNavigation }) {
+/*class*/ function Menu({ showButton, showStatus, OnClose, MakeNavigation }) {
     var self = this;
 
     self.Init = function() {
         self.showButton = showButton;
+				self.showStatus = showStatus;
         self.OnClose = OnClose;
         self.bMenu = MakeMenuButton({ OnClose });
         self.spec = MakeNavigation(self);
@@ -133,7 +134,7 @@ function MakeMenuButton({ OnClose }) {
             );
         }
 
-        if (self.isOpen() || self.showButton) {
+        if ((self.isOpen() && self.showStatus !== false) || self.showButton) {
             self.bMenu.Step();
         }
 
@@ -241,18 +242,18 @@ function MakeMenuButton({ OnClose }) {
         if (target.isDown()) {
             // the menu is open so check buttons.
             if (self.isOpen()) {
-		// clicking on disabled button should do nothing:
-		// no action, no closing the menu.
+								// clicking on disabled button should do nothing:
+								// no action, no closing the menu.
                 var found = Object.entries(self.Navigation()).find(
                     e => e[1].button.ProcessTarget(target)
                 );
                 hit = exists(found);
 
                 if (hit) {
-		    if (!found[1].button.disabled) {
-			if (found != self.bMenu) { self.Focus(found[0]); }
-			found[1].button.Click();
-		    }
+										if (!found[1].button.disabled) {
+												if (found != self.bMenu) { self.Focus(found[0]); }
+												found[1].button.Click();
+										}
                 } else {
                     // touching outside the menu closes it.
                     self.bMenu.Click();
@@ -291,7 +292,7 @@ function MakeMenuButton({ OnClose }) {
             });
         }
         // esc.
-        if (self.isOpen() || self.showButton) {
+        if ((self.isOpen() && self.showStatus !== false) || self.showButton) {
             self.bMenu.Draw();
         }
     };

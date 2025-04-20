@@ -3,8 +3,10 @@
 * warning: things in code tend to not be simply what they seem / what you'd expect, even for me.
 * support webgl (e.g. via pixijs) to get performance (vs. e.g. cavas color string hell).
 * comment out asserts in out/* somehow, for perf.
+* add more global variables /s.
 * step broken when paused e.g. wrt animations.js, i think?
 * fix resizing to be allowed during the game, especially for toggling fullscreen.
+* figure out the right hellacious way to support fullscreen button?!@#?!@?#!!!
 * pill/powerup code is across too many files, i am so confused.
 * there is a lot of similar/copied but not shared code for e.g. drawing score header.
 * cmds vs. targets vs. button polling is a buggy mess, needs to be unified.
@@ -56,6 +58,7 @@
 * the ForSide()/P1/P2 thing has gotten ever more ugly & confusing.
 * i feel like isUrgent isn't weighted high enough by ai cf. engorge.
 * maybe add english based on paddle y velocity.
+* i know i am dumb for not just using some npm vector math package.
 * i know "!!" et. al. are dangerous but i can't stop using them sometimes.
 * very bad code smell wrt maxVX and order of how it gets set and used.
   * also uh no idea how/why/where puck.vx gets to be > than {gameState,level}.maxVX

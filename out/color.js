@@ -140,9 +140,10 @@ function lerp_rgba255s(src255, dst255, alpha, t) {
 }
 function ColorCycle() {
   var alpha = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
-  var r = Math.sin(gGameTime * 3 / 7000);
-  var g = Math.sin(gGameTime * 11 / 7000);
-  var b = Math.sin(gGameTime * 31 / 7000);
+  var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+  var r = Math.sin((offset + gGameTime) * 3 / 7000);
+  var g = Math.sin((offset + gGameTime) * 11 / 7000);
+  var b = Math.sin((offset + gGameTime) * 31 / 7000);
   if (r + g + b < 0.2) {
     g = 0.4;
   }

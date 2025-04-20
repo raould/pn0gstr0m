@@ -38,8 +38,9 @@ function logEvery(key, v, count) {
     const update = isU(oc) || (oc%count === 0);
     if (update) {
         console.log(key, v);
-        gLogEveryMap[key] = gLogEveryMap[key] + 1;
+	gLogEveryMap[key] = 0;
     }
+    gLogEveryMap[key]++;
 }
 
 const gLogOnChangeMap = {};
@@ -136,6 +137,10 @@ function Trim(n, decimals) {
     return Math.floor(n*m)/m;
 }
 
+function FromTo(x0, y0, x1, y1) {
+    return { x: x1-x0, y: y1-y0 };
+}
+
 function Distance(x0, y0, x1, y1) {
     var d = Math.sqrt(Distance2(x0, y0, x1, y1));
     return d;
@@ -144,6 +149,16 @@ function Distance(x0, y0, x1, y1) {
 function Distance2(x0, y0, x1, y1) {
     var d = Math.pow(x1-x0,2) + Math.pow(y1-y0,2);
     return d;
+}
+
+function Magnitude(x, y) {
+    return Math.sqrt(Math.pow(x,2) + Math.pow(y,2));
+}
+
+function Norm(x, y, m) {
+    m = m ?? Magnitude(x, y);
+    if (m === 0) { m = 1; }
+    return { x: x/m, y: y/m };
 }
 
 function Pow2(v) {
@@ -226,14 +241,18 @@ function T01Signed(v, max) {
 
 // aesthetically "non linear".
 // v expected to be in range [0, max].
-function T01nl(v, max) {
+function T01nl(v, max, p=3) {
     max = max == 0 ? 1 : max;
     return Clip01(
         Math.pow(
             v/max,
-            3
+            p
         )
     );
+}
+
+function T10nl(v, max, p=3) {
+    return 1 - T01nl(v, max, p);
 }
 
 function xyNudge(y, ysize, scale, side) {
@@ -285,10 +304,22 @@ var kAppleMobileHellPlatforms = [
     "mac",
 ];
 function supportsFullscreen() {
-    const plc = navigator.platform.toLowerCase()
+    if (!kAppMode) { return false; }
+    const plc = navigator.platform.toLowerCase();
     const isAppleHell = kAppleMobileHellPlatforms.reduce(
         (h, p) => h || plc.includes(p),
         false
     );
     return !isAppleHell;
+}
+
+// [start, end) or [end, start)
+function * range(start, end) {
+    var up = start <= end;
+    step = up ? 1 : -1;
+    var cur = start;
+    while (up ? cur < end : cur > end) {
+	yield cur;
+	cur += step;
+    }
 }

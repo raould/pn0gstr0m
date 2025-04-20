@@ -14,6 +14,9 @@ function Pool(size, allocDeadFn) {
       self.array[i] = allocDeadFn();
     }
   };
+
+  // new things do not overwrite existing ones;
+  // if there is no room, this returns undefined.
   self.Alloc = function () {
     return self.array.find(function (e) {
       Assert(exists(e));
