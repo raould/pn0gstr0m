@@ -42,7 +42,7 @@ function MakeMenuButton({ OnClose }) {
     var w = sx(110);
     var bMenu = new Button({
         x: gw(0.5)-(w/2), y: gh(0.80),
-        width: w, height: gReducedFontSize*1.4,
+        width: w, height: gReducedFontSizePt * 1.4,
         radii: 0,
         margin: {x: sx1(10), y: sy1(10)},
         title: "",
@@ -54,16 +54,16 @@ function MakeMenuButton({ OnClose }) {
             // theoretically in 2 player mode it cannot be
             // extra hard, and is secretly forced-zen behind the scenes.
             if (is1P()) {
-                if (gGameMode === kGameModeHard) { gameMode = "*"; }
+                if (gGameMode === kGameModeHard) { gameMode = "!"; }
                 if (gGameMode === kGameModeZen) { gameMode = "Z"; }
             }
             else {
                 Assert(gGameMode === kGameMode2P);
             }
             bself.has_focus = false;
-            bself.title = "h" +
+            bself.title = "h " +
 		(is1P() ? "1p  " : "2pp ") +
-                (gSfxMuted ? "  " : "m ") +
+                (gSfxMuted ? " " : "m") +
                 (gMusicMuted ? " " : "o") +
                 gameMode;
         },

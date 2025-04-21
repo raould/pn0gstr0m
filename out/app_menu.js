@@ -19,7 +19,7 @@
 
 function AppMenuConstants() {
   var bw = gw(0.2);
-  var bh = gSmallFontSize * 1.7;
+  var bh = gSmallFontSizePt * 1.7;
   var bs = bh * 1.2;
   var ss = bh / 2;
 
