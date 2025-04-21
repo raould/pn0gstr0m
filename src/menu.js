@@ -61,7 +61,8 @@ function MakeMenuButton({ OnClose }) {
                 Assert(gGameMode === kGameMode2P);
             }
             bself.has_focus = false;
-            bself.title = (is1P() ? "1p  " : "2pp ") +
+            bself.title = "h" +
+		(is1P() ? "1p  " : "2pp ") +
                 (gSfxMuted ? "  " : "m ") +
                 (gMusicMuted ? " " : "o") +
                 gameMode;

@@ -201,12 +201,17 @@ function RecalculateConstants() {
     gPauseRadius = sxi(12);
     gSparkWidth = sxi(3);
     gSparkHeight = syi(3);
-    gBigFontSize = NearestEven(gw(0.088));
-    gRegularFontSize = NearestEven(gw(0.047));
-    gReducedFontSize = NearestEven(gw(0.037));
-    gSmallFontSize = NearestEven(gw(0.027));
-    gSmallerFontSize = NearestEven(gw(0.021));
-    gSmallestFontSize = NearestEven(gw(0.018));
+    // recent exports of noyb2.ttf and conversion to woff
+    // have ended up with the font being way bigger than
+    // it used to be and i have no idea why or where the
+    // buggy change happens end to end. i hate software.
+    var fscale = 0.5;
+    gBigFontSize = NearestEven(gw(0.088*fscale));
+    gRegularFontSize = NearestEven(gw(0.047*fscale));
+    gReducedFontSize = NearestEven(gw(0.037*fscale));
+    gSmallFontSize = NearestEven(gw(0.027*fscale));
+    gSmallerFontSize = NearestEven(gw(0.021*fscale));
+    gSmallestFontSize = NearestEven(gw(0.018*fscale));
     gBigFontSizePt = gBigFontSize + "pt";
     gRegularFontSizePt = gRegularFontSize + "pt";
     gReducedFontSizePt = gReducedFontSize + "pt";
