@@ -84,7 +84,7 @@ function MakeChargeUpMeterAnimation(duration) {
           zen: gYInset
         }) + dashStep / 2;
         // match: Level.DrawText().
-        var txo = gSmallFontSize;
+        var txo = gSmallFontSizePt;
         var bottom = gh() - gYInset * 1.05 - txo;
         var range = bottom - top;
         var e = zptT / zpt * range;
