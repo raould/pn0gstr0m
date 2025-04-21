@@ -47,7 +47,7 @@ function MakeMenuButton(_ref) {
     x: gw(0.5) - w / 2,
     y: gh(0.80),
     width: w,
-    height: gReducedFontSize * 1.4,
+    height: gReducedFontSizePt * 1.4,
     radii: 0,
     margin: {
       x: sx1(10),
@@ -63,7 +63,7 @@ function MakeMenuButton(_ref) {
       // extra hard, and is secretly forced-zen behind the scenes.
       if (is1P()) {
         if (gGameMode === kGameModeHard) {
-          gameMode = "*";
+          gameMode = "!";
         }
         if (gGameMode === kGameModeZen) {
           gameMode = "Z";
@@ -72,7 +72,7 @@ function MakeMenuButton(_ref) {
         Assert(gGameMode === kGameMode2P);
       }
       bself.has_focus = false;
-      bself.title = (is1P() ? "1p  " : "2pp ") + (gSfxMuted ? "  " : "m ") + (gMusicMuted ? " " : "o") + gameMode;
+      bself.title = "h " + (is1P() ? "1p  " : "2pp ") + (gSfxMuted ? " " : "m") + (gMusicMuted ? " " : "o") + gameMode;
     },
     click_fn: function click_fn(bself) {
       bself.isOpen = !bself.isOpen; // see below.

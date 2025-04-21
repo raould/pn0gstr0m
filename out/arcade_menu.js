@@ -19,7 +19,7 @@
 
 function ArcadeMenuConstants() {
   var bw = gw(0.2);
-  var bh = gSmallFontSize * 1.7;
+  var bh = gSmallFontSizePt * 1.7;
   var bs = bh * 1.3;
   var ss = bh;
 

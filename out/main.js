@@ -169,12 +169,6 @@ var gPauseCenterY;
 var gPauseRadius;
 var gSparkWidth;
 var gSparkHeight;
-var gBigFontSize;
-var gRegularFontSize;
-var gReducedFontSize;
-var gSmallFontSize;
-var gSmallerFontSize;
-var gSmallestFontSize;
 var gBigFontSizePt;
 var gRegularFontSizePt;
 var gReducedFontSizePt;
@@ -203,18 +197,12 @@ function RecalculateConstants() {
   gPauseRadius = sxi(12);
   gSparkWidth = sxi(3);
   gSparkHeight = syi(3);
-  gBigFontSize = NearestEven(gw(0.088));
-  gRegularFontSize = NearestEven(gw(0.047));
-  gReducedFontSize = NearestEven(gw(0.037));
-  gSmallFontSize = NearestEven(gw(0.027));
-  gSmallerFontSize = NearestEven(gw(0.021));
-  gSmallestFontSize = NearestEven(gw(0.018));
-  gBigFontSizePt = gBigFontSize + "pt";
-  gRegularFontSizePt = gRegularFontSize + "pt";
-  gReducedFontSizePt = gReducedFontSize + "pt";
-  gSmallFontSizePt = gSmallFontSize + "pt";
-  gSmallerFontSizePt = gSmallerFontSize + "pt";
-  gSmallestFontSizePt = gSmallestFontSize + "pt";
+  gBigFontSizePt = NearestEven(gw(0.088));
+  gRegularFontSizePt = NearestEven(gw(0.047));
+  gReducedFontSizePt = NearestEven(gw(0.037));
+  gSmallFontSizePt = NearestEven(gw(0.027));
+  gSmallerFontSizePt = NearestEven(gw(0.021));
+  gSmallestFontSizePt = NearestEven(gw(0.018));
   gPillTextY = gh(0.9);
 }
 
@@ -658,7 +646,14 @@ function DrawText(data, align, x, y, size, wiggle, font) {
     x = WX(x);
     y = WY(y);
   }
-  gCx.font = size + " " + (font != null ? font : kFontName);
+  // wtf recent exports of noyb2.ttf and conversion to woff
+  // have ended up with the font being way bigger than
+  // it used to be and i have no idea why or where the
+  // buggy change happens end to end. i hate complexity.
+  if (font == undefined) {
+    size *= 0.5;
+  }
+  gCx.font = size + "pt " + (font != null ? font : kFontName);
   gCx.textAlign = align;
   gCx.fillText(data.toString(), x, y);
 }
@@ -711,7 +706,7 @@ function StepToasts() {
         gCx.fillStyle = "magenta";
         gToasts.forEach(function (t) {
           DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, "monospace");
-          y += gSmallestFontSize * 1.1;
+          y += gSmallestFontSizePt * 1.1;
           if (y > gh(0.8)) {
             y = gh(0.1);
           }
@@ -2022,7 +2017,7 @@ function GameState(props) {
         zen: gYInset
       }) + dashStep / 2;
       // match: Level.DrawText().
-      var txo = gSmallFontSize;
+      var txo = gSmallFontSizePt;
       var bottom = ForGameMode({
         regular: gh() - gYInset * 1.05 - txo,
         zen: gh() - gYInset
@@ -2093,7 +2088,7 @@ function GameState(props) {
       var cy = gPauseCenterY;
       Cxdo(function () {
         gCx.fillStyle = gCx.strokeStyle = RandomForColor(greySpec, 0.3);
-        DrawText("ESC", "center", cx, cy + gSmallestFontSize * 0.4, gSmallestFontSizePt);
+        DrawText("ESC", "center", cx, cy + gSmallestFontSizePt * 0.4, gSmallestFontSizePt);
         gCx.beginPath();
         gCx.RoundRect(cx - gPauseRadius, cy - gPauseRadius, gPauseRadius * 2, gPauseRadius * 2, gPauseRadius);
         gCx.lineWidth = sx1(1.5);
@@ -2188,7 +2183,7 @@ function GameState(props) {
       }, 0);
       DrawText(F(mvx.toString()), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
       gCx.fillStyle = "red";
-      DrawText(F(self.maxVX.toString()), "left", gw(0.1), gh(0.1) + gSmallFontSize, gSmallFontSizePt);
+      DrawText(F(self.maxVX.toString()), "left", gw(0.1), gh(0.1) + gSmallFontSizePt, gSmallFontSizePt);
       gCx.fillStyle = RandomBlue(0.5);
       DrawText(gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt);
       DrawText(gFrameCount.toString(), "right", gw(0.9), gh(0.9), gSmallFontSizePt);

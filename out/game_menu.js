@@ -12,7 +12,7 @@
 function GameMenuConstants() {
   var by0 = gh(0.4);
   var bw = gw(0.2);
-  var bh = gSmallFontSize * 1.7;
+  var bh = gSmallFontSizePt * 1.7;
   var bs = bh * 1.3;
   var ss = bh / 2;
 
