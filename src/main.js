@@ -2874,7 +2874,7 @@ function UpdateLocalStorage() {
                 gP1Score.game === gP2Score.game ? "TIE!" :
                     (gP1Score.game > gP2Score.game ? " PLAYER 1" : "PLAYER 2"),
                 "center",
-                gw(0.5), gh(0.45),
+                gw(0.5), gh(0.55),
                 gBigFontSizePt
             );
 
