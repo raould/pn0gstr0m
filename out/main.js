@@ -2744,7 +2744,7 @@ function GameOverSummaryState() {
       gCx.fillStyle = RandomGreen();
       DrawText(
       // leading space to visually center player 1.
-      gP1Score.game === gP2Score.game ? "TIE!" : gP1Score.game > gP2Score.game ? " PLAYER 1" : "PLAYER 2", "center", gw(0.5), gh(0.45), gBigFontSizePt);
+      gP1Score.game === gP2Score.game ? "TIE!" : gP1Score.game > gP2Score.game ? " PLAYER 1" : "PLAYER 2", "center", gw(0.5), gh(0.55), gBigFontSizePt);
       if (self.isNewHighScore) {
         gCx.fillStyle = ColorCycle();
         DrawText("NEW HIGH: ".concat(self.maxScore), "center", gw(0.5), gh(0.65), gSmallFontSizePt);
