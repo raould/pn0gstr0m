@@ -165,7 +165,6 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
             return undefined;
         }
 
-	console.log("before", self.side, self.pillState.deck);
         var pid = self.pillState.deck.shift();
 
         var info = gPillInfo[pid];
@@ -189,7 +188,6 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
             // state across levels so you aren't retreading.
             self.pillState.deck.push(pid);
 	}
-	console.log("after", self.side, self.pillState.deck);
 
         return spec;
     };
@@ -396,10 +394,8 @@ function MakeDecimateProps(context) {
 			.slice(0, count)
 			.map((e) => { return e.p; });
                     Assert(targets.length < gPucks.A.length);
-		    console.log("targets", targets.length);
 		    if (targets.length === 0 && gPucks.A.length > 1) {
 			targets = gPucks.A.slice(0, 1);
-			console.log("targets'", targets.length);
 		    }
                     targets.forEach(p => {
 			p.alive = false;
