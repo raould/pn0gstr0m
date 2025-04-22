@@ -1397,7 +1397,7 @@ function UpdateLocalStorage() {
             })();
 
             gCx.fillStyle = RandomGreen();
-            DrawText(`GET READY! ${t}`, "center", gw(0.5), gh(0.55), gBigFontSizePt);
+            DrawText(`GET READY! ${t}`, "center", gw(0.5), gh(0.45), gBigFontSizePt);
         });
     };
 
@@ -2327,7 +2327,7 @@ function UpdateLocalStorage() {
                 `LEVEL ${self.levelIndex} WON!`,
                 "center",
                 gw(0.5),
-                gh(0.55),
+                gh(0.45),
                 gBigFontSizePt,
             );
 
@@ -2737,7 +2737,7 @@ function UpdateLocalStorage() {
                 "GAME OVER",
                 "center",
                 gw(0.5),
-                gh(0.55),
+                gh(0.45),
                 gBigFontSizePt,
             );
             if (self.goOn) {
@@ -2874,7 +2874,7 @@ function UpdateLocalStorage() {
                 gP1Score.game === gP2Score.game ? "TIE!" :
                     (gP1Score.game > gP2Score.game ? " PLAYER 1" : "PLAYER 2"),
                 "center",
-                gw(0.5), gh(0.55),
+                gw(0.5), gh(0.45),
                 gBigFontSizePt
             );
 

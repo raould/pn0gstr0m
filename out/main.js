@@ -1401,7 +1401,7 @@ function GetReadyState() {
         zen: function zen() {} // only 1 level.
       })();
       gCx.fillStyle = RandomGreen();
-      DrawText("GET READY! ".concat(t), "center", gw(0.5), gh(0.55), gBigFontSizePt);
+      DrawText("GET READY! ".concat(t), "center", gw(0.5), gh(0.45), gBigFontSizePt);
     });
   };
   self.Init();
@@ -2314,7 +2314,7 @@ function LevelFinState() {
   self.DrawSinglePlayer = function () {
     Cxdo(function () {
       gCx.fillStyle = RandomGreen();
-      DrawText("LEVEL ".concat(self.levelIndex, " WON!"), "center", gw(0.5), gh(0.55), gBigFontSizePt);
+      DrawText("LEVEL ".concat(self.levelIndex, " WON!"), "center", gw(0.5), gh(0.45), gBigFontSizePt);
       DrawText("P1 LVL: ".concat(gP1Score.level), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       DrawText("P2 LVL: ".concat(gP2Score.level), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       if (self.levelIndex > 1) {
@@ -2655,7 +2655,7 @@ function GameOverState() {
   self.DrawText = function () {
     Cxdo(function () {
       gCx.fillStyle = RandomForColor(redSpec);
-      DrawText("GAME OVER", "center", gw(0.5), gh(0.55), gBigFontSizePt);
+      DrawText("GAME OVER", "center", gw(0.5), gh(0.45), gBigFontSizePt);
       if (self.goOn) {
         gCx.fillStyle = RandomForColor(yellowSpec);
         DrawText("NEXT", "center", gw(0.5), gh(0.8), gRegularFontSizePt);
@@ -2744,7 +2744,7 @@ function GameOverSummaryState() {
       gCx.fillStyle = RandomGreen();
       DrawText(
       // leading space to visually center player 1.
-      gP1Score.game === gP2Score.game ? "TIE!" : gP1Score.game > gP2Score.game ? " PLAYER 1" : "PLAYER 2", "center", gw(0.5), gh(0.55), gBigFontSizePt);
+      gP1Score.game === gP2Score.game ? "TIE!" : gP1Score.game > gP2Score.game ? " PLAYER 1" : "PLAYER 2", "center", gw(0.5), gh(0.45), gBigFontSizePt);
       if (self.isNewHighScore) {
         gCx.fillStyle = ColorCycle();
         DrawText("NEW HIGH: ".concat(self.maxScore), "center", gw(0.5), gh(0.65), gSmallFontSizePt);
