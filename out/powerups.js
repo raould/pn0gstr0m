@@ -190,7 +190,6 @@ function Powerups(props) {
     if (self.pillState.deck.length === 0) {
       return undefined;
     }
-    console.log("before", self.side, self.pillState.deck);
     var pid = self.pillState.deck.shift();
     var info = gPillInfo[pid];
     var maker = info.maker;
@@ -210,7 +209,6 @@ function Powerups(props) {
       // state across levels so you aren't retreading.
       self.pillState.deck.push(pid);
     }
-    console.log("after", self.side, self.pillState.deck);
     return spec;
   };
   self.Init();
@@ -427,10 +425,8 @@ function MakeDecimateProps(context) {
             return e.p;
           });
           Assert(targets.length < gPucks.A.length);
-          console.log("targets", targets.length);
           if (targets.length === 0 && gPucks.A.length > 1) {
             targets = gPucks.A.slice(0, 1);
-            console.log("targets'", targets.length);
           }
           targets.forEach(function (p) {
             p.alive = false;
