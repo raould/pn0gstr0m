@@ -536,8 +536,8 @@ var kTitle = 1;
 var kGetReady = 2; // includes 'level splash' for levels 2+.
 var kChargeUp = 3;
 var kGame = 4;
-var kLevelFin = 5; // todo: deprecate for LevelFinChoose.
-var kLevelFinChoose = 6;
+var kLevelFinish = 5; // todo: deprecate for LevelFinishChoose.
+var kLevelFinishChoose = 6;
 var kGameOver = 7;
 var kGameOverSummary = 8;
 var gCanvas;
@@ -1655,7 +1655,7 @@ function GameState(props) {
     if (self.quit) {
       SaveEndScreenshot(self);
       return ForGameMode({
-        regular: gDebug ? kLevelFin : kGameOver,
+        regular: gDebug ? kLevelFinish : kGameOver,
         zen: kGameOver
       });
     }
@@ -1779,7 +1779,7 @@ function GameState(props) {
     var nextState;
     if (!self.isAttract && gPucks.A.length == 0) {
       nextState = ForGameMode({
-        regular: is1P() ? gP1Score.level < gP2Score.level ? kGameOver : kLevelFin : kGameOver,
+        regular: is1P() ? gP1Score.level < gP2Score.level ? kGameOver : kLevelFinish : kGameOver,
         zen: kGameOver
       });
     }
@@ -2196,7 +2196,7 @@ function GameState(props) {
 }
 
 /*class*/
-function LevelFinState() {
+function LevelFinishState() {
   var self = this;
   self.Init = function () {
     ResetInput();
@@ -2285,7 +2285,7 @@ function LevelFinState() {
     if (advance) {
       gLevelIndex += 1;
       if (is1P()) {
-        return kLevelFinChoose;
+        return kLevelFinishChoose;
       } else {
         return kGameOverSummary;
       }
@@ -2318,8 +2318,8 @@ function LevelFinState() {
       DrawText("P1 LVL: ".concat(gP1Score.level), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       DrawText("P2 LVL: ".concat(gP2Score.level), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       if (self.levelIndex > 1) {
-        DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.3), gSmallFontSizePt);
-        DrawText("GPT GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.3), gSmallFontSizePt);
+        DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.27), gSmallFontSizePt);
+        DrawText("GPT GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.27), gSmallFontSizePt);
       }
       if (self.goOn) {
         gCx.fillStyle = RandomYellowSolid();
@@ -2349,7 +2349,7 @@ function LevelFinState() {
 }
 
 /*class*/
-function LevelFinChooseState() {
+function LevelFinishChooseState() {
   var self = this;
   self.Init = function () {
     ResetInput();
@@ -3206,11 +3206,11 @@ function Start() {
   handlerMap[kGame] = function () {
     return new GameState();
   };
-  handlerMap[kLevelFin] = function () {
-    return new LevelFinState();
+  handlerMap[kLevelFinish] = function () {
+    return new LevelFinishState();
   };
-  handlerMap[kLevelFinChoose] = function () {
-    return new LevelFinChooseState();
+  handlerMap[kLevelFinishChoose] = function () {
+    return new LevelFinishChooseState();
   };
   handlerMap[kGameOver] = function () {
     return new GameOverState();
