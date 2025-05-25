@@ -493,8 +493,8 @@ const kTitle = 1;
 const kGetReady = 2; // includes 'level splash' for levels 2+.
 const kChargeUp = 3;
 const kGame = 4;
-const kLevelFin = 5; // todo: deprecate for LevelFinChoose.
-const kLevelFinChoose = 6;
+const kLevelFinish = 5; // todo: deprecate for LevelFinishChoose.
+const kLevelFinishChoose = 6;
 const kGameOver = 7;
 const kGameOverSummary = 8;
 
@@ -1644,7 +1644,7 @@ function UpdateLocalStorage() {
         if (self.quit) {
             SaveEndScreenshot(self);
             return ForGameMode({
-                regular: gDebug ? kLevelFin : kGameOver,
+                regular: gDebug ? kLevelFinish : kGameOver,
                 zen: kGameOver,
             });
         }
@@ -1778,7 +1778,7 @@ function UpdateLocalStorage() {
         let nextState;
         if (!self.isAttract && gPucks.A.length == 0) {
             nextState = ForGameMode({
-                regular: is1P() ? (gP1Score.level < gP2Score.level ? kGameOver : kLevelFin) : kGameOver,
+                regular: is1P() ? (gP1Score.level < gP2Score.level ? kGameOver : kLevelFinish) : kGameOver,
                 zen: kGameOver,
             });
         }
@@ -2198,7 +2198,7 @@ function UpdateLocalStorage() {
     self.Init();
 }
 
-/*class*/ function LevelFinState() {
+/*class*/ function LevelFinishState() {
     var self = this;
 
     self.Init = function() {
@@ -2291,7 +2291,7 @@ function UpdateLocalStorage() {
         if (advance) {
             gLevelIndex += 1;
             if (is1P()) {
-                return kLevelFinChoose;
+                return kLevelFinishChoose;
             }
             else {
                 return kGameOverSummary;
@@ -2351,14 +2351,14 @@ function UpdateLocalStorage() {
                     `P1 GAME: ${gP1Score.game}`,
                     ForP1Side("left", "right"),
                     ForP1Side(gw(0.2), gw(0.8)),
-                    gh(0.3),
+                    gh(0.27),
                     gSmallFontSizePt
                 );
                 DrawText(
                     `GPT GAME: ${gP2Score.game}`,
                     ForP2Side("left", "right"),
                     ForP2Side(gw(0.2), gw(0.8)),
-                    gh(0.3),
+                    gh(0.27),
                     gSmallFontSizePt
                 );
             }
@@ -2409,7 +2409,7 @@ function UpdateLocalStorage() {
     self.Init();
 }
 
-/*class*/ function LevelFinChooseState() {
+/*class*/ function LevelFinishChooseState() {
     var self = this;
 
     self.Init = function() {
@@ -3367,8 +3367,8 @@ function Start() {
     handlerMap[kGetReady] = () => new GetReadyState();
     handlerMap[kChargeUp] = () => new ChargeUpState();
     handlerMap[kGame] = () => new GameState();
-    handlerMap[kLevelFin] = () => new LevelFinState();
-    handlerMap[kLevelFinChoose] = () => new LevelFinChooseState();
+    handlerMap[kLevelFinish] = () => new LevelFinishState();
+    handlerMap[kLevelFinishChoose] = () => new LevelFinishChooseState();
     handlerMap[kGameOver] = () => new GameOverState();
     handlerMap[kGameOverSummary] = () => new GameOverSummaryState();
     if (exists(gLifecycle)) { gLifecycle.Quit(); }
