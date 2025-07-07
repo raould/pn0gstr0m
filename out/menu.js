@@ -110,7 +110,7 @@ function Menu(_ref2) {
     fb.has_focus = true;
   };
   self.Navigation = function () {
-    return this.spec.navigation;
+    return self.spec.navigation;
   };
   self.Spec = function (bId) {
     Assert(exists(self.Navigation()));
