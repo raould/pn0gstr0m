@@ -98,7 +98,7 @@ function MakeMenuButton({ OnClose }) {
     };
 
     self.Navigation = function() {
-        return this.spec.navigation;
+        return self.spec.navigation;
     };
 
     self.Spec = function(bId) {
@@ -243,18 +243,18 @@ function MakeMenuButton({ OnClose }) {
         if (target.isDown()) {
             // the menu is open so check buttons.
             if (self.isOpen()) {
-								// clicking on disabled button should do nothing:
-								// no action, no closing the menu.
+		// clicking on disabled button should do nothing:
+		// no action, no closing the menu.
                 var found = Object.entries(self.Navigation()).find(
                     e => e[1].button.ProcessTarget(target)
                 );
                 hit = exists(found);
 
                 if (hit) {
-										if (!found[1].button.disabled) {
-												if (found != self.bMenu) { self.Focus(found[0]); }
-												found[1].button.Click();
-										}
+		    if (!found[1].button.disabled) {
+			if (found != self.bMenu) { self.Focus(found[0]); }
+			found[1].button.Click();
+		    }
                 } else {
                     // touching outside the menu closes it.
                     self.bMenu.Click();

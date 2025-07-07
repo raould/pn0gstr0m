@@ -38,23 +38,23 @@
 
     // closed interval [min, max].
     // no idea how this handles negative values.
-    self.RandomRange = function( min, max ) {
+    self.RandomRange = function( min, max, bothSigns=false ) {
         if (min > max) {
             Swap(min, max);
         }
         var r = min + self.next()*(max-min);
-        return r;
+        return r * (bothSigns ? self.RandomSign() : 1);
     };
 
     // closed interval [min, max].
     // no idea how this handles negative values.
-    self.RandomRangeInt = function( min, max ) {
+    self.RandomRangeInt = function( min, max, bothSigns=false ) {
         if (min > max) {
             Swap(min, max);
         }
         var o = self.next() * (max-min);
         var r = Math.round(min + o);
-        return r;
+        return r * (bothSigns ? self.RandomSign() : 1);
     };
 
     // no idea how this handles negative values.
