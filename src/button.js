@@ -9,16 +9,16 @@
     var self = this;
 
     self.Init = function() {
-        this.buttons = aub(props?.buttons, []);
+        self.buttons = aub(props?.buttons, []);
     };
 
     self.AddButton = function(button) {
-        this.buttons.push(button);
+        self.buttons.push(button);
     };
 
     self.OnSelect = function(button) {
         button.is_checked = true;
-        this.buttons.forEach(b => {
+        self.buttons.forEach(b => {
             if (b != button) {
                 // they should uncheck themselves.
                 Assert(b.is_checkbox, b);
