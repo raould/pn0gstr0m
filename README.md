@@ -1,5 +1,5 @@
 # pn0gstr0m
-* a [Desafortunados Games](https://duckduckgo.com/?q=desafortunados+games+pn0gstr0m+sheepgate+mzzl+nbf0) production.
+* a [Desafortunados Games](https://raould.github.io/desafortunados/) production.
 * as [seen on HN](https://news.ycombinator.com/item?id=40582357)
 * [play it now!](https://raould.github.io/pn0gstr0m/)
 * "it's pong Jim, but not as we know it, Captain." (Klingons on the starboard bow!)
