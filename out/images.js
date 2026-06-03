@@ -22,3 +22,7 @@ AddImageToCache("xtra", "images/xtra.png", gImageCache);
 AddImageToCache("neo", "images/neo.png", gImageCache);
 AddImageToCache("chaos", "images/chaos.png", gImageCache);
 AddImageToCache("qr", "images/pn0g_qr.png", gImageCache);
+AddImageToCache("dm1", "images/dm1.png", gImageCache);
+AddImageToCache("dm2", "images/dm2.png", gImageCache);
+AddImageToCache("dm3", "images/dm3.png", gImageCache);
+AddImageToCache("dm4", "images/dm4.png", gImageCache);

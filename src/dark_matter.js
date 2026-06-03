@@ -3,7 +3,8 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-const kDarkMatterForce = 0.003;
+const kDarkMatterForce = 0.005;
+const kDarkMatterAnimMsec = 16;
 
 /*class*/ function DarkMatterGenerator( props /*timeout*/ ) {
     var self = this;
@@ -53,6 +54,14 @@ const kDarkMatterForce = 0.003;
 	self.vx = props.vx;
 	self.vy = props.vy;
 	self.range = gh(0.3);
+	self.imgs = [
+	    gImageCache["dm1"],
+	    gImageCache["dm2"],
+	    gImageCache["dm3"],
+	    gImageCache["dm4"],
+	];
+	self.frame = 0;
+	self.lastTime = Date.now();
     };
 
     self.Step = function( dt ) {
@@ -85,26 +94,27 @@ const kDarkMatterForce = 0.003;
 
 	    // outer.
             gCx.beginPath();
-            gCx.arc(mx, my, self.width/2 + sx1(1), 0, k2Pi);
+            gCx.arc(mx, my, gR.RandomCentered(self.width/2 + sx1(5), 3), 0, k2Pi);
             gCx.closePath();
             gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
-            gCx.lineWidth = sx1(gR.RandomRange(2,4));
+            gCx.lineWidth = sx1(gR.RandomRange(1,3));
             gCx.stroke();
 
 	    // inner.
-	    var scale = T10((gGameTime % 300), 300);
-            gCx.beginPath();
-            gCx.arc(mx, my, scale * self.width/2 + sx1(1), 0, k2Pi);
-            gCx.closePath();
-            gCx.strokeStyle = gCx.fillStyle = RandomYellow();
-            gCx.lineWidth = sx1(1);
-            gCx.stroke();
+	    var now = Date.now();
+	    var dt = now - self.lastTime;
+	    if (dt > kDarkMatterAnimMsec) {
+		self.frame = (self.frame + 1) % self.imgs.length;
+		self.lastTime = now;
+	    }
+	    var img = self.imgs[self.frame];
+	    gCx.drawImage(img, wx, wy, self.width, self.height);
 
 	    if (gDebug) { // range.
 		gCx.beginPath();
 		gCx.arc(mx, my, self.width/2 + self.range, 0, k2Pi);
 		gCx.closePath();
-		gCx.strokeStyle = gCx.fillStyle = "rgba(255,255,0,0.2)";
+		gCx.strokeStyle = gCx.fillStyle = "rgba(255,255,0,0.1)";
 		gCx.lineWidth = sx1(1);
 		gCx.stroke();
 	    }

@@ -32,7 +32,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -51,7 +51,8 @@ var gLifecycle;
 // false: then we are in "arcade/demo night" so the menu is just 1p, 2p, start,
 // and the only way to start the game is to click start (game controllers),
 // and no hard or zen modes.
-var kAppMode = true;
+// see also: kGameMode*, so this is all quite confusing.
+var kAppMode = false;
 var kScoreIncrement = 1;
 var kScoreLastPuckIncrement = 100;
 // note: see GameState.Init().
@@ -76,10 +77,11 @@ var gLastPuckSide;
 // mutually exclusive enum.
 // regular & hard & zen are single player.
 // hard is the ame as 1P but zen is different!
+// see also: kAppMode, so this is all quite confusing.
 var kGameModeRegular = "regular";
 var kGameModeHard = "hard";
 var kGameModeZen = "zen";
-var kGameMode2P = "2p";
+var kGameMode2P = "2p"; // aka z2p, unfortunately (curse js).
 var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
 function is1P() {
   return gGameMode != kGameMode2P;
@@ -1571,10 +1573,10 @@ function GameState(props) {
     // also see the 'must' check later on.
     // prevent pills from showing up too often, or too early - but not too late.
     self.pillSpawnCooldown = ForGameMode({
-      regular: 1000 * 3,
-      hard: 1000 * 3,
-      zen: 1000 * 3,
-      zp2: 1000 * 3
+      regular: 1000 * (kAppMode ? 3 : 6),
+      hard: 1000 * 4,
+      zen: 1000 * 5,
+      z2p: 1000 * (kAppMode ? 3 : 6)
     });
     self.pillP1SpawnCountdown = self.pillSpawnCooldown;
     self.pillP2SpawnCountdown = self.pillSpawnCooldown;
@@ -1585,7 +1587,7 @@ function GameState(props) {
     self.unfairPillCount = 0;
     self.unfairPillDiffMax = 2;
 
-    // only break up 'streaming' steady-state in 2P mode.
+    // only break up 'streaming' steady-state in (either of the) 2P mode(s).
     self.darkMatterGenerator = is1P() ? undefined : new DarkMatterGenerator({
       timeout: kStreamingCountTimeout
     });
@@ -1683,8 +1685,8 @@ function GameState(props) {
         self.darkMatterGenerator.Reset();
         var x = gR.RandomChoice(gw(0.2), gw(0.8));
         var vx = (x < gw(0.5) ? 1 : -1) * sx(0.015);
-        var width = sx1(30);
-        var height = sx1(30);
+        var width = sx1(20);
+        var height = sx1(20);
         self.darkMatter = new DarkMatter({
           x: x,
           y: gh(0.05) - height / 2,
