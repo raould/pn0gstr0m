@@ -350,11 +350,17 @@ function MakeForcePushProps(context) {
             var targetSign = ForSide(context.side, -1, 1);
             gPucks.A.forEach(p => {
                 if (Sign(p.vx) == targetSign) {
-                    p.vx *= -1;
+                    p.vx *= -1.15;
                 }
 		else {
 		    p.vx = MinSigned(p.vx*1.15, gameState.maxVX);
 		}
+		p.vy *= ForGameMode({
+		    regular: 1.1,
+		    hard: 1.2,
+		    zen: 1,
+		    z2p: 2,
+		});
             });
             gameState.AddAnimation(MakeWaveAnimation({
                 lifespan: 250,
@@ -453,14 +459,20 @@ function MakeSplitProps(context) {
         width, height,
         lifespan: kPillLifespan,
         testFn: (gameState) => {
-            return true;
+	    return gPucks.A.length < kPuckPoolSize / 3;
         },
         drawFn: (self, alpha=1) => DrawSplitPill(context.side, self, alpha),
         boomFn: (gameState) => {
-            var r = 10/gPucks.A.length;
-            var targets = gPucks.A.filter((p, i) => {
-                return i < 1 ? true : gR.RandomBool(r);
-            });
+	    var targets;
+	    if (gPucks.A.length < 10) {
+		targets = [...gPucks.A];
+	    }
+	    else {
+		var r = 10/gPucks.A.length;
+		var targets = gPucks.A.filter((p, i) => {
+                    return i < 1 ? true : gR.RandomBool(r);
+		});
+	    }
             targets.forEach(t => {
                 var maxVX = gameState.level.maxVX;
                 var split = t.MaybeSplitPuck({ forced: true, maxVX });
@@ -507,7 +519,7 @@ function MakeDefendProps(context) {
                 regular: 50,
                 hard: 70,
                 zen: 50 + (pc*100),
-                z2p: 50,
+                z2p: 50 + gPucks.A.length/3,
             });
             console.log(`defend pc=${pc} hp=${F(hp)}`);
 	    var drawScale = ForGameMode({ regular: 1, zen: 0.5 });
@@ -563,7 +575,7 @@ function MakeXtraProps(context) {
                 regular: 30,
                 hard: 50,
                 zen: 50 + (pc*100),
-                z2p: 50,
+                z2p: 50 + gPucks.A.length/3,
             });
             console.log(`xtra pc=${pc} hp=${F(hp)}`);
             ForCount(n, (i) => {
@@ -632,7 +644,7 @@ function MakeChaosProps(context) {
             var targets = [];
             gPucks.A.forEach((p,i) => {
                 if (isMultiple(i, 2)) {
-                    p.vy *= -gR.RandomCentered(6, 2);
+                    p.vy *= -gR.RandomCentered(7, 2);
                     targets.push(p);
                 }
             });

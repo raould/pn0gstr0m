@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = true;
+var gDebug = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -217,7 +217,7 @@ const kAvgSparkFrame = 20;
 const kEjectCountThreshold = 350;
 const kEjectSpeedCountThreshold = 300;
 const kStreamingCountThreshold = 300; // must be <= kEjectCountThreshold i guess.
-const kStreamingCountTimeout = 1000 * 60;
+const kStreamingCountTimeout = 1000 * 60; // for dark matter.
 const kPuckPoolSize = 500;
 const kSparkPoolSize = 300;
 
@@ -1574,7 +1574,12 @@ function UpdateLocalStorage() {
         self.unfairPillDiffMax = 2;
 
 	// only break up 'streaming' steady-state in (either of the) 2P mode(s).
-	self.darkMatterGenerator = is1P() ? undefined : new DarkMatterGenerator({timeout: kStreamingCountTimeout});
+	self.darkMatterGenerator = is1P() ?
+	    undefined :
+	    new DarkMatterGenerator({
+		firstTimeout: kStreamingCountTimeout,
+		timeout: kStreamingCountTimeout/2
+	    });
 	self.darkMatter = undefined;
 
         if (!self.isAttract) {
@@ -1672,16 +1677,8 @@ function UpdateLocalStorage() {
 	    var spawnNaturally = isU(self.darkMatter) && self.darkMatterGenerator.triggered && gR.RandomBool(0.1);
 	    var spawn = spawnNaturally || forced;
 	    if (spawn) {
+		self.darkMatter = self.darkMatterGenerator.Generate();
 		self.darkMatterGenerator.Reset();
-		var x = gR.RandomChoice(gw(0.2), gw(0.8));
-		var vx = (x < gw(0.5) ? 1 : -1) * sx(0.015);
-		var width = sx1(20);
-		var height = sx1(20);
-		self.darkMatter = new DarkMatter({
-		    x: x, y: gh(0.05) - height/2,
-		    width, height,
-		    vx, vy: sy(0.02),
-		});
 	    }
 	    self.darkMatter?.Step( dt );
 	    if (self.darkMatter?.alive === false) {
@@ -1964,6 +1961,7 @@ function UpdateLocalStorage() {
                 p.XtrasCollision(self.paddleP2.xtras.A);
                 p.NeoCollision(self.paddleP1.neo);
                 p.NeoCollision(self.paddleP2.neo);
+		p.DarkMatterCollision(self.darkMatter);
 
                 self.paddleP1.OnPuckMoved(p, i);
                 self.paddleP2.OnPuckMoved(p, i);
@@ -2179,13 +2177,13 @@ function UpdateLocalStorage() {
         gP2Target.DrawDebug();
         Cxdo(() => {
             gCx.fillStyle = "magenta";
-            DrawText(`${self.unfairPillCount} ${self.pillP1SpawnCountdown} ${self.pillP2SpawnCountdown}`, "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
+            DrawText(`UP:${self.unfairPillCount} 1P:${self.pillP1SpawnCountdown} 2P:${self.pillP2SpawnCountdown}`, "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
 
             gCx.fillStyle = RandomGrey();
             var mvx = gPucks.A.reduce((m,p) => { return p.alive ? Math.max(m, Math.abs(p.vx)) : m; }, 0);
-            DrawText(F(mvx.toString()), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
+            DrawText( F(mvx).toString(), "left", gw(0.1), gh(0.1), gSmallFontSizePt );
             gCx.fillStyle = "red";
-            DrawText(F(self.maxVX.toString()), "left", gw(0.1), gh(0.1) + gSmallFontSizePt, gSmallFontSizePt);
+            DrawText( F(self.maxVX).toString(), "left", gw(0.1), gh(0.1) + gSmallFontSizePt, gSmallFontSizePt );
 
             gCx.fillStyle = RandomBlue(0.5);
             DrawText( gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt );

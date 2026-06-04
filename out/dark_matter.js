@@ -9,29 +9,43 @@ var kDarkMatterForce = 0.005;
 var kDarkMatterAnimMsec = 16;
 
 /*class*/
-function DarkMatterGenerator(props /*timeout*/) {
+function DarkMatterGenerator(props /*firstTimeout, timeout*/) {
   var self = this;
   self.Init = function () {
     self.id = gNextID++;
     self.Reset();
+    // but, wait longer for the first spawn.
+    self.timeout = props.firstTimeout;
   };
   self.Reset = function () {
-    self.timeout = props.timeout;
     self.triggered = false; // latches when true.
+    self.timeout = props.timeout;
+    Assert(self.timeout > 0);
   };
   self.Step = function (dt) {
-    if (gPucks.A.length > kStreamingCountThreshold) {
-      self.timeout = Math.max(0, self.timeout - dt);
-      self.triggered = self.triggered || self.timeout <= 0;
-    } else {
-      self.timeout = props.timeout;
+    if (!self.triggered && gPucks.A.length > kStreamingCountThreshold) {
+      self.timeout = self.timeout - dt;
+      self.triggered = self.timeout <= 0;
     }
-    //logEvery("dmg", `${F(self.timeout)} ${self.triggered}`, kFPS);
+  };
+  self.Generate = function () {
+    var x = gR.RandomChoice(gw(0.2), gw(0.8));
+    var vx = (x < gw(0.5) ? 1 : -1) * sx(0.015);
+    var width = sx1(20);
+    var height = sx1(20);
+    return new DarkMatter({
+      x: x,
+      y: gh(0.05) - height / 2,
+      width: width,
+      height: height,
+      vx: vx,
+      vy: sy(0.02)
+    });
   };
   self.DrawDebug = function () {
     Cxdo(function () {
       gCx.fillStyle = "yellow";
-      DrawText("".concat(self.timeout, " ").concat(String(self.triggered).toUpperCase()), "center", gw(0.6), gh(0.8), gSmallerFontSizePt);
+      DrawText("DM:".concat(self.timeout, " ").concat(String(self.triggered).toUpperCase()), "center", gw(0.6), gh(0.8), gSmallerFontSizePt);
     });
   };
   self.Init();
@@ -88,8 +102,8 @@ function DarkMatter(props /*x, y, width, height, vx, vy*/) {
       gCx.beginPath();
       gCx.arc(mx, my, gR.RandomCentered(self.width / 2 + sx1(5), 3), 0, k2Pi);
       gCx.closePath();
-      gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-      gCx.lineWidth = sx1(gR.RandomRange(1, 3));
+      gCx.strokeStyle = gCx.fillStyle = "yellow";
+      gCx.lineWidth = sx1(1);
       gCx.stroke();
 
       // inner.

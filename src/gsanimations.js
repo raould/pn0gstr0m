@@ -317,10 +317,11 @@ function MakeChaosAnimation(props) {
         name: "chaos",
         lifespan: 300,
         drawFn: () => {
+	    var color = RandomForColor(yellowDarkSpec);
             targets.forEach((p, i) => {
                 if (p.alive) {
                     AddLightningPath({
-                        color: RandomForColor(gR.RandomBool(0.5) ? magentaSpec : yellowSpec),
+                        color,
                         x0: p.x,
                         y0: Sign(oldvys[i])==1 ? gYInset : gHeight-gYInset,
                         x1: p.x,

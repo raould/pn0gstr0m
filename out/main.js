@@ -32,7 +32,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = true;
+var gDebug = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -219,7 +219,7 @@ var kAvgSparkFrame = 20;
 var kEjectCountThreshold = 350;
 var kEjectSpeedCountThreshold = 300;
 var kStreamingCountThreshold = 300; // must be <= kEjectCountThreshold i guess.
-var kStreamingCountTimeout = 1000 * 60;
+var kStreamingCountTimeout = 1000 * 60; // for dark matter.
 var kPuckPoolSize = 500;
 var kSparkPoolSize = 300;
 var kBarriersArrayInitialSize = 4;
@@ -1589,7 +1589,8 @@ function GameState(props) {
 
     // only break up 'streaming' steady-state in (either of the) 2P mode(s).
     self.darkMatterGenerator = is1P() ? undefined : new DarkMatterGenerator({
-      timeout: kStreamingCountTimeout
+      firstTimeout: kStreamingCountTimeout,
+      timeout: kStreamingCountTimeout / 2
     });
     self.darkMatter = undefined;
     if (!self.isAttract) {
@@ -1682,19 +1683,8 @@ function GameState(props) {
       var spawnNaturally = isU(self.darkMatter) && self.darkMatterGenerator.triggered && gR.RandomBool(0.1);
       var spawn = spawnNaturally || forced;
       if (spawn) {
+        self.darkMatter = self.darkMatterGenerator.Generate();
         self.darkMatterGenerator.Reset();
-        var x = gR.RandomChoice(gw(0.2), gw(0.8));
-        var vx = (x < gw(0.5) ? 1 : -1) * sx(0.015);
-        var width = sx1(20);
-        var height = sx1(20);
-        self.darkMatter = new DarkMatter({
-          x: x,
-          y: gh(0.05) - height / 2,
-          width: width,
-          height: height,
-          vx: vx,
-          vy: sy(0.02)
-        });
       }
       (_self$darkMatter = self.darkMatter) == null || _self$darkMatter.Step(dt);
       if (((_self$darkMatter2 = self.darkMatter) == null ? void 0 : _self$darkMatter2.alive) === false) {
@@ -1971,6 +1961,7 @@ function GameState(props) {
         p.XtrasCollision(self.paddleP2.xtras.A);
         p.NeoCollision(self.paddleP1.neo);
         p.NeoCollision(self.paddleP2.neo);
+        p.DarkMatterCollision(self.darkMatter);
         self.paddleP1.OnPuckMoved(p, i);
         self.paddleP2.OnPuckMoved(p, i);
 
@@ -2178,14 +2169,14 @@ function GameState(props) {
     gP2Target.DrawDebug();
     Cxdo(function () {
       gCx.fillStyle = "magenta";
-      DrawText("".concat(self.unfairPillCount, " ").concat(self.pillP1SpawnCountdown, " ").concat(self.pillP2SpawnCountdown), "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
+      DrawText("UP:".concat(self.unfairPillCount, " 1P:").concat(self.pillP1SpawnCountdown, " 2P:").concat(self.pillP2SpawnCountdown), "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
       gCx.fillStyle = RandomGrey();
       var mvx = gPucks.A.reduce(function (m, p) {
         return p.alive ? Math.max(m, Math.abs(p.vx)) : m;
       }, 0);
-      DrawText(F(mvx.toString()), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
+      DrawText(F(mvx).toString(), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
       gCx.fillStyle = "red";
-      DrawText(F(self.maxVX.toString()), "left", gw(0.1), gh(0.1) + gSmallFontSizePt, gSmallFontSizePt);
+      DrawText(F(self.maxVX).toString(), "left", gw(0.1), gh(0.1) + gSmallFontSizePt, gSmallFontSizePt);
       gCx.fillStyle = RandomBlue(0.5);
       DrawText(gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt);
       DrawText(gFrameCount.toString(), "right", gw(0.9), gh(0.9), gSmallFontSizePt);
