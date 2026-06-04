@@ -519,7 +519,7 @@ function MakeDefendProps(context) {
                 regular: 50,
                 hard: 70,
                 zen: 50 + (pc*100),
-                z2p: 50 + gPucks.A.length/3,
+                z2p: 70,
             });
             console.log(`defend pc=${pc} hp=${F(hp)}`);
 	    var drawScale = ForGameMode({ regular: 1, zen: 0.5 });
@@ -575,7 +575,7 @@ function MakeXtraProps(context) {
                 regular: 30,
                 hard: 50,
                 zen: 50 + (pc*100),
-                z2p: 50 + gPucks.A.length/3,
+                z2p: 50 + Math.floor(gPucks.A.length/5),
             });
             console.log(`xtra pc=${pc} hp=${F(hp)}`);
             ForCount(n, (i) => {
