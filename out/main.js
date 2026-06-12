@@ -146,8 +146,7 @@ var kAlphaFadeInMsec = 700;
 var gLevelHighScores = LoadLocal(LocalStorageKeys.levelHighScores, {});
 var gHighScore = LoadLocal(LocalStorageKeys.gameHighScore, 0);
 
-// note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
-// although i did try to compensate in the run loop.
+// note: puck speed doesn't seem to be properly independent of fps. :-(
 var kFPS = 30;
 var kTimeStep = 1000 / kFPS;
 var kTimeStepThreshold = kTimeStep * 0.7;
@@ -542,10 +541,12 @@ var kLevelFinish = 5; // todo: deprecate for LevelFinishChoose.
 var kLevelFinishChoose = 6;
 var kGameOver = 7;
 var kGameOverSummary = 8;
-var gCanvas;
+var gCanvasBacking;
+var gCanvasOnscreen;
+var gCanvasScreenshot;
 var gCx;
-var gCanvas2;
-var gCx2;
+var gCxOnscreen;
+var gCxS;
 var gToasts = [];
 var gGamepad1;
 var gGamepad2;
@@ -608,8 +609,8 @@ function SaveEndScreenshot(state) {
     state.Draw({
       isEndScreenshot: true
     });
-    gCx2.clearRect(0, 0, gWidth, gHeight);
-    gCx2.drawImage(gCanvas, 0, 0);
+    gCxS.clearRect(0, 0, gCanvasScreenshot.width, gCanvasScreenshot.height);
+    gCxS.drawImage(gCanvasBacking, 0, 0);
   });
 }
 
@@ -726,7 +727,7 @@ function PushToast(msg) {
   });
 }
 function ClearScreen() {
-  gCx.clearRect(0, 0, gWidth, gHeight);
+  gCx.clearRect(0, 0, gCanvasBacking.width, gCanvasBacking.height);
 }
 function DrawResizing() {
   Cxdo(function () {
@@ -800,9 +801,9 @@ function DrawBounds() {
     // the full canvas x.
     gCx.beginPath();
     gCx.moveTo(0, 0);
-    gCx.lineTo(gCanvas.width, gCanvas.height);
-    gCx.moveTo(gCanvas.width, 0);
-    gCx.lineTo(0, gCanvas.height);
+    gCx.lineTo(gCanvasBacking.width, gCanvasBacking.height);
+    gCx.moveTo(gCanvasBacking.width, 0);
+    gCx.lineTo(0, gCanvasBacking.height);
     gCx.strokeStyle = rgba255s(greenSpec.regular, alpha);
     gCx.lineWidth = 1;
     gCx.stroke();
@@ -914,6 +915,10 @@ function DrawMoveTargets() {
     DrawMoveTarget(gP2Target);
   }
 }
+function CopyScreenBuffer() {
+  gCxOnscreen.clearRect(0, 0, gCanvasOnscreen.width, gCanvasOnscreen.height);
+  gCxOnscreen.drawImage(gCanvasBacking, 0, 0);
+}
 function UpdateLocalStorage() {
   // todo: ugly that this only works "because globals".
   // note:
@@ -970,6 +975,7 @@ function Lifecycle(handlerMap) {
       self.StepFrame(dt);
       gFrameCount++;
       gEventQueue = [];
+      CopyScreenBuffer();
     }
     requestAnimationFrame(self.RunLoop);
   };
@@ -1011,8 +1017,8 @@ function Lifecycle(handlerMap) {
   };
   self.DrawCRTScanlines = function () {
     if (self.state != kRoot && self.state != kWarning) {
-      gCx.beginPath();
       Cxdo(function () {
+        gCx.beginPath();
         var height = 2;
         var skip = 10;
         var step = ii(skip / height);
@@ -1020,9 +1026,9 @@ function Lifecycle(handlerMap) {
         for (var y = gHeight - start; y >= 0; y -= step) {
           gCx.rect(0, y, gWidth, height);
         }
+        gCx.fillStyle = scanlineColorStr;
+        gCx.fill();
       });
-      gCx.fillStyle = scanlineColorStr;
-      gCx.fill();
     }
   };
   self.Init();
@@ -2971,7 +2977,7 @@ function handleFullscreen(e) {
   return false;
 }
 function PointerProcess(e, updateFn) {
-  var cvrect = gCanvas.getBoundingClientRect();
+  var cvrect = gCanvasBacking.getBoundingClientRect();
   var cvx = cvrect.x + window.scrollX;
   var cvy = cvrect.y + window.scrollY;
   // "regular" non-game-transformed screen pixel coordinates.
@@ -3151,8 +3157,15 @@ function DoResize() {
   } else {
     h = w * 1 / kAspectRatio;
   }
-  gCanvas.width = gWidth = w;
-  gCanvas.height = gHeight = h;
+  gWidth = w;
+  gHeight = h;
+  gCanvasOnscreen.width = gWidth;
+  gCanvasOnscreen.height = gHeight;
+  gCanvasBacking.width = gWidth;
+  gCanvasBacking.height = gHeight;
+  // todo: prolly make the screenshot buffer lower resolution.
+  gCanvasScreenshot.width = gWidth;
+  gCanvasScreenshot.height = gHeight;
 }
 function CheckResizeMatch() {
   var area = gWidth * gHeight;
@@ -3167,19 +3180,35 @@ function CheckResizeMatch() {
   }
 }
 function Start() {
-  gCanvas = document.getElementById(kCanvasName);
-  gCx = gCanvas.getContext('2d');
+  InitCanvases();
+  DoResize();
+  RecalculateConstants();
+  ResetClipping();
+  InitHandlers();
+  StopAudio();
+}
+function InitCanvases() {
+  // the 'onscreen' canvas which we update at the end of each frame.
+  // it is not where the drawing commands go, that is gCanvasBacking.
+  gCanvasOnscreen = document.getElementById(kCanvasName);
+  Assert(gCanvasOnscreen != null);
+  gCxOnscreen = gCanvasOnscreen.getContext('2d');
+  gCxOnscreen.globalAlpha = 1;
+
+  // canvas to draw on during the frame, the offscreen one.
+  gCanvasBacking = document.createElement('canvas');
+  gCx = gCanvasBacking.getContext('2d');
+  // hacks to make line drawing mo bettah.
   gCx.MoveTo = MoveTo;
   gCx.LineTo = LineTo;
   gCx.RoundRect = RoundRect;
   gCx.RectXYWH = RectXYWH;
-  DoResize();
-  RecalculateConstants();
-  gCanvas2 = document.createElement('canvas');
-  gCanvas2.width = gCanvas.width;
-  gCanvas2.height = gCanvas.height;
-  gCx2 = gCanvas2.getContext('2d');
-  ResetClipping();
+
+  // screenshot between states.
+  gCanvasScreenshot = document.createElement('canvas');
+  gCxS = gCanvasScreenshot.getContext('2d');
+}
+function InitHandlers() {
   var handlerMap = {};
   handlerMap[kRoot] = function () {
     return new RootState(kAppMode ? kWarning : kTitle);
@@ -3216,7 +3245,6 @@ function Start() {
   }
   gLifecycle = new Lifecycle(handlerMap);
   gLifecycle.RunLoop();
-  StopAudio();
 }
 
 // er, i'm lazy and never un-register so be sure this only gets called once.
