@@ -190,8 +190,9 @@ function Puck() {
         hard: 0.3,
         zen: 0.3,
         // the faster things get, the more spread out, i hope, but,
-        // not too much since it can be fun to be 'streaming' until neo.
-        z2p: 0.3 + pvx * 0.2
+        // not too much since it can be fun to be 'streaming'
+        // up until neo / darkMatter.
+        z2p: 0.3 + pvx * 10
       });
       var vyf = 1 + gR.RandomRange(-vyfc, vyfc);
       vy = self.vy * vyf;
@@ -329,6 +330,12 @@ function Puck() {
         if (hit) {
           barrier.OnPuckHit();
           PlayBlip();
+          self.vy *= ForGameMode({
+            regular: 1,
+            hard: 1.7,
+            zen: 1,
+            z2p: 1.7
+          });
           self.AdjustAndBounceX(barrier);
         }
       });
@@ -354,6 +361,24 @@ function Puck() {
         PlayBlip();
         // no bounce, get stuck instead.
         self.isLocked = true;
+      }
+    }
+  };
+  self.DarkMatterCollision = function (darkMatter) {
+    if (self.alive && exists(darkMatter)) {
+      var hit = self.CollisionTest(darkMatter);
+      if (hit) {
+        self.alive = false; // this could end the game!?
+        AddSparks({
+          x: self.x,
+          y: self.y,
+          vx: self.vx / 5,
+          vy: self.vy,
+          count: 10,
+          rx: sx(2),
+          ry: sy(2),
+          colorSpec: yellowSpec
+        });
       }
     }
   };

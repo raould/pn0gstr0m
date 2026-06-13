@@ -38,7 +38,8 @@ var gLifecycle;
 // false: then we are in "arcade/demo night" so the menu is just 1p, 2p, start,
 // and the only way to start the game is to click start (game controllers),
 // and no hard or zen modes.
-const kAppMode = true;
+// see also: kGameMode*, so this is all quite confusing.
+const kAppMode = false;
 
 const kScoreIncrement = 1;
 const kScoreLastPuckIncrement = 100;
@@ -61,10 +62,11 @@ var gLastPuckSide;
 // mutually exclusive enum.
 // regular & hard & zen are single player.
 // hard is the ame as 1P but zen is different!
-const kGameModeRegular = "regular";
+// see also: kAppMode, so this is all quite confusing.
+const kGameModeRegular = "regular"; 
 const kGameModeHard = "hard";
 const kGameModeZen = "zen";
-const kGameMode2P = "2p";
+const kGameMode2P = "2p"; // aka z2p, unfortunately (curse js).
 var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
 function is1P() {
     return gGameMode != kGameMode2P;
@@ -140,8 +142,7 @@ const kAlphaFadeInMsec = 700;
 var gLevelHighScores = LoadLocal(LocalStorageKeys.levelHighScores, {});
 var gHighScore = LoadLocal(LocalStorageKeys.gameHighScore, 0);
 
-// note that all the timing and stepping stuff is maybe fragile vs. frame rate?!
-// although i did try to compensate in the run loop.
+// note: puck speed doesn't seem to be properly independent of fps. :-(
 const kFPS = 30;
 const kTimeStep = 1000/kFPS;
 const kTimeStepThreshold = kTimeStep * 0.7;
@@ -215,7 +216,7 @@ const kAvgSparkFrame = 20;
 const kEjectCountThreshold = 350;
 const kEjectSpeedCountThreshold = 300;
 const kStreamingCountThreshold = 300; // must be <= kEjectCountThreshold i guess.
-const kStreamingCountTimeout = 1000 * 60;
+const kStreamingCountTimeout = 1000 * 60; // for dark matter.
 const kPuckPoolSize = 500;
 const kSparkPoolSize = 300;
 
@@ -498,10 +499,12 @@ const kLevelFinishChoose = 6;
 const kGameOver = 7;
 const kGameOverSummary = 8;
 
-var gCanvas;
+var gCanvasBacking;
+var gCanvasOnscreen;
+var gCanvasScreenshot;
 var gCx;
-var gCanvas2;
-var gCx2;
+var gCxOnscreen;
+var gCxS;
 var gToasts = [];
 var gGamepad1;
 var gGamepad2;
@@ -553,10 +556,10 @@ function Cxdo(fn) { // get it?
 
 function SaveEndScreenshot(state) {
     Cxdo(() => {
-        Assert(exists(state.Draw));
+        Assert( exists(state.Draw) );
         state.Draw({ isEndScreenshot: true });
-        gCx2.clearRect(0, 0, gWidth, gHeight);
-        gCx2.drawImage(gCanvas, 0, 0);
+        gCxS.clearRect( 0, 0, gCanvasScreenshot.width, gCanvasScreenshot.height );
+        gCxS.drawImage( gCanvasBacking, 0, 0 );
     });
 }
 
@@ -665,7 +668,7 @@ function PushToast(msg, lifespan=1000) {
 
 
 function ClearScreen() {
-    gCx.clearRect( 0, 0, gWidth, gHeight );
+    gCx.clearRect( 0, 0, gCanvasBacking.width, gCanvasBacking.height );
 }
 
 function DrawResizing() {
@@ -739,9 +742,9 @@ function DrawBounds( alpha=0.5 ) {
         // the full canvas x.
         gCx.beginPath();
         gCx.moveTo(0, 0);
-        gCx.lineTo(gCanvas.width, gCanvas.height);
-        gCx.moveTo(gCanvas.width, 0);
-        gCx.lineTo(0, gCanvas.height);
+        gCx.lineTo(gCanvasBacking.width, gCanvasBacking.height);
+        gCx.moveTo(gCanvasBacking.width, 0);
+        gCx.lineTo(0, gCanvasBacking.height);
         gCx.strokeStyle = rgba255s(greenSpec.regular, alpha);
         gCx.lineWidth = 1;
         gCx.stroke();
@@ -872,6 +875,11 @@ function DrawMoveTargets() {
     }
 }
 
+function CopyScreenBuffer() {
+    gCxOnscreen.clearRect( 0, 0, gCanvasOnscreen.width, gCanvasOnscreen.height );
+    gCxOnscreen.drawImage( gCanvasBacking, 0, 0 );
+}
+
 function UpdateLocalStorage() {
     // todo: ugly that this only works "because globals".
     // note:
@@ -933,6 +941,7 @@ function UpdateLocalStorage() {
             self.StepFrame(dt);
             gFrameCount++;
             gEventQueue = [];
+	    CopyScreenBuffer();
         }
         requestAnimationFrame( self.RunLoop );
     };
@@ -973,8 +982,8 @@ function UpdateLocalStorage() {
 
     self.DrawCRTScanlines = function() {
         if (self.state != kRoot && self.state != kWarning) {
-            gCx.beginPath();
             Cxdo(() => {
+		gCx.beginPath();
                 var height = 2;
                 var skip = 10;
                 var step = ii(skip/height);
@@ -982,9 +991,9 @@ function UpdateLocalStorage() {
                 for (var y = gHeight-start; y >= 0; y -= step) {
                     gCx.rect(0, y, gWidth, height);
                 }
+		gCx.fillStyle = scanlineColorStr;
+		gCx.fill();
             });
-            gCx.fillStyle = scanlineColorStr;
-            gCx.fill();
         }
     };
 
@@ -1557,10 +1566,10 @@ function UpdateLocalStorage() {
         // also see the 'must' check later on.
         // prevent pills from showing up too often, or too early - but not too late.
         self.pillSpawnCooldown = ForGameMode({
-            regular: 1000 * 3,
-            hard: 1000 * 3,
-            zen: 1000 * 3,
-            zp2: 1000 * 3,
+            regular: 1000 * (kAppMode ? 3 : 6),
+            hard: 1000 * 4,
+            zen: 1000 * 5,
+            z2p: 1000 * (kAppMode ? 3 : 6),
         });
         self.pillP1SpawnCountdown = self.pillSpawnCooldown;
         self.pillP2SpawnCountdown = self.pillSpawnCooldown;
@@ -1571,8 +1580,13 @@ function UpdateLocalStorage() {
         self.unfairPillCount = 0;
         self.unfairPillDiffMax = 2;
 
-	// only break up 'streaming' steady-state in 2P mode.
-	self.darkMatterGenerator = is1P() ? undefined : new DarkMatterGenerator({timeout: kStreamingCountTimeout});
+	// only break up 'streaming' steady-state in (either of the) 2P mode(s).
+	self.darkMatterGenerator = is1P() ?
+	    undefined :
+	    new DarkMatterGenerator({
+		firstTimeout: kStreamingCountTimeout,
+		timeout: kStreamingCountTimeout/2
+	    });
 	self.darkMatter = undefined;
 
         if (!self.isAttract) {
@@ -1670,16 +1684,8 @@ function UpdateLocalStorage() {
 	    var spawnNaturally = isU(self.darkMatter) && self.darkMatterGenerator.triggered && gR.RandomBool(0.1);
 	    var spawn = spawnNaturally || forced;
 	    if (spawn) {
+		self.darkMatter = self.darkMatterGenerator.Generate();
 		self.darkMatterGenerator.Reset();
-		var x = gR.RandomChoice(gw(0.2), gw(0.8));
-		var vx = (x < gw(0.5) ? 1 : -1) * sx(0.015);
-		var width = sx1(30);
-		var height = sx1(30);
-		self.darkMatter = new DarkMatter({
-		    x: x, y: gh(0.05) - height/2,
-		    width, height,
-		    vx, vy: sy(0.02),
-		});
 	    }
 	    self.darkMatter?.Step( dt );
 	    if (self.darkMatter?.alive === false) {
@@ -1962,6 +1968,7 @@ function UpdateLocalStorage() {
                 p.XtrasCollision(self.paddleP2.xtras.A);
                 p.NeoCollision(self.paddleP1.neo);
                 p.NeoCollision(self.paddleP2.neo);
+		p.DarkMatterCollision(self.darkMatter);
 
                 self.paddleP1.OnPuckMoved(p, i);
                 self.paddleP2.OnPuckMoved(p, i);
@@ -2177,13 +2184,13 @@ function UpdateLocalStorage() {
         gP2Target.DrawDebug();
         Cxdo(() => {
             gCx.fillStyle = "magenta";
-            DrawText(`${self.unfairPillCount} ${self.pillP1SpawnCountdown} ${self.pillP2SpawnCountdown}`, "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
+            DrawText(`UP:${self.unfairPillCount} 1P:${self.pillP1SpawnCountdown} 2P:${self.pillP2SpawnCountdown}`, "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
 
             gCx.fillStyle = RandomGrey();
             var mvx = gPucks.A.reduce((m,p) => { return p.alive ? Math.max(m, Math.abs(p.vx)) : m; }, 0);
-            DrawText(F(mvx.toString()), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
+            DrawText( F(mvx).toString(), "left", gw(0.1), gh(0.1), gSmallFontSizePt );
             gCx.fillStyle = "red";
-            DrawText(F(self.maxVX.toString()), "left", gw(0.1), gh(0.1) + gSmallFontSizePt, gSmallFontSizePt);
+            DrawText( F(self.maxVX).toString(), "left", gw(0.1), gh(0.1) + gSmallFontSizePt, gSmallFontSizePt );
 
             gCx.fillStyle = RandomBlue(0.5);
             DrawText( gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt );
@@ -3121,7 +3128,7 @@ function handleFullscreen(e) {
 }
 
 function PointerProcess(e, updateFn) {
-    var cvrect = gCanvas.getBoundingClientRect();
+    var cvrect = gCanvasBacking.getBoundingClientRect();
     var cvx = cvrect.x + window.scrollX;
     var cvy = cvrect.y + window.scrollY;
     // "regular" non-game-transformed screen pixel coordinates.
@@ -3326,8 +3333,15 @@ function DoResize() {
     } else {
         h = w * 1/kAspectRatio;
     }
-    gCanvas.width = gWidth = w;
-    gCanvas.height = gHeight = h;
+    gWidth = w;
+    gHeight = h;
+    gCanvasOnscreen.width = gWidth;
+    gCanvasOnscreen.height = gHeight;
+    gCanvasBacking.width = gWidth;
+    gCanvasBacking.height = gHeight;
+    // todo: prolly make the screenshot buffer lower resolution.
+    gCanvasScreenshot.width = gWidth;
+    gCanvasScreenshot.height = gHeight;
 }
 
 function CheckResizeMatch() {
@@ -3344,22 +3358,37 @@ function CheckResizeMatch() {
 }
 
 function Start() {
-    gCanvas = document.getElementById( kCanvasName );
-    gCx = gCanvas.getContext('2d');
+    InitCanvases();
+    DoResize();
+    RecalculateConstants();
+    ResetClipping();
+    InitHandlers();
+    StopAudio();
+}
+
+function InitCanvases() {
+    // the 'onscreen' canvas which we update at the end of each frame.
+    // it is not where the drawing commands go, that is gCanvasBacking.
+    gCanvasOnscreen = document.getElementById(kCanvasName);
+    Assert(gCanvasOnscreen != null);
+    gCxOnscreen = gCanvasOnscreen.getContext('2d');
+    gCxOnscreen.globalAlpha = 1;
+
+    // canvas to draw on during the frame, the offscreen one.
+    gCanvasBacking = document.createElement('canvas');
+    gCx = gCanvasBacking.getContext('2d');
+    // hacks to make line drawing mo bettah.
     gCx.MoveTo = MoveTo;
     gCx.LineTo = LineTo;
     gCx.RoundRect = RoundRect;
     gCx.RectXYWH = RectXYWH;
-    DoResize();
-    RecalculateConstants();
 
-    gCanvas2 = document.createElement('canvas');
-    gCanvas2.width = gCanvas.width;
-    gCanvas2.height = gCanvas.height;
-    gCx2 = gCanvas2.getContext('2d');
+    // screenshot between states.
+    gCanvasScreenshot = document.createElement('canvas');
+    gCxS = gCanvasScreenshot.getContext('2d');
+}
 
-    ResetClipping();
-
+function InitHandlers() {
     var handlerMap = {};
     handlerMap[kRoot] = () => new RootState(kAppMode ? kWarning : kTitle);
     handlerMap[kWarning] = () => new WarningState();
@@ -3374,8 +3403,6 @@ function Start() {
     if (exists(gLifecycle)) { gLifecycle.Quit(); }
     gLifecycle = new Lifecycle( handlerMap );
     gLifecycle.RunLoop();
-
-    StopAudio();
 }
 
 // er, i'm lazy and never un-register so be sure this only gets called once.
