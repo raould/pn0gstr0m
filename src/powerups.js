@@ -350,11 +350,17 @@ function MakeForcePushProps(context) {
             var targetSign = ForSide(context.side, -1, 1);
             gPucks.A.forEach(p => {
                 if (Sign(p.vx) == targetSign) {
-                    p.vx *= -1;
+                    p.vx *= -1.15;
                 }
 		else {
 		    p.vx = MinSigned(p.vx*1.15, gameState.maxVX);
 		}
+		p.vy *= ForGameMode({
+		    regular: 1.1,
+		    hard: 1.2,
+		    zen: 1,
+		    z2p: 2,
+		});
             });
             gameState.AddAnimation(MakeWaveAnimation({
                 lifespan: 250,
@@ -383,8 +389,11 @@ function MakeDecimateProps(context) {
         boomFn: (gameState) => {
             // try to destroy at least 1, but leave at least enough alive to avoid(ish) game over.
 	    var minSaved = 3;
-	    if (gPucks.A.length > minSaved) {
-		var count = Clip(gPucks.A.length - minSaved, 0, 20);
+	    var pcount = gPucks.A.length;
+	    if (pcount > minSaved) {
+		var clipMax = kAppMode ? 20 : pcount * 0.6;
+		var count = Clip(pcount - minSaved, 0, clipMax);
+		console.log("decimate", pcount, clipMax, count);
 		if (count > 0) {
                     PlayPowerupBoom();
                     var targets = gPucks.A
@@ -393,8 +402,8 @@ function MakeDecimateProps(context) {
 			.sort((a,b) => { return a.d - b.d; })
 			.slice(0, count)
 			.map((e) => { return e.p; });
-                    Assert(targets.length < gPucks.A.length);
-		    if (targets.length === 0 && gPucks.A.length > 1) {
+                    Assert(targets.length < pcount);
+		    if (targets.length === 0 && pcount > 1) {
 			targets = gPucks.A.slice(0, 1);
 		    }
                     targets.forEach(p => {
@@ -450,14 +459,20 @@ function MakeSplitProps(context) {
         width, height,
         lifespan: kPillLifespan,
         testFn: (gameState) => {
-            return true;
+	    return gPucks.A.length < kPuckPoolSize / 3;
         },
         drawFn: (self, alpha=1) => DrawSplitPill(context.side, self, alpha),
         boomFn: (gameState) => {
-            var r = 10/gPucks.A.length;
-            var targets = gPucks.A.filter((p, i) => {
-                return i < 1 ? true : gR.RandomBool(r);
-            });
+	    var targets;
+	    if (gPucks.A.length < 10) {
+		targets = [...gPucks.A];
+	    }
+	    else {
+		var r = 10/gPucks.A.length;
+		var targets = gPucks.A.filter((p, i) => {
+                    return i < 1 ? true : gR.RandomBool(r);
+		});
+	    }
             targets.forEach(t => {
                 var maxVX = gameState.level.maxVX;
                 var split = t.MaybeSplitPuck({ forced: true, maxVX });
@@ -504,7 +519,7 @@ function MakeDefendProps(context) {
                 regular: 50,
                 hard: 70,
                 zen: 50 + (pc*100),
-                z2p: 50,
+                z2p: 70,
             });
             console.log(`defend pc=${pc} hp=${F(hp)}`);
 	    var drawScale = ForGameMode({ regular: 1, zen: 0.5 });
@@ -560,7 +575,7 @@ function MakeXtraProps(context) {
                 regular: 30,
                 hard: 50,
                 zen: 50 + (pc*100),
-                z2p: 50,
+                z2p: 50 + Math.floor(gPucks.A.length/5),
             });
             console.log(`xtra pc=${pc} hp=${F(hp)}`);
             ForCount(n, (i) => {
@@ -615,7 +630,10 @@ function MakeChaosProps(context) {
     return {
         name,
         width, height,
-        lifespan: kPillLifespan,
+	// try to force more chaos in arcade mode
+	// to break up streaming-for-too-long?!
+	// see also: dark matter.
+        lifespan: kPillLifespan * (kAppMode ? 1 : 2),
         testFn: (gameState) => {
             return gPucks.A.length > 10 &&
 		isU(context.paddle.neo);
@@ -625,8 +643,8 @@ function MakeChaosProps(context) {
             PlayPowerupBoom();
             var targets = [];
             gPucks.A.forEach((p,i) => {
-                if (isMultiple(i, 3)) {
-                    p.vy *= -gR.RandomCentered(4, 2);
+                if (isMultiple(i, 2)) {
+                    p.vy *= -gR.RandomCentered(7, 2);
                     targets.push(p);
                 }
             });

@@ -1,5 +1,11 @@
 "use strict";
 
+function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
@@ -370,10 +376,16 @@ function MakeForcePushProps(context) {
       var targetSign = ForSide(context.side, -1, 1);
       gPucks.A.forEach(function (p) {
         if (Sign(p.vx) == targetSign) {
-          p.vx *= -1;
+          p.vx *= -1.15;
         } else {
           p.vx = MinSigned(p.vx * 1.15, gameState.maxVX);
         }
+        p.vy *= ForGameMode({
+          regular: 1.1,
+          hard: 1.2,
+          zen: 1,
+          z2p: 2
+        });
       });
       gameState.AddAnimation(MakeWaveAnimation({
         lifespan: 250,
@@ -408,8 +420,11 @@ function MakeDecimateProps(context) {
     boomFn: function boomFn(gameState) {
       // try to destroy at least 1, but leave at least enough alive to avoid(ish) game over.
       var minSaved = 3;
-      if (gPucks.A.length > minSaved) {
-        var count = Clip(gPucks.A.length - minSaved, 0, 20);
+      var pcount = gPucks.A.length;
+      if (pcount > minSaved) {
+        var clipMax = kAppMode ? 20 : pcount * 0.6;
+        var count = Clip(pcount - minSaved, 0, clipMax);
+        console.log("decimate", pcount, clipMax, count);
         if (count > 0) {
           PlayPowerupBoom();
           var targets = gPucks.A.map(function (p) {
@@ -424,8 +439,8 @@ function MakeDecimateProps(context) {
           }).slice(0, count).map(function (e) {
             return e.p;
           });
-          Assert(targets.length < gPucks.A.length);
-          if (targets.length === 0 && gPucks.A.length > 1) {
+          Assert(targets.length < pcount);
+          if (targets.length === 0 && pcount > 1) {
             targets = gPucks.A.slice(0, 1);
           }
           targets.forEach(function (p) {
@@ -494,17 +509,22 @@ function MakeSplitProps(context) {
     height: height,
     lifespan: kPillLifespan,
     testFn: function testFn(gameState) {
-      return true;
+      return gPucks.A.length < kPuckPoolSize / 3;
     },
     drawFn: function drawFn(self) {
       var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawSplitPill(context.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
-      var r = 10 / gPucks.A.length;
-      var targets = gPucks.A.filter(function (p, i) {
-        return i < 1 ? true : gR.RandomBool(r);
-      });
+      var targets;
+      if (gPucks.A.length < 10) {
+        targets = _toConsumableArray(gPucks.A);
+      } else {
+        var r = 10 / gPucks.A.length;
+        var targets = gPucks.A.filter(function (p, i) {
+          return i < 1 ? true : gR.RandomBool(r);
+        });
+      }
       targets.forEach(function (t) {
         var maxVX = gameState.level.maxVX;
         var split = t.MaybeSplitPuck({
@@ -558,7 +578,7 @@ function MakeDefendProps(context) {
         regular: 50,
         hard: 70,
         zen: 50 + pc * 100,
-        z2p: 50
+        z2p: 70
       });
       console.log("defend pc=".concat(pc, " hp=").concat(F(hp)));
       var drawScale = ForGameMode({
@@ -626,7 +646,7 @@ function MakeXtraProps(context) {
         regular: 30,
         hard: 50,
         zen: 50 + pc * 100,
-        z2p: 50
+        z2p: 50 + Math.floor(gPucks.A.length / 5)
       });
       console.log("xtra pc=".concat(pc, " hp=").concat(F(hp)));
       ForCount(n, function (i) {
@@ -691,7 +711,10 @@ function MakeChaosProps(context) {
     name: name,
     width: width,
     height: height,
-    lifespan: kPillLifespan,
+    // try to force more chaos in arcade mode
+    // to break up streaming-for-too-long?!
+    // see also: dark matter.
+    lifespan: kPillLifespan * (kAppMode ? 1 : 2),
     testFn: function testFn(gameState) {
       return gPucks.A.length > 10 && isU(context.paddle.neo);
     },
@@ -703,8 +726,8 @@ function MakeChaosProps(context) {
       PlayPowerupBoom();
       var targets = [];
       gPucks.A.forEach(function (p, i) {
-        if (isMultiple(i, 3)) {
-          p.vy *= -gR.RandomCentered(4, 2);
+        if (isMultiple(i, 2)) {
+          p.vy *= -gR.RandomCentered(7, 2);
           targets.push(p);
         }
       });
