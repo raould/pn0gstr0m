@@ -52,7 +52,8 @@ var gLifecycle;
 // and the only way to start the game is to click start (game controllers),
 // and no hard or zen modes.
 // see also: kGameMode*, so this is all quite confusing.
-var kAppMode = false;
+var kAppMode = true; // keep it commited as true, please.
+
 var kScoreIncrement = 1;
 var kScoreLastPuckIncrement = 100;
 // note: see GameState.Init().
