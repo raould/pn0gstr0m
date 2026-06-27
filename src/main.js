@@ -39,7 +39,7 @@ var gLifecycle;
 // and the only way to start the game is to click start (game controllers),
 // and no hard or zen modes.
 // see also: kGameMode*, so this is all quite confusing.
-const kAppMode = false;
+const kAppMode = true; // keep it commited as true, please.
 
 const kScoreIncrement = 1;
 const kScoreLastPuckIncrement = 100;
