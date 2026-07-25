@@ -3128,7 +3128,7 @@ function handleFullscreen(e) {
 }
 
 function PointerProcess(e, updateFn) {
-    var cvrect = gCanvasBacking.getBoundingClientRect();
+    var cvrect = gCanvasOnscreen.getBoundingClientRect();
     var cvx = cvrect.x + window.scrollX;
     var cvy = cvrect.y + window.scrollY;
     // "regular" non-game-transformed screen pixel coordinates.
