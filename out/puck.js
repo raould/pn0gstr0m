@@ -165,7 +165,7 @@ function Puck() {
       var slowCountFactor = ForGameMode({
         regular: Math.pow(countFactor, 1.5),
         zen: countFactor,
-        z2p: Math.pow(countFactor, 1.5)
+        pp: Math.pow(countFactor, 1.5)
       });
 
       // some variety in vx.
@@ -176,7 +176,7 @@ function Puck() {
       var scaleF = ForGameMode({
         regular: slow ? slowF : fastF,
         zen: zenF,
-        z2p: slow ? slowF : fastF
+        pp: slow ? slowF : fastF
       });
       var vxf = self.vx * scaleF;
       var vx = gR.RandomCentered(vxf, vxf / 10);
@@ -192,7 +192,7 @@ function Puck() {
         // the faster things get, the more spread out, i hope, but,
         // not too much since it can be fun to be 'streaming'
         // up until neo / darkMatter.
-        z2p: 0.3 + pvx * 10
+        pp: 0.3 + pvx * 10
       });
       var vyf = 1 + gR.RandomRange(-vyfc, vyfc);
       vy = self.vy * vyf;
@@ -257,6 +257,7 @@ function Puck() {
     self.vx *= -1;
   };
   self.ApplyEnglish = function (paddle) {
+    // note: pretty minimal, on purpose.
     // ugh, see: paddle, level.
 
     // smallest bit of vertical english.
@@ -334,7 +335,7 @@ function Puck() {
             regular: 1,
             hard: 1.7,
             zen: 1,
-            z2p: 1.7
+            pp: 1.7
           });
           self.AdjustAndBounceX(barrier);
         }

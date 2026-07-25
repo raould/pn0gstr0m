@@ -33,8 +33,8 @@ function ArcadeMenuConstants() {
   var bx1 = gw(0.5) - bw / 2;
   var by1 = by0 + bs * 2 + ss;
   var margin = {
-    x: bw * 0.2,
-    y: bh * 0.2
+    x: bw * 0.05,
+    y: bh * 0.05
   };
   var font_size = gSmallFontSizePt;
   return {

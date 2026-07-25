@@ -39,7 +39,7 @@ var gLifecycle;
 // and the only way to start the game is to click start (game controllers),
 // and no hard or zen modes.
 // see also: kGameMode*, so this is all quite confusing.
-const kAppMode = true; // keep it commited as true, please.
+const kAppMode = false; // keep it commited as true, please.
 
 const kScoreIncrement = 1;
 const kScoreLastPuckIncrement = 100;
@@ -66,7 +66,7 @@ var gLastPuckSide;
 const kGameModeRegular = "regular"; 
 const kGameModeHard = "hard";
 const kGameModeZen = "zen";
-const kGameMode2P = "2p"; // aka z2p, unfortunately (curse js).
+const kGameMode2P = "tp";
 var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
 function is1P() {
     return gGameMode != kGameMode2P;
@@ -78,7 +78,7 @@ const kZenLevelIndex = -2;
 // todo: gLevelIndex is an overloaded mess yay.
 var gLevelIndex = (gGameMode === kGameModeZen) ? kZenLevelIndex : 1;
 // this doesn't even handle attract-mode levels.
-function ForGameMode({regular, hard, zen, z2p}) {
+function ForGameMode({regular, hard, zen, tp}) {
     if (gGameMode === kGameModeRegular) {
         return regular;
     }
@@ -95,8 +95,8 @@ function ForGameMode({regular, hard, zen, z2p}) {
              regular);
     }
     else if (gGameMode === kGameMode2P) {
-        return exists(z2p) ?
-            z2p :
+        return exists(tp) ?
+            tp :
             (exists(zen) ?
              zen :
              (exists(hard) ?
@@ -415,7 +415,7 @@ function LatchP1Side(side) {
     // the first call wins and everything thereafter is ignored, on purpose.
     if (gP1Side == undefined) {
         // todo: seems risky that 'side' exists in so many places.
-	Assert(side != undefined);
+	Assert(exists(side));
         gP1Side = side;
         gP2Side = OtherSide(side);
         gP1Target.SetSide(gP1Side, is1P(), gw(0.5));
@@ -981,7 +981,7 @@ function UpdateLocalStorage() {
     };
 
     self.DrawCRTScanlines = function() {
-        if (self.state != kRoot && self.state != kWarning) {
+        if (gDebug == false && self.state != kRoot && self.state != kWarning) {
             Cxdo(() => {
 		gCx.beginPath();
                 var height = 2;
@@ -1308,7 +1308,7 @@ function UpdateLocalStorage() {
 		regular: kChargeUp,
 		hard: kChargeUp,
 		zen: kGame,
-		z2p: kGame
+		pp: kGame
 	    });
         } else {
             // one-second-at-a-time countdown.
@@ -1569,7 +1569,7 @@ function UpdateLocalStorage() {
             regular: 1000 * (kAppMode ? 3 : 6),
             hard: 1000 * 4,
             zen: 1000 * 5,
-            z2p: 1000 * (kAppMode ? 3 : 6),
+            pp: 1000 * (kAppMode ? 3 : 6),
         });
         self.pillP1SpawnCountdown = self.pillSpawnCooldown;
         self.pillP2SpawnCountdown = self.pillSpawnCooldown;
@@ -1618,7 +1618,7 @@ function UpdateLocalStorage() {
             self.level = MakeAttract(self.paddleP1, self.paddleP2);
         }
         else if (gGameMode === kGameMode2P) {
-            self.level = MakeZ2P(self.paddleP1, self.paddleP2);
+            self.level = MakePP(self.paddleP1, self.paddleP2);
         }
         else if (gGameMode === kGameModeZen) {
             self.level = MakeZen(self.paddleP1, self.paddleP2);
@@ -2193,8 +2193,12 @@ function UpdateLocalStorage() {
             DrawText( F(self.maxVX).toString(), "left", gw(0.1), gh(0.1) + gSmallFontSizePt, gSmallFontSizePt );
 
             gCx.fillStyle = RandomBlue(0.5);
-            DrawText( gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt );
             DrawText( gFrameCount.toString(), "right", gw(0.9), gh(0.9), gSmallFontSizePt );
+
+            gCx.fillStyle = RandomBlue(0.5);
+            DrawText( "#:"+gPucks.A.length, "right", gw(0.6), gh(0.9), gSmallerFontSizePt );
+	    gCx.fillStyle = "white";
+	    DrawText( "DPR:"+window.devicePixelRatio, "right", gw(0.6), gh(0.95), gSmallerFontSizePt);
 
             gCx.fillStyle = RandomForColor(blueSpec, 0.3);
             DrawText( "D E B U G", "center", gw(0.5), gh(0.8), gBigFontSizePt );
@@ -3100,13 +3104,14 @@ function RemoveGamepad(e) {
 
 function setFullscreenIconVisible(visible) {
     var icon = document.getElementById( kFullscreenIconName );
-    if (icon != undefined) {
+    if (exists(icon)) {
         icon.style.visibility = visible ? 'visible' : 'hidden';
     }
 }
 
 function handleFullscreen(e) {
     // so far there's only one <img> in the page.
+    /* note: deprecated, i commented out the <img> as browsers are hell.
     if (e.target.nodeName === "IMG") {
         if (!window.screenTop && !window.screenY) {
             var xfn = document.exitFullscreen ||
@@ -3124,18 +3129,17 @@ function handleFullscreen(e) {
         }
         return true;
     }
+    */
     return false;
 }
 
-function PointerProcess(e, updateFn) {
-    var cvrect = gCanvasBacking.getBoundingClientRect();
-    var cvx = cvrect.x + window.scrollX;
-    var cvy = cvrect.y + window.scrollY;
-    // "regular" non-game-transformed screen pixel coordinates.
-    // todo: handle window.devicePixelRatio.
-    var x = (e.clientX - cvx);
-    var y = (e.clientY - cvy);
-    Assert(exists(updateFn), "PointerProcess");
+function PointerProcess(e, updateFn, debug=false) {
+    Assert(exists(updateFn), "PointerProcess"); // from old bug fixing.
+    const coff = gCanvasOnscreen.getBoundingClientRect();
+    const cvx = coff.x;
+    const cvy = coff.y;
+    var x = e.clientX - cvx;
+    var y = e.clientY - cvy;
     updateFn(x, y);
 }
 
@@ -3154,7 +3158,8 @@ function MouseDown(e) {
                             gP2Target.OnDown(kMousePointerId, x, y);
                         }
                     });
-                }
+                },
+		true
             );
         }
     }
@@ -3370,9 +3375,9 @@ function InitCanvases() {
     // the 'onscreen' canvas which we update at the end of each frame.
     // it is not where the drawing commands go, that is gCanvasBacking.
     gCanvasOnscreen = document.getElementById(kCanvasName);
-    Assert(gCanvasOnscreen != null);
+    Assert(exists(gCanvasOnscreen));
     gCxOnscreen = gCanvasOnscreen.getContext('2d');
-    gCxOnscreen.globalAlpha = 1;
+    Assert(exists(gCxOnscreen));
 
     // canvas to draw on during the frame, the offscreen one.
     gCanvasBacking = document.createElement('canvas');

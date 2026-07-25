@@ -384,7 +384,7 @@ function MakeForcePushProps(context) {
           regular: 1.1,
           hard: 1.2,
           zen: 1,
-          z2p: 2
+          tp: 2
         });
       });
       gameState.AddAnimation(MakeWaveAnimation({
@@ -578,7 +578,7 @@ function MakeDefendProps(context) {
         regular: 50,
         hard: 70,
         zen: 50 + pc * 100,
-        z2p: 70
+        tp: 70
       });
       console.log("defend pc=".concat(pc, " hp=").concat(F(hp)));
       var drawScale = ForGameMode({
@@ -646,7 +646,7 @@ function MakeXtraProps(context) {
         regular: 30,
         hard: 50,
         zen: 50 + pc * 100,
-        z2p: 50 + Math.floor(gPucks.A.length / 5)
+        tp: 50 + Math.floor(gPucks.A.length / 5)
       });
       console.log("xtra pc=".concat(pc, " hp=").concat(F(hp)));
       ForCount(n, function (i) {

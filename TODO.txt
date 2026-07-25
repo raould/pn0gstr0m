@@ -1,5 +1,6 @@
 * all the todo's noted in code comments.
 * this has quickly become an empirical big ball of mud. :-(
+* i bet even AI couldn't unravel all the horrible game-mode related state.
 * warning: things in code tend to not be simply what they seem / what you'd expect, even for me.
 * support webgl (e.g. via pixijs) to get performance (vs. e.g. cavas color string hell).
 * comment out asserts in out/* somehow, for perf.
@@ -83,6 +84,8 @@
   * a pause menu command to swap sides (proably only in single player mode).
 * (note that gDebug is not gospel the way it is used, it is always just a hack
   that is changed however the inevitably different modes are needed for testing.)
+* Pause Esc button and menu UX is terrible.
+  * when paused, should be able to click Esc button cleanly.
 
 ----------------------------------------
 

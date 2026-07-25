@@ -19,8 +19,8 @@ function GameMenuConstants() {
   // all buttons are vertically aligned.
   var bl = gw(0.5) - bw / 2;
   var margin = {
-    x: bw * 0.2,
-    y: bh * 0.2
+    x: bw * 0.05,
+    y: bh * 0.05
   };
   var font_size = gSmallFontSizePt;
   return {

@@ -32,8 +32,8 @@ function AppMenuConstants() {
   var bx2 = gw(0.5) + bw / 3 - bw / 2;
   var by2 = by1 + bs * 2 + ss;
   var margin = {
-    x: bw * 0.2,
-    y: bh * 0.2
+    x: bw * 0.05,
+    y: bh * 0.05
   };
   var font_size = gSmallFontSizePt;
   return {
@@ -146,6 +146,7 @@ function MakeModeButtons(_ref2) {
       is_checkbox: true,
       is_checked: gGameMode === kGameModeZen,
       disabled: !is1P(),
+      // note: zen mode is only for 1 player, it seems.
       step_fn: function step_fn(bself) {
         if (is1P()) {
           var was_checked = bself.is_checked;

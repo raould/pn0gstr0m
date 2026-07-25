@@ -76,19 +76,20 @@ function MakeZen(paddleP1, paddleP2) {
     vx0: sxi(2.5),
     maxVX: sxi(ForGameMode({
       zen: 18,
-      z2p: 22
+      pp: 22
     })),
     speedupFactor: undefined,
     // no english progression.
     isP1Player: true,
-    isP2Player: !is1P(),
+    isP2Player: false,
+    // note: zen mode is only for 1 player, it seems.
     p1PillState: MakeAllPillState(),
     p2PillState: MakeAllPillState(),
     paddleP1: paddleP1,
     paddleP2: paddleP2
   });
 }
-function MakeZ2P(paddleP1, paddleP2) {
+function MakePP(paddleP1, paddleP2) {
   return new Level({
     index: kZenLevelIndex,
     isSpawning: true,
@@ -97,12 +98,12 @@ function MakeZ2P(paddleP1, paddleP2) {
     vx0: sxi(2.5),
     maxVX: sxi(ForGameMode({
       zen: 18,
-      z2p: 22
+      pp: 22
     })),
     speedupFactor: undefined,
     // no english progression.
     isP1Player: true,
-    isP2Player: !is1P(),
+    isP2Player: true,
     p1PillState: MakeAllPillState(),
     p2PillState: MakeAllPillState(),
     paddleP1: paddleP1,
