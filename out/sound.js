@@ -17,8 +17,6 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-// commit as 'false', 'true' is just for debugging.
-var _kill_unplayed = false;
 var kMusicVolume = 0.7;
 
 // this object contains multiple mappings.
@@ -134,7 +132,7 @@ function BeginMusic() {
 
     // if unknown (or forced), refresh to full list.
     var unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
-    if (_kill_unplayed || unplayed.length == 0) {
+    if (unplayed.length == 0) {
       unplayed = unplayedAll;
     }
     Assert(unplayed != null, "BeginMusic: null");
@@ -230,6 +228,8 @@ var kBlipSfxCount = 3;
 var PlayBlip = MakePlayFn(kBlipSfxCount, "blip", PlaySfxDebounced);
 function LoadAudio(onLoaded) {
   gAudio.onLoaded = onLoaded;
+  SaveLocal(LocalStorageKeys.unplayed, []);
+
   // these will load in order 1 by 1 via onload().
   RegisterSfx("explosion1", "explosionA", {
     volume: 0.35
