@@ -52,6 +52,7 @@ var kUITimeout = 1000 * (gDebug ? 5 : 20);
 // match: index.html
 var kCanvasName = "canvas";
 var kFullscreenIconName = "fullscreen";
+var kLinksDivName = "links";
 var gLifecycle;
 var kScoreIncrement = 1;
 var kScoreLastPuckIncrement = 100;
@@ -3337,7 +3338,16 @@ function Start() {
   StopAudio();
   UnhideLinks();
 }
-function UnhideLinks() {}
+function UnhideLinks() {
+  var links = document.getElementById(kLinksDivName);
+  if (exists(links)) {
+    console.log("found links");
+    if (kAppMode) {
+      console.log("unhiding links");
+      links.style = "";
+    }
+  }
+}
 function InitCanvases() {
   // the 'onscreen' canvas which we update at the end of each frame.
   // it is not where the drawing commands go, that is gCanvasBacking.

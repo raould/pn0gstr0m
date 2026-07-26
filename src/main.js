@@ -38,6 +38,7 @@ const kUITimeout = 1000 * (gDebug ? 5 : 20);
 // match: index.html
 const kCanvasName = "canvas";
 const kFullscreenIconName = "fullscreen";
+const kLinksDivName = "links";
 
 var gLifecycle;
 
@@ -3524,7 +3525,14 @@ function Start() {
 }
 
 function UnhideLinks() {
-    
+    const links = document.getElementById(kLinksDivName);
+    if (exists(links)) {
+	console.log("found links");
+	if (kAppMode) {
+	    console.log("unhiding links");
+	    links.style = "";
+	}
+    }
 }
 
 function InitCanvases() {
