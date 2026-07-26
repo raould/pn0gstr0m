@@ -1,4 +1,4 @@
-/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -121,8 +121,8 @@ function Sign(value) {
 }
 
 function AvoidZero(value, radius) {
-    if (value > 0 && value < radius) { return radius; }
-    if (value < 0 && value > radius) { return -radius; }
+    if (value >= 0 && value < radius) { return radius; }
+    if (value <= 0 && value > radius) { return -radius; }
     return value;
 }
 
@@ -194,9 +194,11 @@ function MaxSigned(n, max) {
 
 function Clip(n, min, max) {
     if (min > max) {
-        var tmp = min; min = max; max = tmp;
+	return Math.min(min, Math.max(max, n));
     }
-    return Math.min(max, Math.max(min, n));
+    else {
+	return Math.min(max, Math.max(min, n));
+    }
 }
 
 function Clip01(n) {
@@ -211,6 +213,20 @@ function Clip01Signed(n) {
 function Clip255(n) {
     var i = Math.floor(n);
     return Clip(i, 0, 255);
+}
+
+function T01Range(v, min, max) {
+    return T01(
+	Clip(v, min, max) - min,
+	max- min
+    );
+}
+
+function T10Range(v, min, max) {
+    return T10(
+	Clip(v, min, max) - min,
+	max-min
+    );
 }
 
 // v expected to go from 0 to max.

@@ -1,4 +1,4 @@
-/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -28,7 +28,7 @@ const kEnglishStep = 0.05;
 	Assert(!isBadNumber(self.maxVX));
 
         self.speedupFactor = props.speedupFactor;
-        // these do not apply until after the MidGame.
+        // these do not apply until later in the level.
         self.englishFactorPlayer = 0.5;
         self.englishFactorCPU = 0.5;
 
@@ -78,9 +78,8 @@ const kEnglishStep = 0.05;
     };
 
     self.Step = function( dt ) {
-        // boost maxVX & english to prevent getting stuck on the level for ever.
         // ugh, see: paddle, puck.
-        if (!self.IsHalfGame() && exists(self.speedupFactor)) {
+        if (self.IsSecondHalfGame() && exists(self.speedupFactor)) {
 	    Assert(gGameMode !== kGameModeZen);
             self.StepMaxVX(dt);
             self.StepEnglish(dt);
@@ -110,20 +109,25 @@ const kEnglishStep = 0.05;
         self.paddleP2.englishFactor = self.paddleP2.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
     };
 
-    self.IsHalfGame = function() {
-        return self.IsNGame(self.splitsMax * 0.5);
+    // make the latter half of a level get more zany
+    // in order to hurry things up.
+    self.IsSecondHalfGame = function() {
+        return !self.IsNGame(self.splitsMax * 0.5);
     };
 
-    self.IsMidGame = function() {
+    // avoid some powerups at the end of a level
+    // because they can get into degenerate states
+    // that are hard to escape w/out enough pucks.
+    self.IsBeforeEndingGame = function() {
         return self.IsNGame(self.splitsMax * 0.7);
     };
 
     self.IsNGame = function(n) {
-        var isMidGame = true;
+        var isNGame = true;
         if (exists(self.splitsRemaining)) {
-            isMidGame = self.splitsRemaining > n;
+            isNGame = self.splitsRemaining > n;
         }
-        return isMidGame;
+        return isNGame;
     };
 
     self.IsSuddenDeath = function() {

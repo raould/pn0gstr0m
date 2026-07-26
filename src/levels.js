@@ -1,4 +1,4 @@
-/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -51,7 +51,7 @@ function MakeZen(paddleP1, paddleP2) {
         isSpawning: true,
         splitsCount: undefined, // no limit on how many.
 	vx0: sxi(2.5),
-        maxVX: sxi(ForGameMode({zen: 18, z2p: 22})),
+        maxVX: sxi(ForGameMode({zen: 18, pp: 22})),
         speedupFactor: undefined, // no english progression.
         isP1Player: true,
         isP2Player: !is1P(),
@@ -62,13 +62,13 @@ function MakeZen(paddleP1, paddleP2) {
     });
 }
 
-function MakeZ2P(paddleP1, paddleP2) {
+function MakePP(paddleP1, paddleP2) {
     return new Level({
         index: kZenLevelIndex,
         isSpawning: true,
         splitsCount: undefined, // no limit on how many.
 	vx0: sxi(2.5),
-        maxVX: sxi(ForGameMode({zen: 18, z2p: 22})),
+        maxVX: sxi(ForGameMode({zen: 18, pp: 22})),
         speedupFactor: undefined, // no english progression.
         isP1Player: true,
         isP2Player: !is1P(),

@@ -1,6 +1,6 @@
 "use strict";
 
-/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -266,6 +266,7 @@ function Menu(_ref2) {
     // menu.
     if (self.isOpen()) {
       Cxdo(function () {
+        var ga = gCx.globalAlpha;
         if (gDebug) {
           // fade buttons so i can watch stepping the game.
           gCx.globalAlpha = 0.5;
@@ -278,6 +279,7 @@ function Menu(_ref2) {
         Object.values(self.Navigation()).forEach(function (bspec) {
           return bspec.button.Draw();
         });
+        gCx.globalAlpha = ga;
       });
     }
     // esc.

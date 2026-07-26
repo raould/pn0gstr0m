@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -13,6 +13,10 @@ function Puck() {
     
     /* props = { x, y, vx, vy, ur=true, forced=false, maxVX } */
     self.PlacementInit = function(props) {
+	Assert(!isNaN(props.x));
+	Assert(!isNaN(props.y));
+	Assert(!isNaN(props.vx));
+	Assert(!isNaN(props.vy));
         self.x = props.x;
         self.y = props.y;
         self.prevX = self.x;
@@ -22,7 +26,15 @@ function Puck() {
         self.midX = self.x + self.width/2;
         self.midY = self.y + self.height/2;
         self.vx = MaxSigned(props.vx, sx(1.5));
-        self.vy = AvoidZero(props.vy, 0.1);
+
+	// note: experimenting, trying to avoid the 2 player degenerage infinite stream case!?
+	if (is2P()) {
+            self.vy = AvoidZero(props.vy, ghr(0.0003));
+	}
+	else {
+	    self.vy = AvoidZero(props.vy, 0.1);
+	}
+
         self.alive = true;
         self.ur = aub(props.ur, false);
         self.startTime = self.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
@@ -88,13 +100,20 @@ function Puck() {
 
             if (gDebug) {
                 // tail to show direction of movement.
-                // different y for opposite vx.
+                // tail is at top or bottom depending on vx direction.
                 gCx.beginPath();
                 var oy = self.vx > 0 ? -1 : self.height+1;
                 gCx.strokeStyle = self.vx > 0 ? "magenta" : "pink";
                 gCx.moveTo(self.prevX+self.width/2, self.prevY+oy);
                 gCx.lineTo(self.midX, self.y+oy);
                 gCx.stroke();
+
+		// show vy exaggerated.
+		gCx.beginPath();
+		gCx.strokeStyle = "yellow";
+		gCx.moveTo(self.midX, self.midY);
+		gCx.lineTo(self.midX, self.midY + self.vy * 20);
+		gCx.stroke();
 
                 // highlight the ur pucks.
                 if (self.ur) {
@@ -123,8 +142,13 @@ function Puck() {
 
             var xout = self.x < 0 || self.x+self.width >= gWidth;
             Assert(!isNaN(xout), "xout");
+
+	    // technically, pucks should never escape vertically!
+	    self.y = Clip(self.y, 0, gHeight-1-self.height);
             var yout = self.y < 0 || self.y+self.height >= gHeight;
             Assert(!isNaN(yout), "yout");
+	    Assert(yout == false, "yout");
+
             self.alive = !(xout || yout);
 
             self.midX = self.x + self.width/2;
@@ -170,7 +194,7 @@ function Puck() {
             const slowCountFactor = ForGameMode({
                 regular: Math.pow(countFactor, 1.5),
                 zen: countFactor,
-                z2p: Math.pow(countFactor, 1.5)
+                pp: Math.pow(countFactor, 1.5)
             });
 
             // some variety in vx.
@@ -181,34 +205,34 @@ function Puck() {
 	    const scaleF = ForGameMode({
                 regular: slow?slowF:fastF,
                 zen: zenF,
-                z2p: slow?slowF:fastF
+                pp: slow?slowF:fastF
             });
             const vxf = self.vx * scaleF;
             var vx = gR.RandomCentered(vxf, vxf/10);
+	    var vy = self.vy;
 
-            // some variety in vy.
-            let vy = self.vy;
-            const pvx = T01(Math.abs(self.vx), maxVX);
-            // some modes allow more for linear streaming of the pucks.
-            const vyfc = ForGameMode({
-                regular: 0.3,
-                hard: 0.3,
-                zen: 0.3,
-                // the faster things get, the more spread out, i hope, but,
-                // not too much since it can be fun to be 'streaming'
-		// up until neo / darkMatter.
-                z2p: 0.3 + pvx*10,
-            });
-            const vyf = 1 + gR.RandomRange(-vyfc, vyfc);
-            vy = self.vy * vyf;
-
-            // finally, case the first split to (try to) make it
-            // always obvious that it split - avoid the new puck
+            // bump the very first split to make it
+            // clear that it split; avoid the new puck
             // being co-located with the original.
             if (gPucks.A.length === 1) {
-                vx += sx(0.1) * Sign(vx);
-                vy += sy(0.1) * Sign(vy);
+                vx += 0.1 * Sign(vx);
+                vy += 0.01 * Sign(vy);
             }
+	    else {
+		// some modes allow more for linear streaming of the pucks.
+		const vyff = ForGameMode({
+                    regular: 0.1,
+                    hard: 0.2,
+                    zen: 0.1,
+                    // the faster things get, the more spread out, i hope, but,
+                    // not too much since it can be fun to be 'streaming'
+		    // up until neo / darkMatter.
+                    pp: 0.1 + 0.4 * T01(Math.abs(self.vx), maxVX)
+		});
+		vyf = 1 + (gR.RandomBool() ? vyff : 0);
+		vy = self.vy * vyf;
+		//console.log(F(self.vy), F(vyff), F(vyf), F(vy), F(vy-self.vy));
+	    }
 
 	    newprops = { x: self.x, y: self.y, vx, vy, ur: false, forced, maxVX };
         }
@@ -341,7 +365,7 @@ function Puck() {
 			regular: 1,
 			hard: 1.7,
 			zen: 1,
-			z2p: 1.7,
+			pp: 1.7,
 		    });
                     self.AdjustAndBounceX( barrier );
                 }
@@ -378,7 +402,7 @@ function Puck() {
 	if (self.alive && exists(darkMatter)) {
 	    var hit = self.CollisionTest( darkMatter );
 	    if (hit) {
-		self.alive = false; // this could end the game!?
+		self.alive = false; // todo: this could end the game!?
 		AddSparks({
 		    x:self.x, y:self.y,
 		    vx:self.vx/5, vy:self.vy,
@@ -393,7 +417,6 @@ function Puck() {
     self.WallsCollision = function( maxVX ) {
         if (self.alive && !self.isLocked) {
             self.WallsBounceY();
-            self.WallsRepelY( maxVX );
         }
     };
 
@@ -410,25 +433,15 @@ function Puck() {
         }
         if (did) {
             self.vy *= -1;
+	    if (is2P()) {
+		// trying to avoid degenerate steaming at top and bottom.
+		if (Math.abs(self.vy) < 0.3) {
+		    console.log(self.vy);
+		    self.vy *= 1.1;
+		}
+	    }
             PlayBlip();
-        }
-    };
-
-    self.WallsRepelY = function( maxVX ) {
-        var zone = gh(0.1);
-        // if the puck is _not_ moving slowly, repel vertically away from walls
-        // in order to try to prevent the user from just leaving their paddle
-        // at the wall indefinitely and not moving, yet not losing pucks boringness.
-        if (Math.abs(self.vx) > maxVX * 0.5) {
-            // bounce harder if moving toward the respective wall;
-            // trying to push it away would probably look more strange?
-            if (self.y - gYInset < zone && self.vy < 0) {
-                self.vy -= sy(0.01);
-            }
-            if (gh(1) - gYInset - self.y < zone && self.vy > 0) {
-                self.vy += sy(0.01);
-            }
-        }
+	}
     };
 
     self.Init();

@@ -1,4 +1,4 @@
-/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -51,7 +51,7 @@
         self.length = 0;
     };
 
-    self.read = function( index ) {
+    self.get = function( index ) {
         Assert(index < self.length);
         Assert(index < self.array.length);
         return self.array[ index ];

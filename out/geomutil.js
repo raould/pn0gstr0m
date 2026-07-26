@@ -1,12 +1,12 @@
 "use strict";
 
-/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
 function isPointInRect(p, xywh) {
-  var marginxy = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+  var marginxy = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
   if (isU(p) || isU(xywh)) {
     return false;
   }
@@ -16,9 +16,9 @@ function isPointInRect(p, xywh) {
     my = _marginxy$y === void 0 ? 0 : _marginxy$y;
   var l = p.x >= xywh.x - mx;
   var r = p.x <= xywh.x + xywh.width + mx;
-  var t = p.y >= xywh.y - my;
-  var b = p.y <= xywh.y + xywh.height + my;
-  return l && r && t && b;
+  var b = p.y >= xywh.y - my;
+  var t = p.y <= xywh.y + xywh.height + my;
+  return l && r && b && t;
 }
 function isPointInCircle(p, xyr) {
   var margin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;

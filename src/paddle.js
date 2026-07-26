@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -80,7 +80,7 @@ function Paddle(props) {
         self.nudgeX();
 
         // ugh, see: level, puck.
-        self.englishFactor = ForGameMode({ regular: 0.3, zen: 0.08 });
+        self.englishFactor = ForGameMode({ regular: 0.3, zen: 0.08, pp: 0.3 });
     };
 
     self.ForEachPaddle = function(fn) {
@@ -479,26 +479,38 @@ function Paddle(props) {
             DrawText(F(scale), "center", gw(0.8), gh(0.6), gSmallestFontSizePt);
         }});
 
-        if (PS && exists(self.aiPill) && self.aiPill.isUrgent) {
-            self.debugMsg = "PILL_1";
+	const count = gPucks.A.length;
+
+        if (count > 10 && PS && exists(self.aiPill) && self.aiPill.isUrgent) {
+            self.debugMsg = "PILL_URGENT";
             self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, scale );
             return;
         }
+
+	const attacking_count = ForSide(self.side, gPuckLeftCount, gPuckRightCount);
+	if (count < 10 || attacking_count / count > 0.25) {
+            if (exists(self.aiPuck) && self.isPuckAttacking(self.aiPuck)) {
+		self.debugMsg = "AI_PUCK";
+		self.AISeekTargetMidY( dt, self.aiPuck.midY, scale );
+		return;
+            }
+	    const index = ForSide(self.side, gPuckYLeftCommonIndex, gPuckYRightCommonIndex);
+	    if (exists(index)) {
+		self.debugMsg = "PUCKS!";
+		const midY = kPuckYCountBucketHeight * index - (kPuckYCountBucketHeight/2);
+		self.AISeekTargetMidY( dt, midY, scale );
+		return;
+	    }
+	}
 
         if (PS && self.attackingNearCount == 0 && exists(self.aiPill)) {
-            self.debugMsg = "PILL_2";
+            self.debugMsg = "PILL_FREE";
             self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, scale );
-            return;
-        }
-
-        if (exists(self.aiPuck) && self.isPuckAttacking(self.aiPuck)) {
-            self.debugMsg = "PUCK";
-            self.AISeekTargetMidY( dt, self.aiPuck.midY, scale );
             return;
         }
 
         if (PS && exists(self.aiPill)) {
-            self.debugMsg = "PILL_3";
+            self.debugMsg = "PILL_DEFAULT";
             self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, scale );
             return;
         }
@@ -546,9 +558,10 @@ function Paddle(props) {
         var istart = Math.min(self.scanIndex, gPucks.A.length-1);
         var iend = Math.min(self.scanIndex+self.scanCount, gPucks.A.length);
         if (istart < 0) { return; }
+	// todo: wish this were incremental inside the main puck update loop.
         for (var i = istart; i < iend; ++i) {
             // todo: handle when best isLocked.
-            var p = gPucks.A.read(i);
+            var p = gPucks.A.get(i);
             if (isU(best)) {
                 Assert(exists(p), "bad puck");
                 best = p;

@@ -1,18 +1,12 @@
 "use strict";
 
-function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
-function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -205,11 +199,16 @@ function Powerups(props) {
     Assert(exists(spec), "wtf maker? ".concat(info.name));
     if (!spec.testFn(gameState)) {
       spec = undefined;
-      // try the failed powerup again after the next one
-      // in order to attempt to spawn the new ones soon even
-      // if they were skipped i.e. at the start of the level when
-      // there aren't many pucks.
-      self.pillState.deck.splice(1, 0, pid);
+      if (gDebug) {
+        // loop through them all.
+        self.pillState.deck.push(pid);
+      } else {
+        // try the failed powerup again after the next one
+        // in order to attempt to spawn the new ones soon even
+        // if they were skipped i.e. at the start of the level when
+        // there aren't many pucks.
+        self.pillState.deck.splice(1, 0, pid);
+      }
     } else {
       // keep looping through the pills. also keeps the 
       // state across levels so you aren't retreading.
@@ -365,7 +364,9 @@ function MakeForcePushProps(context) {
     height: height,
     lifespan: kPillLifespan,
     testFn: function testFn(gameState) {
-      return gPucks.A.length > 5 && isU(context.paddle.neo);
+      var can = gPucks.A.length > 5 && isU(context.paddle.neo);
+      console.log("push?", can);
+      return can;
     },
     drawFn: function drawFn(self) {
       var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
@@ -384,7 +385,7 @@ function MakeForcePushProps(context) {
           regular: 1.1,
           hard: 1.2,
           zen: 1,
-          z2p: 2
+          pp: 2
         });
       });
       gameState.AddAnimation(MakeWaveAnimation({
@@ -411,7 +412,9 @@ function MakeDecimateProps(context) {
       // looks unfun if there aren't enough pucks to destroy.
       // by the time the powerup is activated there might be even less.
       // e.g. consider that the other player might also be doing their decimate.
-      return gPucks.A.length > 30;
+      var can = gPucks.A.length > 30;
+      console.log("decimate?", can);
+      return can;
     },
     drawFn: function drawFn(self) {
       var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
@@ -480,7 +483,9 @@ function MakeEngorgeProps(context) {
     lifespan: kPillLifespan,
     isUrgent: true,
     testFn: function testFn(gameState) {
-      return !context.paddle.engorged;
+      var can = !context.paddle.engorged;
+      console.log("engorce?", can);
+      return can;
     },
     drawFn: function drawFn(self) {
       var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
@@ -509,22 +514,31 @@ function MakeSplitProps(context) {
     height: height,
     lifespan: kPillLifespan,
     testFn: function testFn(gameState) {
-      return gPucks.A.length < kPuckPoolSize / 3;
+      var can = gPucks.A.length < kPuckPoolSize / 3;
+      console.log("split?", can);
+      return can;
     },
     drawFn: function drawFn(self) {
       var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       return DrawSplitPill(context.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
-      var targets;
-      if (gPucks.A.length < 10) {
-        targets = _toConsumableArray(gPucks.A);
-      } else {
-        var r = 10 / gPucks.A.length;
-        var targets = gPucks.A.filter(function (p, i) {
-          return i < 1 ? true : gR.RandomBool(r);
-        });
-      }
+      var needone = true;
+      var targets = [];
+      gPucks.A.forEach(function (p) {
+        var pick = needone;
+        needone = false;
+        if (!pick) {
+          if (gPucks.A.length <= 10) {
+            pick = true;
+          } else {
+            pick = gR.RandomBool(10 / gPucks.A.length);
+          }
+        }
+        if (pick) {
+          targets.push(p);
+        }
+      });
       targets.forEach(function (t) {
         var maxVX = gameState.level.maxVX;
         var split = t.MaybeSplitPuck({
@@ -563,7 +577,9 @@ function MakeDefendProps(context) {
     testFn: function testFn(gameState) {
       // todo: there is a bug here that let one paddle
       // have 2 defend powerups active at the same time wtf.
-      return gameState.level.IsMidGame() && gPucks.A.length > 10 && context.paddle.barriers.A.length == 0;
+      var can = gameState.level.IsBeforeEndingGame() && gPucks.A.length > 10 && context.paddle.barriers.A.length == 0;
+      console.log("defend?", can);
+      return can;
     },
     drawFn: function drawFn(self) {
       var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
@@ -578,7 +594,7 @@ function MakeDefendProps(context) {
         regular: 50,
         hard: 70,
         zen: 50 + pc * 100,
-        z2p: 70
+        pp: 70
       });
       console.log("defend pc=".concat(pc, " hp=").concat(F(hp)));
       var drawScale = ForGameMode({
@@ -629,7 +645,9 @@ function MakeXtraProps(context) {
     lifespan: kPillLifespan,
     isUrgent: true,
     testFn: function testFn(gameState) {
-      return gameState.level.IsMidGame() && gPucks.A.length > 20 && context.paddle.xtras.A.length == 0;
+      var can = gameState.level.IsBeforeEndingGame() && gPucks.A.length > 20 && context.paddle.xtras.A.length == 0;
+      console.log("xtra?", can);
+      return can;
     },
     drawFn: function drawFn(self) {
       var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
@@ -646,7 +664,7 @@ function MakeXtraProps(context) {
         regular: 30,
         hard: 50,
         zen: 50 + pc * 100,
-        z2p: 50 + Math.floor(gPucks.A.length / 5)
+        pp: 50 + Math.floor(gPucks.A.length / 5)
       });
       console.log("xtra pc=".concat(pc, " hp=").concat(F(hp)));
       ForCount(n, function (i) {
@@ -683,7 +701,9 @@ function MakeNeoProps(context) {
     lifespan: kPillLifespan,
     isUrgent: true,
     testFn: function testFn(gameState) {
-      return gameState.level.IsMidGame() && gPucks.A.length > 20 && isU(context.paddle.neo);
+      var can = gameState.level.IsBeforeEndingGame() && gPucks.A.length > 20 && isU(context.paddle.neo);
+      console.log("neo?", can);
+      return can;
     },
     drawFn: function drawFn(self) {
       var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
@@ -716,7 +736,9 @@ function MakeChaosProps(context) {
     // see also: dark matter.
     lifespan: kPillLifespan * (kAppMode ? 1 : 2),
     testFn: function testFn(gameState) {
-      return gPucks.A.length > 10 && isU(context.paddle.neo);
+      var can = gPucks.A.length > 10 && isU(context.paddle.neo);
+      console.log("chaos?", can);
+      return can;
     },
     drawFn: function drawFn(self) {
       var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;

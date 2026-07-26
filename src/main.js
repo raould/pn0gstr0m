@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -20,6 +20,14 @@
 // do not check this (to main branch, anyway) in as true.
 var gDebug = false;
 
+// which title menu to show?
+// true: (which is the expected shipping state) the title menu has more options.
+// false: then we are in "arcade/demo night" so the menu is just 1p, 2p, start,
+// and the only way to start the game is to click start (game controllers),
+// and no hard or zen modes.
+// see also: kGameMode*, so this is all quite confusing.
+const kAppMode = true; // keep it commited as true, please.
+
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
 var gShowToasts = gDebug;
@@ -32,14 +40,6 @@ const kCanvasName = "canvas";
 const kFullscreenIconName = "fullscreen";
 
 var gLifecycle;
-
-// which title menu to show?
-// true: (which is the expected shipping state) the title menu has more options.
-// false: then we are in "arcade/demo night" so the menu is just 1p, 2p, start,
-// and the only way to start the game is to click start (game controllers),
-// and no hard or zen modes.
-// see also: kGameMode*, so this is all quite confusing.
-const kAppMode = true; // keep it commited as true, please.
 
 const kScoreIncrement = 1;
 const kScoreLastPuckIncrement = 100;
@@ -66,19 +66,28 @@ var gLastPuckSide;
 const kGameModeRegular = "regular"; 
 const kGameModeHard = "hard";
 const kGameModeZen = "zen";
-const kGameMode2P = "2p"; // aka z2p, unfortunately (curse js).
+const kGameMode2P = "pp";
 var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
+// oh lordy, the database migrations!
+if (gGameMode === "z2p") { gGameMode = kGameMode2P; }
+
 function is1P() {
     return gGameMode != kGameMode2P;
 }
+function is2P() {
+    return !is1P();
+}
+
 // code smell: sentinel values, -1 is attract, -2 is zen. 
 const kAttractLevelIndex = -1;
 const kZenLevelIndex = -2;
+
 // levels are 1-based.
 // todo: gLevelIndex is an overloaded mess yay.
 var gLevelIndex = (gGameMode === kGameModeZen) ? kZenLevelIndex : 1;
+
 // this doesn't even handle attract-mode levels.
-function ForGameMode({regular, hard, zen, z2p}) {
+function ForGameMode({regular, hard, zen, pp}) {
     if (gGameMode === kGameModeRegular) {
         return regular;
     }
@@ -95,8 +104,8 @@ function ForGameMode({regular, hard, zen, z2p}) {
              regular);
     }
     else if (gGameMode === kGameMode2P) {
-        return exists(z2p) ?
-            z2p :
+        return exists(pp) ?
+            pp :
             (exists(zen) ?
              zen :
              (exists(hard) ?
@@ -212,11 +221,11 @@ const kFontName = "noyb2Regular";
 const kAvgSparkFrame = 20;
 
 // hand-waving 'heuristic's abound!
-// all of these are kind of related...
-const kEjectCountThreshold = 350;
-const kEjectSpeedCountThreshold = 300;
-const kStreamingCountThreshold = 300; // must be <= kEjectCountThreshold i guess.
-const kStreamingCountTimeout = 1000 * 60; // for dark matter.
+// all of these are kind of related... :-(
+const kEjectCountThreshold = 300;
+const kEjectSpeedCountThreshold = 200;
+const kDarkMatterCountThreshold = 100; // should be <= kEjectCountThreshold i guess?
+const kDarkMatterGeneratorTimeout = gDebug ? undefined : (1000 * 20);
 const kPuckPoolSize = 500;
 const kSparkPoolSize = 300;
 
@@ -227,6 +236,8 @@ const kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
 var gNextID = 0;
+
+const kHotRod = false; // keep this committed as false.
 
 var nokeys = { up: false, down: false };
 function noKeysState() { return {...nokeys}; }
@@ -371,7 +382,9 @@ function clearAnyMenuPressed() {
    pause: false,
    activate: false,
    addPuck: false,
-   gameOver: false,
+   addPuckRandomY: false,
+   levelWon: false,
+   levelLost: false,
    spawnPill: false,
    spawnDarkMatter: false,
    clearHighScore: false,
@@ -385,9 +398,8 @@ function clearAnyMenuPressed() {
 function ResetInput() { // todo: code smell.
     // todo: eventually, i think
     // we don't actually always want to reset
-    // the inputs (keys, buttons, sticks, pointers)
-    // so that players can move in a direction as soon as the game
-    // starts; we aren't polling on every frame.
+    // the inputs (keys, buttons, sticks, pointers),
+    // so that players can move soon as the game begins.
     gEventQueue = [];
     // any remaining events were just forgotten,
     // so we must clean up state e.g. key-up
@@ -402,24 +414,34 @@ function ResetInput() { // todo: code smell.
     gP1Target.ClearPointer();
     gP2Target.ClearPointer();
 }
+
 var gP1Side;
 var gP2Side;
+
 function ResetP1Side() {
+    console.log("ResetP1Side");
     gP1Side = undefined;
     gP2Side = undefined;
     exists(gP1Target) && gP1Target.ClearSide();
     exists(gP2Target) && gP2Target.ClearSide();
 }
 ResetP1Side();
+
+// input types: touch, keyboard (& hotrod), gamepad.
+// gamepads do not tell us which physical side of the screen they are on.
+// but the others do, so we latch the player's side with them.
+// even for gamepads, eventually we have to choose player screen sides.
 function LatchP1Side(side) {
-    // the first call wins and everything thereafter is ignored, on purpose.
+    // the first call wins and everything thereafter is ignored, on purpose,
+    // well except for if ResetP1Side() is called, so this is all kind of a hell.
     if (gP1Side == undefined) {
+	console.log("LatchP1Side", gP1Side, side);
         // todo: seems risky that 'side' exists in so many places.
 	Assert(side != undefined);
         gP1Side = side;
         gP2Side = OtherSide(side);
         gP1Target.SetSide(gP1Side, is1P(), gw(0.5));
-        if (!is1P()) {
+        if (is2P()) {
             gP2Target.SetSide(gP2Side, false, gw(0.5));
         }
     }
@@ -429,6 +451,7 @@ const kNoopEvent = { updateFn: () => ({}) };
 var gEventQueue = [];
 const kEventKeyDown = "key_down";
 const kEventKeyUp = "key_up";
+function ForKeyMode(mode, down, up) { if (mode === kKeyDown) { return down; } else { return up; } }
 const kEventPointerDown = "pointer_down";
 const kEventPointerMove = "pointer_move";
 const kEventPointerUp = "pointer_up";
@@ -479,12 +502,26 @@ function cancelPointing() {
     gP2Target.ClearPointer();
 }
 
-// todo: move all these into GameState.
-// todo: use typescript. (or haxe.)
-var gPuckPool;
-var gPucks; // { A: reuseArray, B: reuseArray }
-var gSparkPool;
-var gSparks; // { A: reuseArray, B: reuseArray }
+// todo: move all these into GameState!!!
+// (assuming nothing tries to use them in any other state.)
+let gPuckPool;
+let gPucks; // { A: reuseArray, B: reuseArray }
+let gSparkPool;
+let gSparks; // { A: reuseArray, B: reuseArray }
+let gPuckLeftCount = 0;
+let gPuckRightCount = 0;
+let gPuckYMin = gHeight;
+let gPuckYMax = 0;
+let gPuckYAvg = gh(0.5);
+const kPuckYCountBuckets = 10;
+const kPuckYCountBucketHeight = gHeight / kPuckYCountBuckets;
+const gPuckYLeftCounts = new Array(kPuckYCountBuckets).fill(0);
+const gPuckYRightCounts = new Array(kPuckYCountBuckets).fill(0);
+let gPuckYLeftCommonIndex = undefined;
+let gPuckYRightCommonIndex = undefined;
+function yCountBucketIndex(y) {
+    return Math.floor(y / kPuckYCountBucketHeight);
+}
 
 // i just love not having an enum type.
 const kDebug = -2;
@@ -624,9 +661,6 @@ function AddSparks(props) {
         if (exists(s)) {
             s.PlacementInit({ x, y, vx: svx, vy: svy, colorSpec });
             gSparks.A.push(s);
-        }
-        else {
-            console.log("AddSparks: no spark available");
         }
     }
 }
@@ -870,7 +904,7 @@ function DrawMoveTarget(target) {
 
 function DrawMoveTargets() {
     DrawMoveTarget(gP1Target);
-    if (!is1P()) {
+    if (is2P()) {
         DrawMoveTarget(gP2Target);
     }
 }
@@ -972,7 +1006,7 @@ function UpdateLocalStorage() {
             const scale = 0.1;
 	    const width = sx(img.width*scale);
 	    const height = sy(img.height*scale);
-            gCx.drawImage(img, gw(0.7), gh(0.75), width, height);
+            gCx.drawImage(img, gw(0.8), gh(0.75), width, height);
         }
         DrawDebugList();
         if (gDebug) { DrawBounds(0.3); }
@@ -1102,7 +1136,6 @@ function UpdateLocalStorage() {
             return new Menu({
                 showButton: true,
                 OnClose: () => {
-                    ResetP1Side();
                     // forget any extra in-menu state
                     // like which button is default selected.
                     self.theMenu = self.MakeMenu();
@@ -1118,7 +1151,6 @@ function UpdateLocalStorage() {
                 showButton: false,
 		showStatus: false,
                 OnClose: () => {
-                    ResetP1Side();
                     // forget any extra in-menu state
                     // like which button is default selected.
                     if (!kAppMode) {
@@ -1194,8 +1226,7 @@ function UpdateLocalStorage() {
         // * "options" style gamepad buttons.
         // * "esc" key on keyboard.
         // * touching the menu button on-screen.
-        if ((!self.isLoading() &&
-             !self.theMenu.isOpen()) &&
+        if ((!self.isLoading() && !self.theMenu.isOpen()) &&
             (self.theMenu.ProcessTarget(gP1Target) == false &&
              self.theMenu.ProcessTarget(gP2Target) == false) &&
             (isAnyUpOrDownPressed() ||
@@ -1220,9 +1251,12 @@ function UpdateLocalStorage() {
 
         var nextState;
         if (self.done) {
-            // if it was all only gamepad inputs, there's no "side" set.
+            // if it was all only gamepad inputs, there was no "side" set
+	    // since we do not have a way of knowing physically where
+	    // the controllers are!
             if (isU(gP1Side)) {
-                LatchP1Side("right");
+		// 50-50 chance it will look correct :-(
+                LatchP1Side("left");
             }
             nextState = kGetReady;
         }
@@ -1247,6 +1281,10 @@ function UpdateLocalStorage() {
 		    var y = kAppMode ? gh(0.6) : gh(0.4);
                     DrawText( msg, "center", gw(0.5), y, gSmallFontSizePt);
                 }
+		if (!kAppMode) {
+		    gCx.fillStyle = "grey";
+		    DrawText( gWarning1, "center", gw(0.5), gh(0.9), gSmallerFontSizePt );
+		}
             });
             self.theMenu.Draw();
             self.DrawMusicName();
@@ -1284,7 +1322,7 @@ function UpdateLocalStorage() {
     self.Init = function() {
         ResetInput();
         gStateMuted = false;
-        var seconds = gDebug ? 1 : (gP1PillState.deck.length > 0 ? 5 : 3);
+        var seconds = gDebug ? 1 : 3;
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
@@ -1308,7 +1346,7 @@ function UpdateLocalStorage() {
 		regular: kChargeUp,
 		hard: kChargeUp,
 		zen: kGame,
-		z2p: kGame
+		pp: kGame
 	    });
         } else {
             // one-second-at-a-time countdown.
@@ -1532,7 +1570,7 @@ function UpdateLocalStorage() {
             target: gP1Target,
         };
         var paddle2specs = {
-            isPlayer: !self.isAttract && !is1P(),
+            isPlayer: !self.isAttract && is2P(),
             width: gPaddleWidth, height: gPaddleHeight,
             label: p2label,
             isSplitter: !self.isAttract,
@@ -1569,25 +1607,44 @@ function UpdateLocalStorage() {
             regular: 1000 * (kAppMode ? 3 : 6),
             hard: 1000 * 4,
             zen: 1000 * 5,
-            z2p: 1000 * (kAppMode ? 3 : 6),
+            pp: 1000 * (kAppMode ? 3 : 6),
         });
         self.pillP1SpawnCountdown = self.pillSpawnCooldown;
         self.pillP2SpawnCountdown = self.pillSpawnCooldown;
         // make sure the cpu doesn't get one first, that looks too mean/unfair,
         // however, allow a 2nd player to get one first!
-        self.isCpuPillAllowed = !is1P();
+        self.isCpuPillAllowed = is2P();
         // also, neither side gets too many pills before the other.
         self.unfairPillCount = 0;
         self.unfairPillDiffMax = 2;
 
-	// only break up 'streaming' steady-state in (either of the) 2P mode(s).
-	self.darkMatterGenerator = is1P() ?
-	    undefined :
-	    new DarkMatterGenerator({
-		firstTimeout: kStreamingCountTimeout,
-		timeout: kStreamingCountTimeout/2
-	    });
+	// help break up 'streaming' steady-state in (either of the) 2P mode(s).
 	self.darkMatter = undefined;
+	if( exists(kDarkMatterGeneratorTimeout) && is2P() ) {
+	    self.darkMatterGenerator = new DarkMatterGenerator({
+		timeout: kDarkMatterGeneratorTimeout
+	    });
+	}
+
+	// vfx re: help break up 'streaming' steady-state at top and bottom.
+	if (is2P() && !self.isAttract) {
+	    self.AddAnimation(MakeForceFieldHorizAnimation({
+		points: [
+		    0, gYInset,
+		    gw(0.25), gYInset*2/3,
+		    gw(0.75), gYInset*2/3,
+		    gWidth, gYInset
+		]
+	    }));
+	    self.AddAnimation(MakeForceFieldHorizAnimation({
+		points: [
+		    0, gHeight-gYInset,
+		    gw(0.25), gHeight-gYInset*2/3,
+		    gw(0.75), gHeight-gYInset*2/3,
+		    gWidth, gHeight-gYInset
+		]
+	    }));
+	}
 
         if (!self.isAttract) {
             PlayStart();
@@ -1618,7 +1675,7 @@ function UpdateLocalStorage() {
             self.level = MakeAttract(self.paddleP1, self.paddleP2);
         }
         else if (gGameMode === kGameMode2P) {
-            self.level = MakeZ2P(self.paddleP1, self.paddleP2);
+            self.level = MakePP(self.paddleP1, self.paddleP2);
         }
         else if (gGameMode === kGameModeZen) {
             self.level = MakeZen(self.paddleP1, self.paddleP2);
@@ -1655,10 +1712,10 @@ function UpdateLocalStorage() {
 	self.StepDarkMatter( dt );
 
         self.ProcessAllInput();
-        if (self.quit) {
+        if (self.quit != false) { // could be false, true, "won", or "lost". :-(
             SaveEndScreenshot(self);
             return ForGameMode({
-                regular: gDebug ? kLevelFinish : kGameOver,
+                regular: gDebug ? (self.quit == "won" ? kLevelFinish : kGameOver) : kGameOver,
                 zen: kGameOver,
             });
         }
@@ -1822,16 +1879,21 @@ function UpdateLocalStorage() {
         gPucks.A.push(p);
     };
 
-    self.CreateRandomPuck = function() {
-        var p = gPuckPool.Alloc();
-        if (exists(p)) {
-            p.PlacementInit({ x: gw(gR.RandomRange(1/8, 7/8)),
-                              y: gh(gR.RandomRange(3.5/8, 4/8)),
-                              vx: gR.RandomRange(0.2, 0.3) * self.maxVX,
-                              vy: gR.RandomCentered(0.2, 0.1),
-                              ur: true });
-            gPucks.A.push(p);
-        }
+    // note: not actually random, hard-coded to ranges i need for debugging.
+    self.CreateRandomPucks = function(props) {
+	const { count, y:ry, vy } = props;
+	const y = ry ?? gh(gR.RandomRange(0.1, 0.9));
+	for (let i = 0; i < count; ++i) {
+            var p = gPuckPool.Alloc();
+            if (exists(p)) {
+		p.PlacementInit({ x: gw(gR.RandomRange(1/8, 7/8)),
+				  y,
+				  vx: gR.RandomRange(0.2, 0.3) * self.maxVX,
+				  vy: vy ?? gR.RandomCentered( 0, 0.15, 0.01 ),
+				  ur: true });
+		gPucks.A.push(p);
+            }
+	}
     };
 
     self.ProcessAllInput = function() {
@@ -1852,9 +1914,14 @@ function UpdateLocalStorage() {
                 self.stepping = true;
             }
         }
-        if (cmds.gameOver) {
+        if (cmds.levelWon) {
             if (self.paused) {
-                self.quit = true;
+                self.quit = "won";
+            }
+        }
+        if (cmds.levelLost) {
+            if (self.paused) {
+                self.quit = "lost";
             }
         }
         if (cmds.spawnPill) {
@@ -1877,11 +1944,14 @@ function UpdateLocalStorage() {
                 DeleteLocal(LocalStorageKeys.gameHighScore);
             }
         }
-        if(cmds.addPuck) {
+        if (cmds.addPuck) {
             if (self.paused) {
-                ForCount(50, () => {
-                    self.CreateRandomPuck();
-                });
+                self.CreateRandomPucks({ count: 10, y: gYInset*2, vy:-0.1 }); // fixed y for bolus.
+            }
+        }
+        if (cmds.addPuckRandomY) {
+            if (self.paused) {
+                self.CreateRandomPucks({ count: 20 }); // random y for bolus.
             }
         }
         // everything below is about pause state and menu showing oh boy.
@@ -1909,7 +1979,12 @@ function UpdateLocalStorage() {
     };
 
     self.AddAnimation = function( a ) {
-        self.animations[gNextID++] = a;
+	if (Array.isArray(a)) {
+	    a.forEach(i => self.AddAnimation(i));
+	}
+	else {
+            self.animations[gNextID++] = a;
+	}
     };
 
     self.StepMoveables = function( dt ) {
@@ -1929,10 +2004,20 @@ function UpdateLocalStorage() {
 
     self.MovePucks = function( dt ) {
         let pmaxvx = -Number.MAX_SAFE_INTEGER;
+	let ySum = 0;
+	gPuckLeftCount = 0;
+	gPuckRightCount = 0;
+	gPuckYMin = gHeight;
+	gPuckYMax = 0;
+	gPuckYLeftCounts.fill(0);
+	gPuckYRightCounts.fill(0);
+	gPuckYLeftCommonIndex = undefined;
+	gPuckYRightCommonIndex = undefined;
         gPucks.B.clear();
         gPucks.A.forEach((p, i) => {
             Assert(exists(p));
             p.Step(dt, self.maxVX, kMaxVY);
+	    self.darkMatter?.StepPuck(dt, p);
             Assert(!isBadNumber(p.x), p);
             Assert(!isBadNumber(p.y), p);
             if (!self.isAttract && !p.alive) {
@@ -1978,9 +2063,45 @@ function UpdateLocalStorage() {
                 gPucks.B.metadata.pmaxvx = pmaxvx;
 
                 gPucks.B.push(p);
+
+		// statistics for things lke AI and force fields.
+		if (p.vx < 0) {
+		    gPuckLeftCount++;
+		    const i = yCountBucketIndex(p.y);
+		    gPuckYLeftCounts[i]++;
+		    if (gPuckYLeftCommonIndex == null) {
+			gPuckYLeftCommonIndex = i;
+		    }
+		    else {
+			const oldcount = gPuckYLeftCounts[gPuckYLeftCommonIndex];
+			const newcount = gPuckYLeftCounts[i];
+			if (newcount > oldcount) {
+			    gPuckYLeftCommonIndex = i;
+			}
+		    }
+		}
+		else {
+		    gPuckRightCount++;
+		    const i = yCountBucketIndex(p.y);
+		    gPuckYRightCounts[i]++;
+		    if (gPuckYRightCommonIndex == null) {
+			gPuckYRightCommonIndex = i;
+		    }
+		    else {
+			const oldcount = gPuckYRightCounts[gPuckYRightCommonIndex];
+			const newcount = gPuckYRightCounts[i];
+			if (newcount > oldcount) {
+			    gPuckYRightCommonIndex = i;
+			}
+		    }
+		}
+		gPuckYMin = Math.min(gPuckYMin, p.y);
+		gPuckYMax = Math.max(gPuckYMax, p.y);
+		ySum += p.y;
             }
         });
         SwapBuffers(gPucks);
+	gPuckYAvg = ySum / gPucks.B.length;
     };
 
     self.MovePills = function( dt ) {
@@ -2112,6 +2233,7 @@ function UpdateLocalStorage() {
     };
 
     self.DrawAnimations = function() {
+	// supports both Animation and GSAnimation by passing 'self'.
         Object.values(self.animations).forEach(a => a.Draw(self));
     };
 
@@ -2186,17 +2308,21 @@ function UpdateLocalStorage() {
             gCx.fillStyle = "magenta";
             DrawText(`UP:${self.unfairPillCount} 1P:${self.pillP1SpawnCountdown} 2P:${self.pillP2SpawnCountdown}`, "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
 
-            gCx.fillStyle = RandomGrey();
+            gCx.fillStyle = "grey"
             var mvx = gPucks.A.reduce((m,p) => { return p.alive ? Math.max(m, Math.abs(p.vx)) : m; }, 0);
             DrawText( F(mvx).toString(), "left", gw(0.1), gh(0.1), gSmallFontSizePt );
             gCx.fillStyle = "red";
             DrawText( F(self.maxVX).toString(), "left", gw(0.1), gh(0.1) + gSmallFontSizePt, gSmallFontSizePt );
 
-            gCx.fillStyle = RandomBlue(0.5);
+            gCx.fillStyle = "blue"
             DrawText( gPucks.A.length, "center", gw(0.6), gh(0.9), gRegularFontSizePt );
             DrawText( gFrameCount.toString(), "right", gw(0.9), gh(0.9), gSmallFontSizePt );
 
-            gCx.fillStyle = RandomForColor(blueSpec, 0.3);
+	    gCx.fillStyle = "grey";
+	    DrawText( `YMIN:${ii(gPuckYMin)}`, "left", gw(0.8), gh(0.8), gSmallestFontSizePt );
+	    DrawText( `YMAX:${ii(gPuckYMax)}`, "left", gw(0.8), gh(0.85), gSmallestFontSizePt );
+
+            gCx.fillStyle = "rgba(0,0,255,0.4)";
             DrawText( "D E B U G", "center", gw(0.5), gh(0.8), gBigFontSizePt );
         });
 	self.darkMatterGenerator?.DrawDebug();
@@ -2433,9 +2559,9 @@ function UpdateLocalStorage() {
         Assert(p1Rewards.length === p2Rewards.length);
         // the ui expects at most 2.
         Assert(p1Rewards.length <= 2);
-
         const count = p1Rewards.length;
-        self.timeout = gDebug ? 1 : (1000 * (count === 1 ? 5 : 10)) - 1;
+
+        self.timeout = 1000 * 5 - 1;
         self.started = gGameTime;
         self.lastSec = Math.floor((self.timeout+1)/1000);
 
@@ -2546,7 +2672,7 @@ function UpdateLocalStorage() {
         if (isP1DownKey(true) || isGamepad1Down()) {
             self.p1Highlight = Math.min(self.p1Specs.length-1, self.p1Highlight+1);
         }
-        if (!is1P()) {
+        if (is2P()) {
             if (isP2UpKey(true) || isGamepad2Up()) {
                 self.p2Highlight = Math.max(0, self.p2Highlight-1);
             }
@@ -2702,42 +2828,71 @@ function UpdateLocalStorage() {
 
     self.Draw = function() {
 	self.DrawScores();
-	self.DrawText();
+	self.DrawTexts();
     };
 
     self.DrawScores = function() {
 	// see GameOverSummaryState.Draw*()
+	if (is1P()) {
+	    self.DrawSinglePlayer();
+	}
+	else {
+	    self.DrawTwoPlayer();
+	}
+    };
+
+    self.DrawSinglePlayer = function() {
 	Cxdo(() => {
 	    gCx.fillStyle = RandomGreen(0.3);
-	    if (is1P()) {
+
+	    if (gLevelIndex > 1) {
 		DrawText(
-                    `P1 GAME: ${gP1Score.game}`,
+                    `P1 LVL: ${gP1Score.level}`,
                     ForP1Side("left", "right"),
                     ForP1Side(gw(0.2), gw(0.8)),
                     gh(0.2),
                     gSmallFontSizePt
 		);
-
 		DrawText(
-                    `GPT GAME: ${gP2Score.game}`,
+                    `P2 LVL: ${gP2Score.level}`,
                     ForP2Side("left", "right"),
                     ForP2Side(gw(0.2), gw(0.8)),
                     gh(0.2),
                     gSmallFontSizePt
 		);
 	    }
-	    else {
-		var p1a = ForP1Side("left", "right");
-		var p1x = ForP1Side(gw(0.2), gw(0.8));
-		DrawText( `P1: ${gP1Score.game}`, p1a, p1x, gh(0.22), gRegularFontSizePt );
-		var p2a = ForP2Side("left", "right");
-		var p2x = ForP2Side(gw(0.2), gw(0.8));
-		DrawText( `P2: ${gP2Score.game}`, p2a, p2x, gh(0.22), gRegularFontSizePt );
-	    }
+
+	    DrawText(
+                `P1 GAME: ${gP1Score.game}`,
+                ForP1Side("left", "right"),
+                ForP1Side(gw(0.2), gw(0.8)),
+                gh(0.27),
+                gSmallFontSizePt
+	    );
+
+	    DrawText(
+                `GPT GAME: ${gP2Score.game}`,
+                ForP2Side("left", "right"),
+                ForP2Side(gw(0.2), gw(0.8)),
+                gh(0.27),
+                gSmallFontSizePt
+	    );
 	});
     };
 
-    self.DrawText = function() {
+    self.DrawTwoPlayer = function() {
+	Cxdo(() => {
+	    gCx.fillStyle = RandomGreen(0.3);
+	    var p1a = ForP1Side("left", "right");
+	    var p1x = ForP1Side(gw(0.2), gw(0.8));
+	    DrawText( `P1: ${gP1Score.game}`, p1a, p1x, gh(0.22), gRegularFontSizePt );
+	    var p2a = ForP2Side("left", "right");
+	    var p2x = ForP2Side(gw(0.2), gw(0.8));
+	    DrawText( `P2: ${gP2Score.game}`, p2a, p2x, gh(0.22), gRegularFontSizePt );
+	});
+    };
+
+    self.DrawTexts = function() {
         Cxdo(() => {
             gCx.fillStyle = RandomForColor(redSpec);
             DrawText(
@@ -2829,14 +2984,14 @@ function UpdateLocalStorage() {
                 `P1 GAME: ${gP1Score.game}`,
                 ForP1Side("left", "right"),
                 ForP1Side(gw(0.2), gw(0.8)),
-                gh(0.2),
+                gh(0.27),
                 gSmallFontSizePt
             );
             DrawText(
                 `GPT GAME: ${gP2Score.game}`,
                 ForP2Side("left", "right"),
                 ForP2Side(gw(0.2), gw(0.8)),
-                gh(0.2),
+                gh(0.27),
                 gSmallFontSizePt
             );
 
@@ -3267,6 +3422,7 @@ function ResetGlobalStorage() {
         A: new ReuseArray(kPuckPoolSize),
         B: new ReuseArray(kPuckPoolSize)
     };
+    gPucks.A.forEach(i => console.log(i));
 
     gSparkPool = new Pool(
         kSparkPoolSize,
@@ -3434,307 +3590,545 @@ function InitEvents() {
     window.addEventListener( 'blur', OnBlur, false );
 
     window.addEventListener('keydown', (e) => {
-        if (e.repeat) { return; }
-
         // my bad. keyCodes do not respect e.g. QWERTZ vs. QWERTY, they assume QWERTY.
         // that sort of works for WASD pattern, but maybe not for all debug commands.
-
         // assumes w/s is on the left hand side of keyboard,
         // arrow up/down are on the right hand side.
-
-        if( e.keyCode == 13 || e.keyCode == 32 ) { // enter, ' '
-            e.preventDefault();
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: (cmds) => {
-                    cmds.activate = true;
-                }
-            });
-        }
-
-        if( e.keyCode == 87 ) { // 'w'
-            e.preventDefault();
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: () => {
-                    gP1Target.ClearY();
-                    LatchP1Side("left");
-                    LeftKeys().Update({ up: true });
-                }
-            });
-        }
-
-        if( e.keyCode == 83 ) { // s
-            e.preventDefault();
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: () => {
-                    gP1Target.ClearY();
-                    LatchP1Side("left");
-                    LeftKeys().Update({ down: true });
-                }
-            });
-        }
-
-        if( e.keyCode == 38 || e.keyCode == 73 ) { // arrow up, i
-            e.preventDefault();
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: () => {
-                    gP2Target.ClearY();
-                    LatchP1Side("right");
-                    RightKeys().Update({ up: true });
-                }
-            });
-        }
-
-        if( e.keyCode == 40 || e.keyCode == 75 ) { // arrow down, k
-            e.preventDefault();
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: () => {
-                    gP2Target.ClearY();
-                    LatchP1Side("right");
-                    RightKeys().Update({ down: true });
-                }
-            });
-        }
-
-        if( e.keyCode == 27 ) { // esc
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: (cmds) => {
-                    cmds.menu = true;
-                }
-            });
-        }
-        if( e.keyCode == 80 || e.keyCode == 19 ) { // 'p', 'pause'
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: (cmds) => {
-                    cmds.pause = true;
-                }
-            });
-        }
-
-        if( e.keyCode == 49 ) { // '1'
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: (cmds) => {
-                    cmds.singlePlayer = true;
-                }
-            });
-        }
-
-        if( e.keyCode == 50 ) { // '2'
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: (cmds) => {
-                    cmds.doublePlayer = true;
-                }
-            });
-        }
-
-        if( e.keyCode == 187 || e.keyCode == 61 ) { // '+' and '=', vs. firefox (?!)
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.addPuck = true; }
-                }
-            });
-        }
-
-        if( e.keyCode == 78 ) { // 'n'
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.step = true; }
-                }
-            });
-        }
-
-        if( e.keyCode == 81 ) { // 'q'
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.gameOver = true; }
-                }
-            });
-        }
-
-        if( e.keyCode == 66 ) { // 'b'
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.spawnPill = true; }
-                }
-            });
-        }
-
-	if( e.keyCode == 68) { // 'd'
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.spawnDarkMatter = true; }
-                }
-            });
+	// todo: 'keyCode' is deprecated, yay.
+        if (e.repeat) { return; }
+	if (kHotRod) {
+	    handleHotrodDown(e);
 	}
-
-        if( e.keyCode == 69 ) { // 'e'
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.nextMusic = true; }
-                }
-            });
-        }
-
-        if (e.keyCode == 46) { // delete
-            gEventQueue.push({
-                type: kEventKeyDown,
-                updateFn: (cmds) => {
-                    cmds.clearHighScore = true;
-                }
-            });
-        }
+	else {
+	    handleKeyboardDown(e);
+	}
     });
-
-    // todo: fix which things should/not support continuous pressing
-    // ie everything should clear the keydown as soon as the keyup is
-    // consumed, the only exception being the game state for up/down.
     window.addEventListener('keyup', (e) => {
-        if( e.keyCode == 13 || e.keyCode == 32 ) { // enter, ' '
-            e.preventDefault();
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: (cmds) => {
-                    cmds.activate = false;
-                }
-            });
-        }
-
-        if( e.keyCode == 87 ) { // 'w'
-            e.preventDefault();
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: () => {
-                    LeftKeys().Update({ up: false });
-                }
-            });
-        }
-
-        if( e.keyCode == 83 ) { // 's'
-            e.preventDefault();
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: () => {
-                    LeftKeys().Update({ down: false });
-                }
-            });
-        }
-
-        if( e.keyCode == 38 || e.keyCode == 73 ) { // arrow up, i
-            e.preventDefault();
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: () => {
-                    RightKeys().Update({ up: false });
-                }
-            });
-        }
-
-        if( e.keyCode == 40 || e.keyCode == 75 ) { // arrow down, k
-            e.preventDefault();
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: () => {
-                    RightKeys().Update({ down: false });
-                }
-            });
-        }
-
-        if( e.keyCode == 27 ) { // esc
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: (cmds) => {
-                    cmds.menu = false;
-                }
-            });
-        }
-
-        // pause only works in game state, and there it == menu key.
-        if( e.keyCode == 80 || e.keyCode == 19) { // 'p', 'pause'
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: (cmds) => {
-                    cmds.pause = false;
-                }
-            });
-        }
-
-        if( e.keyCode == 187 ) { // '+' and '='
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.addPuck = false; }
-                }
-            });
-        }
-
-        if( e.keyCode == 78 ) { // 'n'
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.step = false; }
-                }
-            });
-        }
-
-        if( e.keyCode == 81 ) { // 'q'
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.gameOver = false; }
-                }
-            });
-        }
-
-        if( e.keyCode == 66 ) { // 'b'
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.spawnPill = false; }
-                }
-            });
-        }
-
-	if( e.keyCode == 68) { // 'd'
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.spawnDarkMatter = false; }
-                }
-            });
+	// todo: fix which things should/not support continuous pressing
+	// ie everything should clear the keydown as soon as the keyup is
+	// consumed, the only exception being the game state for up/down.
+        if (e.repeat) { return; }
+	if (kHotRod) {
+	    handleHotrodUp(e);
 	}
-
-        if( e.keyCode == 69 ) { // 'e'
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.nextMusic = false; }
-                }
-            });
-        }
-
-        if (e.keyCode == 46) { // delete
-            gEventQueue.push({
-                type: kEventKeyUp,
-                updateFn: (cmds) => {
-                    if (gDebug) { cmds.clearHighScore = false; }
-                }
-            });
-        }
+	else {
+	    handleKeyboardUp(e);
+	}
     });
+}
+    
+function handleHotrodDown(e) {
+    const g = gKey2Cmd_hotrod_general[e.key];
+    const left = gKey2Cmd_hotrod_left[e.key];
+    const right = gKey2Cmd_hotrod_right[e.key];
+
+    switch (g) {
+    case 'pause':
+        e.preventDefault();
+	gEventQueue.push({
+	    type: kEventKeyDown,
+	    updateFn: (cmds) => {
+		cmds.pause = true;
+	    }
+	});
+	break;
+    case 'menu':
+        e.preventDefault();
+	gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+		cmds.menu = true;
+            }
+	});
+    case 'activate': 
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                cmds.activate = true;
+            }
+        });
+	break;
+    }
+
+    switch (left) {
+    case 'up':
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: () => {
+                gP1Target.ClearY();
+                gP2Target.ClearY();
+                LatchP1Side("left");
+                LeftKeys().Update({ up: true });
+            }
+        });
+	break;
+    case 'down':
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: () => {
+                gP1Target.ClearY();
+                gP2Target.ClearY();
+                LatchP1Side("left");
+                LeftKeys().Update({ down: true });
+            }
+        });
+	break;
+    }
+
+    switch (right) {
+    case 'up':
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: () => {
+                gP1Target.ClearY();
+                gP2Target.ClearY();
+                LatchP1Side("right");
+                RightKeys().Update({ up: true });
+            }
+        });
+	break;
+    case 'down':
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: () => {
+                gP1Target.ClearY();
+                gP2Target.ClearY();
+                LatchP1Side("right");
+                RightKeys().Update({ down: true });
+            }
+        });
+	break;
+    }
+}
+
+function handleHotrodUp(e) {
+    const g = gKey2Cmd_hotrod_general[e.key];
+    const left = gKey2Cmd_hotrod_left[e.key];
+    const right = gKey2Cmd_hotrod_right[e.key];
+
+    switch (g) {
+    case 'pause':
+        e.preventDefault();
+	gEventQueue.push({
+	    type: kEventKeyUp,
+	    updateFn: (cmds) => {
+		cmds.pause = false;
+	    }
+	});
+	break;
+    case 'menu':
+        e.preventDefault();
+	gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+		cmds.menu = false;
+            }
+	});
+    case 'activate': 
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+                cmds.activate = false;
+            }
+        });
+	break;
+    }
+
+    switch (left) {
+    case 'up':
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: () => {
+                LeftKeys().Update({ up: false });
+            }
+        });
+	break;
+    case 'down':
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: () => {
+                LeftKeys().Update({ down: false });
+            }
+        });
+	break;
+    }
+
+    switch (right) {
+    case 'up':
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: () => {
+                RightKeys().Update({ up: false });
+            }
+        });
+	break;
+    case 'down':
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: () => {
+                RightKeys().Update({ down: false });
+            }
+        });
+	break;
+    }
+}
+
+function handleKeyboardDown(e) {
+    if( e.keyCode == 13 || e.keyCode == 32 ) { // enter, ' '
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                cmds.activate = true;
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 87 ) { // 'w'
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: () => {
+                gP1Target.ClearY();
+                LatchP1Side("left");
+                LeftKeys().Update({ up: true });
+            }
+        });	
+	return;
+    }
+
+    if( e.keyCode == 83 ) { // s
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: () => {
+                gP1Target.ClearY();
+                LatchP1Side("left");
+                LeftKeys().Update({ down: true });
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 38 || e.keyCode == 73 ) { // arrow up, i
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: () => {
+                gP2Target.ClearY();
+                LatchP1Side("right");
+                RightKeys().Update({ up: true });
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 40 || e.keyCode == 75 ) { // arrow down, k
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: () => {
+                gP2Target.ClearY();
+                LatchP1Side("right");
+                RightKeys().Update({ down: true });
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 27 ) { // esc
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                cmds.menu = true;
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 80 || e.keyCode == 19 ) { // 'p', 'pause'
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                cmds.pause = true;
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 49 ) { // '1'
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                cmds.singlePlayer = true;
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 50 ) { // '2'
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                cmds.doublePlayer = true;
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 187 || e.keyCode == 61 ) { // '+' and '=', vs. firefox (?!)
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.addPuck = true; }
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 56 ) { // '*'
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.addPuckRandomY = true; }
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 78 ) { // 'n'
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.step = true; }
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 81 ) { // 'q'
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                if (gDebug) {
+		    if (e.shiftKey) { cmds.levelLost = true; }
+		    else { cmds.levelWon = true; }
+		}
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 66 ) { // 'b'
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.spawnPill = true; }
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 68) { // 'd'
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.spawnDarkMatter = true; }
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 69 ) { // 'e'
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.nextMusic = true; }
+            }
+        });
+	return;
+    }
+
+    if (e.keyCode == 46) { // delete
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                cmds.clearHighScore = true;
+            }
+        });
+	return;
+    }
+}
+
+function handleKeyboardUp(e) {
+    if( e.keyCode == 13 || e.keyCode == 32 ) { // enter, ' '
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+                cmds.activate = false;
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 87 ) { // 'w'
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: () => {
+                LeftKeys().Update({ up: false });
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 83 ) { // 's'
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: () => {
+                LeftKeys().Update({ down: false });
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 38 || e.keyCode == 73 ) { // arrow up, i
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: () => {
+                RightKeys().Update({ up: false });
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 40 || e.keyCode == 75 ) { // arrow down, k
+        e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: () => {
+                RightKeys().Update({ down: false });
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 27 ) { // esc
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+                cmds.menu = false;
+            }
+        });
+	return;
+    }
+
+    // pause only works in game state, and there it == menu key.
+    if( e.keyCode == 80 || e.keyCode == 19) { // 'p', 'pause'
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+                cmds.pause = false;
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 187 || e.keyCode == 61 ) { // '+' and '='
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.addPuck = false; }
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 56 ) { // '*'
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.addPuckRandomY = false; }
+            }
+        });
+	return;
+    }
+
+
+    if( e.keyCode == 78 ) { // 'n'
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.step = false; }
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 81 ) { // 'q'
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+		if (e.shiftKey) { cmds.levelLost = false; }
+		else { cmds.levelWon = false; }
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 66 ) { // 'b'
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.spawnPill = false; }
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 68) { // 'd'
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.spawnDarkMatter = false; }
+            }
+        });
+	return;
+    }
+
+    if( e.keyCode == 69 ) { // 'e'
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.nextMusic = false; }
+            }
+        });
+	return;
+    }
+
+    if (e.keyCode == 46) { // delete
+        gEventQueue.push({
+            type: kEventKeyUp,
+            updateFn: (cmds) => {
+                if (gDebug) { cmds.clearHighScore = false; }
+            }
+        });
+	return;
+    }
 }
 
 window.addEventListener( 'load', () => { Start(); InitEvents(); }, false );

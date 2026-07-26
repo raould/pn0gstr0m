@@ -1,4 +1,4 @@
-/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -164,24 +164,26 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
         if (self.pillState.deck.length === 0) {
             return undefined;
         }
-
         var pid = self.pillState.deck.shift();
-
         var info = gPillInfo[pid];
         var maker = info.maker;
         Assert(exists(maker));
         Assert(typeof maker == "function", `maker()? ${info.name} ${self.pillState} ${typeof maker}`);
-
         var spec = maker(self);
         Assert(exists(spec), `wtf maker? ${info.name}`);
-
         if (!spec.testFn(gameState)) {
 	    spec = undefined;
-	    // try the failed powerup again after the next one
-	    // in order to attempt to spawn the new ones soon even
-	    // if they were skipped i.e. at the start of the level when
-	    // there aren't many pucks.
-	    self.pillState.deck.splice(1, 0, pid);
+	    if (gDebug) {
+		// loop through them all.
+		self.pillState.deck.push(pid);
+	    }
+	    else {
+		// try the failed powerup again after the next one
+		// in order to attempt to spawn the new ones soon even
+		// if they were skipped i.e. at the start of the level when
+		// there aren't many pucks.
+		self.pillState.deck.splice(1, 0, pid);
+	    }
         }
 	else {
             // keep looping through the pills. also keeps the 
@@ -342,7 +344,9 @@ function MakeForcePushProps(context) {
         width, height,
         lifespan: kPillLifespan,
         testFn: (gameState) => {
-            return gPucks.A.length > 5 && isU(context.paddle.neo);
+            const can = gPucks.A.length > 5 && isU(context.paddle.neo);
+	    console.log("push?", can);
+	    return can;
         },
         drawFn: (self, alpha=1) => DrawForcePushPill(context.side, self, alpha),
         boomFn: (gameState) => {
@@ -359,7 +363,7 @@ function MakeForcePushProps(context) {
 		    regular: 1.1,
 		    hard: 1.2,
 		    zen: 1,
-		    z2p: 2,
+		    pp: 2,
 		});
             });
             gameState.AddAnimation(MakeWaveAnimation({
@@ -383,7 +387,9 @@ function MakeDecimateProps(context) {
             // looks unfun if there aren't enough pucks to destroy.
 	    // by the time the powerup is activated there might be even less.
 	    // e.g. consider that the other player might also be doing their decimate.
-            return gPucks.A.length > 30;
+            const can = gPucks.A.length > 30;
+	    console.log("decimate?", can);
+	    return can;
         },
         drawFn: (self, alpha=1) => DrawDecimatePill(context.side, self, alpha),
         boomFn: (gameState) => {
@@ -437,7 +443,9 @@ function MakeEngorgeProps(context) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            return !context.paddle.engorged;
+            const can = !context.paddle.engorged;
+	    console.log("engorce?", can);
+	    return can;
         },
         drawFn: (self, alpha=1) => DrawEngorgePill(context.side, self, alpha),
         boomFn: (gameState) => {
@@ -451,38 +459,43 @@ function MakeEngorgeProps(context) {
 };
 
 function MakeSplitProps(context) {
-    var { name, wfn, hfn } = gPillInfo[kSplitPill];
-    var width = wfn();
-    var height = hfn();
+    const { name, wfn, hfn } = gPillInfo[kSplitPill];
+    const width = wfn();
+    const height = hfn();
     return {
         name,
         width, height,
         lifespan: kPillLifespan,
         testFn: (gameState) => {
-	    return gPucks.A.length < kPuckPoolSize / 3;
+	    const can = gPucks.A.length < kPuckPoolSize / 3;
+	    console.log("split?", can);
+	    return can;
         },
         drawFn: (self, alpha=1) => DrawSplitPill(context.side, self, alpha),
         boomFn: (gameState) => {
-	    var targets;
-	    if (gPucks.A.length < 10) {
-		targets = [...gPucks.A];
-	    }
-	    else {
-		var r = 10/gPucks.A.length;
-		var targets = gPucks.A.filter((p, i) => {
-                    return i < 1 ? true : gR.RandomBool(r);
-		});
-	    }
-            targets.forEach(t => {
-                var maxVX = gameState.level.maxVX;
-                var split = t.MaybeSplitPuck({ forced: true, maxVX });
-                gameState.level.OnPuckSplits(1);
-                var p = gPuckPool.Alloc();
-		if (exists(p)) {
-                    p.PlacementInit(split);
-                    gPucks.A.push(p);
+	    let needone = true;
+	    const targets = [];
+            gPucks.A.forEach(p => {
+		let pick = needone;
+		needone = false;
+		if (!pick) {
+		    if (gPucks.A.length <= 10) { pick = true; }
+		    else { pick = gR.RandomBool(10/gPucks.A.length); }
+		}
+		if (pick) {
+		    targets.push(p);
 		}
             });
+	    targets.forEach(t => {
+		const maxVX = gameState.level.maxVX;
+                const split = t.MaybeSplitPuck({ forced: true, maxVX });
+                gameState.level.OnPuckSplits(1);
+                const p = gPuckPool.Alloc();
+		if (exists(p)) {
+		    p.PlacementInit(split);
+		    gPucks.A.push(p);
+		}
+	    });
             gameState.AddAnimation(MakeSplitAnimation({
                 lifespan: 250,
                 targets,
@@ -505,9 +518,11 @@ function MakeDefendProps(context) {
         testFn: (gameState) => {
             // todo: there is a bug here that let one paddle
             // have 2 defend powerups active at the same time wtf.
-            return gameState.level.IsMidGame() &&
+            const can = gameState.level.IsBeforeEndingGame() &&
                 gPucks.A.length > 10 &&
-                context.paddle.barriers.A.length == 0;
+                  context.paddle.barriers.A.length == 0;
+	    console.log("defend?", can);
+	    return can;
         },
         drawFn: (self, alpha=1) => DrawDefendPill(context.side, self, alpha),
         boomFn: (gameState) => {
@@ -519,7 +534,7 @@ function MakeDefendProps(context) {
                 regular: 50,
                 hard: 70,
                 zen: 50 + (pc*100),
-                z2p: 70,
+                pp: 70,
             });
             console.log(`defend pc=${pc} hp=${F(hp)}`);
 	    var drawScale = ForGameMode({ regular: 1, zen: 0.5 });
@@ -559,9 +574,11 @@ function MakeXtraProps(context) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            return gameState.level.IsMidGame() &&
+            const can = gameState.level.IsBeforeEndingGame() &&
                 gPucks.A.length > 20 &&
-                context.paddle.xtras.A.length == 0;
+                  context.paddle.xtras.A.length == 0;
+	    console.log("xtra?", can);
+	    return can;
         },
         drawFn: (self, alpha=1) => DrawXtraPill(context.side, self, alpha),
         boomFn: (gameState) => {
@@ -575,7 +592,7 @@ function MakeXtraProps(context) {
                 regular: 30,
                 hard: 50,
                 zen: 50 + (pc*100),
-                z2p: 50 + Math.floor(gPucks.A.length/5),
+                pp: 50 + Math.floor(gPucks.A.length/5),
             });
             console.log(`xtra pc=${pc} hp=${F(hp)}`);
             ForCount(n, (i) => {
@@ -606,9 +623,11 @@ function MakeNeoProps(context) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            return gameState.level.IsMidGame() &&
+            const can = gameState.level.IsBeforeEndingGame() &&
                 gPucks.A.length > 20 &&
-                isU(context.paddle.neo);
+                  isU(context.paddle.neo);
+	    console.log("neo?", can);
+	    return can;
         },
         drawFn: (self, alpha=1) => DrawNeoPill(context.side, self, alpha),
         boomFn: (gameState) => {
@@ -635,8 +654,10 @@ function MakeChaosProps(context) {
 	// see also: dark matter.
         lifespan: kPillLifespan * (kAppMode ? 1 : 2),
         testFn: (gameState) => {
-            return gPucks.A.length > 10 &&
-		isU(context.paddle.neo);
+	    const can = gPucks.A.length > 10 &&
+		  isU(context.paddle.neo);
+	    console.log("chaos?", can);
+	    return can;
         },
         drawFn: (self, alpha=1) => DrawChaosPill(context.side, self, alpha),
         boomFn: (gameState) => {

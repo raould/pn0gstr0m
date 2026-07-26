@@ -6,7 +6,7 @@ function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) 
 function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
 function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -76,7 +76,7 @@ function MakeZen(paddleP1, paddleP2) {
     vx0: sxi(2.5),
     maxVX: sxi(ForGameMode({
       zen: 18,
-      z2p: 22
+      pp: 22
     })),
     speedupFactor: undefined,
     // no english progression.
@@ -88,7 +88,7 @@ function MakeZen(paddleP1, paddleP2) {
     paddleP2: paddleP2
   });
 }
-function MakeZ2P(paddleP1, paddleP2) {
+function MakePP(paddleP1, paddleP2) {
   return new Level({
     index: kZenLevelIndex,
     isSpawning: true,
@@ -97,7 +97,7 @@ function MakeZ2P(paddleP1, paddleP2) {
     vx0: sxi(2.5),
     maxVX: sxi(ForGameMode({
       zen: 18,
-      z2p: 22
+      pp: 22
     })),
     speedupFactor: undefined,
     // no english progression.

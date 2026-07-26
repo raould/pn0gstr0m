@@ -1,4 +1,4 @@
-/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -14,9 +14,12 @@ function sy(y) { return y * gHeight/kHtmlHeight; }
 // so these helpers can be used to avoid that if needed e.g. pixel widths.
 function sx1(x) { return Math.max(1, sxi(x)); }
 function sy1(y) { return Math.max(1, syi(y)); }
-// "percent" scaling helpers.
+// "percent" scaling helpers, rounded.
 function gw(x=1) { return ii(x * gWidth); }
 function gh(y=1) { return ii(y * gHeight); }
+// "percent" scaling helpers, raw. (bad naming history vs. 'ii'.)
+function gwr(x=1) { return x * gWidth; }
+function ghr(y=1) { return y * gHeight; }
 
 // the game was designed based on this default aspect & resolution kindasorta.
 var kAspectRatio = 16/9;
@@ -46,18 +49,3 @@ function WX( v ) {
 function WY( v ) {
     return v + sy(gR.RandomBool() ? 0 : (gR.RandomBool() ? 0.1 : -0.1));
 }
-
-function InGameBounds(xywh) {
-    var left = xywh.x;
-    var top = xywh.y;
-    var width = xywh.width;
-    var height = xywh.height;
-    Assert(left != undefined);
-    Assert(top != undefined);
-    Assert(width != undefined);
-    Assert(height != undefined);
-    return (left+width >= 0) &&
-	(left <= gWidth) &&
-	(top+height >= 0) &&
-	(top <=gHeight);
-};

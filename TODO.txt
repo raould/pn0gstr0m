@@ -1,11 +1,17 @@
 * all the todo's noted in code comments.
 * this has quickly become an empirical big ball of mud. :-(
 * warning: things in code tend to not be simply what they seem / what you'd expect, even for me.
+* fyi 'top (of screen)' (should) means low-y-value, 'bottom (of screen)' means high-y-value.
+* the "side" ux fails with multi-modal inputs e.g. touchscreen laptop. :-(
+* i am pretty sure all the 'physics' is not respecting units (and fps).
 * support webgl (e.g. via pixijs) to get performance (vs. e.g. cavas color string hell).
 * comment out asserts in out/* somehow, for perf.
 * fix resizing to be allowed during the game, especially for toggling fullscreen.
 * step broken when paused e.g. wrt animations.js, i think?
+* probably should really fix up [min, max) of horiz & vert coordinates.
 * add more global variables /s.
+* add more hard-coded values /s.
+* optimize to have fewer loops over all pucks.
 * step broken when paused e.g. wrt animations.js, i think?
 * fix resizing to be allowed during the game, especially for toggling fullscreen.
 * figure out the right hellacious way to support fullscreen button?!@#?!@?#!!!
@@ -15,22 +21,17 @@
 * the general coding suck of not knowing which things must/not be done via property functions.
 * the level index, game mode, single player stuff is now a nightmare.
 * the level should live longer than just the GameState.
-* 2 player mode should not have levels, just be zen mode.
-* high score totalling across levels (esp. for zen single player).
 * funny how many different ways of doing a timeout there are.
 * gLevelIndex is a code smell, but is a nightmare to fix. i tried.
 * the logic of puck splits is split up across too many files.
 * the ownership graph is heck even if done right.
 * figure out per-game high score ui ux.
 * need to specify first puck speed specifically rather than ratio?
-* better (yet safe) color for low hp on xtra and barrier?
 * quit should really ask ays?
-* maybe have rare 3x split into even smaller, faster pucks?
+* pill that turns it into regular pong with one faaaat puck.
 * do i need clearFn() for gamepad buttons and joystick? or what else instead?
 * check that the gamepad buttons & sticks non/repeat is sane/right.
 * really test all the possible inputs!
-* hm, original pucks must also speed up at the end of the level?
-* playtest all the speedup/timeout/english factors, sheesh.
 * animate the menu opening/closing?
 * my other metal band name really is The Wrong Abstractions. :-(
 * clean up var t = T01(anim.lifespan0-anim.life, anim.lifespan0);

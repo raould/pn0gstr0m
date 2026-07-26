@@ -9,7 +9,7 @@ function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) 
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-/* Copyright (C) 2024 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -120,10 +120,10 @@ function Sign(value) {
   return sign;
 }
 function AvoidZero(value, radius) {
-  if (value > 0 && value < radius) {
+  if (value >= 0 && value < radius) {
     return radius;
   }
-  if (value < 0 && value > radius) {
+  if (value <= 0 && value > radius) {
     return -radius;
   }
   return value;
@@ -205,11 +205,10 @@ function MaxSigned(n, max) {
 }
 function Clip(n, min, max) {
   if (min > max) {
-    var tmp = min;
-    min = max;
-    max = tmp;
+    return Math.min(min, Math.max(max, n));
+  } else {
+    return Math.min(max, Math.max(min, n));
   }
-  return Math.min(max, Math.max(min, n));
 }
 function Clip01(n) {
   return Clip(n, 0, 1);
@@ -223,6 +222,12 @@ function Clip01Signed(n) {
 function Clip255(n) {
   var i = Math.floor(n);
   return Clip(i, 0, 255);
+}
+function T01Range(v, min, max) {
+  return T01(Clip(v, min, max) - min, max - min);
+}
+function T10Range(v, min, max) {
+  return T10(Clip(v, min, max) - min, max - min);
 }
 
 // v expected to go from 0 to max.
