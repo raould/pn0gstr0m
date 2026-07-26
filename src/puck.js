@@ -229,7 +229,7 @@ function Puck() {
 		    // up until neo / darkMatter.
                     pp: 0.1 + 0.4 * T01(Math.abs(self.vx), maxVX)
 		});
-		vyf = 1 + (gR.RandomBool() ? vyff : 0);
+		const vyf = 1 + (gR.RandomBool() ? vyff : 0);
 		vy = self.vy * vyf;
 		//console.log(F(self.vy), F(vyff), F(vyf), F(vy), F(vy-self.vy));
 	    }
