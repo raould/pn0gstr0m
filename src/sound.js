@@ -13,7 +13,6 @@ const gAudio = {
     names: [],
     name2meta: {},
     id2name: {},
-    onLoaded: undefined,
     musicCount: 0,
 };
 
@@ -77,18 +76,14 @@ function RegisterSound(name, basename, props, isMusic) {
 
 function LoadNextSound() {
     // cute for debugging.
-    // var report = gAudio.names.map((n) => {
-    //  return gAudio.name2meta[n].loaded ? "1" : "0";
-    // }).join('');
-    // console.log(report);
+    var report = gAudio.names.map((n) => {
+	return String(gAudio.name2meta[n].loaded);
+    }).join(',');
+    console.log(report);
 
     var next = Object.values(gAudio.name2meta).find(m => m.loaded === false); // not 'error'.
     if (exists(next)) {
         next.howl.load();
-    }
-    else {
-	gAudio.onLoaded?.();
-	gAudio.onLoaded = undefined;
     }
 }
 
@@ -101,9 +96,18 @@ function OnSfxStop(name) {
     }
 }
 
+function IsMusicReady() {
+    const music = Object.values(gAudio.name2meta).filter(v => v.isMusic);
+    const loading = music.filter(m => m.loaded === false); // not 'error'.
+    return loading.length === 0;
+}
+
 function BeginMusic() {
     StopAudio(true);
-    if (!gMusicMuted) {
+    if (IsMusicReady() === false) {
+	setTimeout(() => BeginMusic(), 1000);
+    }
+    else if (!gMusicMuted) {
 	const unplayedAll = Object.entries(gAudio.name2meta).map(([key, value]) => {
 	    if (value.isMusic && value.loaded === true) {
 		return key;
@@ -211,8 +215,7 @@ const PlayExplosion = MakePlayFn(kExplosionSfxCount, "explosion", PlaySfxDebounc
 const kBlipSfxCount = 3;
 const PlayBlip = MakePlayFn(kBlipSfxCount, "blip", PlaySfxDebounced);
 
-function LoadAudio(onLoaded) {
-    gAudio.onLoaded = onLoaded;
+function LoadAudio() {
     SaveLocal(LocalStorageKeys.unplayed, []);
     
     // these will load in order 1 by 1 via onload().

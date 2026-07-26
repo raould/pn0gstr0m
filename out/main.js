@@ -1095,6 +1095,7 @@ function WarningState() {
   var self = this;
   self.Init = function () {
     ResetInput();
+    LoadAudio();
     self.done = false;
   };
   self.Step = function () {
@@ -1144,7 +1145,7 @@ function WarningState() {
 function TitleState() {
   var self = this;
   self.Init = function () {
-    LoadAudio(BeginMusic);
+    BeginMusic();
     ResetInput();
     ResetP1Side();
     ResetScores();

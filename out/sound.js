@@ -27,7 +27,6 @@ var gAudio = {
   names: [],
   name2meta: {},
   id2name: {},
-  onLoaded: undefined,
   musicCount: 0
 };
 var gMusicID;
@@ -93,20 +92,15 @@ function RegisterSound(name, basename, props, isMusic) {
 }
 function LoadNextSound() {
   // cute for debugging.
-  // var report = gAudio.names.map((n) => {
-  //  return gAudio.name2meta[n].loaded ? "1" : "0";
-  // }).join('');
-  // console.log(report);
-
+  var report = gAudio.names.map(function (n) {
+    return String(gAudio.name2meta[n].loaded);
+  }).join(',');
+  console.log(report);
   var next = Object.values(gAudio.name2meta).find(function (m) {
     return m.loaded === false;
   }); // not 'error'.
   if (exists(next)) {
     next.howl.load();
-  } else {
-    var _gAudio$onLoaded;
-    (_gAudio$onLoaded = gAudio.onLoaded) == null || _gAudio$onLoaded.call(gAudio);
-    gAudio.onLoaded = undefined;
   }
 }
 function OnSfxStop(name) {
@@ -117,9 +111,22 @@ function OnSfxStop(name) {
     !!meta.isMusic && BeginMusic();
   }
 }
+function IsMusicReady() {
+  var music = Object.values(gAudio.name2meta).filter(function (v) {
+    return v.isMusic;
+  });
+  var loading = music.filter(function (m) {
+    return m.loaded === false;
+  }); // not 'error'.
+  return loading.length === 0;
+}
 function BeginMusic() {
   StopAudio(true);
-  if (!gMusicMuted) {
+  if (IsMusicReady() === false) {
+    setTimeout(function () {
+      return BeginMusic();
+    }, 1000);
+  } else if (!gMusicMuted) {
     var unplayedAll = Object.entries(gAudio.name2meta).map(function (_ref) {
       var _ref2 = _slicedToArray(_ref, 2),
         key = _ref2[0],
@@ -226,8 +233,7 @@ var kExplosionSfxCount = 3;
 var PlayExplosion = MakePlayFn(kExplosionSfxCount, "explosion", PlaySfxDebounced);
 var kBlipSfxCount = 3;
 var PlayBlip = MakePlayFn(kBlipSfxCount, "blip", PlaySfxDebounced);
-function LoadAudio(onLoaded) {
-  gAudio.onLoaded = onLoaded;
+function LoadAudio() {
   SaveLocal(LocalStorageKeys.unplayed, []);
 
   // these will load in order 1 by 1 via onload().

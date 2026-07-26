@@ -1055,7 +1055,8 @@ function UpdateLocalStorage() {
 
     self.Init = function() {
         ResetInput();
-        self.done = false;
+	LoadAudio();
+        self.done = false;	
     };
 
     self.Step = function() {
@@ -1110,7 +1111,7 @@ function UpdateLocalStorage() {
     var self = this;
 
     self.Init = function() {
-        LoadAudio(BeginMusic); 
+	BeginMusic();
         ResetInput();
         ResetP1Side();
         ResetScores();
