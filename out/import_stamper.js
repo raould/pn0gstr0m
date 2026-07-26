@@ -4,6 +4,6 @@
 function import_stamped(url) {
   var script = document.createElement('script');
   script.src = url + "?VVV=" + new Date().getTime();
-  script.async = true;
+  script.async = false;
   document.head.appendChild(script);
 }

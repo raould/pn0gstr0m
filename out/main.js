@@ -3335,7 +3335,9 @@ function Start() {
   ResetClipping();
   InitHandlers();
   StopAudio();
+  UnhideLinks();
 }
+function UnhideLinks() {}
 function InitCanvases() {
   // the 'onscreen' canvas which we update at the end of each frame.
   // it is not where the drawing commands go, that is gCanvasBacking.

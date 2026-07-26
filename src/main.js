@@ -3520,6 +3520,11 @@ function Start() {
     ResetClipping();
     InitHandlers();
     StopAudio();
+    UnhideLinks();
+}
+
+function UnhideLinks() {
+    
 }
 
 function InitCanvases() {
