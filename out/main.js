@@ -41,6 +41,7 @@ var gDebug = false;
 // and no hard or zen modes.
 // see also: kGameMode*, so this is all quite confusing.
 var kAppMode = true; // keep it commited as true, please.
+var gDidWarning = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1094,12 +1095,15 @@ function WarningState() {
   var self = this;
   self.Init = function () {
     ResetInput();
-    LoadAudio();
     self.done = false;
   };
   self.Step = function () {
     if (gDebug) {
       // skip it!
+      return kTitle;
+    } else if (!kAppMode && gDidWarning) {
+      // we already got user input once to unlock audio
+      // so we do not need to show the Warning any more.
       return kTitle;
     } else {
       var nextState;
@@ -1119,6 +1123,7 @@ function WarningState() {
     var apd = isAnyPointerDown();
     if (ud || ap || apd) {
       self.done = true;
+      gDidWarning = true;
     }
     return self.done ? kTitle : undefined;
   };
@@ -1139,9 +1144,7 @@ function WarningState() {
 function TitleState() {
   var self = this;
   self.Init = function () {
-    if (!kAppMode) {
-      LoadAudio();
-    }
+    LoadAudio(BeginMusic);
     ResetInput();
     ResetP1Side();
     ResetScores();
@@ -1157,11 +1160,6 @@ function TitleState() {
     self.timeout = gDebug ? 1 : (kAppMode ? 1000 : 0) * 1.5;
     self.started = gGameTime;
     self.done = false;
-    if (kAppMode) {
-      self.musicTimer = setTimeout(BeginMusic, 1000); // avoid bugs? dunno.
-    } else {
-      gMusicMuted = true;
-    }
     self.theMenu = self.MakeMenu();
     setFullscreenIconVisible(supportsFullscreen());
     console.log("TitleState", is1P(), gGameMode);
@@ -1212,7 +1210,6 @@ function TitleState() {
 
     nextState = self.ProcessAllInput();
     if (exists(nextState)) {
-      clearTimeout(self.musicTimer);
       StopAudio(true);
     }
     return nextState;
@@ -1313,17 +1310,17 @@ function TitleState() {
   };
   self.DrawMusicName = function () {
     if (!gMusicMuted) {
-      var msg = "fetching music";
+      var msg = "FETCHING MUSIC";
       if (exists(gMusicID)) {
         var name = gAudio.id2name[gMusicID];
         var meta = gAudio.name2meta[name];
         if (exists(meta == null ? void 0 : meta.basename) && !!(meta != null && meta.loaded)) {
-          var msg = meta.basename;
+          var msg = "o PLAYING " + meta.basename.toUpperCase() + " o";
         }
       }
       Cxdo(function () {
         gCx.fillStyle = rgba255s(greySpec.strong, 0.5);
-        DrawText(msg.toUpperCase(), "center", gw(0.5), gh(0.94), gSmallestFontSizePt, false);
+        DrawText(msg, "center", gw(0.5), gh(0.94), gSmallestFontSizePt, false);
       });
     }
   };
@@ -3372,7 +3369,7 @@ function InitCanvases() {
 function InitHandlers() {
   var handlerMap = {};
   handlerMap[kRoot] = function () {
-    return new RootState(kAppMode ? kWarning : kTitle);
+    return new RootState(kWarning);
   };
   handlerMap[kWarning] = function () {
     return new WarningState();

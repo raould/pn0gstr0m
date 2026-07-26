@@ -3,29 +3,33 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-// ship as 'false'.
-var _kill_unplayed = false;
+// commit as 'false', 'true' is just for debugging.
+const _kill_unplayed = false;
+
+const kMusicVolume = 0.7;
 
 // this object contains multiple mappings.
 // 0-bsed index to name.
 // name to meta.
 // actively playing sound id to name.
-var gAudio = {
+const gAudio = {
     names: [],
     name2meta: {},
     id2name: {},
+    onLoaded: undefined,
+    musicCount: 0,
 };
 
-var gMusicID;
+let gMusicID;
 
 /* muting implementation is... tricky? i am 
  * using gStateMuted to prevent the attract
  * mode from playing game blip and explosion sfx,
  * but we still want the music to play.
  */
-var gStateMuted = false;
-var gMusicMuted = LoadLocal(LocalStorageKeys.musicMuted, false);
-var gSfxMuted = LoadLocal(LocalStorageKeys.sfxMuted, false);
+let gStateMuted = false;
+let gMusicMuted = LoadLocal(LocalStorageKeys.musicMuted, false);
+let gSfxMuted = LoadLocal(LocalStorageKeys.sfxMuted, false);
 
 function RegisterMusic(name, basename, props) {
     RegisterSound(name, basename, props, true);
@@ -38,19 +42,25 @@ function RegisterSfx(name, basename, props) {
 function RegisterSound(name, basename, props, isMusic) {
     if (isU(gAudio.name2meta[name])) {
         var files = ["ogg", "aac", "mp3"].map((e) => `sounds/${basename}.${e}`);
-        var howl = new Howl({
+        var howl = new Howl({ // there is no good answer to browser audio at all.
             ...props,
             src: files,
             onload: () => {
-                gAudio.name2meta[name].loaded = true;
+		const meta = gAudio.name2meta[name];
+                meta.loaded = true;
+		if (meta.isMusic) { ++gAudio.musicCount; }
+		console.log("onload", gAudio.name2meta[name]);
                 LoadNextSound();
             },
             onloaderror: () => {
                 // well, poop.
                 console.error("onloaderror", name);
+		const meta = gAudio.name2meta[name];
+		if (exists(meta)) { meta.loaded = "error"; }
+		console.log("onloaderror", gAudio.name2meta[name]);
                 LoadNextSound();
             },
-            html5: false,
+            html5: false, // this is a never-win parameter.
             preload: false,
             // only 1 concurrent playback per name.
             onend: () => OnSfxStop(name),
@@ -75,9 +85,13 @@ function LoadNextSound() {
     // }).join('');
     // console.log(report);
 
-    var next = Object.values(gAudio.name2meta).find(m => !m.loaded);
+    var next = Object.values(gAudio.name2meta).find(m => m.loaded === false); // not 'error'.
     if (exists(next)) {
         next.howl.load();
+    }
+    else {
+	gAudio.onLoaded?.();
+	gAudio.onLoaded = undefined;
     }
 }
 
@@ -90,12 +104,15 @@ function OnSfxStop(name) {
     }
 }
 
-const kMusicSfxCount = 24;
 function BeginMusic() {
     StopAudio(true);
     if (!gMusicMuted) {
-        // max list of music numbers in order (javascript sucks?).
-        const unplayedAll = Array(kMusicSfxCount).fill().map((_,i) => {return i+1;});
+	const unplayedAll = Object.entries(gAudio.name2meta).map(([key, value]) => {
+	    if (value.isMusic && value.loaded === true) {
+		return key;
+	    }
+	    return undefined;
+	}).filter(Boolean);
 
         // if unknown (or forced), refresh to full list.
         let unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
@@ -105,13 +122,11 @@ function BeginMusic() {
 
         Assert(unplayed != null, "BeginMusic: null");
         Assert(unplayed.length > 0, "BeginMusic: 0");
-        // not random, always play musicN in order since we 'load' them in order.
-        const num = unplayed.shift();
+        const name = unplayed.shift();
 
         // save the now-smaller remaining-items list.
         SaveLocal(LocalStorageKeys.unplayed, unplayed, true);
 
-        const name = `music${num}`;
         console.log("BeginMusic", name);
         gMusicID = PlayMusic(name);
     }
@@ -199,7 +214,8 @@ const PlayExplosion = MakePlayFn(kExplosionSfxCount, "explosion", PlaySfxDebounc
 const kBlipSfxCount = 3;
 const PlayBlip = MakePlayFn(kBlipSfxCount, "blip", PlaySfxDebounced);
 
-function LoadAudio() {
+function LoadAudio(onLoaded) {
+    gAudio.onLoaded = onLoaded;
     // these will load in order 1 by 1 via onload().
     RegisterSfx("explosion1", "explosionA", { volume: 0.35 });
     RegisterSfx("explosion2", "explosionB", { volume: 0.35 });
@@ -211,32 +227,31 @@ function LoadAudio() {
     RegisterSfx("chargeup1", "chargeup", { volume: 0.3 });
     RegisterSfx("powerupboom1", "powerUp");
     RegisterSfx("gameover1", "gameover");
-    RegisterMusic("music1", "nervouslynx");
-    RegisterMusic("music2", "candiddonkey");
-    RegisterMusic("music3", "devotedhyena");
-    RegisterMusic("music4", "sweetgorilla");
-    RegisterMusic("music5", "sweettapir");
-    RegisterMusic("music6", "uglyshrimp");
-    RegisterMusic("music7", "vulgarhamster");
-    RegisterMusic("music8", "cynicalsheep2");
-    RegisterMusic("music9", "cynicaltermite2");
-    RegisterMusic("music10", "grumpywolverine");
-    RegisterMusic("music11", "lazymouse");
-    RegisterMusic("music12", "lonelymouse");
-    RegisterMusic("music13", "modestcamel");
-    RegisterMusic("music14", "nastywalrus");
-    RegisterMusic("music15", "oldpenguin");
-    RegisterMusic("music16", "rudeantelope");
-    RegisterMusic("music17", "skinnykoala");
-    RegisterMusic("music18", "sneakylabradoodle");
-    RegisterMusic("music19", "wickedguppy");
-    RegisterMusic("music20", "wickedmoose");
-    RegisterMusic("music21", "youngchipmunk");
-    RegisterMusic("music22", "youngprawn");
-    RegisterMusic("music23", "politetortoise");
-    RegisterMusic("music24", "poorhamster");
+    RegisterMusic("music1", "nervouslynx", { volume: kMusicVolume });
+    RegisterMusic("music2", "candiddonkey", { volume: kMusicVolume });
+    RegisterMusic("music3", "devotedhyena", { volume: kMusicVolume });
+    RegisterMusic("music4", "sweetgorilla", { volume: kMusicVolume });
+    RegisterMusic("music5", "sweettapir", { volume: kMusicVolume });
+    RegisterMusic("music6", "uglyshrimp", { volume: kMusicVolume });
+    RegisterMusic("music7", "vulgarhamster", { volume: kMusicVolume });
+    RegisterMusic("music8", "cynicalsheep2", { volume: kMusicVolume });
+    RegisterMusic("music9", "cynicaltermite2", { volume: kMusicVolume });
+    RegisterMusic("music10", "grumpywolverine", { volume: kMusicVolume });
+    RegisterMusic("music11", "lazymouse", { volume: kMusicVolume });
+    RegisterMusic("music12", "lonelymouse", { volume: kMusicVolume });
+    RegisterMusic("music13", "modestcamel", { volume: kMusicVolume });
+    RegisterMusic("music14", "nastywalrus", { volume: kMusicVolume });
+    RegisterMusic("music15", "oldpenguin", { volume: kMusicVolume });
+    RegisterMusic("music16", "rudeantelope", { volume: kMusicVolume });
+    RegisterMusic("music17", "skinnykoala", { volume: kMusicVolume });
+    RegisterMusic("music18", "sneakylabradoodle", { volume: kMusicVolume });
+    RegisterMusic("music19", "wickedguppy", { volume: kMusicVolume });
+    RegisterMusic("music20", "wickedmoose", { volume: kMusicVolume });
+    RegisterMusic("music21", "youngchipmunk", { volume: kMusicVolume });
+    RegisterMusic("music22", "youngprawn", { volume: kMusicVolume });
+    RegisterMusic("music23", "politetortoise", { volume: kMusicVolume });
+    RegisterMusic("music24", "poorhamster", { volume: kMusicVolume });
 
-    Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("music")).length == kMusicSfxCount, "music count");
     Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("explosion")).length == kExplosionSfxCount, "explosion count");
     Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("blip")).length == kBlipSfxCount, "blip count");
 

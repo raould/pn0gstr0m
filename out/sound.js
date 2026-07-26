@@ -1,6 +1,12 @@
 "use strict";
 
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
@@ -11,8 +17,9 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-// ship as 'false'.
+// commit as 'false', 'true' is just for debugging.
 var _kill_unplayed = false;
+var kMusicVolume = 0.7;
 
 // this object contains multiple mappings.
 // 0-bsed index to name.
@@ -21,7 +28,9 @@ var _kill_unplayed = false;
 var gAudio = {
   names: [],
   name2meta: {},
-  id2name: {}
+  id2name: {},
+  onLoaded: undefined,
+  musicCount: 0
 };
 var gMusicID;
 
@@ -47,15 +56,26 @@ function RegisterSound(name, basename, props, isMusic) {
     var howl = new Howl(_objectSpread(_objectSpread({}, props), {}, {
       src: files,
       onload: function onload() {
-        gAudio.name2meta[name].loaded = true;
+        var meta = gAudio.name2meta[name];
+        meta.loaded = true;
+        if (meta.isMusic) {
+          ++gAudio.musicCount;
+        }
+        console.log("onload", gAudio.name2meta[name]);
         LoadNextSound();
       },
       onloaderror: function onloaderror() {
         // well, poop.
         console.error("onloaderror", name);
+        var meta = gAudio.name2meta[name];
+        if (exists(meta)) {
+          meta.loaded = "error";
+        }
+        console.log("onloaderror", gAudio.name2meta[name]);
         LoadNextSound();
       },
       html5: false,
+      // this is a never-win parameter.
       preload: false,
       // only 1 concurrent playback per name.
       onend: function onend() {
@@ -81,10 +101,14 @@ function LoadNextSound() {
   // console.log(report);
 
   var next = Object.values(gAudio.name2meta).find(function (m) {
-    return !m.loaded;
-  });
+    return m.loaded === false;
+  }); // not 'error'.
   if (exists(next)) {
     next.howl.load();
+  } else {
+    var _gAudio$onLoaded;
+    (_gAudio$onLoaded = gAudio.onLoaded) == null || _gAudio$onLoaded.call(gAudio);
+    gAudio.onLoaded = undefined;
   }
 }
 function OnSfxStop(name) {
@@ -95,14 +119,18 @@ function OnSfxStop(name) {
     !!meta.isMusic && BeginMusic();
   }
 }
-var kMusicSfxCount = 24;
 function BeginMusic() {
   StopAudio(true);
   if (!gMusicMuted) {
-    // max list of music numbers in order (javascript sucks?).
-    var unplayedAll = Array(kMusicSfxCount).fill().map(function (_, i) {
-      return i + 1;
-    });
+    var unplayedAll = Object.entries(gAudio.name2meta).map(function (_ref) {
+      var _ref2 = _slicedToArray(_ref, 2),
+        key = _ref2[0],
+        value = _ref2[1];
+      if (value.isMusic && value.loaded === true) {
+        return key;
+      }
+      return undefined;
+    }).filter(Boolean);
 
     // if unknown (or forced), refresh to full list.
     var unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
@@ -111,12 +139,10 @@ function BeginMusic() {
     }
     Assert(unplayed != null, "BeginMusic: null");
     Assert(unplayed.length > 0, "BeginMusic: 0");
-    // not random, always play musicN in order since we 'load' them in order.
-    var num = unplayed.shift();
+    var name = unplayed.shift();
 
     // save the now-smaller remaining-items list.
     SaveLocal(LocalStorageKeys.unplayed, unplayed, true);
-    var name = "music".concat(num);
     console.log("BeginMusic", name);
     gMusicID = PlayMusic(name);
   }
@@ -202,7 +228,8 @@ var kExplosionSfxCount = 3;
 var PlayExplosion = MakePlayFn(kExplosionSfxCount, "explosion", PlaySfxDebounced);
 var kBlipSfxCount = 3;
 var PlayBlip = MakePlayFn(kBlipSfxCount, "blip", PlaySfxDebounced);
-function LoadAudio() {
+function LoadAudio(onLoaded) {
+  gAudio.onLoaded = onLoaded;
   // these will load in order 1 by 1 via onload().
   RegisterSfx("explosion1", "explosionA", {
     volume: 0.35
@@ -228,33 +255,78 @@ function LoadAudio() {
   });
   RegisterSfx("powerupboom1", "powerUp");
   RegisterSfx("gameover1", "gameover");
-  RegisterMusic("music1", "nervouslynx");
-  RegisterMusic("music2", "candiddonkey");
-  RegisterMusic("music3", "devotedhyena");
-  RegisterMusic("music4", "sweetgorilla");
-  RegisterMusic("music5", "sweettapir");
-  RegisterMusic("music6", "uglyshrimp");
-  RegisterMusic("music7", "vulgarhamster");
-  RegisterMusic("music8", "cynicalsheep2");
-  RegisterMusic("music9", "cynicaltermite2");
-  RegisterMusic("music10", "grumpywolverine");
-  RegisterMusic("music11", "lazymouse");
-  RegisterMusic("music12", "lonelymouse");
-  RegisterMusic("music13", "modestcamel");
-  RegisterMusic("music14", "nastywalrus");
-  RegisterMusic("music15", "oldpenguin");
-  RegisterMusic("music16", "rudeantelope");
-  RegisterMusic("music17", "skinnykoala");
-  RegisterMusic("music18", "sneakylabradoodle");
-  RegisterMusic("music19", "wickedguppy");
-  RegisterMusic("music20", "wickedmoose");
-  RegisterMusic("music21", "youngchipmunk");
-  RegisterMusic("music22", "youngprawn");
-  RegisterMusic("music23", "politetortoise");
-  RegisterMusic("music24", "poorhamster");
-  Assert(Object.keys(gAudio.name2meta).filter(function (k) {
-    return k.includes("music");
-  }).length == kMusicSfxCount, "music count");
+  RegisterMusic("music1", "nervouslynx", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music2", "candiddonkey", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music3", "devotedhyena", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music4", "sweetgorilla", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music5", "sweettapir", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music6", "uglyshrimp", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music7", "vulgarhamster", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music8", "cynicalsheep2", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music9", "cynicaltermite2", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music10", "grumpywolverine", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music11", "lazymouse", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music12", "lonelymouse", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music13", "modestcamel", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music14", "nastywalrus", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music15", "oldpenguin", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music16", "rudeantelope", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music17", "skinnykoala", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music18", "sneakylabradoodle", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music19", "wickedguppy", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music20", "wickedmoose", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music21", "youngchipmunk", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music22", "youngprawn", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music23", "politetortoise", {
+    volume: kMusicVolume
+  });
+  RegisterMusic("music24", "poorhamster", {
+    volume: kMusicVolume
+  });
   Assert(Object.keys(gAudio.name2meta).filter(function (k) {
     return k.includes("explosion");
   }).length == kExplosionSfxCount, "explosion count");

@@ -27,6 +27,7 @@ var gDebug = false;
 // and no hard or zen modes.
 // see also: kGameMode*, so this is all quite confusing.
 const kAppMode = true; // keep it commited as true, please.
+let gDidWarning = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1054,7 +1055,6 @@ function UpdateLocalStorage() {
 
     self.Init = function() {
         ResetInput();
-        LoadAudio(); 
         self.done = false;
     };
 
@@ -1062,6 +1062,11 @@ function UpdateLocalStorage() {
         if (gDebug) { // skip it!
             return kTitle;
         }
+	else if (!kAppMode && gDidWarning) {
+	    // we already got user input once to unlock audio
+	    // so we do not need to show the Warning any more.
+	    return kTitle;
+	}
         else {
             var nextState;
             gEventQueue.forEach((event, i) => {
@@ -1081,6 +1086,7 @@ function UpdateLocalStorage() {
         var apd = isAnyPointerDown();
         if (ud || ap || apd) {
             self.done = true;
+	    gDidWarning = true;
         }
         return self.done ? kTitle : undefined;
     };
@@ -1104,9 +1110,7 @@ function UpdateLocalStorage() {
     var self = this;
 
     self.Init = function() {
-        if (!kAppMode) {
-            LoadAudio();
-        }
+        LoadAudio(BeginMusic); 
         ResetInput();
         ResetP1Side();
         ResetScores();
@@ -1121,11 +1125,6 @@ function UpdateLocalStorage() {
         self.timeout = gDebug ? 1 : ((kAppMode ? 1000 : 0) * 1.5);
         self.started = gGameTime;
         self.done = false;
-        if (kAppMode) {
-            self.musicTimer = setTimeout( BeginMusic, 1000 ); // avoid bugs? dunno.
-        } else {
-            gMusicMuted = true;
-        }
         self.theMenu = self.MakeMenu();
 
         setFullscreenIconVisible(supportsFullscreen());
@@ -1176,7 +1175,6 @@ function UpdateLocalStorage() {
 
         nextState = self.ProcessAllInput();
         if (exists(nextState)) {
-            clearTimeout(self.musicTimer);
             StopAudio(true);
         }
 
@@ -1294,17 +1292,17 @@ function UpdateLocalStorage() {
 
     self.DrawMusicName = function() {
         if (!gMusicMuted) {
-            var msg = "fetching music";
+            var msg = "FETCHING MUSIC";
             if (exists(gMusicID)) {
                 var name = gAudio.id2name[gMusicID];
                 var meta = gAudio.name2meta[name];
                 if (exists(meta?.basename) && !!(meta?.loaded)) {
-                    var msg = meta.basename;
+                    var msg = "o PLAYING " + meta.basename.toUpperCase() + " o";
                 }
             }
             Cxdo(() => {
                 gCx.fillStyle = rgba255s(greySpec.strong, 0.5);
-                DrawText(msg.toUpperCase(),
+                DrawText(msg,
                          "center",
                          gw(0.5),
                          gh(0.94),
@@ -3559,7 +3557,7 @@ function InitCanvases() {
 
 function InitHandlers() {
     var handlerMap = {};
-    handlerMap[kRoot] = () => new RootState(kAppMode ? kWarning : kTitle);
+    handlerMap[kRoot] = () => new RootState(kWarning);
     handlerMap[kWarning] = () => new WarningState();
     handlerMap[kTitle] = () => new TitleState();
     handlerMap[kGetReady] = () => new GetReadyState();
