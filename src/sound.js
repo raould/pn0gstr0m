@@ -13,7 +13,6 @@ const gAudio = {
     names: [],
     name2meta: {},
     id2name: {},
-    musicCount: 0,
     musicTimer: undefined,
 };
 
@@ -37,7 +36,11 @@ function RegisterSfx(name, basename, props) {
 }
 
 function RegisterSound(name, basename, props, isMusic) {
-    if (isU(gAudio.name2meta[name])) {
+    if (!isU(gAudio.name2meta[name])) {
+	console.log("RegisterSound: duplicate request", name, basename);
+    }
+    else {
+	console.log("RegisterSound", name, basename);
         var files = ["ogg", "aac", "mp3"].map((e) => `sounds/${basename}.${e}`);
         var howl = new Howl({ // there is no good answer to browser audio at all.
             ...props,
@@ -45,7 +48,6 @@ function RegisterSound(name, basename, props, isMusic) {
             onload: () => {
 		const meta = gAudio.name2meta[name];
                 meta.loaded = true;
-		if (meta.isMusic) { ++gAudio.musicCount; }
 		console.log("onload", gAudio.name2meta[name]);
                 LoadNextSound();
             },
@@ -111,7 +113,7 @@ function BeginMusic() {
     gAudio.musicTimer = setTimeout(() => {
 	console.log("BeginMusic: polling");
 	gAudio.musicTimer = undefined;
-	if (IsMusicReady) {
+	if (IsMusicReady()) {
 	    BeginMusicPlaying();
 	}
 	else {
