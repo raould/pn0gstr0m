@@ -238,7 +238,7 @@ function Puck() {
         maxVX: maxVX
       };
     }
-    PlayExplosion();
+    PlayPaddleHit();
 
     // try to hurry up when the level has no more pucks.
     var nvx = MinSigned(self.vx * (isSuddenDeath ? 1.1 : 1), maxVX);

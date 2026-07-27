@@ -3,6 +3,8 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+const kIsSafari = UAParser()?.browser?.name === "Safari";
+
 // Welcome to The Land of Global Varibles, And Inconsistent Naming.
 //
 // sorry: velocities are kinda hacky guesstimates;
@@ -18,7 +20,7 @@
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
@@ -1352,7 +1354,7 @@ function UpdateLocalStorage() {
             // one-second-at-a-time countdown.
             var sec = Math.floor(self.timeout/1000);
             if (sec < self.lastSec) {
-		PlayBlip(2);
+		PlayBlip();
 		self.lastSec = sec;
             }
 	    return undefined;
@@ -1618,11 +1620,16 @@ function UpdateLocalStorage() {
         self.unfairPillCount = 0;
         self.unfairPillDiffMax = 2;
 
-	// help break up 'streaming' steady-state in (either of the) 2P mode(s).
+	// help break up degenerate streaming after a while.
 	self.darkMatter = undefined;
-	if( exists(kDarkMatterGeneratorTimeout) && is2P() ) {
+	const should_generate_darkMatter = !self.isAttract &&
+	      (is2P() ||
+	       // assumes both players run out of new powerup rewards at the same time.
+	       gP1PillState.remaining.length === 0);
+	if( should_generate_darkMatter && exists(kDarkMatterGeneratorTimeout) ) {
+	    console.log("DarkMatterGenerator is enabled");
 	    self.darkMatterGenerator = new DarkMatterGenerator({
-		timeout: kDarkMatterGeneratorTimeout // just for the first appearance.
+		timeout: kDarkMatterGeneratorTimeout // first appearance; longer thereafter.
 	    });
 	}
 
@@ -2285,6 +2292,9 @@ function UpdateLocalStorage() {
         gP1Target.DrawDebug();
         gP2Target.DrawDebug();
         Cxdo(() => {
+            gCx.fillStyle = "grey";
+	    DrawText(`SAFARI? ${kIsSafari ? "YES":"NO"}`, "left", gw(0.8), gh(0.1), gSmallestFontSizePt);
+
             gCx.fillStyle = "magenta";
             DrawText(`UP:${self.unfairPillCount} 1P:${self.pillP1SpawnCountdown} 2P:${self.pillP2SpawnCountdown}`, "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
 
@@ -2541,7 +2551,7 @@ function UpdateLocalStorage() {
         Assert(p1Rewards.length <= 2);
         const count = p1Rewards.length;
 
-        self.timeout = 1000 * 5 - 1;
+        self.timeout = 1000 * (gDebug ? 2 : 5) - 1;
         self.started = gGameTime;
         self.lastSec = Math.floor((self.timeout+1)/1000);
 
@@ -2567,6 +2577,8 @@ function UpdateLocalStorage() {
 
         self.p1Highlight = 0;
         self.p2Highlight = is1P() ? gR.RandomRangeInt(0, count-1) : 0;
+
+	self.playedSfx = false;
     };
 
     self.RemainingTime = function() {
@@ -2595,9 +2607,13 @@ function UpdateLocalStorage() {
 	    // one-second-at-a-time countdown.
             var sec = Math.floor(self.RemainingTime()/1000);
             if (sec < self.lastSec) {
-		PlayBlip(2);
+		PlayBlip();
 		self.lastSec = sec;
             }
+	}
+	else if (self.playedSfx === false) {
+	    PlayChosen();
+	    self.playedSfx = true;
 	}
 
         return nextState;

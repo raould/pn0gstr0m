@@ -17,6 +17,7 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 var gP1PillState;
 var gP2PillState;
 function ResetLevelsPillStates() {
+  // production values:
   gP1PillState = {
     deck: [],
     remaining: _toConsumableArray(gPillIDs)
@@ -25,8 +26,10 @@ function ResetLevelsPillStates() {
     deck: [],
     remaining: _toConsumableArray(gPillIDs)
   };
-  //    gP1PillState = { deck: gPillIDs.slice(0,1), remaining: gPillIDs.slice(1) };
-  //    gP2PillState = { deck: gPillIDs.slice(0,1), remaining: gPillIDs.slice(1) };
+  // testing values:
+  //    const count = 2; // has to be less than gPillIDs.length-1, or something.
+  //    gP1PillState = { deck: gPillIDs.slice(0,count), remaining: gPillIDs.slice(count,count+1) };
+  //    gP2PillState = { deck: gPillIDs.slice(0,count), remaining: gPillIDs.slice(count,count+1) };
   console.log("gP1PillState", gP1PillState);
   console.log("gP2PillState", gP2PillState);
 }

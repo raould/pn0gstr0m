@@ -32,7 +32,7 @@ function AppMenuConstants() {
     var bx2 = gw(0.5) + (bw/3) - bw/2;
     var by2 = by1 + bs*2 + ss;
 
-    var margin = { x: bw*0.2, y: bh*0.2 };
+    var margin = { x: bw*0.02, y: 0 };
     var font_size = gSmallFontSizePt;
 
     return {

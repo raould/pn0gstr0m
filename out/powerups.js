@@ -105,10 +105,10 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
   maker: MakeChaosProps,
   drawer: DrawChaosPill,
   wfn: function wfn() {
-    return sxi(20);
+    return sxi(22);
   },
   hfn: function hfn() {
-    return syi(20);
+    return syi(22);
   }
 }), kDefendPill, {
   name: "SHLD",

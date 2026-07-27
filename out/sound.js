@@ -109,7 +109,7 @@ function LoadNextSound() {
 }
 function OnSfxStop(name) {
   var meta = gAudio.name2meta[name];
-  if (meta != undefined) {
+  if (exists(meta)) {
     delete meta.id;
     // if a piece of music just ended, kick off the next one.
     !!meta.isMusic && BeginMusic();
@@ -155,7 +155,7 @@ function BeginMusicPlaying() {
     if (unplayed.length == 0) {
       unplayed = unplayedAll;
     }
-    Assert(unplayed != null, "BeginMusic: null");
+    Assert(exists(unplayed), "BeginMusic: null");
     Assert(unplayed.length > 0, "BeginMusic: 0");
     var name = unplayed.shift();
 
@@ -200,13 +200,14 @@ function PlaySfx(name) {
   return undefined;
 }
 function PlaySfxDebounced(name) {
+  var debounceMsec = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 110;
   var sid;
   if (!gStateMuted && !gSfxMuted) {
     var meta = gAudio.name2meta[name];
-    Assert(meta != undefined, name, "PlaySfxDebounced ".concat(name));
-    if (meta != undefined) {
+    Assert(exists(meta), name, "PlaySfxDebounced ".concat(name));
+    if (exists(meta)) {
       var last = meta.last || 0;
-      if (Date.now() - last > gR.RandomCentered(25, 10) /*msec*/) {
+      if (Date.now() - last > debounceMsec) {
         sid = PlaySound(name);
       }
     }
@@ -216,15 +217,21 @@ function PlaySfxDebounced(name) {
 function PlaySound(name) {
   var sid = undefined;
   var meta = gAudio.name2meta[name];
-  Assert(meta != undefined, "PlaySound ".concat(name));
-  if (meta != undefined) {
+  Assert(exists(meta), "PlaySound ".concat(name));
+  if (exists(meta)) {
     var howl = meta.howl;
-    // currently only allowing one name-instance at a time.
-    if (howl != undefined) {
+    var play = false;
+    // the web is a lie.
+    if (kIsSafari && howl == undefined) {
+      play = true;
+    } else if (exists(howl)) {
       var id = meta.id;
-      if (id != undefined) {
+      if (exists(id)) {
         howl.stop();
       }
+      play = true;
+    }
+    if (play) {
       meta.id = sid = howl.play();
       meta.last = Date.now();
       gAudio.id2name[sid] = name;
@@ -238,48 +245,51 @@ function MakePlayFn(count, basename, playfn) {
     return "".concat(basename).concat(i + 1);
   });
   return function (index) {
-    var _index;
-    index = (_index = index) != null ? _index : gR.RandomRangeInt(0, count - 1);
-    var name = gNames[index];
+    // index is unused these days, oh well.
+    var name = gNames[index != null ? index : gR.RandomRangeInt(0, count - 1)];
     return playfn(name);
   };
 }
+
+// this is a mess because i've been trying to work around various
+// browser differences, all to no real winning answer, so it all sucks.
 var PlayStart = MakePlayFn(1, "start", PlaySfx);
 var PlayGameOver = MakePlayFn(1, "gameover", PlaySfx);
 var PlayChargeup = MakePlayFn(1, "chargeup", PlaySfx);
-var PlayPowerupBoom = MakePlayFn(1, "powerupboom", PlaySfxDebounced);
-var kExplosionSfxCount = 3;
-var PlayExplosion = MakePlayFn(kExplosionSfxCount, "explosion", PlaySfxDebounced);
-var kBlipSfxCount = 3;
-var PlayBlip = MakePlayFn(kBlipSfxCount, "blip", PlaySfxDebounced);
+var PlayPowerupBoom = MakePlayFn(1, "powerupboom", function (name) {
+  return PlaySfxDebounced(name, 250);
+});
+var PlayBlip = MakePlayFn(1, "blip", function (name) {
+  return PlaySfxDebounced(name, 55);
+});
+var PlayChosen = MakePlayFn(1, "chosen", PlaySfx);
+var PlayPaddleHit = MakePlayFn(2, "explosion", function (name) {
+  return PlaySfxDebounced(name, 55);
+});
 function LoadAudio() {
   SaveLocal(LocalStorageKeys.unplayed, []);
 
   // these will load in order 1 by 1 via onload().
-  RegisterSfx("explosion1", "explosionA", {
+
+  // todo: not enough audible difference between the explosion sfx.
+  RegisterSfx("explosion1", "explosionB2", {
     volume: 0.35
-  });
-  RegisterSfx("explosion2", "explosionB", {
+  }); // puck hits paddle.
+  RegisterSfx("explosion2", "explosionA2", {
     volume: 0.35
-  });
-  RegisterSfx("explosion3", "explosionC", {
-    volume: 0.35
-  });
-  RegisterSfx("blip1", "blipSelectA", {
-    volume: 0.3
-  });
-  RegisterSfx("blip2", "blipSelectB", {
-    volume: 0.3
-  });
-  RegisterSfx("blip3", "blipSelectC", {
-    volume: 0.3
-  });
+  }); // puck hits paddle.
+
+  RegisterSfx("blip1", "blipSelectC", {
+    volume: 0.2
+  }); // puck hits wall etc.
+
   RegisterSfx("start1", "start");
   RegisterSfx("chargeup1", "chargeup", {
     volume: 0.3
   });
   RegisterSfx("powerupboom1", "powerUp");
   RegisterSfx("gameover1", "gameover");
+  RegisterSfx("chosen1", "chosen");
   RegisterMusic("music1", "nervouslynx", {
     volume: kMusicVolume
   });
@@ -352,12 +362,6 @@ function LoadAudio() {
   RegisterMusic("music24", "poorhamster", {
     volume: kMusicVolume
   });
-  Assert(Object.keys(gAudio.name2meta).filter(function (k) {
-    return k.includes("explosion");
-  }).length == kExplosionSfxCount, "explosion count");
-  Assert(Object.keys(gAudio.name2meta).filter(function (k) {
-    return k.includes("blip");
-  }).length == kBlipSfxCount, "blip count");
 
   // kick off loading chain.
   gAudio.name2meta[gAudio.names[0]].howl.load();

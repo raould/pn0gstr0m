@@ -94,7 +94,7 @@ var gPillInfo = {
         name: "WILD",
 	maker: MakeChaosProps,
         drawer: DrawChaosPill,
-        wfn: () => sxi(20), hfn: () => syi(20),
+        wfn: () => sxi(22), hfn: () => syi(22),
     },
     [kDefendPill]: {
         name: "SHLD",

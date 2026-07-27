@@ -241,7 +241,7 @@ function Puck() {
 	    newprops = { x: self.x, y: self.y, vx, vy, ur: false, forced, maxVX };
         }
 
-        PlayExplosion();
+        PlayPaddleHit();
 
         // try to hurry up when the level has no more pucks.
         const nvx = MinSigned(

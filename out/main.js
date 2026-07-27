@@ -1,6 +1,7 @@
 "use strict";
 
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+var _UAParser;
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
@@ -17,6 +18,8 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
+
 // Welcome to The Land of Global Varibles, And Inconsistent Naming.
 //
 // sorry: velocities are kinda hacky guesstimates;
@@ -32,7 +35,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = false;
+var gDebug = true;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
@@ -1361,7 +1364,7 @@ function GetReadyState() {
       // one-second-at-a-time countdown.
       var sec = Math.floor(self.timeout / 1000);
       if (sec < self.lastSec) {
-        PlayBlip(2);
+        PlayBlip();
         self.lastSec = sec;
       }
       return undefined;
@@ -1637,11 +1640,15 @@ function GameState(props) {
     self.unfairPillCount = 0;
     self.unfairPillDiffMax = 2;
 
-    // help break up 'streaming' steady-state in (either of the) 2P mode(s).
+    // help break up degenerate streaming after a while.
     self.darkMatter = undefined;
-    if (exists(kDarkMatterGeneratorTimeout) && is2P()) {
+    var should_generate_darkMatter = !self.isAttract && (is2P() ||
+    // assumes both players run out of new powerup rewards at the same time.
+    gP1PillState.remaining.length === 0);
+    if (should_generate_darkMatter && exists(kDarkMatterGeneratorTimeout)) {
+      console.log("DarkMatterGenerator is enabled");
       self.darkMatterGenerator = new DarkMatterGenerator({
-        timeout: kDarkMatterGeneratorTimeout // just for the first appearance.
+        timeout: kDarkMatterGeneratorTimeout // first appearance; longer thereafter.
       });
     }
     if (!self.isAttract) {
@@ -2293,6 +2300,8 @@ function GameState(props) {
     gP1Target.DrawDebug();
     gP2Target.DrawDebug();
     Cxdo(function () {
+      gCx.fillStyle = "grey";
+      DrawText("SAFARI? ".concat(kIsSafari ? "YES" : "NO"), "left", gw(0.8), gh(0.1), gSmallestFontSizePt);
       gCx.fillStyle = "magenta";
       DrawText("UP:".concat(self.unfairPillCount, " 1P:").concat(self.pillP1SpawnCountdown, " 2P:").concat(self.pillP2SpawnCountdown), "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
       gCx.fillStyle = "grey";
@@ -2487,7 +2496,7 @@ function LevelFinishChooseState() {
     // the ui expects at most 2.
     Assert(p1Rewards.length <= 2);
     var count = p1Rewards.length;
-    self.timeout = 1000 * 5 - 1;
+    self.timeout = 1000 * (gDebug ? 2 : 5) - 1;
     self.started = gGameTime;
     self.lastSec = Math.floor((self.timeout + 1) / 1000);
 
@@ -2519,6 +2528,7 @@ function LevelFinishChooseState() {
     }
     self.p1Highlight = 0;
     self.p2Highlight = is1P() ? gR.RandomRangeInt(0, count - 1) : 0;
+    self.playedSfx = false;
   };
   self.RemainingTime = function () {
     return self.started + self.timeout - gGameTime;
@@ -2544,9 +2554,12 @@ function LevelFinishChooseState() {
       // one-second-at-a-time countdown.
       var sec = Math.floor(self.RemainingTime() / 1000);
       if (sec < self.lastSec) {
-        PlayBlip(2);
+        PlayBlip();
         self.lastSec = sec;
       }
+    } else if (self.playedSfx === false) {
+      PlayChosen();
+      self.playedSfx = true;
     }
     return nextState;
   };
