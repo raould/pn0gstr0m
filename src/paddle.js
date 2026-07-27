@@ -83,12 +83,12 @@ function Paddle(props) {
         self.englishFactor = ForGameMode({ regular: 0.3, zen: 0.08, pp: 0.4 });
     };
 
-    self.ApplyEnglishFactor = function(player, cpu) {
+    self.ApplyEnglishFactor = function(player, cpu) { // either arg could be undefined.
 	if (self.isPlayer && exists(player)) {
-	    self.englishFactor = Math.max(self.englishFactor, player);
+	    self.englishFactor = Math.max(self.englishFactor, player ?? 0);
 	}
 	else {
-	    self.englishFactor = Math.max(self.englishFactor, cpu);
+	    self.englishFactor = Math.max(self.englishFactor, cpu ?? 0);
 	}
     }
 

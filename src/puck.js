@@ -157,6 +157,8 @@ function Puck() {
 
             self.vx = Math.min(maxVX, self.vx);
             self.vy = Math.min(maxVY, self.vy);
+	    Assert(!isNaN(self.vx), "vx");
+	    Assert(!isNaN(self.vy), "vy");
         }
     };
 
@@ -215,8 +217,8 @@ function Puck() {
             // clear that it split; avoid the new puck
             // being co-located with the original.
             if (gPucks.A.length === 1) {
-                vx += 0.1 * Sign(vx);
-                vy += 0.01 * Sign(vy);
+                vx *= 1.1;
+                vy *= 1.4;
             }
 	    else {
 		// some modes allow more for linear streaming of the pucks.
@@ -233,6 +235,8 @@ function Puck() {
 		vy = self.vy * vyf;
 		//console.log(F(self.vy), F(vyff), F(vyf), F(vy), F(vy-self.vy));
 	    }
+	    Assert(!isNaN(vx), "vx");
+	    Assert(!isNaN(vy), "vy");
 
 	    newprops = { x: self.x, y: self.y, vx, vy, ur: false, forced, maxVX };
         }
@@ -320,6 +324,7 @@ function Puck() {
             nvy += mody;
         }
         self.vy = nvy;
+	Assert(!isNaN(self.vy), "vy");
     };
 
     self.PaddleCollisionNewprops = function( paddle, isSuddenDeath, maxVX ) {

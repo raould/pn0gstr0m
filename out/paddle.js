@@ -91,10 +91,11 @@ function Paddle(props) {
     });
   };
   self.ApplyEnglishFactor = function (player, cpu) {
+    // either arg could be undefined.
     if (self.isPlayer && exists(player)) {
-      self.englishFactor = Math.max(self.englishFactor, player);
+      self.englishFactor = Math.max(self.englishFactor, player != null ? player : 0);
     } else {
-      self.englishFactor = Math.max(self.englishFactor, cpu);
+      self.englishFactor = Math.max(self.englishFactor, cpu != null ? cpu : 0);
     }
   };
   self.ForEachPaddle = function (fn) {

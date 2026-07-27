@@ -216,17 +216,21 @@ function Clip255(n) {
 }
 
 function T01Range(v, min, max) {
-    return T01(
+    const t = T01(
 	Clip(v, min, max) - min,
 	max- min
     );
+    Assert(!isNaN(t), "t");
+    return t;
 }
 
 function T10Range(v, min, max) {
-    return T10(
+    const t = T10(
 	Clip(v, min, max) - min,
 	max-min
     );
+    Assert(!isNaN(t), "t");
+    return t;
 }
 
 // v expected to go from 0 to max.
@@ -234,12 +238,16 @@ function T10Range(v, min, max) {
 // v = max -> return = 0.
 function T10(v, max) { 
     max = max == 0 ? 1 : max;
-    return Clip01(1 - v/max);
+    const t = Clip01(1 - v/max);
+    Assert(!isNaN(t), "t");
+    return t;
 }
 
 function T10Signed(v, max) {
     max = max == 0 ? 1 : max;
-    return Clip01Signed(1 - v/max);
+    const t = Clip01Signed(1 - v/max);
+    Assert(!isNaN(t), "t");
+    return t;
 }
 
 // v expected to be in range [0, max].
@@ -247,28 +255,36 @@ function T10Signed(v, max) {
 // v = max -> return = 1.
 function T01(v, max) {
     max = max == 0 ? 1 : max;
-    return Clip01(v/max);
+    const t = Clip01(v/max);
+    Assert(!isNaN(t), "t");
+    return t;
 }
 
 function T01Signed(v, max) {
     max = max == 0 ? 1 : max;
-    return Clip01Signed(v/max);
+    const t = Clip01Signed(v/max);
+    Assert(!isNaN(t), "t");
+    return t;
 }
 
 // aesthetically "non linear".
 // v expected to be in range [0, max].
 function T01nl(v, max, p=3) {
     max = max == 0 ? 1 : max;
-    return Clip01(
+    const t = Clip01(
         Math.pow(
             v/max,
             p
         )
     );
+    Assert(!isNaN(t), "t");
+    return t;
 }
 
 function T10nl(v, max, p=3) {
-    return 1 - T01nl(v, max, p);
+    const t = 1 - T01nl(v, max, p);
+    Assert(!isNaN(t), "t");
+    return t;
 }
 
 function xyNudge(y, ysize, scale, side) {
