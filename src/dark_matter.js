@@ -33,7 +33,7 @@ function InGameBounds(xywh) {
 
     self.Reset = function() {
 	self.triggered = false; // latches when true.
-	self.timeout = props.timeout;
+	self.timeout = props.timeout * 2; // wait longer after the first time.
 	Assert(self.timeout > 0);
     };
 

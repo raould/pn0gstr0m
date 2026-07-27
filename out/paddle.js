@@ -83,12 +83,19 @@ function Paddle(props) {
     self.attackingNearCount = 0;
     self.nudgeX();
 
-    // ugh, see: level, puck.
+    // ugh, see: level, puck. these starting values can be changed by the level. horrible.
     self.englishFactor = ForGameMode({
       regular: 0.3,
       zen: 0.08,
-      pp: 0.3
+      pp: 0.4
     });
+  };
+  self.ApplyEnglishFactor = function (player, cpu) {
+    if (self.isPlayer && exists(player)) {
+      self.englishFactor = Math.max(self.englishFactor, player);
+    } else {
+      self.englishFactor = Math.max(self.englishFactor, cpu);
+    }
   };
   self.ForEachPaddle = function (fn) {
     fn(self);
@@ -216,14 +223,6 @@ function Paddle(props) {
     } else {
       self.DrawAsPlayer(alpha, s01, isEndScreenshot);
     }
-    if (gDebug && self.isPlayer && isPlayer1(self.side)) {
-      gDebug_DrawList.push({
-        fn: function fn() {
-          gCx.fillStyle = "white";
-          DrawText(F(self.englishFactor), "left", ForP1Side(gw(0.2), gw(0.8)), gh(0.8), gSmallestFontSizePt);
-        }
-      });
-    }
   };
   self.DrawAsXtra = function (alpha, hp01) {
     Cxdo(function () {
@@ -292,9 +291,12 @@ function Paddle(props) {
         gCx.lineTo(paddle.GetMidX() + sx1(10) * paddle.normalX, paddle.GetMidY());
         gCx.lineWidth = 2;
         gCx.stroke();
+        gCx.fillStyle = "blue";
         if (exists(paddle.debugMsg)) {
-          gCx.fillStyle = "blue";
           DrawText(paddle.debugMsg, ForSide(paddle.side, "left", "right"), ForSide(paddle.side, gw(0.1), gw(0.9)), gh(0.2), gSmallFontSizePt);
+        }
+        if (self.isPlayer) {
+          DrawText(F(self.englishFactor), ForSide(paddle.side, "left", "right"), ForSide(paddle.side, gw(0.1), gw(0.9)), gh(0.25), gSmallestFontSizePt);
         }
         if (exists(paddle.aiPuck)) {
           gCx.strokeStyle = "red";

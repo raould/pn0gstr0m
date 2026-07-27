@@ -58,7 +58,6 @@ function MakeAttract(paddleP1, paddleP2) {
     vx0: sxi(3),
     maxVX: sxi(14),
     speedupFactor: undefined,
-    // no english progression.
     isP1Player: false,
     isP2Player: false,
     p1PillState: MakeNoPillState(),
@@ -79,7 +78,6 @@ function MakeZen(paddleP1, paddleP2) {
       pp: 22
     })),
     speedupFactor: undefined,
-    // no english progression.
     isP1Player: true,
     isP2Player: !is1P(),
     p1PillState: MakeAllPillState(),
@@ -100,7 +98,6 @@ function MakePP(paddleP1, paddleP2) {
       pp: 22
     })),
     speedupFactor: undefined,
-    // no english progression.
     isP1Player: true,
     isP2Player: !is1P(),
     p1PillState: MakeAllPillState(),
@@ -125,6 +122,9 @@ function MakeLevel(index, paddleP1, paddleP2) {
     // fyi maxVX is allowed to grow somewhat when there are no more splits.
     maxVX: sxi(12 + index),
     speedupFactor: 0.0001,
+    // should be less than what is in paddle. :-(
+    englishFactorPlayer: 0.01,
+    englishFactorCPU: 0.01,
     isP1Player: true,
     isP2Player: !is1P(),
     p1PillState: gP1PillState,

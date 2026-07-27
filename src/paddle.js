@@ -79,9 +79,18 @@ function Paddle(props) {
         self.attackingNearCount = 0;
         self.nudgeX();
 
-        // ugh, see: level, puck.
-        self.englishFactor = ForGameMode({ regular: 0.3, zen: 0.08, pp: 0.3 });
+        // ugh, see: level, puck. these starting values can be changed by the level. horrible.
+        self.englishFactor = ForGameMode({ regular: 0.3, zen: 0.08, pp: 0.4 });
     };
+
+    self.ApplyEnglishFactor = function(player, cpu) {
+	if (self.isPlayer && exists(player)) {
+	    self.englishFactor = Math.max(self.englishFactor, player);
+	}
+	else {
+	    self.englishFactor = Math.max(self.englishFactor, cpu);
+	}
+    }
 
     self.ForEachPaddle = function(fn) {
         fn(self);
@@ -229,19 +238,6 @@ function Paddle(props) {
 	else {
             self.DrawAsPlayer(alpha, s01, isEndScreenshot);
 	}
-
-        if (gDebug && self.isPlayer && isPlayer1(self.side)) {
-            gDebug_DrawList.push({
-                fn: () => {
-                    gCx.fillStyle = "white";
-                    DrawText(F(self.englishFactor),
-                             "left",
-                             ForP1Side(gw(0.2), gw(0.8)),
-                             gh(0.8),
-                             gSmallestFontSizePt);
-                },
-            });
-        }
     };
 
     self.DrawAsXtra = function( alpha, hp01 ) {
@@ -318,8 +314,8 @@ function Paddle(props) {
                 gCx.lineWidth = 2;
                 gCx.stroke();
 
+                gCx.fillStyle = "blue";
                 if (exists(paddle.debugMsg)) {
-                    gCx.fillStyle = "blue";
                     DrawText(
                         paddle.debugMsg,
                         ForSide(paddle.side, "left", "right"),
@@ -328,6 +324,16 @@ function Paddle(props) {
                         gSmallFontSizePt
                     );
                 }
+		if (self.isPlayer) {
+		    DrawText(
+			F(self.englishFactor),
+                        ForSide(paddle.side, "left", "right"),
+                        ForSide(paddle.side, gw(0.1), gw(0.9)),
+			gh(0.25),
+			gSmallestFontSizePt
+		    );
+		}
+
                 if( exists(paddle.aiPuck)) {
                     gCx.strokeStyle = "red";
                     gCx.beginPath();

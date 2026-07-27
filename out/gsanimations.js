@@ -64,16 +64,14 @@ function MakeForceFieldHorizAnimation(props /* points: array of [x0,y0,x1,y1,x2,
       name: "force_field",
       lifespan: undefined,
       drawFn: function drawFn(self, gameState) {
-        var ga = gCx.globalAlpha;
         var t = isTop ? T10Range(gPuckYMin, top_y0, top_y1) : T01Range(gPuckYMax, bottom_y0, bottom_y1);
-        gCx.globalAlpha = t;
         AddLightningPath(_objectSpread(_objectSpread({}, path_props), {}, {
+          alpha: t / 2,
           x0: props.points[i],
           y0: props.points[i + 1],
           x1: props.points[i + 2],
           y1: props.points[i + 3]
         }));
-        gCx.globalAlpha = ga;
       }
     }));
   };

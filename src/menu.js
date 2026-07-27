@@ -277,7 +277,6 @@ function MakeMenuButton({ OnClose }) {
         // menu.
         if (self.isOpen()) {
             Cxdo(() => {
-		const ga = gCx.globalAlpha;
                 if (gDebug) {
                     // fade buttons so i can watch stepping the game.
                     gCx.globalAlpha = 0.5;
@@ -288,10 +287,11 @@ function MakeMenuButton({ OnClose }) {
                     gCx.fillStyle = backgroundColorStr;
                     gCx.fillRect(0, 0, gw(1), gh(1));
                 }
+		gCx.globalAlpha = 1;
+		DrawCRTOutline();
                 Object.values(self.Navigation()).forEach(
                     bspec => bspec.button.Draw()
                 );
-		gCx.globalAlpha = ga;
             });
         }
         // esc.

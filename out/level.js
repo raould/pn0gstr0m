@@ -29,8 +29,8 @@ function Level(props) {
     Assert(!isBadNumber(self.maxVX));
     self.speedupFactor = props.speedupFactor;
     // these do not apply until later in the level.
-    self.englishFactorPlayer = 0.5;
-    self.englishFactorCPU = 0.5;
+    self.englishFactorPlayer = props.englishFactorPlayer;
+    self.denglishFactorCPU = props.englishFactorCPU;
     self.splitsMax = props.splitsCount; // undefined means unlimited.
     self.splitsRemaining = self.splitsMax;
     self.isSpawning = props.isSpawning;
@@ -75,33 +75,38 @@ function Level(props) {
   };
   self.Step = function (dt) {
     // ugh, see: paddle, puck.
-    if (self.IsSecondHalfGame() && exists(self.speedupFactor)) {
+    if (self.IsSecondHalfGame()) {
       Assert(gGameMode !== kGameModeZen);
       self.StepMaxVX(dt);
       self.StepEnglish(dt);
     }
   };
   self.StepMaxVX = function (dt) {
-    // allow future spawned pucks to go faster, up to a hard limit.
-    self.maxVX = MinSigned(self.maxVX + self.speedupFactor * dt / kTimeStep, kMaxVX);
+    if (exists(self.speedupFactor)) {
+      // allow future spawned pucks to go faster, up to a hard limit.
+      self.maxVX = MinSigned(self.maxVX + self.speedupFactor * dt / kTimeStep, kMaxVX);
+    }
   };
   self.StepEnglish = function (dt) {
     // heuristics to increase english, all fairly arbitrary hacky values.
     // increases over time, more so for human players.
-    var de = dt / kTimeStep * kEnglishStep;
-    var boostFactor = Clip01(1 - 0.25 - Math.pow(self.EnergyFactor(), 3));
-    self.englishFactorPlayer += de * boostFactor;
+    if (exists(self.englishFactorPlayer)) {
+      var de = dt / kTimeStep * kEnglishStep;
+      var boostFactor = Clip01(1 - 0.25 - Math.pow(self.EnergyFactor(), 3));
+      self.englishFactorPlayer += de * boostFactor;
+    }
 
     // cpu doesn't get as much english, it looks strange to me otherwise.
-    self.englishFactorCPU += dt / kTimeStep * kEnglishStep;
+    if (exists(self.englishFactorCPU)) {
+      self.englishFactorCPU += dt / kTimeStep * kEnglishStep;
+    }
 
     // store the new values on the paddles, the pucks read from them.
-    self.paddleP1.englishFactor = self.paddleP1.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
-    self.paddleP2.englishFactor = self.paddleP2.isPlayer ? self.englishFactorPlayer : self.englishFactorCPU;
+    self.paddleP1.ApplyEnglishFactor(self.englishFactorPlayer, self.englishFactorCPU);
+    self.paddleP2.ApplyEnglishFactor(self.englishFactorPlayer, self.englishFactorCPU);
   };
 
-  // make the latter half of a level get more zany
-  // in order to hurry things up.
+  // make the latter half of a level get more zany in order to hurry things up.
   self.IsSecondHalfGame = function () {
     return !self.IsNGame(self.splitsMax * 0.5);
   };

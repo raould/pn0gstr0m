@@ -26,7 +26,7 @@ function AppMenuConstants() {
   // hard coded assumption:
   // there are 3 groups of 2 buttons each.
   var bx0 = gw(0.5) - bw / 3 - bw / 2;
-  var by0 = gh(0.05);
+  var by0 = gh(0.09);
   var bx1 = gw(0.5) - bw / 2;
   var by1 = by0 + bs * 2 + ss;
   var bx2 = gw(0.5) + bw / 3 - bw / 2;

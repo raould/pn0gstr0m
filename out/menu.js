@@ -266,7 +266,6 @@ function Menu(_ref2) {
     // menu.
     if (self.isOpen()) {
       Cxdo(function () {
-        var ga = gCx.globalAlpha;
         if (gDebug) {
           // fade buttons so i can watch stepping the game.
           gCx.globalAlpha = 0.5;
@@ -276,10 +275,11 @@ function Menu(_ref2) {
           gCx.fillStyle = backgroundColorStr;
           gCx.fillRect(0, 0, gw(1), gh(1));
         }
+        gCx.globalAlpha = 1;
+        DrawCRTOutline();
         Object.values(self.Navigation()).forEach(function (bspec) {
           return bspec.button.Draw();
         });
-        gCx.globalAlpha = ga;
       });
     }
     // esc.

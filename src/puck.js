@@ -221,15 +221,15 @@ function Puck() {
 	    else {
 		// some modes allow more for linear streaming of the pucks.
 		const vyff = ForGameMode({
-                    regular: 0.1,
-                    hard: 0.2,
-                    zen: 0.1,
+                    regular: 1.04,
+                    hard: 1.1,
+                    zen: 1.03,
                     // the faster things get, the more spread out, i hope, but,
                     // not too much since it can be fun to be 'streaming'
 		    // up until neo / darkMatter.
-                    pp: 0.1 + 0.4 * T01(Math.abs(self.vx), maxVX)
+                    pp: 3 * T01(Math.abs(self.vx), maxVX)
 		});
-		const vyf = 1 + (gR.RandomBool() ? vyff : 0);
+		const vyf = gR.RandomBool(0.7) ? vyff : 0;
 		vy = self.vy * vyf;
 		//console.log(F(self.vy), F(vyff), F(vyf), F(vy), F(vy-self.vy));
 	    }
@@ -298,7 +298,7 @@ function Puck() {
 	// (but see also: MaybeSplitPuck()'s algorithm for culling.)
         // note that englishFactor increases as level ends.
         var dy = self.midY - paddle.GetMidY();
-        var mody = gR.RandomFloat(0.02) * (Math.abs(dy)*0.05) * paddle.englishFactor;
+        var mody = gR.RandomFloat(0.1) * (Math.abs(dy)*0.05) * paddle.englishFactor; // wtf.
 
         // try to avoid getting boringly stuck at top or bottom, especially in zen.
         // but, don't want to utterly lose 'streaming'.
@@ -363,9 +363,9 @@ function Puck() {
                     PlayBlip();
 		    self.vy *= ForGameMode({
 			regular: 1,
-			hard: 1.7,
+			hard: 1.1,
 			zen: 1,
-			pp: 1.7,
+			pp: 1.05,
 		    });
                     self.AdjustAndBounceX( barrier );
                 }
@@ -399,10 +399,11 @@ function Puck() {
     };
 
     self.DarkMatterCollision = function(darkMatter) {
-	if (self.alive && exists(darkMatter)) {
+	// eat pucks but try not to eat all of them.
+	if (self.alive && exists(darkMatter) && gPucks.A.length > 20) {
 	    var hit = self.CollisionTest( darkMatter );
 	    if (hit) {
-		self.alive = false; // todo: this could end the game!?
+		self.alive = false;
 		AddSparks({
 		    x:self.x, y:self.y,
 		    vx:self.vx/5, vy:self.vy,
@@ -436,8 +437,7 @@ function Puck() {
 	    if (is2P()) {
 		// trying to avoid degenerate steaming at top and bottom.
 		if (Math.abs(self.vy) < 0.3) {
-		    console.log(self.vy);
-		    self.vy *= 1.1;
+		    self.vy *= 1.05;
 		}
 	    }
             PlayBlip();

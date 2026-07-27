@@ -49,10 +49,11 @@ function AddLightningPath(props) {
     x0 = props.x0,
     y0 = props.y0,
     x1 = props.x1,
-    y1 = props.y1;
+    y1 = props.y1,
+    alpha = props.alpha;
   var points = GenerateLightningPath(props);
   Cxdo(function () {
-    var ga = gCx.globalAlpha;
+    var ga = alpha != null ? alpha : 1;
     gCx.strokeStyle = color;
     gCx.beginPath();
     gCx.moveTo(points[0][0], points[0][1]);
@@ -76,6 +77,5 @@ function AddLightningPath(props) {
     gCx.lineWidth = 1;
     gCx.globalAlpha = ga;
     gCx.stroke();
-    gCx.globalAlpha = ga;
   });
 }

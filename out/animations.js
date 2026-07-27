@@ -175,7 +175,6 @@ function MakeCrawlingLightningAnimation(props) {
     },
     drawFn: function drawFn(self) {
       Cxdo(function () {
-        var ga = gCx.globalAlpha;
         gCx.strokeStyle = color;
         gCx.lineWidth = sx1(3);
         gCx.beginPath();
@@ -193,7 +192,6 @@ function MakeCrawlingLightningAnimation(props) {
         }
         gCx.globalAlpha = 1;
         gCx.stroke();
-        gCx.globalAlpha = ga;
       });
     },
     endFn: endFn

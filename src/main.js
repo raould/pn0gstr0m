@@ -187,11 +187,11 @@ var gSmallestFontSizePt;
 var gPillTextY;
 
 // try to avoid huge visual puck steps jumps per frame.
-const kMaxVX = sxi(19);
+const kMaxVX = sxi(12);
 
 // bug: if vy gets too big then the pucks escape vertically,
 // so hard coding a limit to work around that.
-const kMaxVY = syi(30);
+const kMaxVY = syi(15);
 
 function RecalculateConstants() {
     gMidLineDashCount = syi(16);
@@ -227,7 +227,7 @@ const kAvgSparkFrame = 20;
 const kEjectCountThreshold = 300;
 const kEjectSpeedCountThreshold = 200;
 const kDarkMatterCountThreshold = 100; // should be <= kEjectCountThreshold i guess?
-const kDarkMatterGeneratorTimeout = gDebug ? undefined : (1000 * 20);
+const kDarkMatterGeneratorTimeout = 1000 * 20;
 const kPuckPoolSize = 500;
 const kSparkPoolSize = 300;
 
@@ -1517,6 +1517,8 @@ function UpdateLocalStorage() {
     var self = this;
 
     self.Init = function() {
+	StopAudio(true);
+
         // the order of everything here matters (everything is fragile).
 
         // todo: i wish i knew a good way to pull this out, it
@@ -1622,28 +1624,8 @@ function UpdateLocalStorage() {
 	self.darkMatter = undefined;
 	if( exists(kDarkMatterGeneratorTimeout) && is2P() ) {
 	    self.darkMatterGenerator = new DarkMatterGenerator({
-		timeout: kDarkMatterGeneratorTimeout
+		timeout: kDarkMatterGeneratorTimeout // just for the first appearance.
 	    });
-	}
-
-	// vfx re: help break up 'streaming' steady-state at top and bottom.
-	if (is2P() && !self.isAttract) {
-	    self.AddAnimation(MakeForceFieldHorizAnimation({
-		points: [
-		    0, gYInset,
-		    gw(0.25), gYInset*2/3,
-		    gw(0.75), gYInset*2/3,
-		    gWidth, gYInset
-		]
-	    }));
-	    self.AddAnimation(MakeForceFieldHorizAnimation({
-		points: [
-		    0, gHeight-gYInset,
-		    gw(0.25), gHeight-gYInset*2/3,
-		    gw(0.75), gHeight-gYInset*2/3,
-		    gWidth, gHeight-gYInset
-		]
-	    }));
 	}
 
         if (!self.isAttract) {

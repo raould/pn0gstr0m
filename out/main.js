@@ -191,11 +191,11 @@ var gSmallestFontSizePt;
 var gPillTextY;
 
 // try to avoid huge visual puck steps jumps per frame.
-var kMaxVX = sxi(19);
+var kMaxVX = sxi(12);
 
 // bug: if vy gets too big then the pucks escape vertically,
 // so hard coding a limit to work around that.
-var kMaxVY = syi(30);
+var kMaxVY = syi(15);
 function RecalculateConstants() {
   gMidLineDashCount = syi(16);
   gMidLineDashWidth = sx1(1);
@@ -230,7 +230,7 @@ var kAvgSparkFrame = 20;
 var kEjectCountThreshold = 300;
 var kEjectSpeedCountThreshold = 200;
 var kDarkMatterCountThreshold = 100; // should be <= kEjectCountThreshold i guess?
-var kDarkMatterGeneratorTimeout = gDebug ? undefined : 1000 * 20;
+var kDarkMatterGeneratorTimeout = 1000 * 20;
 var kPuckPoolSize = 500;
 var kSparkPoolSize = 300;
 var kBarriersArrayInitialSize = 4;
@@ -1522,6 +1522,8 @@ function ChargeUpState() {
 function GameState(props) {
   var self = this;
   self.Init = function () {
+    StopAudio(true);
+
     // the order of everything here matters (everything is fragile).
 
     // todo: i wish i knew a good way to pull this out, it
@@ -1641,18 +1643,8 @@ function GameState(props) {
     self.darkMatter = undefined;
     if (exists(kDarkMatterGeneratorTimeout) && is2P()) {
       self.darkMatterGenerator = new DarkMatterGenerator({
-        timeout: kDarkMatterGeneratorTimeout
+        timeout: kDarkMatterGeneratorTimeout // just for the first appearance.
       });
-    }
-
-    // vfx re: help break up 'streaming' steady-state at top and bottom.
-    if (is2P() && !self.isAttract) {
-      self.AddAnimation(MakeForceFieldHorizAnimation({
-        points: [0, gYInset, gw(0.25), gYInset * 2 / 3, gw(0.75), gYInset * 2 / 3, gWidth, gYInset]
-      }));
-      self.AddAnimation(MakeForceFieldHorizAnimation({
-        points: [0, gHeight - gYInset, gw(0.25), gHeight - gYInset * 2 / 3, gw(0.75), gHeight - gYInset * 2 / 3, gWidth, gHeight - gYInset]
-      }));
     }
     if (!self.isAttract) {
       PlayStart();
