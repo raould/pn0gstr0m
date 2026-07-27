@@ -1211,7 +1211,7 @@ function TitleState() {
 
     nextState = self.ProcessAllInput();
     if (exists(nextState)) {
-      StopAudio(true);
+      StopMusic();
     }
     return nextState;
   };
@@ -1522,8 +1522,6 @@ function ChargeUpState() {
 function GameState(props) {
   var self = this;
   self.Init = function () {
-    StopAudio(true);
-
     // the order of everything here matters (everything is fragile).
 
     // todo: i wish i knew a good way to pull this out, it
@@ -3325,7 +3323,8 @@ function Start() {
   RecalculateConstants();
   ResetClipping();
   InitHandlers();
-  StopAudio();
+  StopMusic();
+  StopSfx();
   UnhideLinks();
 }
 function UnhideLinks() {

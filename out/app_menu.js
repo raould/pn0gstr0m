@@ -201,7 +201,7 @@ function MakeMuteButtons(_ref3) {
       },
       click_fn: function click_fn(bself) {
         gMusicMuted = !gMusicMuted;
-        gMusicMuted ? StopAudio() : BeginMusic();
+        gMusicMuted ? StopMusic() : BeginMusic();
       }
     })
   };

@@ -187,7 +187,7 @@ function MakeMuteButtons({constants:k}) {
             },
             click_fn: (bself) => {
                 gMusicMuted = !gMusicMuted;
-                gMusicMuted ? StopAudio() : BeginMusic();
+                gMusicMuted ? StopMusic() : BeginMusic();
             }
         }),
     };

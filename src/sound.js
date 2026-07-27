@@ -14,6 +14,7 @@ const gAudio = {
     name2meta: {},
     id2name: {},
     musicCount: 0,
+    musicTimer: undefined,
 };
 
 let gMusicID;
@@ -76,15 +77,18 @@ function RegisterSound(name, basename, props, isMusic) {
 
 function LoadNextSound() {
     // cute for debugging.
-    var report = gAudio.names.map((n) => {
-	return String(gAudio.name2meta[n].loaded);
-    }).join(',');
-    console.log(report);
+    // var report = gAudio.names.map((n) => {
+    //     return String(gAudio.name2meta[n].loaded);
+    // }).join(',');
+    // console.log(report);
 
-    var next = Object.values(gAudio.name2meta).find(m => m.loaded === false); // not 'error'.
-    if (exists(next)) {
-        next.howl.load();
-    }
+    const delay = gDebug ? 500 : 1; // hack to support testing.
+    setTimeout(() => {
+	var next = Object.values(gAudio.name2meta).find(m => m.loaded === false); // not 'error'.
+	if (exists(next)) {
+            next.howl.load();
+	}
+    }, delay);
 }
 
 function OnSfxStop(name) {
@@ -103,11 +107,23 @@ function IsMusicReady() {
 }
 
 function BeginMusic() {
-    StopAudio(true);
-    if (IsMusicReady() === false) {
-	setTimeout(() => BeginMusic(), 1000);
-    }
-    else if (!gMusicMuted) {
+    StopMusic();
+    gAudio.musicTimer = setTimeout(() => {
+	console.log("BeginMusic: polling");
+	gAudio.musicTimer = undefined;
+	if (IsMusicReady) {
+	    BeginMusicPlaying();
+	}
+	else {
+	    BeginMusic();
+	}
+    }, 1000);
+    console.log("BeginMusic, timer", gAudio.musicTimer);
+}
+
+function BeginMusicPlaying() {
+    console.log("BeginMusicPlaying");
+    if (!gMusicMuted) {
 	const unplayedAll = Object.entries(gAudio.name2meta).map(([key, value]) => {
 	    if (value.isMusic && value.loaded === true) {
 		return key;
@@ -133,17 +149,24 @@ function BeginMusic() {
     }
 }
 
-function StopAudio(onlyMusic=false) {
+function StopMusic() {
+    console.log("StopMusic, clear timer", gAudio.musicTimer);
+    if (exists(gAudio.musicTimer)) {
+	clearTimeout(gAudio.musicTimer);
+	gAudio.musicTimer = undefined;
+    }
+    gMusicID = undefined;
     Object.values(gAudio.name2meta).forEach(meta => {
-        if (meta != undefined) {
-            if (!onlyMusic || meta.isMusic) {
-                meta.howl.stop();
-                delete gAudio.id2name[meta.id];
-                delete meta.id;
-            }
+        if (meta?.isMusic) { // '?' shouldn't be necessary, old bug?
+            meta.howl.stop();
+            delete gAudio.id2name[meta.id];
+            delete meta.id;
         }
     });
-    gMusicID = undefined;
+}
+
+function StopSfx() {
+    // they only play once so lamely don't bother.
 }
 
 function PlayMusic(name) {
@@ -253,7 +276,7 @@ function LoadAudio() {
     RegisterMusic("music22", "youngprawn", { volume: kMusicVolume });
     RegisterMusic("music23", "politetortoise", { volume: kMusicVolume });
     RegisterMusic("music24", "poorhamster", { volume: kMusicVolume });
-
+    
     Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("explosion")).length == kExplosionSfxCount, "explosion count");
     Assert(Object.keys(gAudio.name2meta).filter((k)=>k.includes("blip")).length == kBlipSfxCount, "blip count");
 

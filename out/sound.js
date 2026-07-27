@@ -27,7 +27,8 @@ var gAudio = {
   names: [],
   name2meta: {},
   id2name: {},
-  musicCount: 0
+  musicCount: 0,
+  musicTimer: undefined
 };
 var gMusicID;
 
@@ -92,16 +93,20 @@ function RegisterSound(name, basename, props, isMusic) {
 }
 function LoadNextSound() {
   // cute for debugging.
-  var report = gAudio.names.map(function (n) {
-    return String(gAudio.name2meta[n].loaded);
-  }).join(',');
-  console.log(report);
-  var next = Object.values(gAudio.name2meta).find(function (m) {
-    return m.loaded === false;
-  }); // not 'error'.
-  if (exists(next)) {
-    next.howl.load();
-  }
+  // var report = gAudio.names.map((n) => {
+  //     return String(gAudio.name2meta[n].loaded);
+  // }).join(',');
+  // console.log(report);
+
+  var delay = gDebug ? 500 : 1; // hack to support testing.
+  setTimeout(function () {
+    var next = Object.values(gAudio.name2meta).find(function (m) {
+      return m.loaded === false;
+    }); // not 'error'.
+    if (exists(next)) {
+      next.howl.load();
+    }
+  }, delay);
 }
 function OnSfxStop(name) {
   var meta = gAudio.name2meta[name];
@@ -121,12 +126,21 @@ function IsMusicReady() {
   return loading.length === 0;
 }
 function BeginMusic() {
-  StopAudio(true);
-  if (IsMusicReady() === false) {
-    setTimeout(function () {
-      return BeginMusic();
-    }, 1000);
-  } else if (!gMusicMuted) {
+  StopMusic();
+  gAudio.musicTimer = setTimeout(function () {
+    console.log("BeginMusic: polling");
+    gAudio.musicTimer = undefined;
+    if (IsMusicReady) {
+      BeginMusicPlaying();
+    } else {
+      BeginMusic();
+    }
+  }, 1000);
+  console.log("BeginMusic, timer", gAudio.musicTimer);
+}
+function BeginMusicPlaying() {
+  console.log("BeginMusicPlaying");
+  if (!gMusicMuted) {
     var unplayedAll = Object.entries(gAudio.name2meta).map(function (_ref) {
       var _ref2 = _slicedToArray(_ref, 2),
         key = _ref2[0],
@@ -152,18 +166,24 @@ function BeginMusic() {
     gMusicID = PlayMusic(name);
   }
 }
-function StopAudio() {
-  var onlyMusic = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+function StopMusic() {
+  console.log("StopMusic, clear timer", gAudio.musicTimer);
+  if (exists(gAudio.musicTimer)) {
+    clearTimeout(gAudio.musicTimer);
+    gAudio.musicTimer = undefined;
+  }
+  gMusicID = undefined;
   Object.values(gAudio.name2meta).forEach(function (meta) {
-    if (meta != undefined) {
-      if (!onlyMusic || meta.isMusic) {
-        meta.howl.stop();
-        delete gAudio.id2name[meta.id];
-        delete meta.id;
-      }
+    if (meta != null && meta.isMusic) {
+      // '?' shouldn't be necessary, old bug?
+      meta.howl.stop();
+      delete gAudio.id2name[meta.id];
+      delete meta.id;
     }
   });
-  gMusicID = undefined;
+}
+function StopSfx() {
+  // they only play once so lamely don't bother.
 }
 function PlayMusic(name) {
   if (!gMusicMuted) {
