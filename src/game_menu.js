@@ -62,7 +62,7 @@ function MakeMuteButton({constants:k}) {
             bself.is_checked = !gSfxMuted;
         },
         click_fn: (bself) => {
-            gSfxMuted = !gSfxMuted;
+            SetSfxMuted(!gSfxMuted);
         }
     });
 }

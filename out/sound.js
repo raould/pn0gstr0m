@@ -39,6 +39,14 @@ var gMusicID;
 var gStateMuted = false;
 var gMusicMuted = LoadLocal(LocalStorageKeys.musicMuted, false);
 var gSfxMuted = LoadLocal(LocalStorageKeys.sfxMuted, false);
+function SetMusicMuted(muted) {
+  gMusicMuted = muted;
+  SaveLocal(LocalStorageKeys.musicMuted, gMusicMuted);
+}
+function SetSfxMuted(muted) {
+  gSfxMuted = muted;
+  SaveLocal(LocalStorageKeys.sfxMuted, gSfxMuted);
+}
 function RegisterMusic(name, basename, props) {
   RegisterSound(name, basename, props, true);
 }

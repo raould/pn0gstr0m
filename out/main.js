@@ -88,7 +88,7 @@ var kGameModeHard = "hard";
 var kGameModeZen = "zen";
 var kGameMode2P = "pp";
 var gGameMode = LoadLocal(LocalStorageKeys.gameMode, kGameModeRegular);
-// oh lordy, the database migrations!
+// oh lordy, the database migrations! "z2p" -> "pp" :-(
 if (gGameMode === "z2p") {
   gGameMode = kGameMode2P;
 }
@@ -141,6 +141,7 @@ function SetGameMode() {
       return gLevelIndex = kZenLevelIndex;
     }
   })();
+  SaveLocal(LocalStorageKeys.gameMode, gGameMode);
   console.log("SetGameMode", mode, gLevelIndex);
 }
 
@@ -965,17 +966,6 @@ function CopyScreenBuffer() {
   gCxOnscreen.clearRect(0, 0, gCanvasOnscreen.width, gCanvasOnscreen.height);
   gCxOnscreen.drawImage(gCanvasBacking, 0, 0);
 }
-function UpdateLocalStorage() {
-  // todo: ugly that this only works "because globals".
-  // note:
-  // (1) this doesn't update the level high score dict
-  // since that requires deep-equals testing. so that is
-  // left to be done hard-coded elsewhere.
-  // (2) this doesn't include the unplayed music, see sound.js
-  SaveLocal(LocalStorageKeys.gameMode, gGameMode);
-  SaveLocal(LocalStorageKeys.sfxMuted, gSfxMuted);
-  SaveLocal(LocalStorageKeys.musicMuted, gMusicMuted);
-}
 
 // ----------------------------------------
 
@@ -1059,7 +1049,6 @@ function Lifecycle(handlerMap) {
     if (gShowToasts) {
       StepToasts();
     }
-    UpdateLocalStorage();
   };
   self.DrawCRTScanlines = function () {
     if (self.state != kRoot && self.state != kWarning) {
@@ -1154,11 +1143,11 @@ function TitleState() {
     ResetP1Side();
     ResetScores();
     ResetLevelsPillStates();
-    SetGameMode(gGameMode);
     if (!kAppMode) {
       // reset to 1 player every time for clarity.
       gGameMode = kGameModeRegular;
     }
+    SetGameMode(gGameMode);
     self.attraction = new GameState({
       isAttract: true
     });
@@ -1625,7 +1614,6 @@ function GameState(props) {
     })();
     self.MakeLevel();
     self.CreateStartingPuck(self.level.vx0);
-    //if (gDebug && !self.isAttract) { range(0,400).forEach((_) => self.CreateStartingPuck(self.level.vx0)); }
 
     // this countdown is a block on both player & cpu pill spawning.
     // first wait is longer before the very first pill.
@@ -2454,6 +2442,7 @@ function LevelFinishState() {
       DrawText("P1 LVL: ".concat(gP1Score.level), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       DrawText("GPT LVL: ".concat(gP2Score.level), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       if (self.levelIndex > 1) {
+        gCx.fillStyle = RandomGreen(0.5);
         DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.27), gSmallFontSizePt);
         DrawText("GPT GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.27), gSmallFontSizePt);
       }
@@ -3748,6 +3737,7 @@ function handleKeyboardDown(e) {
         cmds.toggleDebug = true;
       }
     });
+    return;
   }
   if (e.keyCode == 49) {
     // '1'

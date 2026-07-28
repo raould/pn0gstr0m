@@ -170,7 +170,7 @@ function MakeMuteButtons({constants:k}) {
                 bself.is_checked = !gSfxMuted;
             },
             click_fn: (bself) => {
-                gSfxMuted = !gSfxMuted;
+                SetSfxMuted(!gSfxMuted);
             }
         }),
         bMusic: new Button({
@@ -186,7 +186,7 @@ function MakeMuteButtons({constants:k}) {
                 bself.is_checked = !gMusicMuted;
             },
             click_fn: (bself) => {
-                gMusicMuted = !gMusicMuted;
+                SetMusicMuted(!gMusicMuted);
                 gMusicMuted ? StopMusic() : BeginMusic();
             }
         }),
