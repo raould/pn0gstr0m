@@ -20,7 +20,7 @@ const kIsSafari = UAParser()?.browser?.name === "Safari";
 // with a few icons in the lower case.
 
 // do not check this (to main branch, anyway) in as true.
-var gDebug = true;
+var gDebug = false;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
