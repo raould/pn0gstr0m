@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -345,7 +345,7 @@ function MakeForcePushProps(context) {
         lifespan: kPillLifespan,
         testFn: (gameState) => {
             const can = gPucks.A.length > 5 && isU(context.paddle.neo);
-	    console.log("push?", can);
+	    //console.log("push?", can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawForcePushPill(context.side, self, alpha),
@@ -388,7 +388,7 @@ function MakeDecimateProps(context) {
 	    // by the time the powerup is activated there might be even less.
 	    // e.g. consider that the other player might also be doing their decimate.
             const can = gPucks.A.length > 30;
-	    console.log("decimate?", can);
+	    //console.log("decimate?", can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawDecimatePill(context.side, self, alpha),
@@ -399,7 +399,7 @@ function MakeDecimateProps(context) {
 	    if (pcount > minSaved) {
 		var clipMax = kAppMode ? 20 : pcount * 0.6;
 		var count = Clip(pcount - minSaved, 0, clipMax);
-		console.log("decimate", pcount, clipMax, count);
+		//console.log("decimate", pcount, clipMax, count);
 		if (count > 0) {
                     PlayPowerupBoom();
                     var targets = gPucks.A
@@ -444,7 +444,7 @@ function MakeEngorgeProps(context) {
         isUrgent: true,
         testFn: (gameState) => {
             const can = !context.paddle.engorged;
-	    console.log("engorce?", can);
+	    //console.log("engorce?", can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawEngorgePill(context.side, self, alpha),
@@ -468,7 +468,7 @@ function MakeSplitProps(context) {
         lifespan: kPillLifespan,
         testFn: (gameState) => {
 	    const can = gPucks.A.length < kPuckPoolSize / 3;
-	    console.log("split?", can);
+	    //console.log("split?", can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawSplitPill(context.side, self, alpha),
@@ -521,7 +521,7 @@ function MakeDefendProps(context) {
             const can = gameState.level.IsBeforeEndingGame() &&
                 gPucks.A.length > 10 &&
                   context.paddle.barriers.A.length == 0;
-	    console.log("defend?", can);
+	    //console.log("defend?", can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawDefendPill(context.side, self, alpha),
@@ -536,7 +536,7 @@ function MakeDefendProps(context) {
                 zen: 50 + (pc*100),
                 pp: 70,
             });
-            console.log(`defend pc=${pc} hp=${F(hp)}`);
+            //console.log(`defend pc=${pc} hp=${F(hp)}`);
 	    var drawScale = ForGameMode({ regular: 1, zen: 0.5 });
             var width = sx1(hp/3);
             var height = (gHeight-gYInset*2) / n;
@@ -577,7 +577,7 @@ function MakeXtraProps(context) {
             const can = gameState.level.IsBeforeEndingGame() &&
                 gPucks.A.length > 20 &&
                   context.paddle.xtras.A.length == 0;
-	    console.log("xtra?", can);
+	    //console.log("xtra?", can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawXtraPill(context.side, self, alpha),
@@ -594,7 +594,7 @@ function MakeXtraProps(context) {
                 zen: 50 + (pc*100),
                 pp: 50 + Math.floor(gPucks.A.length/5),
             });
-            console.log(`xtra pc=${pc} hp=${F(hp)}`);
+            //console.log(`xtra pc=${pc} hp=${F(hp)}`);
             ForCount(n, (i) => {
                 var x = ForSide(context.side, gw(0.15), gw(0.85));
                 var xoff = isEven(i) ? 0 : gw(0.02);
@@ -626,7 +626,7 @@ function MakeNeoProps(context) {
             const can = gameState.level.IsBeforeEndingGame() &&
                 gPucks.A.length > 20 &&
                   isU(context.paddle.neo);
-	    console.log("neo?", can);
+	    //console.log("neo?", can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawNeoPill(context.side, self, alpha),
@@ -656,7 +656,7 @@ function MakeChaosProps(context) {
         testFn: (gameState) => {
 	    const can = gPucks.A.length > 10 &&
 		  isU(context.paddle.neo);
-	    console.log("chaos?", can);
+	    //console.log("chaos?", can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawChaosPill(context.side, self, alpha),

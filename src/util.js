@@ -1,10 +1,14 @@
-/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
 var k2Pi = Math.PI*2;
 var kPi2 = Math.PI/2;
+
+function mod(n, m) { // history is a b*tch.
+    return ((n % m) + m) % m;
+}
 
 function isBadNumber(n) {
     return n === undefined || isNaN(n);
@@ -35,7 +39,7 @@ function logOnce(key, msg) {
 const gLogEveryMap = {};
 function logEvery(key, v, count) {
     const oc = gLogEveryMap[key];
-    const update = isU(oc) || (oc%count === 0);
+    const update = isU(oc) || (oc % count === 0);
     if (update) {
         console.log(key, v);
 	gLogEveryMap[key] = 0;
@@ -177,10 +181,7 @@ function FNP(n, singular, plural) {
 
 function Wrap(n, max) {
     Assert(max >= 0);
-    if (max === 0) { return 0; }
-    if (n > max) { return n % max; }
-    if (n < 0) { return max + (n % max); }
-    return n;
+    return mod(n, max);
 }
 
 function MinSigned(n, max) {

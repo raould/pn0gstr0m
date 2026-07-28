@@ -1,7 +1,9 @@
-/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
+
+// warning: this is all an underspecified, untested mess.
 
 /*class*/ function Random(seed = 0xCAFECAFE) {
     var self = this;
@@ -36,8 +38,6 @@
         return choices[ii(self.next() * (choices.length-1))];
     };
 
-    // closed interval [min, max].
-    // no idea how this handles negative values.
     self.RandomRange = function( min, max, bothSigns=false ) {
         if (min > max) {
             Swap(min, max);
@@ -46,15 +46,14 @@
         return r * (bothSigns ? self.RandomSign() : 1);
     };
 
-    // closed interval [min, max].
-    // no idea how this handles negative values.
     self.RandomRangeInt = function( min, max, bothSigns=false ) {
         if (min > max) {
             Swap(min, max);
         }
-        var o = self.next() * (max-min);
-        var r = Math.round(min + o);
-        return r * (bothSigns ? self.RandomSign() : 1);
+        var rf = self.next() * (max-min);
+	var ri = Math.floor(rf + 0.5);
+	var rc = Clip(min, max, ri);
+        return (min+rc) * (bothSigns ? self.RandomSign() : 1);
     };
 
     // no idea how this handles negative values.

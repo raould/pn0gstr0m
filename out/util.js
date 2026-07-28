@@ -9,13 +9,17 @@ function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) 
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
 var k2Pi = Math.PI * 2;
 var kPi2 = Math.PI / 2;
+function mod(n, m) {
+  // history is a b*tch.
+  return (n % m + m) % m;
+}
 function isBadNumber(n) {
   return n === undefined || isNaN(n);
 }
@@ -184,16 +188,7 @@ function FNP(n, singular, plural) {
 }
 function Wrap(n, max) {
   Assert(max >= 0);
-  if (max === 0) {
-    return 0;
-  }
-  if (n > max) {
-    return n % max;
-  }
-  if (n < 0) {
-    return max + n % max;
-  }
-  return n;
+  return mod(n, max);
 }
 function MinSigned(n, max) {
   var fm = Math.min(Math.abs(n), Math.abs(max));

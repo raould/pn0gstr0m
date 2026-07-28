@@ -1,9 +1,7 @@
-/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
-
-const kIsSafari = UAParser()?.browser?.name === "Safari";
 
 // Welcome to The Land of Global Varibles, And Inconsistent Naming.
 //
@@ -22,6 +20,8 @@ const kIsSafari = UAParser()?.browser?.name === "Safari";
 // keep this committed as false.
 var gDebug = false;
 
+const kIsSafari = UAParser()?.browser?.name === "Safari";
+
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
 // false: then we are in "arcade/demo night" so the menu is just 1p, 2p, start,
@@ -29,6 +29,7 @@ var gDebug = false;
 // and no hard or zen modes.
 // see also: kGameMode*, so this is all quite confusing.
 const kAppMode = true; // keep it commited as true, please.
+const kHotRod = false; // keep this committed as false.
 let gDidWarning = false;
 
 // [{ fn, frames? }]
@@ -241,8 +242,6 @@ const kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
 var gNextID = 0;
-
-const kHotRod = false; // keep this committed as false.
 
 var nokeys = { up: false, down: false };
 function noKeysState() { return {...nokeys}; }
@@ -3607,8 +3606,30 @@ function handleHotrodDown(e) {
     const g = gKey2Cmd_hotrod_general[e.key];
     const left = gKey2Cmd_hotrod_left[e.key];
     const right = gKey2Cmd_hotrod_right[e.key];
+    console.log("HOTROD", e.key, g, left, right);
 
     switch (g) {
+
+    case '1p':
+	e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                cmds.singlePlayer = true;
+            }
+        });
+	break;
+
+    case '2p':
+	e.preventDefault();
+        gEventQueue.push({
+            type: kEventKeyDown,
+            updateFn: (cmds) => {
+                cmds.doublePlayer = true;
+            }
+        });
+	break;
+
     case 'pause':
         e.preventDefault();
 	gEventQueue.push({

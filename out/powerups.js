@@ -6,7 +6,7 @@ function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t =
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -365,7 +365,7 @@ function MakeForcePushProps(context) {
     lifespan: kPillLifespan,
     testFn: function testFn(gameState) {
       var can = gPucks.A.length > 5 && isU(context.paddle.neo);
-      console.log("push?", can);
+      //console.log("push?", can);
       return can;
     },
     drawFn: function drawFn(self) {
@@ -413,7 +413,7 @@ function MakeDecimateProps(context) {
       // by the time the powerup is activated there might be even less.
       // e.g. consider that the other player might also be doing their decimate.
       var can = gPucks.A.length > 30;
-      console.log("decimate?", can);
+      //console.log("decimate?", can);
       return can;
     },
     drawFn: function drawFn(self) {
@@ -427,7 +427,7 @@ function MakeDecimateProps(context) {
       if (pcount > minSaved) {
         var clipMax = kAppMode ? 20 : pcount * 0.6;
         var count = Clip(pcount - minSaved, 0, clipMax);
-        console.log("decimate", pcount, clipMax, count);
+        //console.log("decimate", pcount, clipMax, count);
         if (count > 0) {
           PlayPowerupBoom();
           var targets = gPucks.A.map(function (p) {
@@ -484,7 +484,7 @@ function MakeEngorgeProps(context) {
     isUrgent: true,
     testFn: function testFn(gameState) {
       var can = !context.paddle.engorged;
-      console.log("engorce?", can);
+      //console.log("engorce?", can);
       return can;
     },
     drawFn: function drawFn(self) {
@@ -515,7 +515,7 @@ function MakeSplitProps(context) {
     lifespan: kPillLifespan,
     testFn: function testFn(gameState) {
       var can = gPucks.A.length < kPuckPoolSize / 3;
-      console.log("split?", can);
+      //console.log("split?", can);
       return can;
     },
     drawFn: function drawFn(self) {
@@ -578,7 +578,7 @@ function MakeDefendProps(context) {
       // todo: there is a bug here that let one paddle
       // have 2 defend powerups active at the same time wtf.
       var can = gameState.level.IsBeforeEndingGame() && gPucks.A.length > 10 && context.paddle.barriers.A.length == 0;
-      console.log("defend?", can);
+      //console.log("defend?", can);
       return can;
     },
     drawFn: function drawFn(self) {
@@ -596,7 +596,7 @@ function MakeDefendProps(context) {
         zen: 50 + pc * 100,
         pp: 70
       });
-      console.log("defend pc=".concat(pc, " hp=").concat(F(hp)));
+      //console.log(`defend pc=${pc} hp=${F(hp)}`);
       var drawScale = ForGameMode({
         regular: 1,
         zen: 0.5
@@ -646,7 +646,7 @@ function MakeXtraProps(context) {
     isUrgent: true,
     testFn: function testFn(gameState) {
       var can = gameState.level.IsBeforeEndingGame() && gPucks.A.length > 20 && context.paddle.xtras.A.length == 0;
-      console.log("xtra?", can);
+      //console.log("xtra?", can);
       return can;
     },
     drawFn: function drawFn(self) {
@@ -666,7 +666,7 @@ function MakeXtraProps(context) {
         zen: 50 + pc * 100,
         pp: 50 + Math.floor(gPucks.A.length / 5)
       });
-      console.log("xtra pc=".concat(pc, " hp=").concat(F(hp)));
+      //console.log(`xtra pc=${pc} hp=${F(hp)}`);
       ForCount(n, function (i) {
         var x = ForSide(context.side, gw(0.15), gw(0.85));
         var xoff = isEven(i) ? 0 : gw(0.02);
@@ -702,7 +702,7 @@ function MakeNeoProps(context) {
     isUrgent: true,
     testFn: function testFn(gameState) {
       var can = gameState.level.IsBeforeEndingGame() && gPucks.A.length > 20 && isU(context.paddle.neo);
-      console.log("neo?", can);
+      //console.log("neo?", can);
       return can;
     },
     drawFn: function drawFn(self) {
@@ -737,7 +737,7 @@ function MakeChaosProps(context) {
     lifespan: kPillLifespan * (kAppMode ? 1 : 2),
     testFn: function testFn(gameState) {
       var can = gPucks.A.length > 10 && isU(context.paddle.neo);
-      console.log("chaos?", can);
+      //console.log("chaos?", can);
       return can;
     },
     drawFn: function drawFn(self) {

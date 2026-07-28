@@ -13,12 +13,10 @@ function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t =
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
-
-var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
 
 // Welcome to The Land of Global Varibles, And Inconsistent Naming.
 //
@@ -36,6 +34,7 @@ var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.brow
 
 // keep this committed as false.
 var gDebug = false;
+var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
@@ -44,6 +43,7 @@ var gDebug = false;
 // and no hard or zen modes.
 // see also: kGameMode*, so this is all quite confusing.
 var kAppMode = true; // keep it commited as true, please.
+var kHotRod = false; // keep this committed as false.
 var gDidWarning = false;
 
 // [{ fn, frames? }]
@@ -243,8 +243,6 @@ var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
 var gNextID = 0;
-var kHotRod = false; // keep this committed as false.
-
 var nokeys = {
   up: false,
   down: false
@@ -3468,7 +3466,26 @@ function handleHotrodDown(e) {
   var g = gKey2Cmd_hotrod_general[e.key];
   var left = gKey2Cmd_hotrod_left[e.key];
   var right = gKey2Cmd_hotrod_right[e.key];
+  console.log("HOTROD", e.key, g, left, right);
   switch (g) {
+    case '1p':
+      e.preventDefault();
+      gEventQueue.push({
+        type: kEventKeyDown,
+        updateFn: function updateFn(cmds) {
+          cmds.singlePlayer = true;
+        }
+      });
+      break;
+    case '2p':
+      e.preventDefault();
+      gEventQueue.push({
+        type: kEventKeyDown,
+        updateFn: function updateFn(cmds) {
+          cmds.doublePlayer = true;
+        }
+      });
+      break;
     case 'pause':
       e.preventDefault();
       gEventQueue.push({

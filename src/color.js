@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2026 raould@gmail.com License: GPLv2 / GNU General
+/* Copyright (C) 2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
@@ -147,6 +147,20 @@ function RandomColor(alpha=1) {
             gR.RandomRangeInt(0, 255),
             gR.RandomRangeInt(0, 255),
             gR.RandomRangeInt(0, 255),
+            alpha
+        ]
+    );
+}
+
+function RandomColorMinMax(min, max, alpha=1) {
+    min = Clip(min, 0, 255);
+    max = Clip(max, 0, 255);
+    Assert( min <= max, `${min}, ${max}` );
+    return rgba255s(
+        [
+            gR.RandomRangeInt(min, max),
+            gR.RandomRangeInt(min, max),
+            gR.RandomRangeInt(min, max),
             alpha
         ]
     );
