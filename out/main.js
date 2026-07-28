@@ -34,7 +34,7 @@ var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.brow
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-// do not check this (to main branch, anyway) in as true.
+// keep this committed as false.
 var gDebug = false;
 
 // which title menu to show?
@@ -1451,7 +1451,7 @@ function GetReadyState() {
     var t = Math.ceil(self.timeout / 1000);
     Cxdo(function () {
       // match: GameState.DrawScoreHeader() et. al.
-      gCx.fillStyle = RandomGreen(0.3);
+      gCx.fillStyle = RandomGreen(0.7);
       DrawText(ForP1Side("P1", p2txt), "left", gw(0.2), gh(0.22), gRegularFontSizePt);
       DrawText(ForP1Side(p2txt, "P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
       ForGameMode({
@@ -2452,7 +2452,7 @@ function LevelFinishState() {
       gCx.fillStyle = RandomGreen();
       DrawText("LEVEL ".concat(self.levelIndex, " WON!"), "center", gw(0.5), gh(0.45), gBigFontSizePt);
       DrawText("P1 LVL: ".concat(gP1Score.level), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
-      DrawText("P2 LVL: ".concat(gP2Score.level), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
+      DrawText("GPT LVL: ".concat(gP2Score.level), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       if (self.levelIndex > 1) {
         DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.27), gSmallFontSizePt);
         DrawText("GPT GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.27), gSmallFontSizePt);
@@ -2785,18 +2785,14 @@ function GameOverState() {
   };
   self.DrawSinglePlayer = function () {
     Cxdo(function () {
-      gCx.fillStyle = RandomGreen(0.3);
-      if (gLevelIndex > 1) {
-        DrawText("P1 LVL: ".concat(gP1Score.level), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
-        DrawText("P2 LVL: ".concat(gP2Score.level), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
-      }
-      DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.27), gSmallFontSizePt);
-      DrawText("GPT GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.27), gSmallFontSizePt);
+      gCx.fillStyle = RandomGreen();
+      DrawText("P1 LVL: ".concat(gP1Score.level), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
+      DrawText("GPT LVL: ".concat(gP2Score.level), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
     });
   };
   self.DrawTwoPlayer = function () {
     Cxdo(function () {
-      gCx.fillStyle = RandomGreen(0.3);
+      gCx.fillStyle = RandomGreen();
       var p1a = ForP1Side("left", "right");
       var p1x = ForP1Side(gw(0.2), gw(0.8));
       DrawText("P1: ".concat(gP1Score.game), p1a, p1x, gh(0.22), gRegularFontSizePt);
@@ -2870,7 +2866,7 @@ function GameOverSummaryState() {
   };
   self.DrawSinglePlayer = function () {
     Cxdo(function () {
-      gCx.fillStyle = RandomGreen(0.3);
+      gCx.fillStyle = RandomGreen();
       DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.27), gSmallFontSizePt);
       DrawText("GPT GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.27), gSmallFontSizePt);
       gCx.fillStyle = RandomForColor(magentaSpec);
@@ -2885,7 +2881,7 @@ function GameOverSummaryState() {
   self.DrawTwoPlayer = function () {
     Cxdo(function () {
       // match: GameState.DrawScoreHeader() et. al.
-      gCx.fillStyle = RandomGreen(0.3);
+      gCx.fillStyle = RandomGreen(0.7);
       var p1a = ForP1Side("left", "right");
       var p1x = ForP1Side(gw(0.2), gw(0.8));
       DrawText("P1: ".concat(gP1Score.game), p1a, p1x, gh(0.22), gRegularFontSizePt);
