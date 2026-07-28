@@ -433,6 +433,7 @@ function clearAnyMenuPressed() {
    nextMusic: false,
    singlePlayer: false,
    doublePlayer: false,
+   toggleDebug: false,
    }
 */
 
@@ -1230,6 +1231,11 @@ function TitleState() {
     return nextState;
   };
   self.ProcessOneInput = function (cmds) {
+    if (cmds.toggleDebug) {
+      gDebug = !gDebug;
+      console.log("gDebug", gDebug);
+      return undefined;
+    }
     if (cmds.singlePlayer) {
       // match: app_menu.bp1.click
       SetGameMode(kGameModeRegular);
@@ -3737,6 +3743,15 @@ function handleKeyboardDown(e) {
       }
     });
     return;
+  }
+  if (e.keyCode == 50) {
+    // '@' toggle debug.
+    gEventQueue.push({
+      type: kEventKeyDown,
+      updateFn: function updateFn(cmds) {
+        cmds.toggleDebug = true;
+      }
+    });
   }
   if (e.keyCode == 49) {
     // '1'
