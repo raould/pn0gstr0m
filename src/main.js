@@ -1976,12 +1976,14 @@ function CopyScreenBuffer() {
     };
 
     self.UpdateScore = function(p) {
-        var wasLeft = p.x < gw(0.5);
-	gLastPuckSide = wasLeft ? "left" : "right";
-        ForP1Side(
-            () => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreIncrement); },
-            () => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreIncrement); }
-        )();
+        if (!self.isAttract && p.alive === false) { // "gone" gets no score.
+            var wasLeft = p.x < gw(0.5);
+	    gLastPuckSide = wasLeft ? "left" : "right";
+            ForP1Side(
+		() => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreIncrement); },
+		() => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreIncrement); }
+            )();
+	}
     };
 
     self.MovePucks = function( dt ) {
@@ -2002,10 +2004,8 @@ function CopyScreenBuffer() {
 	    self.darkMatter?.StepPuck(dt, p);
             Assert(!isBadNumber(p.x), p);
             Assert(!isBadNumber(p.y), p);
-            if (!self.isAttract && !p.alive) {
-                self.UpdateScore(p);
-            }
-            if (p.alive) {
+            self.UpdateScore(p);
+            if (p.alive === true) {
                 // xtras, barriers, neos do not split pucks,
                 // only the main player & cpu paddles.
                 const splits = p.AllPaddlesCollision(
@@ -2294,7 +2294,7 @@ function CopyScreenBuffer() {
             DrawText(`UP:${self.unfairPillCount} 1P:${self.pillP1SpawnCountdown} 2P:${self.pillP2SpawnCountdown}`, "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
 
             gCx.fillStyle = "grey"
-            var mvx = gPucks.A.reduce((m,p) => { return p.alive ? Math.max(m, Math.abs(p.vx)) : m; }, 0);
+            var mvx = gPucks.A.reduce((m,p) => { return (p.alive === true) ? Math.max(m, Math.abs(p.vx)) : m; }, 0);
             DrawText( F(mvx).toString(), "left", gw(0.1), gh(0.1), gSmallFontSizePt );
             gCx.fillStyle = "red";
             DrawText( F(self.maxVX).toString(), "left", gw(0.1), gh(0.1) + gSmallFontSizePt, gSmallFontSizePt );
@@ -3853,7 +3853,7 @@ function handleKeyboardDown(e) {
 	return;
     }
 
-    if( e.keyCode == 50 ) { // '@' toggle debug.
+    if( e.keyCode == 50 && e.shiftKey ) { // '@' toggle debug.
 	gEventQueue.push({
 	    type: kEventKeyDown,
 	    updateFn: (cmds) => {

@@ -350,7 +350,7 @@ function MakeChaosAnimation(props) {
         drawFn: () => {
 	    var color = RandomForColor(yellowDarkSpec);
             targets.forEach((p, i) => {
-                if (p.alive) {
+                if (p.alive === true) {
                     AddLightningPath({
                         color,
                         x0: p.x,

@@ -9,7 +9,7 @@ function Puck() {
   var self = this;
   self.Init = function () {
     self.id = gNextID++;
-    self.alive = false;
+    self.alive = false; // false, true, "gone". :-(
   };
 
   /* props = { x, y, vx, vy, ur=true, forced=false, maxVX } */
@@ -119,7 +119,7 @@ function Puck() {
     });
   };
   self.Step = function (dt, maxVX, maxVY) {
-    if (self.alive && !self.isLocked) {
+    if (self.alive === true && !self.isLocked) {
       self.impotentTime -= dt;
       dt = dt * kPhysicsStepScale;
       Assert(!isNaN(dt));
@@ -246,7 +246,7 @@ function Puck() {
     return newprops;
   };
   self.CollisionTest = function (xywh, blockvx) {
-    if (self.alive && !self.isLocked) {
+    if (self.alive === true && !self.isLocked) {
       if (isU(blockvx) || Sign(self.vx) == blockvx) {
         // currently overlapping?
         var xRight = self.x >= xywh.x + xywh.width;
@@ -338,7 +338,7 @@ function Puck() {
   };
   self.AllPaddlesCollision = function (isSuddenDeath, maxVX, pA, pB) {
     var spawned = [];
-    if (self.alive && !self.isLocked) {
+    if (self.alive === true && !self.isLocked) {
       pA.ForEachPaddle(function (p) {
         return self.PaddleCollision(p, isSuddenDeath, maxVX, spawned);
       });
@@ -349,7 +349,7 @@ function Puck() {
     return spawned;
   };
   self.BarriersCollision = function (barriers) {
-    if (self.alive && !self.isLocked && exists(barriers)) {
+    if (self.alive === true && !self.isLocked && exists(barriers)) {
       barriers.forEach(function (barrier) {
         var hit = self.CollisionTest(barrier, ForSide(barrier.side, -1, 1));
         if (hit) {
@@ -367,7 +367,7 @@ function Puck() {
     }
   };
   self.XtrasCollision = function (xtras) {
-    if (self.alive && !self.isLocked && exists(xtras)) {
+    if (self.alive === true && !self.isLocked && exists(xtras)) {
       xtras.forEach(function (xtra) {
         var hit = self.CollisionTest(xtra, -xtra.normalX);
         if (hit) {
@@ -379,7 +379,7 @@ function Puck() {
     }
   };
   self.NeoCollision = function (neo) {
-    if (self.alive && !self.isLocked && exists(neo)) {
+    if (self.alive === true && !self.isLocked && exists(neo)) {
       var hit = self.CollisionTest(neo);
       if (hit) {
         neo.OnPuckHit(self);
@@ -391,7 +391,7 @@ function Puck() {
   };
   self.DarkMatterCollision = function (darkMatter) {
     // eat pucks but try not to eat all of them.
-    if (self.alive && exists(darkMatter) && gPucks.A.length > 20) {
+    if (self.alive === true && exists(darkMatter) && gPucks.A.length > 20) {
       var hit = self.CollisionTest(darkMatter);
       if (hit) {
         self.alive = false;
@@ -409,7 +409,7 @@ function Puck() {
     }
   };
   self.WallsCollision = function (maxVX) {
-    if (self.alive && !self.isLocked) {
+    if (self.alive === true && !self.isLocked) {
       self.WallsBounceY();
     }
   };

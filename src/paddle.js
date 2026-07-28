@@ -453,8 +453,8 @@ function Paddle(props) {
 
     self.StepAI = function( dt, gameState ) {
 	Assert(!self.isPlayer);
-        if (isU(self.aiPuck) || !self.aiPuck.alive) { self.aiPuck = undefined; }
-        if (isU(self.aiPill) || !self.aiPill.alive) { self.aiPill = undefined; }
+        if (isU(self.aiPuck) || self.aiPuck.alive === false) { self.aiPuck = undefined; }
+        if (isU(self.aiPill) || self.aiPill.alive === false) { self.aiPill = undefined; }
         self.AISeek( dt, gameState.level.index );
         if (self.shouldUpdate()) {
             self.UpdatePuckTarget();
@@ -524,8 +524,8 @@ function Paddle(props) {
 
     self.shouldUpdate = function() {
         self.aiCountdownToUpdate--;
-        var hasPuck = self.aiPuck?.alive ?? false;
-        var hasPill = self.aiPill?.alive ?? false;
+        var hasPuck = (self.aiPuck?.alive === true) ?? false;
+        var hasPill = (self.aiPill?.alive === true) ?? false;
         var should = !hasPuck && !hasPill;
         if( !should ) {
             should = self.aiCountdownToUpdate <= 0;

@@ -18,7 +18,7 @@
     self.Alloc = function() {
         return self.array.find(e => {
 	    Assert(exists(e));
-	    return !e.alive;
+	    return e.alive !== true; // false, or "gone".
 	});
     };
     

@@ -1990,13 +1990,16 @@ function GameState(props) {
     self.MovePills(dt);
   };
   self.UpdateScore = function (p) {
-    var wasLeft = p.x < gw(0.5);
-    gLastPuckSide = wasLeft ? "left" : "right";
-    ForP1Side(function () {
-      incrScore(wasLeft ? gP2Score : gP1Score, kScoreIncrement);
-    }, function () {
-      incrScore(wasLeft ? gP1Score : gP2Score, kScoreIncrement);
-    })();
+    if (!self.isAttract && p.alive === false) {
+      // "gone" gets no score.
+      var wasLeft = p.x < gw(0.5);
+      gLastPuckSide = wasLeft ? "left" : "right";
+      ForP1Side(function () {
+        incrScore(wasLeft ? gP2Score : gP1Score, kScoreIncrement);
+      }, function () {
+        incrScore(wasLeft ? gP1Score : gP2Score, kScoreIncrement);
+      })();
+    }
   };
   self.MovePucks = function (dt) {
     var pmaxvx = -Number.MAX_SAFE_INTEGER;
@@ -2017,10 +2020,8 @@ function GameState(props) {
       (_self$darkMatter3 = self.darkMatter) == null || _self$darkMatter3.StepPuck(dt, p);
       Assert(!isBadNumber(p.x), p);
       Assert(!isBadNumber(p.y), p);
-      if (!self.isAttract && !p.alive) {
-        self.UpdateScore(p);
-      }
-      if (p.alive) {
+      self.UpdateScore(p);
+      if (p.alive === true) {
         // xtras, barriers, neos do not split pucks,
         // only the main player & cpu paddles.
         var splits = p.AllPaddlesCollision(self.level.IsSuddenDeath(), self.maxVX, self.paddleP1, self.paddleP2);
@@ -2300,7 +2301,7 @@ function GameState(props) {
       DrawText("UP:".concat(self.unfairPillCount, " 1P:").concat(self.pillP1SpawnCountdown, " 2P:").concat(self.pillP2SpawnCountdown), "left", gw(0.2), gh(0.4), gSmallestFontSizePt);
       gCx.fillStyle = "grey";
       var mvx = gPucks.A.reduce(function (m, p) {
-        return p.alive ? Math.max(m, Math.abs(p.vx)) : m;
+        return p.alive === true ? Math.max(m, Math.abs(p.vx)) : m;
       }, 0);
       DrawText(F(mvx).toString(), "left", gw(0.1), gh(0.1), gSmallFontSizePt);
       gCx.fillStyle = "red";
@@ -3729,7 +3730,7 @@ function handleKeyboardDown(e) {
     });
     return;
   }
-  if (e.keyCode == 50) {
+  if (e.keyCode == 50 && e.shiftKey) {
     // '@' toggle debug.
     gEventQueue.push({
       type: kEventKeyDown,

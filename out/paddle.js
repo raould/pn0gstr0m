@@ -409,10 +409,10 @@ function Paddle(props) {
   };
   self.StepAI = function (dt, gameState) {
     Assert(!self.isPlayer);
-    if (isU(self.aiPuck) || !self.aiPuck.alive) {
+    if (isU(self.aiPuck) || self.aiPuck.alive === false) {
       self.aiPuck = undefined;
     }
-    if (isU(self.aiPill) || !self.aiPill.alive) {
+    if (isU(self.aiPill) || self.aiPill.alive === false) {
       self.aiPill = undefined;
     }
     self.AISeek(dt, gameState.level.index);
@@ -477,10 +477,10 @@ function Paddle(props) {
     }
   };
   self.shouldUpdate = function () {
-    var _self$aiPuck$alive, _self$aiPuck, _self$aiPill$alive, _self$aiPill;
+    var _ref, _self$aiPuck, _ref2, _self$aiPill;
     self.aiCountdownToUpdate--;
-    var hasPuck = (_self$aiPuck$alive = (_self$aiPuck = self.aiPuck) == null ? void 0 : _self$aiPuck.alive) != null ? _self$aiPuck$alive : false;
-    var hasPill = (_self$aiPill$alive = (_self$aiPill = self.aiPill) == null ? void 0 : _self$aiPill.alive) != null ? _self$aiPill$alive : false;
+    var hasPuck = (_ref = ((_self$aiPuck = self.aiPuck) == null ? void 0 : _self$aiPuck.alive) === true) != null ? _ref : false;
+    var hasPill = (_ref2 = ((_self$aiPill = self.aiPill) == null ? void 0 : _self$aiPill.alive) === true) != null ? _ref2 : false;
     var should = !hasPuck && !hasPill;
     if (!should) {
       should = self.aiCountdownToUpdate <= 0;

@@ -447,7 +447,7 @@ function MakeDecimateProps(context) {
             targets = gPucks.A.slice(0, 1);
           }
           targets.forEach(function (p) {
-            p.alive = false;
+            p.alive = "gone"; // special hard-coded case, yay.
             AddSparks({
               x: p.x,
               y: p.y,
