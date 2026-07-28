@@ -78,6 +78,19 @@ function Random() {
     }
     return undefined;
   };
+  self.RandomizeArray = function (a) {
+    var r = [];
+    var m = {};
+    a.forEach(function (e) {
+      m[Math.random()] = e;
+    });
+    var s = Object.keys(m);
+    s.sort();
+    s.forEach(function (k) {
+      r.push(m[k]);
+    });
+    return r;
+  };
   self.Init();
 }
 

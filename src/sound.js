@@ -127,26 +127,25 @@ function BeginMusicPlaying() {
     console.log("BeginMusicPlaying");
     if (!gMusicMuted) {
 	const unplayedAll = Object.entries(gAudio.name2meta).map(([key, value]) => {
-	    if (value.isMusic && value.loaded === true) {
+	    if (value.isMusic && value.loaded === true) { // not 'error'.
 		return key;
 	    }
 	    return undefined;
 	}).filter(Boolean);
 
-        // if unknown (or forced), refresh to full list.
         let unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
         if (unplayed.length == 0) {
-            unplayed = unplayedAll;
+	    console.log("BeginMusicPlaying: resetting unplayed");
+	    unplayed = gR.RandomizeArray(unplayedAll);
         }
-
-        Assert(exists(unplayed), "BeginMusic: null");
-        Assert(unplayed.length > 0, "BeginMusic: 0");
+        Assert(exists(unplayed), "BeginMusicPlaying: null");
+        Assert(unplayed.length > 0, "BeginMusicPlaying: 0");
         const name = unplayed.shift();
 
         // save the now-smaller remaining-items list.
         SaveLocal(LocalStorageKeys.unplayed, unplayed, true);
 
-        console.log("BeginMusic", name);
+        console.log("BeginMusicPlaying", name);
         gMusicID = PlayMusic(name);
     }
 }

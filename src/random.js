@@ -73,6 +73,16 @@
         return undefined;
     };
 
+    self.RandomizeArray = function( a ) {
+	const r = [];
+	const m = {};
+	a.forEach((e) => { m[Math.random()] = e; });
+	const s = Object.keys(m);
+	s.sort();
+	s.forEach((k) => { r.push(m[k]); });
+	return r;
+    };
+
     self.Init();
 }
 

@@ -145,23 +145,23 @@ function BeginMusicPlaying() {
         key = _ref2[0],
         value = _ref2[1];
       if (value.isMusic && value.loaded === true) {
+        // not 'error'.
         return key;
       }
       return undefined;
     }).filter(Boolean);
-
-    // if unknown (or forced), refresh to full list.
     var unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
     if (unplayed.length == 0) {
-      unplayed = unplayedAll;
+      console.log("BeginMusicPlaying: resetting unplayed");
+      unplayed = gR.RandomizeArray(unplayedAll);
     }
-    Assert(exists(unplayed), "BeginMusic: null");
-    Assert(unplayed.length > 0, "BeginMusic: 0");
+    Assert(exists(unplayed), "BeginMusicPlaying: null");
+    Assert(unplayed.length > 0, "BeginMusicPlaying: 0");
     var name = unplayed.shift();
 
     // save the now-smaller remaining-items list.
     SaveLocal(LocalStorageKeys.unplayed, unplayed, true);
-    console.log("BeginMusic", name);
+    console.log("BeginMusicPlaying", name);
     gMusicID = PlayMusic(name);
   }
 }
