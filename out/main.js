@@ -3730,8 +3730,8 @@ function handleKeyboardDown(e) {
     });
     return;
   }
-  if (e.keyCode == 50 && e.shiftKey) {
-    // '@' toggle debug.
+  if (e.keyCode == 54 && e.shiftKey) {
+    // '^' toggle debug.
     gEventQueue.push({
       type: kEventKeyDown,
       updateFn: function updateFn(cmds) {
