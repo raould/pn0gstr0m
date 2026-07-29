@@ -110,12 +110,14 @@ function Puck() {
                 gCx.lineTo(self.midX, self.y+oy);
                 gCx.stroke();
 
+		/*
 		// show vy exaggerated.
 		gCx.beginPath();
 		gCx.strokeStyle = "yellow";
 		gCx.moveTo(self.midX, self.midY);
 		gCx.lineTo(self.midX, self.midY + self.vy * 20);
 		gCx.stroke();
+		*/
 
                 // highlight the ur pucks.
                 if (self.ur) {

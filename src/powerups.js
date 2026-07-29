@@ -726,8 +726,8 @@ function MakeYarsProps(context) {
             PlayPowerupBoom();
 	    context.paddle.yars = new Yars({
 		side: context.side,
-		cols: 8,
-		rows: 30,
+		cols: 14,
+		rows: 80,
 		col_width: gw(0.005)
 	    });
         },
