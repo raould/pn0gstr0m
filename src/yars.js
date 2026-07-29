@@ -41,19 +41,22 @@ function YarCol(props /*side, count, isUp, x, width*/) {
     self.Step = function( dt ) {
 	const step = (self.bh / 4);
 	const dy = SafeDiv0(dt, kStepPeriod) * (self.isUp ? -1 : 1) * step;
-	self.yoff = (self.yoff + dy) % gHeight;
+	self.yoff = mod(self.yoff + dy, gHeight);
 
+	let alive = self.blocks.length;
 	for(let i = 0; i < self.blocks.length; ++i) {
 	    const b = self.blocks[i];
 	    if (typeof(b) === "number") { // dead.
 		if (b <= 0) {
 		    self.blocks[i] = undefined;
+		    --alive;
 		}
 		else {
 		    self.blocks[i] = b - 1;
 		}
 	    }
 	};
+	return alive > 0;
     };
 
     self.Draw = function( alpha ) {
@@ -143,9 +146,12 @@ function Yars( props /*side, cols, rows, col_width*/) {
     };
 
     self.Step = function( dt ) {
-	self.cols.forEach(c => c.Step(dt));
-	// todo: kill itself once empty.
-	return self;
+	const alive = self.cols.reduce((a,c) => {
+	    const ca = c.Step(dt);
+	    return a || ca;
+	}, false);
+	if (!alive) { console.log("--------------- yars dead!"); }
+	return alive ? self : undefined;
     };
 
     self.Draw = function( alpha ) {
