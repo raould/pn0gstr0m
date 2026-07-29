@@ -82,7 +82,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return syi(20);
   }
 }), kDecimatePill, {
-  name: "KILL",
+  name: "ZAP",
   maker: MakeDecimateProps,
   drawer: DrawDecimatePill,
   wfn: function wfn() {

@@ -81,7 +81,7 @@ const gPillInfo = {
         wfn: () => sxi(20), hfn: () => syi(20),
     },
     [kDecimatePill]: {
-        name: "KILL",
+        name: "ZAP",
 	maker: MakeDecimateProps,
         drawer: DrawDecimatePill,
         wfn: () => sxi(20), hfn: () => syi(20),
