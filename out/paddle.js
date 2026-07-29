@@ -148,6 +148,7 @@ function Paddle(props) {
     self.StepBarriers(dt);
     self.StepXtras(dt, gameState);
     self.StepNeo(dt, gameState);
+    self.StepYars(dt);
   };
   self.StepBarriers = function (dt) {
     self.barriers.B.clear();
@@ -168,6 +169,11 @@ function Paddle(props) {
   self.StepNeo = function (dt, gameState) {
     if (exists(self.neo)) {
       self.neo = self.neo.Step(dt, gameState);
+    }
+  };
+  self.StepYars = function (dt) {
+    if (exists(self.yars)) {
+      self.yars = self.yars.Step(dt);
     }
   };
   self.OnPuckHit = function () {
@@ -218,6 +224,9 @@ function Paddle(props) {
     });
     if (exists(self.neo)) {
       self.neo.Draw(alpha, gameState);
+    }
+    if (exists(self.yars)) {
+      self.yars.Draw(alpha);
     }
     if (exists(self.hp)) {
       self.DrawAsXtra(alpha, self.hp / self.hp0);

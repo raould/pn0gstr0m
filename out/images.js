@@ -26,3 +26,5 @@ AddImageToCache("dm1", "images/dm1.png", gImageCache);
 AddImageToCache("dm2", "images/dm2.png", gImageCache);
 AddImageToCache("dm3", "images/dm3.png", gImageCache);
 AddImageToCache("dm4", "images/dm4.png", gImageCache);
+AddImageToCache("yarsL", "images/yarsL.png", gImageCache);
+AddImageToCache("yarsR", "images/yarsR.png", gImageCache);

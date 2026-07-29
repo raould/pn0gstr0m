@@ -34,6 +34,8 @@ function Puck() {
 	else {
 	    self.vy = AvoidZero(props.vy, 0.1);
 	}
+	self.prevVX = self.vx;
+	self.prevVY = self.vy;
 
         self.alive = true;
         self.ur = aub(props.ur, false);
@@ -108,12 +110,14 @@ function Puck() {
                 gCx.lineTo(self.midX, self.y+oy);
                 gCx.stroke();
 
+		/*
 		// show vy exaggerated.
 		gCx.beginPath();
 		gCx.strokeStyle = "yellow";
 		gCx.moveTo(self.midX, self.midY);
 		gCx.lineTo(self.midX, self.midY + self.vy * 20);
 		gCx.stroke();
+		*/
 
                 // highlight the ur pucks.
                 if (self.ur) {
@@ -155,6 +159,8 @@ function Puck() {
             self.midY = self.y + self.height/2;
             // note: no clipping or adjusting done here, see collision routines.
 
+	    self.prevVX = self.vx;
+	    self.prevVY = self.vy;
             self.vx = Math.min(maxVX, self.vx);
             self.vy = Math.min(maxVY, self.vy);
 	    Assert(!isNaN(self.vx), "vx");
@@ -283,12 +289,12 @@ function Puck() {
         return false;
     };
 
-    self.AdjustAndBounceX = function( xywh ) {
+    self.AdjustAndBounceX = function( xw ) {
         if( self.vx > 0 ) {
-            self.x = xywh.x - self.width;
+            self.x = xw.x - self.width;
         }
         else {
-            self.x = xywh.x + xywh.width;
+            self.x = xw.x + xw.width;
         }
         self.vx *= -1;
     };
@@ -416,6 +422,16 @@ function Puck() {
 		    rx:sx(2), ry:sy(2),
 		    colorSpec: yellowSpec
 		});
+	    }
+	}
+    };
+
+    self.YarsCollision = function(yars) {
+	if (self.alive === true && exists(yars)) {
+	    var hit = yars.CollisionTest( self );
+	    if (hit) {
+		PlayBlip();
+		self.AdjustAndBounceX(yars);
 	    }
 	}
     };

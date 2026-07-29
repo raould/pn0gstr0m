@@ -44,7 +44,6 @@ var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.brow
 // see also: kGameMode*, so this is all quite confusing.
 var kAppMode = true; // keep it commited as true, please.
 var kHotRod = false; // keep this committed as false.
-var gDidWarning = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1093,10 +1092,6 @@ function WarningState() {
     if (gDebug) {
       // skip it!
       return kTitle;
-    } else if (!kAppMode && gDidWarning) {
-      // we already got user input once to unlock audio
-      // so we do not need to show the Warning any more.
-      return kTitle;
     } else {
       var nextState;
       gEventQueue.forEach(function (event, i) {
@@ -1115,7 +1110,6 @@ function WarningState() {
     var apd = isAnyPointerDown();
     if (ud || ap || apd) {
       self.done = true;
-      gDidWarning = true;
     }
     return self.done ? kTitle : undefined;
   };
@@ -1840,23 +1834,35 @@ function GameState(props) {
     });
   };
   self.CreateStartingPuck = function (vx) {
-    var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
-    var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
-    var _ForSide = ForSide(gP1Side, toRight, toLeft),
-      _ForSide2 = _slicedToArray(_ForSide, 2),
-      x = _ForSide2[0],
-      sign = _ForSide2[1];
-    var p = gPuckPool.Alloc();
-    Assert(exists(p), "CreateStartingPuck");
-    console.log("CreateStartingPuck", vx);
-    p.PlacementInit({
-      x: x,
-      y: gR.RandomCentered(gh(0.3), gh(0.1)),
-      vx: gR.RandomCentered(sign * vx, sign * vx * 0.2),
-      vy: self.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
-      ur: true
+    range(0, 1).forEach(function (_) {
+      // can be increase when debugging.
+      var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
+      var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
+      if (self.isAttract) {
+        // random side since they are both cpu.
+        var _ref8 = gR.RandomBool() ? toRight : toLeft,
+          _ref9 = _slicedToArray(_ref8, 2),
+          x = _ref9[0],
+          sign = _ref9[1];
+      } else {
+        // away from p1.
+        var _ForSide = ForSide(gP1Side, toRight, toLeft),
+          _ForSide2 = _slicedToArray(_ForSide, 2),
+          x = _ForSide2[0],
+          sign = _ForSide2[1];
+      }
+      var p = gPuckPool.Alloc();
+      Assert(exists(p), "CreateStartingPuck");
+      console.log("CreateStartingPuck", vx);
+      p.PlacementInit({
+        x: x,
+        y: gR.RandomCentered(gh(0.3), gh(0.1)),
+        vx: gR.RandomCentered(sign * vx, sign * vx * 0.2),
+        vy: self.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
+        ur: true
+      });
+      gPucks.A.push(p);
     });
-    gPucks.A.push(p);
   };
 
   // note: not actually random, hard-coded to ranges i need for debugging.
@@ -2025,8 +2031,8 @@ function GameState(props) {
         var splits = p.AllPaddlesCollision(self.level.IsSuddenDeath(), self.maxVX, self.paddleP1, self.paddleP2);
         // note: splits are pushed before parent, match: Draw()'s revEach() z order.
         if (self.level.isSpawning) {
-          for (var _i = 0; (_ref8 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref8 : 0; ++_i) {
-            var _ref8;
+          for (var _i = 0; (_ref10 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref10 : 0; ++_i) {
+            var _ref10;
             var _p = gPuckPool.Alloc();
             if (exists(_p)) {
               _p.PlacementInit(splits[_i]);
@@ -2053,6 +2059,8 @@ function GameState(props) {
         p.NeoCollision(self.paddleP1.neo);
         p.NeoCollision(self.paddleP2.neo);
         p.DarkMatterCollision(self.darkMatter);
+        p.YarsCollision(self.paddleP1.yars);
+        p.YarsCollision(self.paddleP2.yars);
         self.paddleP1.OnPuckMoved(p, i);
         self.paddleP2.OnPuckMoved(p, i);
 
@@ -2387,10 +2395,10 @@ function LevelFinishState() {
     return nextState;
   };
   self.StepAnimations = function (dt) {
-    Object.entries(self.animations).forEach(function (_ref9) {
-      var _ref10 = _slicedToArray(_ref9, 2),
-        id = _ref10[0],
-        anim = _ref10[1];
+    Object.entries(self.animations).forEach(function (_ref11) {
+      var _ref12 = _slicedToArray(_ref11, 2),
+        id = _ref12[0],
+        anim = _ref12[1];
       var done = anim.Step(dt, self);
       if (done) {
         delete self.animations[id];

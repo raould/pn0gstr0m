@@ -30,7 +30,6 @@ const kIsSafari = UAParser()?.browser?.name === "Safari";
 // see also: kGameMode*, so this is all quite confusing.
 const kAppMode = true; // keep it commited as true, please.
 const kHotRod = false; // keep this committed as false.
-let gDidWarning = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1053,11 +1052,6 @@ function CopyScreenBuffer() {
         if (gDebug) { // skip it!
             return kTitle;
         }
-	else if (!kAppMode && gDidWarning) {
-	    // we already got user input once to unlock audio
-	    // so we do not need to show the Warning any more.
-	    return kTitle;
-	}
         else {
             var nextState;
             gEventQueue.forEach((event, i) => {
@@ -1077,7 +1071,6 @@ function CopyScreenBuffer() {
         var apd = isAnyPointerDown();
         if (ud || ap || apd) {
             self.done = true;
-	    gDidWarning = true;
         }
         return self.done ? kTitle : undefined;
     };
@@ -1839,25 +1832,33 @@ function CopyScreenBuffer() {
     };
 
     self.CreateStartingPuck = function(vx) {
-        var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
-        var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
-        var [x, sign] = ForSide(
-            gP1Side,
-            toRight,
-            toLeft
-        );
+	range(0, 1).forEach(_ => { // can be increase when debugging.
+            var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
+            var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
 
-        var p = gPuckPool.Alloc();
-        Assert(exists(p), "CreateStartingPuck");
-        console.log("CreateStartingPuck", vx);
-        p.PlacementInit({ x,
-                          y: gR.RandomCentered(gh(0.3), gh(0.1)),
-                          vx: gR.RandomCentered(sign * vx, sign * vx * 0.2),
-                          vy: (self.isAttract ?
-                               gR.RandomCentered(0, 2, 1) :
-                               0.3),
-                          ur: true });
-        gPucks.A.push(p);
+	    if (self.isAttract) { // random side since they are both cpu.
+		var [x, sign] = gR.RandomBool() ? toRight : toLeft;
+	    }
+	    else { // away from p1.
+		var [x, sign] = ForSide(
+		    gP1Side,
+		    toRight,
+		    toLeft
+		);
+	    }
+
+            var p = gPuckPool.Alloc();
+            Assert(exists(p), "CreateStartingPuck");
+            console.log("CreateStartingPuck", vx);
+            p.PlacementInit({ x,
+                              y: gR.RandomCentered(gh(0.3), gh(0.1)),
+                              vx: gR.RandomCentered(sign * vx, sign * vx * 0.2),
+                              vy: (self.isAttract ?
+				   gR.RandomCentered(0, 2, 1) :
+				   0.3),
+                              ur: true });
+            gPucks.A.push(p);
+	});
     };
 
     // note: not actually random, hard-coded to ranges i need for debugging.
@@ -2035,6 +2036,8 @@ function CopyScreenBuffer() {
                 p.NeoCollision(self.paddleP1.neo);
                 p.NeoCollision(self.paddleP2.neo);
 		p.DarkMatterCollision(self.darkMatter);
+		p.YarsCollision(self.paddleP1.yars);
+		p.YarsCollision(self.paddleP2.yars);
 
                 self.paddleP1.OnPuckMoved(p, i);
                 self.paddleP2.OnPuckMoved(p, i);

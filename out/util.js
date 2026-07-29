@@ -76,8 +76,17 @@ function logOnDelta(key, v, delta, xmsg) {
     gLogOnDeltaMap[key] = v;
   }
 }
-function SafeDiv(num, denom) {
-  return num / (denom != 0 ? denom : 1);
+function SafeDiv1(num, denom) {
+  if (denom == 0) {
+    return 1;
+  }
+  return num / denom;
+}
+function SafeDiv0(num, denom) {
+  if (denom == 0) {
+    return 0;
+  }
+  return num / denom;
 }
 
 // not the best name if you ask me (now).

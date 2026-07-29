@@ -301,75 +301,31 @@ function LoadAudio() {
   RegisterMusic("music1", "nervouslynx", {
     volume: kMusicVolume
   });
-  RegisterMusic("music2", "candiddonkey", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music3", "devotedhyena", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music4", "sweetgorilla", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music5", "sweettapir", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music6", "uglyshrimp", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music7", "vulgarhamster", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music8", "cynicalsheep2", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music9", "cynicaltermite2", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music10", "grumpywolverine", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music11", "lazymouse", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music12", "lonelymouse", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music13", "modestcamel", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music14", "nastywalrus", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music15", "oldpenguin", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music16", "rudeantelope", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music17", "skinnykoala", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music18", "sneakylabradoodle", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music19", "wickedguppy", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music20", "wickedmoose", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music21", "youngchipmunk", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music22", "youngprawn", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music23", "politetortoise", {
-    volume: kMusicVolume
-  });
-  RegisterMusic("music24", "poorhamster", {
-    volume: kMusicVolume
-  });
+  /*
+  RegisterMusic("music2", "candiddonkey", { volume: kMusicVolume });
+  RegisterMusic("music3", "devotedhyena", { volume: kMusicVolume });
+  RegisterMusic("music4", "sweetgorilla", { volume: kMusicVolume });
+  RegisterMusic("music5", "sweettapir", { volume: kMusicVolume });
+  RegisterMusic("music6", "uglyshrimp", { volume: kMusicVolume });
+  RegisterMusic("music7", "vulgarhamster", { volume: kMusicVolume });
+  RegisterMusic("music8", "cynicalsheep2", { volume: kMusicVolume });
+  RegisterMusic("music9", "cynicaltermite2", { volume: kMusicVolume });
+  RegisterMusic("music10", "grumpywolverine", { volume: kMusicVolume });
+  RegisterMusic("music11", "lazymouse", { volume: kMusicVolume });
+  RegisterMusic("music12", "lonelymouse", { volume: kMusicVolume });
+  RegisterMusic("music13", "modestcamel", { volume: kMusicVolume });
+  RegisterMusic("music14", "nastywalrus", { volume: kMusicVolume });
+  RegisterMusic("music15", "oldpenguin", { volume: kMusicVolume });
+  RegisterMusic("music16", "rudeantelope", { volume: kMusicVolume });
+  RegisterMusic("music17", "skinnykoala", { volume: kMusicVolume });
+  RegisterMusic("music18", "sneakylabradoodle", { volume: kMusicVolume });
+  RegisterMusic("music19", "wickedguppy", { volume: kMusicVolume });
+  RegisterMusic("music20", "wickedmoose", { volume: kMusicVolume });
+  RegisterMusic("music21", "youngchipmunk", { volume: kMusicVolume });
+  RegisterMusic("music22", "youngprawn", { volume: kMusicVolume });
+  RegisterMusic("music23", "politetortoise", { volume: kMusicVolume });
+  RegisterMusic("music24", "poorhamster", { volume: kMusicVolume });
+  */
 
   // kick off loading chain.
   gAudio.name2meta[gAudio.names[0]].howl.load();
