@@ -23,7 +23,7 @@ function YarCol(props /*side, count, isUp, x, width*/) {
     var self = this;
 
     self.Init = function() {
-	self.stepPeriod = 0;
+	self.stepPeriod = 200;
 	self.side = props.side;
 	self.isUp = props.isUp;
 	self.x = props.x;
@@ -100,7 +100,7 @@ function YarCol(props /*side, count, isUp, x, width*/) {
 	// else puck is inside yars, let it go. (todo: eat it?)
 
 	if (collided) {
-	    const by = puck.midY + (self.isUp ? self.yoff : -self.yoff);
+	    const by = mod(puck.midY - self.yoff, gHeight);
 	    const bi = Math.floor(by / self.bh + 0.5);
 	    if (bi >= 0 && bi < self.blocks.length) {
 		self.blocks[bi] = kDeathFrames; // hard-coded hack # of frames.
