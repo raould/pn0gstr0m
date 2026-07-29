@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // keep this committed as false.
-var gDebug = true;
+var gDebug = false;
 
 const kIsSafari = UAParser()?.browser?.name === "Safari";
 
@@ -30,7 +30,6 @@ const kIsSafari = UAParser()?.browser?.name === "Safari";
 // see also: kGameMode*, so this is all quite confusing.
 const kAppMode = true; // keep it commited as true, please.
 const kHotRod = false; // keep this committed as false.
-let gDidWarning = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1053,11 +1052,6 @@ function CopyScreenBuffer() {
         if (gDebug) { // skip it!
             return kTitle;
         }
-	else if (!kAppMode && gDidWarning) {
-	    // we already got user input once to unlock audio
-	    // so we do not need to show the Warning any more.
-	    return kTitle;
-	}
         else {
             var nextState;
             gEventQueue.forEach((event, i) => {
@@ -1077,7 +1071,6 @@ function CopyScreenBuffer() {
         var apd = isAnyPointerDown();
         if (ud || ap || apd) {
             self.done = true;
-	    gDidWarning = true;
         }
         return self.done ? kTitle : undefined;
     };

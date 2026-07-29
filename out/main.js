@@ -33,7 +33,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // keep this committed as false.
-var gDebug = true;
+var gDebug = false;
 var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
 
 // which title menu to show?
@@ -44,7 +44,6 @@ var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.brow
 // see also: kGameMode*, so this is all quite confusing.
 var kAppMode = true; // keep it commited as true, please.
 var kHotRod = false; // keep this committed as false.
-var gDidWarning = false;
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -1093,10 +1092,6 @@ function WarningState() {
     if (gDebug) {
       // skip it!
       return kTitle;
-    } else if (!kAppMode && gDidWarning) {
-      // we already got user input once to unlock audio
-      // so we do not need to show the Warning any more.
-      return kTitle;
     } else {
       var nextState;
       gEventQueue.forEach(function (event, i) {
@@ -1115,7 +1110,6 @@ function WarningState() {
     var apd = isAnyPointerDown();
     if (ud || ap || apd) {
       self.done = true;
-      gDidWarning = true;
     }
     return self.done ? kTitle : undefined;
   };
