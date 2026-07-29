@@ -128,9 +128,13 @@ function Yars( props /*side, cols, rows, col_width*/) {
     self.Init = function() { // support xywh
         self.id = gNextID++;
         self.side = props.side;
-	self.x = ForSide(self.side, gw(0.1), gw(0.9));
-	self.y = 0;
 	self.width = props.col_width * props.cols;
+	self.x = ForSide(
+	    self.side,
+	    gw(0.1),
+	    gw(0.9) - self.width
+	);
+	self.y = 0;
 	self.height = gHeight;
 
 	self.cols = Array.from(
