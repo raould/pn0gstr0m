@@ -81,9 +81,6 @@ function Paddle(props) {
 
         // ugh, see: level, puck. these starting values can be changed by the level. horrible.
         self.englishFactor = ForGameMode({ regular: 0.3, zen: 0.08, pp: 0.4 });
-
-	// just for testing.
-	self.yars = new Yars({ side: self.side, cols: 8, rows: 30, col_width: gw(0.005) });
     };
 
     self.ApplyEnglishFactor = function(player, cpu) { // either arg could be undefined.

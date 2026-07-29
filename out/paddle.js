@@ -89,14 +89,6 @@ function Paddle(props) {
       zen: 0.08,
       pp: 0.4
     });
-
-    // just for testing.
-    self.yars = new Yars({
-      side: self.side,
-      cols: 8,
-      rows: 30,
-      col_width: gw(0.005)
-    });
   };
   self.ApplyEnglishFactor = function (player, cpu) {
     // either arg could be undefined.

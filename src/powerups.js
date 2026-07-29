@@ -48,6 +48,7 @@ const kDefendPill = 4;
 const kXtraPill = 5;
 const kNeoPill = 6;
 const kChaosPill = 7;
+const kYarsPill = 8;
 
 // note: order matters, this is the
 // canonical progression through the pills.
@@ -61,6 +62,7 @@ const gPillIDs = [
     kSplitPill,
     kXtraPill,
     kNeoPill,
+    kYarsPill,
 ];
 
 // note:
@@ -120,6 +122,12 @@ var gPillInfo = {
         drawer: DrawNeoPill,
         wfn: () => sxi(20), hfn: () => syi(20),
     },
+    [kYarsPill]: {
+	name: "YARS",
+	maker: MakeYarsProps,
+	drawer: DrawYarsPill,
+	wfn: () => sx1(20), hfn: () => sx1(20),
+    },
 };
 Assert(gPillInfo);
 Assert(Object.keys(gPillInfo).length === gPillIDs.length);
@@ -135,6 +143,7 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
         self.isPlayer = props.isPlayer;
         self.side = props.side;
         self.paddle = props.paddle;
+	Assert(self.side === self.paddle.side);
         self.pillState = props.pillState;
     };
 
@@ -333,6 +342,23 @@ function DrawChaosPill(side, xywh, alpha) {
     });
 }
 
+function DrawYarsPushPill(side, xywh, alpha) {
+    var img = gImageCache[ForSide(side, "yarsL", "yarsR")];
+    Cxdo(() => {
+        var wx = WX(xywh.x);
+        var wy = WY(xywh.y);
+        gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
+        var mx = wx + xywh.width/2;
+        var my = wy + xywh.height/2;
+        gCx.beginPath();
+        gCx.arc(mx, my, xywh.width/2 + sx1(1), 0, k2Pi);
+        gCx.closePath();
+        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.lineWidth = sx1(1);
+        gCx.stroke();
+    });
+}
+
 // ----------------------------------------
 
 function MakeForcePushProps(context) {
@@ -519,8 +545,9 @@ function MakeDefendProps(context) {
             // todo: there is a bug here that let one paddle
             // have 2 defend powerups active at the same time wtf.
             const can = gameState.level.IsBeforeEndingGame() &&
-                gPucks.A.length > 10 &&
-                  context.paddle.barriers.A.length == 0;
+                  gPucks.A.length > 10 &&
+                  context.paddle.barriers.A.length == 0 &&
+		  isU(context.paddle.yars);
 	    //console.log("defend?", can);
 	    return can;
         },
@@ -575,8 +602,9 @@ function MakeXtraProps(context) {
         isUrgent: true,
         testFn: (gameState) => {
             const can = gameState.level.IsBeforeEndingGame() &&
-                gPucks.A.length > 20 &&
-                  context.paddle.xtras.A.length == 0;
+                  gPucks.A.length > 20 &&
+                  context.paddle.xtras.A.length == 0 &&
+		  isU(context.paddle.yars);
 	    //console.log("xtra?", can);
 	    return can;
         },
@@ -672,6 +700,35 @@ function MakeChaosProps(context) {
             gameState.AddAnimation(MakeChaosAnimation({
                 targets
             }));
+        },
+    };
+}
+
+function MakeYarsProps(context) {
+    var { name, wfn, hfn } = gPillInfo[kYarsPill];
+    var width = wfn();
+    var height = hfn();
+    return {
+        name,
+        width, height,
+        lifespan: kPillLifespan,
+        testFn: (gameState) => {
+	    const can = gPucks.A.length > kPuckPoolSize/2 &&
+		  isU(context.paddle.neo) &&
+		  context.paddle.barriers.A.length == 0 &&
+		  context.paddle.xtras.A.length == 0;
+	    //console.log("yars?", can);
+	    return can;
+        },
+        drawFn: (self, alpha=1) => DrawYarsPill(context.side, self, alpha),
+        boomFn: (gameState) => {
+            PlayPowerupBoom();
+	    context.paddle.yars = new Yars({
+		side: context.side,
+		cols: 8,
+		rows: 30,
+		col_width: gw(0.005)
+	    });
         },
     };
 }
