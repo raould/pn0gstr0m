@@ -73,7 +73,7 @@ const gPillIDs = [
 // 2) keep the names short, to avoid overlapping
 // on the Get Ready screen.
 // match: gPillIDs length.
-var gPillInfo = {
+const gPillInfo = {
     [kForcePushPill]: {
         name: "PUSH",
         maker: MakeForcePushProps,
@@ -342,7 +342,7 @@ function DrawChaosPill(side, xywh, alpha) {
     });
 }
 
-function DrawYarsPushPill(side, xywh, alpha) {
+function DrawYarsPill(side, xywh, alpha) {
     var img = gImageCache[ForSide(side, "yarsL", "yarsR")];
     Cxdo(() => {
         var wx = WX(xywh.x);
@@ -713,11 +713,12 @@ function MakeYarsProps(context) {
         width, height,
         lifespan: kPillLifespan,
         testFn: (gameState) => {
-	    const can = gPucks.A.length > kPuckPoolSize/2 &&
-		  isU(context.paddle.neo) &&
-		  context.paddle.barriers.A.length == 0 &&
-		  context.paddle.xtras.A.length == 0;
-	    //console.log("yars?", can);
+	    const p_count = true;//gPucks.A.length > kPuckPoolSize/2;
+	    const no_neo = isU(context.paddle.neo);
+	    const no_barriers = context.paddle.barriers.A.length == 0;
+	    const no_xtras = context.paddle.xtras.A.length == 0;
+	    const can = p_count && no_neo && no_barriers && no_xtras;
+	    console.log("yars?", can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawYarsPill(context.side, self, alpha),

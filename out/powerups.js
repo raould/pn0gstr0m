@@ -360,7 +360,7 @@ function DrawChaosPill(side, xywh, alpha) {
     gCx.stroke();
   });
 }
-function DrawYarsPushPill(side, xywh, alpha) {
+function DrawYarsPill(side, xywh, alpha) {
   var img = gImageCache[ForSide(side, "yarsL", "yarsR")];
   Cxdo(function () {
     var wx = WX(xywh.x);
@@ -800,8 +800,12 @@ function MakeYarsProps(context) {
     height: height,
     lifespan: kPillLifespan,
     testFn: function testFn(gameState) {
-      var can = gPucks.A.length > kPuckPoolSize / 2 && isU(context.paddle.neo) && context.paddle.barriers.A.length == 0 && context.paddle.xtras.A.length == 0;
-      //console.log("yars?", can);
+      var p_count = true; //gPucks.A.length > kPuckPoolSize/2;
+      var no_neo = isU(context.paddle.neo);
+      var no_barriers = context.paddle.barriers.A.length == 0;
+      var no_xtras = context.paddle.xtras.A.length == 0;
+      var can = p_count && no_neo && no_barriers && no_xtras;
+      console.log("yars?", can);
       return can;
     },
     drawFn: function drawFn(self) {

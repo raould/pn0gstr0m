@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // keep this committed as false.
-var gDebug = false;
+var gDebug = true;
 
 const kIsSafari = UAParser()?.browser?.name === "Safari";
 
@@ -1839,7 +1839,7 @@ function CopyScreenBuffer() {
     };
 
     self.CreateStartingPuck = function(vx) {
-	range(0, 1).forEach(_ => { // can be increase when debugging.
+	range(0, 100).forEach(_ => { // can be increase when debugging.
             var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
             var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
 
