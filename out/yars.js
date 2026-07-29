@@ -1,6 +1,5 @@
 "use strict";
 
-function _readOnlyError(r) { throw new TypeError('"' + r + '" is read-only'); }
 /* Copyright (C) 2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
@@ -12,7 +11,7 @@ function _readOnlyError(r) { throw new TypeError('"' + r + '" is read-only'); }
 
 function RandomBlockColor() {
   var choices = [magentaSpec, blueSpec, redSpec, yellowSpec];
-  return RandomForColor(gR.RandomElement(choices), 0.5);
+  return rgba255s(gR.RandomElement(choices).strong, 0.5);
 }
 function YarCol(props /*side, count, isUp, x, width*/) {
   var self = this;
@@ -30,28 +29,40 @@ function YarCol(props /*side, count, isUp, x, width*/) {
     });
   };
   self.Step = function (dt) {
-    // todo: adjust things.
     var step = self.bh / 4;
     var dy = dt / 10 * (self.isUp ? -1 : 1) * step;
     self.yoff = (self.yoff + dy) % gHeight;
+    for (var i = 0; i < self.blocks.length; ++i) {
+      var b = self.blocks[i];
+      if (typeof b === "number") {
+        // dead.
+        if (b <= 0) {
+          self.blocks[i] = undefined;
+        } else {
+          self.blocks[i] = b - 1;
+        }
+      }
+    }
+    ;
   };
   self.Draw = function (alpha) {
     Cxdo(function () {
-      for (var _i = 0; _i < self.blocks.length; ++_i) {
-        var y = mod(_i * self.bh + self.yoff, gHeight);
+      for (var i = 0; i < self.blocks.length; ++i) {
+        var y = mod(i * self.bh + self.yoff, gHeight);
         var xoff = 0; // todo: ((gHeight/2)-Math.abs((gHeight/2)-(y+self.bh/2))) * ForSide(self.side, -0.02, 0.02);
         var bottom = (y + self.bh) % gHeight;
-        var block = self.blocks[_i];
+        var block = self.blocks[i];
+        var fillStyle = typeof block === "number" ? "white" : block; // dying.
         if (exists(block)) {
           gCx.beginPath();
           gCx.rect(self.x + xoff, y, self.width, self.bh);
-          gCx.fillStyle = block;
+          gCx.fillStyle = fillStyle;
           gCx.fill();
           if (bottom < y) {
             // wrapped at the bottom, so missing at the top.
             gCx.beginPath();
             gCx.rect(self.x + xoff, bottom - self.bh, self.width, self.bh);
-            gCx.fillStyle = block;
+            gCx.fillStyle = fillStyle;
             gCx.fill();
           }
         }
@@ -62,9 +73,6 @@ function YarCol(props /*side, count, isUp, x, width*/) {
     var r = self.x + self.width;
     var pr = puck.prevX + puck.width;
 
-    // todo: handle pucks on both sides!
-    // todo: get the interval math less wrong.
-    // todo: get the collision step-trace less wrong.
     // todo: curvature.
 
     var collided = false;
@@ -78,23 +86,21 @@ function YarCol(props /*side, count, isUp, x, width*/) {
       // puck is to the left.
       if (puck.vx > 0) {
         // puck is attacking.
-        collided = pr >= self.x;
+        collided = puck.x + puck.width >= self.x;
       }
-    } else {// puck is inside yars, let it go. (todo: eat it?)
     }
-    if (colliding) {
-      var by = puck.midY + (self.isUp ? self.yoff : -self.yoff);
+    // else puck is inside yars, let it go. (todo: eat it?)
+
+    if (collided) {
+      var by = puck.midY + (self.isUp ? -self.yoff : self.yoff);
       var bi = Math.floor(by / self.bh + 0.5);
       if (bi >= 0 && bi < self.blocks.length) {
-        var b = self.blocks[bi];
-        if (exists(b)) {
-          undefined, _readOnlyError("b");
-          // todo: bounce the puck.
-          // todo: check every column.
-        }
+        self.blocks[bi] = 30; // hard-coded hack # of frames.
+        // todo: bounce the puck.
+        // todo: check every column.
       }
     }
-    return colliding;
+    return collided;
   };
   self.Init();
 }
@@ -104,7 +110,8 @@ function Yars(props /*side, cols, col_width*/) {
     // support xywh
     self.id = gNextID++;
     self.side = props.side;
-    self.x = i * props.col_width + ForSide(self.side, gw(0.1), gw(0.9)), self.y = 0;
+    self.x = ForSide(self.side, gw(0.1), gw(0.9));
+    self.y = 0;
     self.width = props.col_width * props.cols;
     self.height = gHeight;
     self.cols = Array.from({
@@ -113,7 +120,7 @@ function Yars(props /*side, cols, col_width*/) {
       return new YarCol({
         side: self.side,
         count: 50,
-        x: self.x,
+        x: self.x + i * props.col_width,
         isUp: i % 2 === 1,
         width: props.col_width
       });
@@ -123,6 +130,8 @@ function Yars(props /*side, cols, col_width*/) {
     self.cols.forEach(function (c) {
       return c.Step(dt);
     });
+    // todo: kill itself once empty.
+    return self;
   };
   self.Draw = function (alpha) {
     self.cols.forEach(function (c) {
@@ -131,7 +140,7 @@ function Yars(props /*side, cols, col_width*/) {
   };
   self.CollisionTest = function (puck) {
     return self.cols.reduce(function (r, c) {
-      return r || c.Collide(puck);
+      return r || c.CollisionTest(puck);
     }, false);
   };
   self.Init();

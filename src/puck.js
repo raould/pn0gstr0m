@@ -428,7 +428,6 @@ function Puck() {
 	if (self.alive === true && exists(yars)) {
 	    var hit = yars.CollisionTest( self );
 	    if (hit) {
-		self.alive = false;
 		PlayBlip();
 		self.AdjustAndBounceX(yars);
 	    }

@@ -1842,10 +1842,19 @@ function GameState(props) {
   self.CreateStartingPuck = function (vx) {
     var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
     var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
-    var _ForSide = ForSide(gP1Side, toRight, toLeft),
-      _ForSide2 = _slicedToArray(_ForSide, 2),
-      x = _ForSide2[0],
-      sign = _ForSide2[1];
+    if (self.isAttract) {
+      // random side since they are both cpu.
+      var _ref8 = gR.RandomBool() ? toRight : toLeft,
+        _ref9 = _slicedToArray(_ref8, 2),
+        x = _ref9[0],
+        sign = _ref9[1];
+    } else {
+      // away from p1.
+      var _ForSide = ForSide(gP1Side, toRight, toLeft),
+        _ForSide2 = _slicedToArray(_ForSide, 2),
+        x = _ForSide2[0],
+        sign = _ForSide2[1];
+    }
     var p = gPuckPool.Alloc();
     Assert(exists(p), "CreateStartingPuck");
     console.log("CreateStartingPuck", vx);
@@ -2025,8 +2034,8 @@ function GameState(props) {
         var splits = p.AllPaddlesCollision(self.level.IsSuddenDeath(), self.maxVX, self.paddleP1, self.paddleP2);
         // note: splits are pushed before parent, match: Draw()'s revEach() z order.
         if (self.level.isSpawning) {
-          for (var _i = 0; (_ref8 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref8 : 0; ++_i) {
-            var _ref8;
+          for (var _i = 0; (_ref10 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref10 : 0; ++_i) {
+            var _ref10;
             var _p = gPuckPool.Alloc();
             if (exists(_p)) {
               _p.PlacementInit(splits[_i]);
@@ -2053,8 +2062,8 @@ function GameState(props) {
         p.NeoCollision(self.paddleP1.neo);
         p.NeoCollision(self.paddleP2.neo);
         p.DarkMatterCollision(self.darkMatter);
-        p.YarsCollion(self.paddleP1.yars);
-        p.YarsCollion(self.paddleP2.yars);
+        p.YarsCollision(self.paddleP1.yars);
+        p.YarsCollision(self.paddleP2.yars);
         self.paddleP1.OnPuckMoved(p, i);
         self.paddleP2.OnPuckMoved(p, i);
 
@@ -2389,10 +2398,10 @@ function LevelFinishState() {
     return nextState;
   };
   self.StepAnimations = function (dt) {
-    Object.entries(self.animations).forEach(function (_ref9) {
-      var _ref10 = _slicedToArray(_ref9, 2),
-        id = _ref10[0],
-        anim = _ref10[1];
+    Object.entries(self.animations).forEach(function (_ref11) {
+      var _ref12 = _slicedToArray(_ref11, 2),
+        id = _ref12[0],
+        anim = _ref12[1];
       var done = anim.Step(dt, self);
       if (done) {
         delete self.animations[id];

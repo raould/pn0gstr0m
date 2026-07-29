@@ -34,10 +34,21 @@ function YarCol(props /*side, count, isUp, x, width*/) {
     };
 
     self.Step = function( dt ) {
-	// todo: adjust things.
 	const step = (self.bh / 4);
 	const dy = (dt/10) * (self.isUp ? -1 : 1) * step;
 	self.yoff = (self.yoff + dy) % gHeight;
+
+	for(let i = 0; i < self.blocks.length; ++i) {
+	    const b = self.blocks[i];
+	    if (typeof(b) === "number") { // dead.
+		if (b <= 0) {
+		    self.blocks[i] = undefined;
+		}
+		else {
+		    self.blocks[i] = b - 1;
+		}
+	    }
+	};
     };
 
     self.Draw = function( alpha ) {
@@ -47,15 +58,16 @@ function YarCol(props /*side, count, isUp, x, width*/) {
 		const xoff = 0; // todo: ((gHeight/2)-Math.abs((gHeight/2)-(y+self.bh/2))) * ForSide(self.side, -0.02, 0.02);
 		const bottom = (y + self.bh) % gHeight;
 		const block = self.blocks[i];
+		const fillStyle = (typeof block === "number") ? "white" : block; // dying.
 		if (exists(block)) {
 		    gCx.beginPath();
 		    gCx.rect(self.x+xoff, y, self.width, self.bh);
-		    gCx.fillStyle = block;
+		    gCx.fillStyle = fillStyle;
 		    gCx.fill();
 		    if (bottom < y) { // wrapped at the bottom, so missing at the top.
 			gCx.beginPath();
 			gCx.rect(self.x+xoff, (bottom-self.bh), self.width, self.bh);
-			gCx.fillStyle = block;
+			gCx.fillStyle = fillStyle;
 			gCx.fill();
 		    }
 		}
@@ -67,9 +79,6 @@ function YarCol(props /*side, count, isUp, x, width*/) {
 	const r = self.x + self.width;
 	const pr = puck.prevX + puck.width;
 
-	// todo: handle pucks on both sides!
-	// todo: get the interval math less wrong.
-	// todo: get the collision step-trace less wrong.
 	// todo: curvature.
 
 	let collided = false;
@@ -83,13 +92,13 @@ function YarCol(props /*side, count, isUp, x, width*/) {
 		collided = puck.x + puck.width >= self.x
 	    }
 	}
-	else { // puck is inside yars, let it go. (todo: eat it?)
-	}
+	// else puck is inside yars, let it go. (todo: eat it?)
+
 	if (collided) {
-	    const by = puck.midY + (self.isUp ? self.yoff : -self.yoff);
+	    const by = puck.midY + (self.isUp ? -self.yoff : self.yoff);
 	    const bi = Math.floor(by / self.bh + 0.5);
 	    if (bi >= 0 && bi < self.blocks.length) {
-		self.blocks[bi] = undefined;
+		self.blocks[bi] = 30; // hard-coded hack # of frames.
 		// todo: bounce the puck.
 		// todo: check every column.
 	    }
