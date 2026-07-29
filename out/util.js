@@ -341,7 +341,7 @@ function supportsFullscreen() {
 
 // [start, end) or [end, start)
 function range(start, end) {
-  var up, cur;
+  var up, step, cur;
   return _regeneratorRuntime().wrap(function range$(_context) {
     while (1) switch (_context.prev = _context.next) {
       case 0:

@@ -355,7 +355,7 @@ function supportsFullscreen() {
 // [start, end) or [end, start)
 function * range(start, end) {
     var up = start <= end;
-    step = up ? 1 : -1;
+    var step = up ? 1 : -1;
     var cur = start;
     while (up ? cur < end : cur > end) {
 	yield cur;
