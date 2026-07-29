@@ -2053,6 +2053,8 @@ function GameState(props) {
         p.NeoCollision(self.paddleP1.neo);
         p.NeoCollision(self.paddleP2.neo);
         p.DarkMatterCollision(self.darkMatter);
+        p.YarsCollion(self.paddleP1.yars);
+        p.YarsCollion(self.paddleP2.yars);
         self.paddleP1.OnPuckMoved(p, i);
         self.paddleP2.OnPuckMoved(p, i);
 

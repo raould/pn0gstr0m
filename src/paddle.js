@@ -81,6 +81,9 @@ function Paddle(props) {
 
         // ugh, see: level, puck. these starting values can be changed by the level. horrible.
         self.englishFactor = ForGameMode({ regular: 0.3, zen: 0.08, pp: 0.4 });
+
+	// just for testing.
+	self.yars = new Yars({ side: self.side, cols: 2, col_width: gw(0.01) });
     };
 
     self.ApplyEnglishFactor = function(player, cpu) { // either arg could be undefined.
@@ -148,6 +151,7 @@ function Paddle(props) {
         self.StepBarriers( dt );
         self.StepXtras( dt, gameState );
         self.StepNeo( dt, gameState );
+	self.StepYars( dt );
     };
 
     self.StepBarriers = function( dt ) {
@@ -172,6 +176,12 @@ function Paddle(props) {
         if (exists(self.neo)) {
             self.neo = self.neo.Step( dt, gameState );
         }
+    };
+
+    self.StepYars = function( dt ) {
+	if (exists(self.yars)) {
+	    self.yars = self.yars.Step( dt );
+	}
     };
 
     self.OnPuckHit = function() {
@@ -231,6 +241,9 @@ function Paddle(props) {
         if (exists(self.neo)) {
             self.neo.Draw( alpha, gameState );
         }
+	if (exists(self.yars)) {
+	    self.yars.Draw( alpha );
+	}
 
 	if (exists(self.hp)) {
 	    self.DrawAsXtra(alpha, (self.hp/self.hp0));

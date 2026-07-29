@@ -1841,11 +1841,17 @@ function CopyScreenBuffer() {
     self.CreateStartingPuck = function(vx) {
         var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
         var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
-        var [x, sign] = ForSide(
-            gP1Side,
-            toRight,
-            toLeft
-        );
+
+	if (self.isAttract) { // random side since they are both cpu.
+            var [x, sign] = gR.RandomBool() ? toRight : toLeft;
+	}
+	else { // away from p1.
+            var [x, sign] = ForSide(
+		gP1Side,
+		toRight,
+		toLeft
+            );
+	}
 
         var p = gPuckPool.Alloc();
         Assert(exists(p), "CreateStartingPuck");
@@ -2035,6 +2041,8 @@ function CopyScreenBuffer() {
                 p.NeoCollision(self.paddleP1.neo);
                 p.NeoCollision(self.paddleP2.neo);
 		p.DarkMatterCollision(self.darkMatter);
+		p.YarsCollision(self.paddleP1.yars);
+		p.YarsCollision(self.paddleP2.yars);
 
                 self.paddleP1.OnPuckMoved(p, i);
                 self.paddleP2.OnPuckMoved(p, i);
