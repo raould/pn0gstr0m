@@ -1840,32 +1840,35 @@ function GameState(props) {
     });
   };
   self.CreateStartingPuck = function (vx) {
-    var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
-    var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
-    if (self.isAttract) {
-      // random side since they are both cpu.
-      var _ref8 = gR.RandomBool() ? toRight : toLeft,
-        _ref9 = _slicedToArray(_ref8, 2),
-        x = _ref9[0],
-        sign = _ref9[1];
-    } else {
-      // away from p1.
-      var _ForSide = ForSide(gP1Side, toRight, toLeft),
-        _ForSide2 = _slicedToArray(_ForSide, 2),
-        x = _ForSide2[0],
-        sign = _ForSide2[1];
-    }
-    var p = gPuckPool.Alloc();
-    Assert(exists(p), "CreateStartingPuck");
-    console.log("CreateStartingPuck", vx);
-    p.PlacementInit({
-      x: x,
-      y: gR.RandomCentered(gh(0.3), gh(0.1)),
-      vx: gR.RandomCentered(sign * vx, sign * vx * 0.2),
-      vy: self.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
-      ur: true
+    range(0, 100).forEach(function (_) {
+      // can be increase when debugging.
+      var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
+      var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
+      if (self.isAttract) {
+        // random side since they are both cpu.
+        var _ref8 = gR.RandomBool() ? toRight : toLeft,
+          _ref9 = _slicedToArray(_ref8, 2),
+          x = _ref9[0],
+          sign = _ref9[1];
+      } else {
+        // away from p1.
+        var _ForSide = ForSide(gP1Side, toRight, toLeft),
+          _ForSide2 = _slicedToArray(_ForSide, 2),
+          x = _ForSide2[0],
+          sign = _ForSide2[1];
+      }
+      var p = gPuckPool.Alloc();
+      Assert(exists(p), "CreateStartingPuck");
+      console.log("CreateStartingPuck", vx);
+      p.PlacementInit({
+        x: x,
+        y: gR.RandomCentered(gh(0.3), gh(0.1)),
+        vx: gR.RandomCentered(sign * vx, sign * vx * 0.2),
+        vy: self.isAttract ? gR.RandomCentered(0, 2, 1) : 0.3,
+        ur: true
+      });
+      gPucks.A.push(p);
     });
-    gPucks.A.push(p);
   };
 
   // note: not actually random, hard-coded to ranges i need for debugging.

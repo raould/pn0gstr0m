@@ -94,7 +94,8 @@ function Paddle(props) {
     self.yars = new Yars({
       side: self.side,
       cols: 2,
-      col_width: gw(0.01)
+      rows: 10,
+      col_width: gw(0.005)
     });
   };
   self.ApplyEnglishFactor = function (player, cpu) {
