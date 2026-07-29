@@ -467,7 +467,7 @@ function MakeEngorgeProps(context) {
         name,
         width, height,
         lifespan: kPillLifespan,
-        isUrgent: true,
+        // sucked. isUrgent: true,
         testFn: (gameState) => {
             const can = !context.paddle.engorged;
 	    //console.log("engorce?", can);
@@ -540,7 +540,7 @@ function MakeDefendProps(context) {
         name,
         width, height,
         lifespan: kPillLifespan,
-        isUrgent: true,
+        // sucked. isUrgent: true,
         testFn: (gameState) => {
             // todo: there is a bug here that let one paddle
             // have 2 defend powerups active at the same time wtf.
@@ -599,7 +599,7 @@ function MakeXtraProps(context) {
         name,
         width, height,
         lifespan: kPillLifespan,
-        isUrgent: true,
+        // sucked. isUrgent: true,
         testFn: (gameState) => {
             const can = gameState.level.IsBeforeEndingGame() &&
                   gPucks.A.length > 20 &&
@@ -649,7 +649,7 @@ function MakeNeoProps(context) {
         name,
         width, height,
         lifespan: kPillLifespan,
-        isUrgent: true,
+        // sucked. isUrgent: true,
         testFn: (gameState) => {
             const can = gameState.level.IsBeforeEndingGame() &&
                 gPucks.A.length > 20 &&
