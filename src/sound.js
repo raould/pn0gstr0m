@@ -272,7 +272,6 @@ function LoadAudio() {
     RegisterSfx("chosen1", "chosen");
 
     RegisterMusic("music1", "nervouslynx", { volume: kMusicVolume });
-    /*
     RegisterMusic("music2", "candiddonkey", { volume: kMusicVolume });
     RegisterMusic("music3", "devotedhyena", { volume: kMusicVolume });
     RegisterMusic("music4", "sweetgorilla", { volume: kMusicVolume });
@@ -296,7 +295,6 @@ function LoadAudio() {
     RegisterMusic("music22", "youngprawn", { volume: kMusicVolume });
     RegisterMusic("music23", "politetortoise", { volume: kMusicVolume });
     RegisterMusic("music24", "poorhamster", { volume: kMusicVolume });
-    */
 
     // kick off loading chain.
     gAudio.name2meta[gAudio.names[0]].howl.load();
