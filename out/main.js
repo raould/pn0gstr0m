@@ -1834,7 +1834,7 @@ function GameState(props) {
     });
   };
   self.CreateStartingPuck = function (vx) {
-    range(0, 100).forEach(function (_) {
+    range(0, 1).forEach(function (_) {
       // can be increase when debugging.
       var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
       var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];

@@ -369,10 +369,10 @@ function DrawYarsPill(side, xywh, alpha) {
     var mx = wx + xywh.width / 2;
     var my = wy + xywh.height / 2;
     gCx.beginPath();
-    gCx.arc(mx, my, xywh.width / 2 + sx1(1), 0, k2Pi);
+    gCx.arc(mx, my, xywh.width / 2 + sx1(4), 0, k2Pi);
     gCx.closePath();
     gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
-    gCx.lineWidth = sx1(1);
+    gCx.lineWidth = sx1(2);
     gCx.stroke();
   });
 }
@@ -800,12 +800,12 @@ function MakeYarsProps(context) {
     height: height,
     lifespan: kPillLifespan,
     testFn: function testFn(gameState) {
-      var p_count = true; //gPucks.A.length > kPuckPoolSize/2;
+      var p_count = gPucks.A.length > kPuckPoolSize * 1 / 3;
       var no_neo = isU(context.paddle.neo);
       var no_barriers = context.paddle.barriers.A.length == 0;
       var no_xtras = context.paddle.xtras.A.length == 0;
       var can = p_count && no_neo && no_barriers && no_xtras;
-      console.log("yars?", can);
+      //console.log("yars?", can);
       return can;
     },
     drawFn: function drawFn(self) {
