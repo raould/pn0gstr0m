@@ -7,6 +7,8 @@
 // todo: 'curvature'.
 // note: everything assumes using full gHeight.
 
+const kDeathFrames = 30;
+
 function RandomBlockColor() {
     const choices = [
 	magentaSpec,
@@ -21,6 +23,7 @@ function YarCol(props /*side, count, isUp, x, width*/) {
     var self = this;
 
     self.Init = function() {
+	self.stepPeriod = 0;
 	self.side = props.side;
 	self.isUp = props.isUp;
 	self.x = props.x;
@@ -35,7 +38,7 @@ function YarCol(props /*side, count, isUp, x, width*/) {
 
     self.Step = function( dt ) {
 	const step = (self.bh / 4);
-	const dy = (dt/10) * (self.isUp ? -1 : 1) * step;
+	const dy = SafeDiv0(dt, self.stepPeriod) * (self.isUp ? -1 : 1) * step;
 	self.yoff = (self.yoff + dy) % gHeight;
 
 	for(let i = 0; i < self.blocks.length; ++i) {
@@ -58,7 +61,9 @@ function YarCol(props /*side, count, isUp, x, width*/) {
 		const xoff = 0; // todo: ((gHeight/2)-Math.abs((gHeight/2)-(y+self.bh/2))) * ForSide(self.side, -0.02, 0.02);
 		const bottom = (y + self.bh) % gHeight;
 		const block = self.blocks[i];
-		const fillStyle = (typeof block === "number") ? "white" : block; // dying.
+		const fillStyle = (typeof block === "number") ?
+		      rgba255s(yellowSpec.strong, block/kDeathFrames) :
+		      block;
 		if (exists(block)) {
 		    gCx.beginPath();
 		    gCx.rect(self.x+xoff, y, self.width, self.bh);
@@ -95,10 +100,10 @@ function YarCol(props /*side, count, isUp, x, width*/) {
 	// else puck is inside yars, let it go. (todo: eat it?)
 
 	if (collided) {
-	    const by = puck.midY + (self.isUp ? -self.yoff : self.yoff);
+	    const by = puck.midY + (self.isUp ? self.yoff : -self.yoff);
 	    const bi = Math.floor(by / self.bh + 0.5);
 	    if (bi >= 0 && bi < self.blocks.length) {
-		self.blocks[bi] = 30; // hard-coded hack # of frames.
+		self.blocks[bi] = kDeathFrames; // hard-coded hack # of frames.
 		// todo: bounce the puck.
 		// todo: check every column.
 	    }
@@ -109,7 +114,7 @@ function YarCol(props /*side, count, isUp, x, width*/) {
     self.Init();
 }
 
-function Yars( props /*side, cols, col_width*/) {
+function Yars( props /*side, cols, rows, col_width*/) {
     var self = this;
 
     self.Init = function() { // support xywh
@@ -124,7 +129,7 @@ function Yars( props /*side, cols, col_width*/) {
 	    { length: props.cols },
 	    (e, i) => new YarCol({
 		side: self.side,
-		count: 50,
+		count: props.rows,
 		x: self.x + (i*props.col_width),
 		isUp: i % 2 === 1,
 		width: props.col_width
