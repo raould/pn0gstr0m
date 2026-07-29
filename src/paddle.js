@@ -83,7 +83,7 @@ function Paddle(props) {
         self.englishFactor = ForGameMode({ regular: 0.3, zen: 0.08, pp: 0.4 });
 
 	// just for testing.
-	self.yars = new Yars({ side: self.side, cols: 2, rows: 30, col_width: gw(0.015) });
+	self.yars = new Yars({ side: self.side, cols: 4, rows: 30, col_width: gw(0.01) });
     };
 
     self.ApplyEnglishFactor = function(player, cpu) { // either arg could be undefined.

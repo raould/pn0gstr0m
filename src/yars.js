@@ -8,22 +8,24 @@
 // note: everything assumes using full gHeight.
 
 const kDeathFrames = 30;
+const kStepPeriod = 10;
 
 function RandomBlockColor() {
     const choices = [
-	magentaSpec,
-	blueSpec,
 	redSpec,
+	greenSpec,
+	blueSpec,
+	cyanSpec,
+	magentaSpec,
 	yellowSpec,
     ];
-    return rgba255s(gR.RandomElement(choices).strong, 0.5);
+    return rgba255s(gR.RandomElement(choices).strong);
 }
 
 function YarCol(props /*side, count, isUp, x, width*/) {
     var self = this;
 
     self.Init = function() {
-	self.stepPeriod = 200;
 	self.side = props.side;
 	self.isUp = props.isUp;
 	self.x = props.x;
@@ -38,7 +40,7 @@ function YarCol(props /*side, count, isUp, x, width*/) {
 
     self.Step = function( dt ) {
 	const step = (self.bh / 4);
-	const dy = SafeDiv0(dt, self.stepPeriod) * (self.isUp ? -1 : 1) * step;
+	const dy = SafeDiv0(dt, kStepPeriod) * (self.isUp ? -1 : 1) * step;
 	self.yoff = (self.yoff + dy) % gHeight;
 
 	for(let i = 0; i < self.blocks.length; ++i) {
@@ -103,9 +105,12 @@ function YarCol(props /*side, count, isUp, x, width*/) {
 	    const by = mod(puck.midY - self.yoff, gHeight);
 	    const bi = Math.floor(by / self.bh + 0.5);
 	    if (bi >= 0 && bi < self.blocks.length) {
-		self.blocks[bi] = kDeathFrames; // hard-coded hack # of frames.
-		// todo: bounce the puck.
-		// todo: check every column.
+		collided = typeof self.blocks[bi] === "string";
+		if (collided) {
+		    self.blocks[bi] = kDeathFrames; // hard-coded hack # of frames.
+		    // todo: bounce the puck.
+		    // todo: check every column.
+		}
 	    }
 	}
 	return collided;
