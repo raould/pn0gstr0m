@@ -40,13 +40,15 @@ function YarCol(props /*side, count, isUp, x, width*/) {
       for (var i = 0; i < self.blocks.length; ++i) {
         var b = self.blocks[i];
         if (typeof b === "number") {
-          // dead.
+          // dying.
           if (b <= 0) {
             self.blocks[i] = undefined;
-            --alive;
           } else {
             self.blocks[i] = b - 1;
           }
+        }
+        if (self.blocks[i] === undefined) {
+          --alive;
         }
       }
       ;
@@ -160,6 +162,15 @@ function Yars(props /*side, cols, rows, col_width*/) {
     self.cols.forEach(function (c) {
       return c.Draw(alpha);
     });
+    if (gDebug) {
+      Cxdo(function () {
+        gCx.beginPath();
+        gCx.rect(self.x, 0, self.width, gHeight);
+        gCx.lineWidth = 1;
+        gCx.strokeStyle = "cyan";
+        gCx.stroke();
+      });
+    }
   };
   self.CollisionTest = function (puck) {
     return self.cols.reduce(function (r, c) {

@@ -93,8 +93,8 @@ function Paddle(props) {
     // just for testing.
     self.yars = new Yars({
       side: self.side,
-      cols: 2,
-      rows: 10,
+      cols: 8,
+      rows: 30,
       col_width: gw(0.005)
     });
   };
