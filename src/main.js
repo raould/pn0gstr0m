@@ -18,7 +18,7 @@
 // with a few icons in the lower case.
 
 // keep this committed as false.
-var gDebug = false;
+var gDebug = true;
 
 const kIsSafari = UAParser()?.browser?.name === "Safari";
 
@@ -190,7 +190,7 @@ var gSmallestFontSizePt;
 var gPillTextY;
 
 // try to avoid huge visual puck steps jumps per frame.
-const kMaxVX = sxi(12);
+const kMaxVX = sxi(20);
 
 // bug: if vy gets too big then the pucks escape vertically,
 // so hard coding a limit to work around that.
@@ -230,7 +230,7 @@ const kAvgSparkFrame = 20;
 const kEjectCountThreshold = 300;
 const kEjectSpeedCountThreshold = 200;
 const kDarkMatterCountThreshold = 100; // should be <= kEjectCountThreshold i guess?
-const kDarkMatterGeneratorTimeout = 1000 * 20;
+const kDarkMatterGeneratorTimeout = 20 * 1000;
 const kPuckPoolSize = 500;
 const kSparkPoolSize = 300;
 
@@ -1039,6 +1039,7 @@ function CopyScreenBuffer() {
     self.Init();
 }
 
+// should only happen once, after you reload the page.
 /*class*/ function WarningState() {
     var self = this;
 
@@ -1049,7 +1050,7 @@ function CopyScreenBuffer() {
     };
 
     self.Step = function() {
-        if (gDebug) { // skip it!
+        if (false) {//gDebug) { // skip it!
             return kTitle;
         }
         else {

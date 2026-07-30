@@ -227,7 +227,7 @@ function T01Range(v, min, max) {
 	Clip(v, min, max) - min,
 	max- min
     );
-    Assert(!isNaN(t), "t");
+    Assert(!isBadNumber(t), "t");
     return t;
 }
 
@@ -236,7 +236,7 @@ function T10Range(v, min, max) {
 	Clip(v, min, max) - min,
 	max-min
     );
-    Assert(!isNaN(t), "t");
+    Assert(!isBadNumber(t), "t");
     return t;
 }
 
@@ -246,14 +246,14 @@ function T10Range(v, min, max) {
 function T10(v, max) { 
     max = max == 0 ? 1 : max;
     const t = Clip01(1 - v/max);
-    Assert(!isNaN(t), "t");
+    Assert(!isBadNumber(t), "t");
     return t;
 }
 
 function T10Signed(v, max) {
     max = max == 0 ? 1 : max;
     const t = Clip01Signed(1 - v/max);
-    Assert(!isNaN(t), "t");
+    Assert(!isBadNumber(t), "t");
     return t;
 }
 
@@ -263,14 +263,14 @@ function T10Signed(v, max) {
 function T01(v, max) {
     max = max == 0 ? 1 : max;
     const t = Clip01(v/max);
-    Assert(!isNaN(t), "t");
+    Assert(!isBadNumber(t), "t");
     return t;
 }
 
 function T01Signed(v, max) {
     max = max == 0 ? 1 : max;
     const t = Clip01Signed(v/max);
-    Assert(!isNaN(t), "t");
+    Assert(!isBadNumber(t), "t");
     return t;
 }
 
@@ -284,13 +284,13 @@ function T01nl(v, max, p=3) {
             p
         )
     );
-    Assert(!isNaN(t), "t");
+    Assert(!isBadNumber(t), "t");
     return t;
 }
 
 function T10nl(v, max, p=3) {
     const t = 1 - T01nl(v, max, p);
-    Assert(!isNaN(t), "t");
+    Assert(!isBadNumber(t), "t");
     return t;
 }
 

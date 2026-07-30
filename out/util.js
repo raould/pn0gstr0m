@@ -229,12 +229,12 @@ function Clip255(n) {
 }
 function T01Range(v, min, max) {
   var t = T01(Clip(v, min, max) - min, max - min);
-  Assert(!isNaN(t), "t");
+  Assert(!isBadNumber(t), "t");
   return t;
 }
 function T10Range(v, min, max) {
   var t = T10(Clip(v, min, max) - min, max - min);
-  Assert(!isNaN(t), "t");
+  Assert(!isBadNumber(t), "t");
   return t;
 }
 
@@ -244,13 +244,13 @@ function T10Range(v, min, max) {
 function T10(v, max) {
   max = max == 0 ? 1 : max;
   var t = Clip01(1 - v / max);
-  Assert(!isNaN(t), "t");
+  Assert(!isBadNumber(t), "t");
   return t;
 }
 function T10Signed(v, max) {
   max = max == 0 ? 1 : max;
   var t = Clip01Signed(1 - v / max);
-  Assert(!isNaN(t), "t");
+  Assert(!isBadNumber(t), "t");
   return t;
 }
 
@@ -260,13 +260,13 @@ function T10Signed(v, max) {
 function T01(v, max) {
   max = max == 0 ? 1 : max;
   var t = Clip01(v / max);
-  Assert(!isNaN(t), "t");
+  Assert(!isBadNumber(t), "t");
   return t;
 }
 function T01Signed(v, max) {
   max = max == 0 ? 1 : max;
   var t = Clip01Signed(v / max);
-  Assert(!isNaN(t), "t");
+  Assert(!isBadNumber(t), "t");
   return t;
 }
 
@@ -276,13 +276,13 @@ function T01nl(v, max) {
   var p = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3;
   max = max == 0 ? 1 : max;
   var t = Clip01(Math.pow(v / max, p));
-  Assert(!isNaN(t), "t");
+  Assert(!isBadNumber(t), "t");
   return t;
 }
 function T10nl(v, max) {
   var p = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3;
   var t = 1 - T01nl(v, max, p);
-  Assert(!isNaN(t), "t");
+  Assert(!isBadNumber(t), "t");
   return t;
 }
 function xyNudge(y, ysize, scale, side) {

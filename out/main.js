@@ -33,7 +33,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 // keep this committed as false.
-var gDebug = false;
+var gDebug = true;
 var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
 
 // which title menu to show?
@@ -194,7 +194,7 @@ var gSmallestFontSizePt;
 var gPillTextY;
 
 // try to avoid huge visual puck steps jumps per frame.
-var kMaxVX = sxi(12);
+var kMaxVX = sxi(20);
 
 // bug: if vy gets too big then the pucks escape vertically,
 // so hard coding a limit to work around that.
@@ -233,7 +233,7 @@ var kAvgSparkFrame = 20;
 var kEjectCountThreshold = 300;
 var kEjectSpeedCountThreshold = 200;
 var kDarkMatterCountThreshold = 100; // should be <= kEjectCountThreshold i guess?
-var kDarkMatterGeneratorTimeout = 1000 * 20;
+var kDarkMatterGeneratorTimeout = 20 * 1000;
 var kPuckPoolSize = 500;
 var kSparkPoolSize = 300;
 var kBarriersArrayInitialSize = 4;
@@ -1080,6 +1080,7 @@ function RootState(nextState) {
   self.Init();
 }
 
+// should only happen once, after you reload the page.
 /*class*/
 function WarningState() {
   var self = this;
@@ -1089,8 +1090,8 @@ function WarningState() {
     self.done = false;
   };
   self.Step = function () {
-    if (gDebug) {
-      // skip it!
+    if (false) {
+      //gDebug) { // skip it!
       return kTitle;
     } else {
       var nextState;

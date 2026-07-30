@@ -92,7 +92,7 @@ function LoadNextSound() {
     // }).join(',');
     // console.log(report);
 
-    const delay = gDebug ? 500 : 1; // hack to support testing.
+    const delay = 1; // can be increased for testing.
     setTimeout(() => {
 	var next = Object.values(gAudio.name2meta).find(m => m.loaded === false); // not 'error'.
 	if (exists(next)) {
@@ -106,54 +106,60 @@ function OnSfxStop(name) {
     if (exists(meta)) {
         delete meta.id;
         // if a piece of music just ended, kick off the next one.
-        !!meta.isMusic && BeginMusic();
+        if (meta.isMusic == true) { BeginMusic(); }
     }
 }
 
 function IsMusicReady() {
     const music = Object.values(gAudio.name2meta).filter(v => v.isMusic);
-    const loading = music.filter(m => m.loaded === false); // not 'error'.
-    return loading.length === 0;
+    const loading = music.filter(m => m.loaded === true); // not 'error'.
+    // start playing asap. sort of assuming more tune data will load
+    // while playing the currently available one.
+    return loading.length > 0;
 }
 
 function BeginMusic() {
     StopMusic();
     gAudio.musicTimer = setTimeout(() => {
-	console.log("BeginMusic: polling");
 	gAudio.musicTimer = undefined;
 	if (IsMusicReady()) {
-	    BeginMusicPlaying();
+	    BeginUnplayedMusic();
 	}
 	else {
 	    BeginMusic();
 	}
     }, 1000);
-    console.log("BeginMusic, timer", gAudio.musicTimer);
 }
 
-function BeginMusicPlaying() {
-    console.log("BeginMusicPlaying");
+function BeginUnplayedMusic() {
+    console.log("BeginUnplayedMusic");
     if (!gMusicMuted) {
-	const unplayedAll = Object.entries(gAudio.name2meta).map(([key, value]) => {
+	const allMusic = Object.entries(gAudio.name2meta).map(([key, value]) => {
 	    if (value.isMusic && value.loaded === true) { // not 'error'.
 		return key;
 	    }
 	    return undefined;
 	}).filter(Boolean);
-
-        let unplayed = LoadLocal(LocalStorageKeys.unplayed, unplayedAll);
+        let unplayed = LoadLocal(LocalStorageKeys.unplayed, allMusic);
         if (unplayed.length == 0) {
-	    console.log("BeginMusicPlaying: resetting unplayed");
-	    unplayed = gR.RandomizeArray(unplayedAll);
+	    // played everything we had, refresh with everything available.
+	    console.log("BeginUnplayedMusic: resetting unplayed");
+	    unplayed = gR.RandomizeArray(allMusic);
         }
-        Assert(exists(unplayed), "BeginMusicPlaying: null");
-        Assert(unplayed.length > 0, "BeginMusicPlaying: 0");
-        const name = unplayed.shift();
+	if (allMusic.length > unplayed.length) {
+	    // more tunes got loaded in the meantime, so add them to the mix.
+	    console.log("BeginUnplayedMusic: adding newly loaded data, before", unplayed);
+	    allMusic.forEach(u => { if (false===unplayed.includes(u)) { unplayed.push(u); } } );
+	    console.log("BeginUnplayedMusic: adding newly loaded data, after", unplayed);
+	}
 
         // save the now-smaller remaining-items list.
+        Assert(exists(unplayed), "BeginUnplayedMusic: null");
+        Assert(unplayed.length > 0, "BeginUnplayedMusic: 0");
         SaveLocal(LocalStorageKeys.unplayed, unplayed, true);
 
-        console.log("BeginMusicPlaying", name);
+        const name = unplayed.shift();
+        console.log("BeginUnplayedMusic", name);
         gMusicID = PlayMusic(name);
     }
 }
@@ -256,46 +262,49 @@ const PlayPaddleHit = MakePlayFn(2, "explosion", (name) => PlaySfxDebounced(name
 
 function LoadAudio() {
     SaveLocal(LocalStorageKeys.unplayed, []);
-    
-    // these will load in order 1 by 1 via onload().
+    LoadSfx();
+    LoadMusic();
+    gAudio.name2meta[gAudio.names[0]].howl.load();
+}
 
+function LoadSfx() {
     // todo: not enough audible difference between the explosion sfx.
     RegisterSfx("explosion1", "explosionB2", { volume: 0.35 }); // puck hits paddle.
     RegisterSfx("explosion2", "explosionA2", { volume: 0.35 }); // puck hits paddle.
-
     RegisterSfx("blip1", "blipSelectC", { volume: 0.2 }); // puck hits wall etc.
-
     RegisterSfx("start1", "start");
     RegisterSfx("chargeup1", "chargeup", { volume: 0.3 });
     RegisterSfx("powerupboom1", "powerUp");
     RegisterSfx("gameover1", "gameover");
     RegisterSfx("chosen1", "chosen");
+}
 
-    RegisterMusic("music1", "nervouslynx", { volume: kMusicVolume });
-    RegisterMusic("music2", "candiddonkey", { volume: kMusicVolume });
-    RegisterMusic("music3", "devotedhyena", { volume: kMusicVolume });
-    RegisterMusic("music4", "sweetgorilla", { volume: kMusicVolume });
-    RegisterMusic("music5", "sweettapir", { volume: kMusicVolume });
-    RegisterMusic("music6", "uglyshrimp", { volume: kMusicVolume });
-    RegisterMusic("music7", "vulgarhamster", { volume: kMusicVolume });
-    RegisterMusic("music8", "cynicalsheep2", { volume: kMusicVolume });
-    RegisterMusic("music9", "cynicaltermite2", { volume: kMusicVolume });
-    RegisterMusic("music10", "grumpywolverine", { volume: kMusicVolume });
-    RegisterMusic("music11", "lazymouse", { volume: kMusicVolume });
-    RegisterMusic("music12", "lonelymouse", { volume: kMusicVolume });
-    RegisterMusic("music13", "modestcamel", { volume: kMusicVolume });
-    RegisterMusic("music14", "nastywalrus", { volume: kMusicVolume });
-    RegisterMusic("music15", "oldpenguin", { volume: kMusicVolume });
-    RegisterMusic("music16", "rudeantelope", { volume: kMusicVolume });
-    RegisterMusic("music17", "skinnykoala", { volume: kMusicVolume });
-    RegisterMusic("music18", "sneakylabradoodle", { volume: kMusicVolume });
-    RegisterMusic("music19", "wickedguppy", { volume: kMusicVolume });
-    RegisterMusic("music20", "wickedmoose", { volume: kMusicVolume });
-    RegisterMusic("music21", "youngchipmunk", { volume: kMusicVolume });
-    RegisterMusic("music22", "youngprawn", { volume: kMusicVolume });
-    RegisterMusic("music23", "politetortoise", { volume: kMusicVolume });
-    RegisterMusic("music24", "poorhamster", { volume: kMusicVolume });
-
-    // kick off loading chain.
-    gAudio.name2meta[gAudio.names[0]].howl.load();
+function LoadMusic() {
+    const musicSources = gR.RandomizeArray([
+	"nervouslynx",
+	"candiddonkey",
+	"devotedhyena",
+	"sweetgorilla",
+	"sweettapir",
+	"uglyshrimp",
+	"vulgarhamster",
+	"cynicalsheep2",
+	"cynicaltermite2",
+	"grumpywolverine",
+	"lazymouse",
+	"lonelymouse",
+	"modestcamel",
+	"nastywalrus",
+	"oldpenguin",
+	"rudeantelope",
+	"skinnykoala",
+	"sneakylabradoodle",
+	"wickedguppy",
+	"wickedmoose",
+	"youngchipmunk",
+	"youngprawn",
+	"politetortoise",
+	"poorhamster",
+    ]);
+    musicSources.forEach((s, i) => RegisterMusic(`music${i}`, s, { volume: kMusicVolume }));
 }

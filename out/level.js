@@ -26,6 +26,7 @@ function Level(props) {
 
     self.vx0 = props.vx0;
     self.maxVX = props.maxVX;
+    console.log("level vx's", self.index, self.vx0, self.maxVX);
     Assert(!isBadNumber(self.maxVX));
     self.speedupFactor = props.speedupFactor;
     // these do not apply until later in the level.

@@ -125,22 +125,29 @@ function DarkMatter(props /*x, y, dim, vx, vy*/) {
       var df = 30;
       var or = T10(gFrameCount % df, df) * sx1(100);
       var a = T01(gFrameCount % df, df);
-      // outermost.
+      // out
       gCx.beginPath();
       gCx.arc(mx, my, or, 0, k2Pi);
       gCx.closePath();
-      gCx.strokeStyle = RandomYellow(a);
-      gCx.lineWidth = sx1(1);
+      gCx.strokeStyle = RandomBlue(a);
+      gCx.lineWidth = sx1(2);
       gCx.stroke();
-      // innermost.
+      // in
       gCx.beginPath();
       gCx.arc(mx, my, or / 2, 0, k2Pi);
       gCx.closePath();
       gCx.strokeStyle = RandomRed(a);
-      gCx.lineWidth = sx1(1);
+      gCx.lineWidth = sx1(2);
+      gCx.stroke();
+      // more-in
+      gCx.beginPath();
+      gCx.arc(mx, my, or / 3, 0, k2Pi);
+      gCx.closePath();
+      gCx.strokeStyle = RandomYellow(a);
+      gCx.lineWidth = sx1(2);
       gCx.stroke();
 
-      // inner.
+      // sprite.
       var now = Date.now();
       var dt = now - self.lastTime;
       if (dt > kDarkMatterAnimMsec) {

@@ -118,12 +118,12 @@ function MakeLevel(index, paddleP1, paddleP2) {
     index: index,
     isSpawning: true,
     splitsCount: MakeSplitsCount(index),
-    vx0: sxi(ForGameMode({
+    vx0: sx(Clip(index * 0.1, 0.1, 1) + ForGameMode({
       regular: 2.5,
       hard: 3.5
     })),
-    // fyi maxVX is allowed to grow somewhat when there are no more splits.
-    maxVX: sxi(12 + index),
+    // fyi maxVX is allowed to grow somewhat later when there are no more splits.
+    maxVX: Math.min(sxi(12 + index), kMaxVX),
     speedupFactor: 0.0001,
     // should be less than what is in paddle. :-(
     englishFactorPlayer: 0.01,

@@ -7,6 +7,7 @@
 * uh, like (prevX,prevY) should also have (prevVX,prevVY) for handling bounces.
 * support webgl (e.g. via pixijs) to get performance (vs. e.g. cavas color string hell).
 * comment out asserts in out/* somehow, for perf.
+* i actually detest "!" and "!!".
 * fix resizing to be allowed during the game, especially for toggling fullscreen.
 * step broken when paused e.g. wrt animations.js, i think?
 * probably should really fix up [min, max) of horiz & vert coordinates.
