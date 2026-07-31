@@ -235,9 +235,9 @@ function Puck() {
                     // the faster things get, the more spread out, i hope, but,
                     // not too much since it can be fun to be 'streaming'
 		    // up until neo / darkMatter.
-                    pp: 3 * T01(Math.abs(self.vx), maxVX)
+                    pp: 1 + 0.15 * T01(Math.abs(self.vx), maxVX)
 		});
-		const vyf = gR.RandomBool(0.7) ? vyff : 0;
+		const vyf = gR.RandomBool(0.7) ? vyff : 1;
 		vy = self.vy * vyf;
 		//console.log(F(self.vy), F(vyff), F(vyf), F(vy), F(vy-self.vy));
 	    }
@@ -457,7 +457,7 @@ function Puck() {
             self.vy *= -1;
 	    if (is2P()) {
 		// trying to avoid degenerate steaming at top and bottom.
-		if (Math.abs(self.vy) < 0.3) {
+		if (Math.abs(self.vy) < 1) {
 		    self.vy *= 1.05;
 		}
 	    }

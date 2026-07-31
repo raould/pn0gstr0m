@@ -51,8 +51,8 @@ function MakeChargeUpTextAnimation(duration) {
     lifespan: lifespan,
     drawFn: function drawFn(self) {
       // match: Level.Draw().
-      // todo: gLevelIndex use here is evil.
-      var zpt = MakeSplitsCount(gLevelIndex);
+      // todo: gLevelInt use here is evil.
+      var zpt = MakeSplitsCount(gLevelInt);
       if (exists(zpt)) {
         // match: MakeChargeUpMeterAnimation t.
         var t = T01(self.lifespan0 - self.life, self.lifespan0 * 0.6);
@@ -72,8 +72,8 @@ function MakeChargeUpMeterAnimation(duration) {
     lifespan: lifespan,
     drawFn: function drawFn(self) {
       // match: GameState.DrawMidLine().
-      // todo: gLevelIndex use here is evil.
-      var zpt = MakeSplitsCount(gLevelIndex);
+      // todo: gLevelInt use here is evil.
+      var zpt = MakeSplitsCount(gLevelInt);
       if (exists(zpt)) {
         // match: MakeChargeUpTextAnimation t.
         var t = T01(self.lifespan0 - self.life, self.lifespan0 * 0.6);
@@ -360,14 +360,14 @@ function MakeRadarAnimation(props) {
     endFn: endFn
   });
 }
-function MakeChaosAnimation(props) {
+function MakeWildAnimation(props) {
   var targets = props.targets,
     endFn = props.endFn;
   var oldvys = targets.map(function (p) {
     return p.vy;
   });
   return new Animation({
-    name: "chaos",
+    name: "wild",
     lifespan: 300,
     drawFn: function drawFn() {
       var color = RandomForColor(yellowDarkSpec);
@@ -375,7 +375,7 @@ function MakeChaosAnimation(props) {
         if (p.alive === true) {
           AddLightningPath({
             color: color,
-            x0: p.x,
+            x0: p.x + (p.vx < 0 ? gw(0.1) : -gw(0.1)),
             y0: Sign(oldvys[i]) == 1 ? gYInset : gHeight - gYInset,
             x1: p.x,
             y1: p.y,

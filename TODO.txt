@@ -4,10 +4,12 @@
 * fyi 'top (of screen)' (should) means low-y-value, 'bottom (of screen)' means high-y-value.
 * the "side" ux fails with multi-modal inputs e.g. touchscreen laptop. :-(
 * i am pretty sure all the 'physics' is not respecting units (and fps).
+* too much lack of consistent (or typed) units of measure, conflated all over the place.
 * uh, like (prevX,prevY) should also have (prevVX,prevVY) for handling bounces.
 * support webgl (e.g. via pixijs) to get performance (vs. e.g. cavas color string hell).
 * comment out asserts in out/* somehow, for perf.
 * i actually detest "!" and "!!".
+* gLevelIndex vs. kAttractLevelIndex is a self-owned hell.
 * fix resizing to be allowed during the game, especially for toggling fullscreen.
 * step broken when paused e.g. wrt animations.js, i think?
 * probably should really fix up [min, max) of horiz & vert coordinates.

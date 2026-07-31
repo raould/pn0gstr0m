@@ -27,9 +27,10 @@ function ResetLevelsPillStates() {
     remaining: _toConsumableArray(gPillIDs)
   };
   // testing values:
-  //    const count = 2; // has to be less than gPillIDs.length-1, or something.
   //    gP1PillState = { deck: gPillIDs.slice(0,count), remaining: gPillIDs.slice(count,count+1) };
   //    gP2PillState = { deck: gPillIDs.slice(0,count), remaining: gPillIDs.slice(count,count+1) };
+  //    gP1PillState = { deck: [...gPillIDs].reverse(), remaining: [] };
+  //    gP2PillState = { deck: [...gPillIDs].reverse(), remaining: [] };
   console.log("gP1PillState", gP1PillState);
   console.log("gP2PillState", gP2PillState);
 }
@@ -53,7 +54,7 @@ function MakeNoPillState() {
 }
 function MakeAttract(paddleP1, paddleP2) {
   return new Level({
-    index: kAttractLevelIndex,
+    index: 0,
     isAttract: true,
     isSpawning: false,
     splitsCount: undefined,
@@ -113,7 +114,7 @@ function MakePP(paddleP1, paddleP2) {
 // level is one-based.
 // zen mode means only one level!
 function MakeLevel(index, paddleP1, paddleP2) {
-  Assert(index > 0, "index is 1-based");
+  Assert(index !== 0, "index is 1-based");
   var level = new Level({
     index: index,
     isSpawning: true,
@@ -138,18 +139,18 @@ function MakeLevel(index, paddleP1, paddleP2) {
   return level;
 }
 function MakeSplitsCount(index) {
-  Assert(index !== 0, "index is 1-based");
-  // todo: so ugly bad that the index overlaps with the game mode.
-  if (index === kAttractLevelIndex) {
-    return 0;
-  } else if (index === kZenLevelIndex) {
+  // see also: animations
+  if (index === kZenLevelIndex) {
     return undefined;
   } else if (index === 1) {
-    return 150;
-  } else {
+    return kAppMode ? 150 : 100; // shorter in arcade mode.
+  } else if (index > 1) {
     // note: this is just a big bad random swag.
-    // at least need enough splits to let the powerups come out.
-    return 150 + index * 250;
+    // at least need enough splits to let the powerups come out?!
+    return 150 + index * 150;
+  } else {
+    Assert(false, "splitsCount " + index);
+    return 150;
   }
 }
 function ChooseRewards(state) {

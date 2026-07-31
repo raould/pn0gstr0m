@@ -37,7 +37,7 @@
 */
 
 // needs to be longish so the cpu has any chance of getting it.
-var kPillLifespan = 1000 * 20;
+const kPillLifespan = 1000 * 20;
 
 // just am enum, not array indices.
 const kForcePushPill = 0;
@@ -47,8 +47,9 @@ const kSplitPill = 3;
 const kDefendPill = 4;
 const kXtraPill = 5;
 const kNeoPill = 6;
-const kChaosPill = 7;
+const kWildPill = 7;
 const kYarsPill = 8;
+const kWallPill = 9;
 
 // note: order matters, this is the
 // canonical progression through the pills.
@@ -57,12 +58,13 @@ const gPillIDs = [
     kForcePushPill,
     kDecimatePill,
     kEngorgePill,
-    kChaosPill,
+    kWildPill,
+    kWallPill,
+    kYarsPill,
     kDefendPill,
     kSplitPill,
     kXtraPill,
     kNeoPill,
-    kYarsPill,
 ];
 
 // note:
@@ -78,13 +80,13 @@ const gPillInfo = {
         name: "PUSH",
         maker: MakeForcePushProps,
         drawer: DrawForcePushPill,
-        wfn: () => sxi(20), hfn: () => syi(20),
+        wfn: () => sxi(20), hfn: () => sxi(20),
     },
     [kDecimatePill]: {
         name: "ZAP",
 	maker: MakeDecimateProps,
         drawer: DrawDecimatePill,
-        wfn: () => sxi(20), hfn: () => syi(20),
+        wfn: () => sxi(20), hfn: () => sxi(20),
     },
     [kEngorgePill]: {
         name: "PHAT",
@@ -92,11 +94,11 @@ const gPillInfo = {
         drawer: DrawEngorgePill,
         wfn: () => sxi(20), hfn: () => syi(35),
     },
-    [kChaosPill]: {
+    [kWildPill]: {
         name: "WILD",
-	maker: MakeChaosProps,
-        drawer: DrawChaosPill,
-        wfn: () => sxi(22), hfn: () => syi(22),
+	maker: MakeWildProps,
+        drawer: DrawWildPill,
+        wfn: () => sxi(22), hfn: () => sxi(22),
     },
     [kDefendPill]: {
         name: "SHLD",
@@ -108,7 +110,7 @@ const gPillInfo = {
         name: "ZPLT",
 	maker: MakeSplitProps,
         drawer: DrawSplitPill,
-        wfn: () => sxi(20), hfn: () => syi(20),
+        wfn: () => sxi(20), hfn: () => sxi(20),
     },
     [kXtraPill]: {
         name: "XTRA",
@@ -120,13 +122,19 @@ const gPillInfo = {
         name: "NEO",
 	maker: MakeNeoProps,
         drawer: DrawNeoPill,
-        wfn: () => sxi(20), hfn: () => syi(20),
+        wfn: () => sxi(20), hfn: () => sxi(20),
     },
     [kYarsPill]: {
 	name: "YARS",
 	maker: MakeYarsProps,
 	drawer: DrawYarsPill,
 	wfn: () => sx1(20), hfn: () => sx1(20),
+    },
+    [kWallPill]: {
+	name: "WALL",
+	maker: MakeWallProps,
+	drawer: DrawWallPill,
+	wfn: () => sx1(15), hfn: () => sy1(30),
     },
 };
 Assert(gPillInfo);
@@ -135,9 +143,10 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
 // cycle through the powerups in order
 // so we have some control over when they
 // are presented in the course of the game.
+// one per paddle.
 /*class*/ function Powerups( props ) {
 
-    var self = this;
+    const self = this;
 
     self.Init = function() {
         self.isPlayer = props.isPlayer;
@@ -148,15 +157,15 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
     };
 
     self.MakeRandomPill = function(gameState) {
-        var propsBase = self.NextPropsBase(gameState);
+        const propsBase = self.NextPropsBase(gameState);
         if (exists(propsBase)) {
             // todo: meh, pills can have different lifespans, but currently they are all the same.
             Assert(exists(propsBase.lifespan), "lifespan");
 	    // spawn on the vertically opposite side from the player, to make it more noticeable.
-            var yTop = gh(0.1);
-	    var yBottom = gh(0.9) - propsBase.height;
-	    var y = self.paddle.GetMidY() > gh(0.5) ? yTop : yBottom;
-            var props = {
+            const yTop = gh(0.1);
+	    const yBottom = gh(0.9) - propsBase.height;
+	    const y = self.paddle.GetMidY() > gh(0.5) ? yTop : yBottom;
+            const props = {
                 ...propsBase,
                 name: propsBase.name,
                 x: ForSide(self.side, gw(0.35), gw(0.65)),
@@ -173,12 +182,12 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
         if (self.pillState.deck.length === 0) {
             return undefined;
         }
-        var pid = self.pillState.deck.shift();
-        var info = gPillInfo[pid];
-        var maker = info.maker;
+        const pid = self.pillState.deck.shift();
+        const info = gPillInfo[pid];
+        const maker = info.maker;
         Assert(exists(maker));
         Assert(typeof maker == "function", `maker()? ${info.name} ${self.pillState} ${typeof maker}`);
-        var spec = maker(self);
+        let spec = maker(self);
         Assert(exists(spec), `wtf maker? ${info.name}`);
         if (!spec.testFn(gameState)) {
 	    spec = undefined;
@@ -209,105 +218,105 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
 // ----------------------------------------
 
 function DrawForcePushPill(side, xywh, alpha) {
-    var img = gImageCache[ForSide(side, "forcepushL", "forcepushR")];
+    const img = gImageCache[ForSide(side, "forcepushL", "forcepushR")];
     Cxdo(() => {
-        var wx = WX(xywh.x);
-        var wy = WY(xywh.y);
+        const wx = WX(xywh.x);
+        const wy = WY(xywh.y);
         gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
-        var mx = wx + xywh.width/2;
-        var my = wy + xywh.height/2;
+        const mx = wx + xywh.width/2;
+        const my = wy + xywh.height/2;
         gCx.beginPath();
         gCx.arc(mx, my, xywh.width/2 + sx1(1), 0, k2Pi);
         gCx.closePath();
-        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.strokeStyle = RandomColor( alpha );
         gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
 
 function DrawDecimatePill(side, xywh, alpha) {
-    var img = gImageCache["decimate"];
+    const img = gImageCache["decimate"];
     Cxdo(() => {
-        var wx = WX(xywh.x);
-        var wy = WY(xywh.y);
+        const wx = WX(xywh.x);
+        const wy = WY(xywh.y);
         gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
-        var mx = wx + ii(xywh.width/2);
-        var my = wy + ii(xywh.height/2);
+        const mx = wx + ii(xywh.width/2);
+        const my = wy + ii(xywh.height/2);
         gCx.beginPath();
         gCx.moveTo(mx, wy);
         gCx.lineTo(wx + xywh.width, my);
         gCx.lineTo(mx, wy + xywh.height);
         gCx.lineTo(wx, my);
         gCx.closePath();
-        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.strokeStyle = RandomColor( alpha );
         gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
 
 function DrawEngorgePill(side, xywh, alpha) {
-    var img = gImageCache["engorge"];
+    const img = gImageCache["engorge"];
     Cxdo(() => {
-        var wx = WX(xywh.x);
-        var wy = WY(xywh.y);
+        const wx = WX(xywh.x);
+        const wy = WY(xywh.y);
         gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
         gCx.beginPath();
         gCx.rect( wx, wy, xywh.width, xywh.height );
         gCx.lineWidth = sx1(1);
-        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.strokeStyle = RandomColor( alpha );
         gCx.stroke();
     });
 }
 
 function DrawSplitPill(side, xywh, alpha) {
-    var img = gImageCache["split"];
+    const img = gImageCache["split"];
     Cxdo(() => {
-        var wx = WX(xywh.x);
-        var wy = WY(xywh.y);
+        const wx = WX(xywh.x);
+        const wy = WY(xywh.y);
         gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
         gCx.beginPath();
         gCx.RoundRect(wx, wy, xywh.width, xywh.height, 10);
-        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.strokeStyle = RandomColor( alpha );
         gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
 
 function DrawDefendPill(side, xywh, alpha) {
-    var img = gImageCache["defend"];
+    const img = gImageCache["defend"];
     Cxdo(() => {
-        var wx = WX(xywh.x);
-        var wy = WY(xywh.y);
+        const wx = WX(xywh.x);
+        const wy = WY(xywh.y);
         gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
         gCx.beginPath();
         gCx.RoundRect(wx, wy, xywh.width, xywh.height, 14);
-        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.strokeStyle = RandomColor( alpha );
         gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
 
 function DrawXtraPill(side, xywh, alpha) {
-    var img = gImageCache["xtra"];
+    const img = gImageCache["xtra"];
     Cxdo(() => {
-        var wx = WX(xywh.x);
-        var wy = WY(xywh.y);
+        const wx = WX(xywh.x);
+        const wy = WY(xywh.y);
         gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
         gCx.beginPath();
         gCx.RoundRect(wx, wy, xywh.width, xywh.height, 14);
-        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.strokeStyle = RandomColor( alpha );
         gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
 
 function DrawNeoPill(side, xywh, alpha) {
-    var img = gImageCache["neo"];
+    const img = gImageCache["neo"];
     Cxdo(() => {
-        var wx = WX(xywh.x);
-        var wy = WY(xywh.y);
-        var mx = wx + ii(xywh.width/2);
-        var my = wy + ii(xywh.height/2);
+        const wx = WX(xywh.x);
+        const wy = WY(xywh.y);
+        const mx = wx + ii(xywh.width/2);
+        const my = wy + ii(xywh.height/2);
         gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
         gCx.beginPath();
         gCx.moveTo(mx, wy);
@@ -315,56 +324,72 @@ function DrawNeoPill(side, xywh, alpha) {
         gCx.lineTo(mx, wy + xywh.height);
         gCx.lineTo(wx, my);
         gCx.closePath();
-        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.strokeStyle = RandomColor( alpha );
         gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
 
-function DrawChaosPill(side, xywh, alpha) {
-    var img = gImageCache["chaos"];
+function DrawWildPill(side, xywh, alpha) {
+    const img = gImageCache["wild"];
     Cxdo(() => {
         // make it randomly resizing to look more chaotic.
-        var o = gR.RandomRange(1, sx1(4));
-        var wx = WX(xywh.x)-o;
-        var wy = WY(xywh.y)-o;
-        var ww = xywh.width + o*2;
-        var wh = xywh.height + o*2;
+        const o = gR.RandomRange(1, sx1(4));
+        const wx = WX(xywh.x)-o;
+        const wy = WY(xywh.y)-o;
+        const ww = xywh.width + o*2;
+        const wh = xywh.height + o*2;
         gCx.drawImage(img, wx, wy, ww, wh);
-        var mx = wx + ww/2;
-        var my = wy + wh/2;
+        const mx = wx + ww/2;
+        const my = wy + wh/2;
         gCx.beginPath();
         gCx.arc(mx, my, ww/2, 0, k2Pi);
         gCx.closePath();
-        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.strokeStyle = RandomColor( alpha );
         gCx.lineWidth = sx1(1);
         gCx.stroke();
     });
 }
 
 function DrawYarsPill(side, xywh, alpha) {
-    var img = gImageCache[ForSide(side, "yarsL", "yarsR")];
+    const img = gImageCache[ForSide(side, "yarsL", "yarsR")];
     Cxdo(() => {
-        var wx = WX(xywh.x);
-        var wy = WY(xywh.y);
+        const wx = WX(xywh.x);
+        const wy = WY(xywh.y);
         gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
-        var mx = wx + xywh.width/2;
-        var my = wy + xywh.height/2;
+        const mx = wx + xywh.width/2;
+        const my = wy + xywh.height/2;
         gCx.beginPath();
         gCx.arc(mx, my, xywh.width/2 + sx1(4), 0, k2Pi);
         gCx.closePath();
-        gCx.strokeStyle = gCx.fillStyle = RandomColor( alpha );
+        gCx.strokeStyle = RandomColor( alpha );
         gCx.lineWidth = sx1(2);
         gCx.stroke();
+    });
+}
+
+function DrawWallPill(side, xywh, alpha) {
+    Cxdo(() => {
+        const wx = WX(xywh.x);
+        const wy = WY(xywh.y);
+	gCx.beginPath();
+        gCx.rect(wx, wy, xywh.width, xywh.height);
+	gCx.lineWidth = sx1(2);
+	gCx.strokeStyle = RandomColor( alpha );
+	gCx.stroke();
+        gCx.beginPath();
+        gCx.rect(wx, wy, xywh.width, xywh.height);
+        gCx.fillStyle = RandomCyan( alpha * 0.5 );
+        gCx.fill();
     });
 }
 
 // ----------------------------------------
 
 function MakeForcePushProps(context) {
-    var { name, wfn, hfn } = gPillInfo[kForcePushPill];
-    var width = wfn();
-    var height = hfn();
+    const { name, wfn, hfn } = gPillInfo[kForcePushPill];
+    const width = wfn();
+    const height = hfn();
     return {
         name,
         width, height,
@@ -377,7 +402,7 @@ function MakeForcePushProps(context) {
         drawFn: (self, alpha=1) => DrawForcePushPill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
-            var targetSign = ForSide(context.side, -1, 1);
+            const targetSign = ForSide(context.side, -1, 1);
             gPucks.A.forEach(p => {
                 if (Sign(p.vx) == targetSign) {
                     p.vx *= -1.15;
@@ -402,9 +427,9 @@ function MakeForcePushProps(context) {
 }
 
 function MakeDecimateProps(context) {
-    var { name, wfn, hfn } = gPillInfo[kDecimatePill];
-    var width = wfn();
-    var height = hfn();
+    const { name, wfn, hfn } = gPillInfo[kDecimatePill];
+    const width = wfn();
+    const height = hfn();
     return {
         name,
         width, height,
@@ -420,15 +445,15 @@ function MakeDecimateProps(context) {
         drawFn: (self, alpha=1) => DrawDecimatePill(context.side, self, alpha),
         boomFn: (gameState) => {
             // try to destroy at least 1, but leave at least enough alive to avoid(ish) game over.
-	    var minSaved = 3;
-	    var pcount = gPucks.A.length;
+	    const minSaved = 3;
+	    const pcount = gPucks.A.length;
 	    if (pcount > minSaved) {
-		var clipMax = kAppMode ? 20 : pcount * 0.6;
-		var count = Clip(pcount - minSaved, 0, clipMax);
+		const clipMax = kAppMode ? 20 : pcount * 0.6;
+		const count = Clip(pcount - minSaved, 0, clipMax);
 		//console.log("decimate", pcount, clipMax, count);
 		if (count > 0) {
                     PlayPowerupBoom();
-                    var targets = gPucks.A
+                    const targets = gPucks.A
 			.map((p) => { return {d:Math.abs(p.x - context.paddle.x), p}; })
 			.filter((e) => { return e.d > gPaddleWidth * 3; })
 			.sort((a,b) => { return a.d - b.d; })
@@ -460,14 +485,14 @@ function MakeDecimateProps(context) {
 }
 
 function MakeEngorgeProps(context) {
-    var { name, wfn, hfn } = gPillInfo[kEngorgePill];
-    var width = wfn();
-    var height = hfn();
+    const { name, wfn, hfn } = gPillInfo[kEngorgePill];
+    const width = wfn();
+    const height = hfn();
     return {
         name,
         width, height,
         lifespan: kPillLifespan,
-        // sucked. isUrgent: true,
+        isUrgent: true,
         testFn: (gameState) => {
             const can = !context.paddle.engorged;
 	    //console.log("engorce?", can);
@@ -533,20 +558,21 @@ function MakeSplitProps(context) {
 }
 
 function MakeDefendProps(context) {
-    var { name, wfn, hfn } = gPillInfo[kDefendPill];
-    var width = wfn();
-    var height = hfn();
+    const { name, wfn, hfn } = gPillInfo[kDefendPill];
+    const width = wfn();
+    const height = hfn();
     return {
         name,
         width, height,
         lifespan: kPillLifespan,
-        // sucked. isUrgent: true,
+        isUrgent: true,
         testFn: (gameState) => {
             // todo: there is a bug here that let one paddle
             // have 2 defend powerups active at the same time wtf.
             const can = gameState.level.IsBeforeEndingGame() &&
-                  gPucks.A.length > 10 &&
+                  gPucks.A.length > kPuckPoolSize*1/2 &&
                   context.paddle.barriers.A.length == 0 &&
+		  isU(gameState.paddleP1.wall) && isU(gameState.paddleP2.wall) &&
 		  isU(context.paddle.yars);
 	    //console.log("defend?", can);
 	    return can;
@@ -554,24 +580,22 @@ function MakeDefendProps(context) {
         drawFn: (self, alpha=1) => DrawDefendPill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
-            var n = 4; // match: kBarriersArrayInitialSize.
-            // zen is more crazy so upping the hp and thus also scaling drawing so they aren't too wide.
-            var pc = T01(gPucks.A.length, kPuckPoolSize);
-            var hp = ForGameMode({
-                regular: 50,
-                hard: 70,
-                zen: 50 + (pc*100),
-                pp: 70,
-            });
+            const n = context.paddle.barriers.A.capacity;
+	    const hp = ForGameMode({
+		regular: 50,
+		hard: 70,
+		zen: 100,
+		pp: 70
+	    });
             //console.log(`defend pc=${pc} hp=${F(hp)}`);
-	    var drawScale = ForGameMode({ regular: 1, zen: 0.5 });
-            var width = sx1(hp/3);
-            var height = (gHeight-gYInset*2) / n;
-            var x = gw(ForSide(context.side, 0.1, 0.9));
-            var targets = [];
+	    const drawScale = ForGameMode({ regular: 1, zen: 0.5 });
+            const width = sx1(hp/3);
+            const height = (gHeight-gYInset*2) / n;
+            const x = gw(ForSide(context.side, 0.1, 0.9));
+            const targets = [];
             for (var i = 0; i < n; ++i) {
-                var y = gYInset + i * height;
-                var xoff = xyNudge(y, height, 10, context.side);
+                const y = gYInset + i * height;
+                const xoff = xyNudge(y, height, 10, context.side);
                 context.paddle.AddBarrier({
                     x: x+xoff, y,
                     width, height,
@@ -592,18 +616,19 @@ function MakeDefendProps(context) {
 }
 
 function MakeXtraProps(context) {
-    var { name, wfn, hfn } = gPillInfo[kXtraPill];
-    var width = wfn();
-    var height = hfn();
+    const { name, wfn, hfn } = gPillInfo[kXtraPill];
+    const width = wfn();
+    const height = hfn();
     return {
         name,
         width, height,
         lifespan: kPillLifespan,
-        // sucked. isUrgent: true,
+        isUrgent: true,
         testFn: (gameState) => {
             const can = gameState.level.IsBeforeEndingGame() &&
-                  gPucks.A.length > 20 &&
+                  gPucks.A.length > kPuckPoolSize*1/2 &&
                   context.paddle.xtras.A.length == 0 &&
+		  isU(gameState.paddleP1.wall) && isU(gameState.paddleP2.wall) &&
 		  isU(context.paddle.yars);
 	    //console.log("xtra?", can);
 	    return can;
@@ -611,24 +636,23 @@ function MakeXtraProps(context) {
         drawFn: (self, alpha=1) => DrawXtraPill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
-            var n = 6; // match: kXtrasArrayInitialSize.
-            var yy = (gHeight-gYInset*2)/n;
-            var width = gPaddleWidth*2/3;
-            var height = Math.min(gPaddleHeight/2, yy/2);
-            var pc = T01(gPucks.A.length, kPuckPoolSize);
-            var hp = ForGameMode({
-                regular: 30,
-                hard: 50,
-                zen: 50 + (pc*100),
-                pp: 50 + Math.floor(gPucks.A.length/5),
-            });
+            const n = context.paddle.xtras.A.capacity;
+            const yy = (gHeight-gYInset*2)/n;
+            const width = gPaddleWidth*2/3;
+            const height = Math.min(gPaddleHeight/2, yy/2);
+	    const hp = ForGameMode({
+		regular: 30,
+		hard: 50,
+		zen: 100,
+		pp: 50,
+	    });
             //console.log(`xtra pc=${pc} hp=${F(hp)}`);
             ForCount(n, (i) => {
-                var x = ForSide(context.side, gw(0.15), gw(0.85));
-                var xoff = isEven(i) ? 0 : gw(0.02);
-                var y = gYInset+yy*i;
-                var yMin = y;
-                var yMax = y+yy;
+                const x = ForSide(context.side, gw(0.15), gw(0.85));
+                const xoff = isEven(i) ? 0 : gw(0.02);
+                const y = gYInset+yy*i;
+                const yMin = y;
+                const yMax = y+yy;
                 context.paddle.AddXtra({
                     x: x+xoff, y,
                     yMin, yMax,
@@ -642,17 +666,17 @@ function MakeXtraProps(context) {
 }
 
 function MakeNeoProps(context) {
-    var { name, wfn, hfn } = gPillInfo[kNeoPill];
-    var width = wfn();
-    var height = hfn();
+    const { name, wfn, hfn } = gPillInfo[kNeoPill];
+    const width = wfn();
+    const height = hfn();
     return {
         name,
         width, height,
         lifespan: kPillLifespan,
-        // sucked. isUrgent: true,
+        isUrgent: true,
         testFn: (gameState) => {
             const can = gameState.level.IsBeforeEndingGame() &&
-                gPucks.A.length > 20 &&
+                  gPucks.A.length > 20 &&
                   isU(context.paddle.neo);
 	    //console.log("neo?", can);
 	    return can;
@@ -670,34 +694,36 @@ function MakeNeoProps(context) {
     };
 }
 
-function MakeChaosProps(context) {
-    var { name, wfn, hfn } = gPillInfo[kChaosPill];
-    var width = wfn();
-    var height = hfn();
+function MakeWildProps(context) {
+    const { name, wfn, hfn } = gPillInfo[kWildPill];
+    const width = wfn();
+    const height = hfn();
     return {
         name,
         width, height,
-	// try to force more chaos in arcade mode
+	// try to force more wild in arcade mode
 	// to break up streaming-for-too-long?!
 	// see also: dark matter.
         lifespan: kPillLifespan * (kAppMode ? 1 : 2),
         testFn: (gameState) => {
 	    const can = gPucks.A.length > 10 &&
 		  isU(context.paddle.neo);
-	    //console.log("chaos?", can);
+	    //console.log("wild?", can);
 	    return can;
         },
-        drawFn: (self, alpha=1) => DrawChaosPill(context.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawWildPill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
-            var targets = [];
-            gPucks.A.forEach((p,i) => {
-                if (isMultiple(i, 2)) {
-                    p.vy *= -gR.RandomCentered(7, 2);
+	    const vs = ForSide(context.paddle.side, 1, -1);
+            const targets = [];
+            gPucks.A.forEach(p => {
+		const ps = Math.sign(p.vx);
+                if (vs === ps) {
+                    p.vy *= gR.RandomCentered(7, 2);
                     targets.push(p);
                 }
             });
-            gameState.AddAnimation(MakeChaosAnimation({
+            gameState.AddAnimation(MakeWildAnimation({
                 targets
             }));
         },
@@ -705,30 +731,75 @@ function MakeChaosProps(context) {
 }
 
 function MakeYarsProps(context) {
-    var { name, wfn, hfn } = gPillInfo[kYarsPill];
-    var width = wfn();
-    var height = hfn();
+    const { name, wfn, hfn } = gPillInfo[kYarsPill];
+    const width = wfn();
+    const height = hfn();
     return {
         name,
         width, height,
         lifespan: kPillLifespan,
+        isUrgent: true,
         testFn: (gameState) => {
-	    const p_count = gPucks.A.length > (kPuckPoolSize*1/3);
-	    const no_neo = isU(context.paddle.neo);
+	    const p_count = gPucks.A.length > (kPuckPoolSize*1/2);
+	    const no_yars = isU(context.paddle.yars);
+	    const no_wall = isU(gameState.paddleP1.wall) && isU(gameState.paddleP2.wall);
 	    const no_barriers = context.paddle.barriers.A.length == 0;
 	    const no_xtras = context.paddle.xtras.A.length == 0;
-	    const can = p_count && no_neo && no_barriers && no_xtras;
+	    const can = p_count && no_yars && no_wall && no_barriers && no_xtras;
 	    //console.log("yars?", can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawYarsPill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
-	    context.paddle.yars = new Yars({
-		side: context.side,
-		cols: 14,
+	    const midX = ForSide(
+		context.paddle.side,
+		gw(0.15),
+		gw(0.85),
+	    );
+            const pc = T01(gPucks.A.length, kPuckPoolSize);
+	    context.paddle.AddYars({
+		midX,
+		cols: 4,
 		rows: 80,
 		col_width: gw(0.005)
+	    });
+        },
+    };
+}
+
+function MakeWallProps(context) {
+    const { name, wfn, hfn } = gPillInfo[kWallPill];
+    const width = wfn();
+    const height = hfn();
+    return {
+        name,
+        width, height,
+        lifespan: kPillLifespan,
+        isUrgent: true,
+        testFn: (gameState) => {
+	    const p_count = gPucks.A.length > (kPuckPoolSize*1/2);
+	    const no_wall = isU(gameState.paddleP1.wall) && isU(gameState.paddleP2.wall);
+	    const no_yars = isU(context.paddle.yars);
+	    const no_barriers = context.paddle.barriers.A.length == 0;
+	    const no_xtras = context.paddle.xtras.A.length == 0;
+	    const can = p_count && no_wall && no_yars && no_barriers && no_xtras;
+	    //console.log("yars?", can);
+	    return can;
+        },
+        drawFn: (self, alpha=1) => DrawWallPill(context.side, self, alpha),
+        boomFn: (gameState) => {
+            PlayPowerupBoom();
+            const pc = T01(gPucks.A.length, kPuckPoolSize);
+	    const midX = gw(0.5);
+	    // there can be only 1.
+	    gameState.paddleP1.wall = undefined;
+	    gameState.paddleP2.wall = undefined;
+	    context.paddle.AddYars({
+		midX,
+		cols: 4,
+		rows: 30,
+		col_width: gw(0.015)
 	    });
         },
     };

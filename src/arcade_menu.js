@@ -73,7 +73,7 @@ function MakePlayerButtons({constants:k, playerRadios}) {
         bp2: new Button({
             x: k.bx0, y: k.by0 + k.bs,
             width: k.bw, height: k.bh,
-            title: "2 PLAYERS",
+            title: "2 PLAYERS", // wild-type.
             align: "left",
             margin: k.margin,
             font_size: k.font_size,

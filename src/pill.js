@@ -4,7 +4,7 @@
  */
 
 // the props is (at least?)
-// { name, x, y, w, h, vx, vy, lifespan, isUrgent, testFn, boomFn, drawFn, endFn }
+// { paddle, name, x, y, w, h, vx, vy, lifespan, isUrgent, testFn, boomFn, drawFn, endFn }
 // don't you wish this was all in typescript now?
 function Pill( props ) {
     var self = this;
@@ -12,6 +12,7 @@ function Pill( props ) {
     self.Init = function() {
         Assert(exists(props), "no props");
         self.id = gNextID++;
+	self.paddle = props.paddle;
         self.name = props.name;
         self.x = props.x;
         self.y = props.y;
@@ -115,7 +116,7 @@ function Pill( props ) {
         var nextSelf = self;
         var hit = self.PaddleCollision(paddle);
         if( hit ) {
-            self.boomFn(gameState);
+            self.boomFn(gameState, paddle);
             nextSelf = undefined;
         }
         return nextSelf;

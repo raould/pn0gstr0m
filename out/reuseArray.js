@@ -37,11 +37,12 @@ function Pool(size, allocDeadFn) {
 // at least in some browsers to reduce hitchiness
 // that i naively guess is gc pauses.
 /*class*/
-function ReuseArray(initialCapacity) {
+function ReuseArray(capacity) {
   var self = this;
   self.Init = function () {
+    self.capacity = capacity;
+    self.array = Array(self.capacity);
     self.length = 0;
-    self.array = Array(initialCapacity);
     self.metadata = {};
   };
   self.clear = function () {

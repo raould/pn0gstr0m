@@ -10,7 +10,7 @@
 // in the various Make*Buttons() below.
 
 function GameMenuConstants() {
-  var by0 = gh(0.4);
+  var by0 = gh(0.2);
   var bw = gw(0.2);
   var bh = gSmallFontSizePt * 1.7;
   var bs = bh * 1.3;
@@ -34,30 +34,11 @@ function GameMenuConstants() {
     font_size: font_size
   };
 }
-function MakeQuitButton(_ref) {
-  var k = _ref.constants,
-    OnQuit = _ref.OnQuit;
+function MakeMuteButton(_ref) {
+  var k = _ref.constants;
   return new Button({
     x: k.bl,
     y: k.by0,
-    width: k.bw,
-    height: k.bh,
-    margin: k.margin,
-    // leading spaces to align with sfx checkbox.
-    title: "  QUIT",
-    align: "left",
-    font_size: k.font_size,
-    is_checkbox: false,
-    click_fn: function click_fn(bself) {
-      OnQuit();
-    }
-  });
-}
-function MakeMuteButton(_ref2) {
-  var k = _ref2.constants;
-  return new Button({
-    x: k.bl,
-    y: k.by0 + k.bs * 2,
     width: k.bw,
     height: k.bh,
     title: "SFX",
@@ -74,26 +55,74 @@ function MakeMuteButton(_ref2) {
     }
   });
 }
-function MakeGameMenuButtons(_ref3) {
-  var OnQuit = _ref3.OnQuit;
-  var constants = new GameMenuConstants();
-  var bSfx = MakeMuteButton({
-    constants: constants
+function MakeResumeButton(_ref2) {
+  var k = _ref2.constants,
+    OnResume = _ref2.OnResume;
+  return new Button({
+    x: k.bl,
+    y: k.by0 + k.bs * 2,
+    width: k.bw,
+    height: k.bh,
+    // leading spaces to align with sfx checkbox.
+    title: " RESUME",
+    align: "left",
+    margin: k.margin,
+    font_size: k.font_size,
+    is_checkbox: false,
+    click_fn: function click_fn(bself) {
+      OnResume();
+    }
   });
+}
+function MakeQuitButton(_ref3) {
+  var k = _ref3.constants,
+    OnQuit = _ref3.OnQuit;
+  return new Button({
+    x: k.bl,
+    y: k.by0 + k.bs * 3,
+    width: k.bw,
+    height: k.bh,
+    margin: k.margin,
+    // leading spaces to align with sfx checkbox.
+    title: "  QUIT",
+    align: "left",
+    font_size: k.font_size,
+    is_checkbox: false,
+    click_fn: function click_fn(bself) {
+      OnQuit();
+    }
+  });
+}
+function MakeGameMenuButtons(_ref4) {
+  var OnResume = _ref4.OnResume,
+    OnQuit = _ref4.OnQuit;
+  var constants = new GameMenuConstants();
   var bQuit = MakeQuitButton({
     constants: constants,
     OnQuit: OnQuit
   });
+  var bResume = MakeResumeButton({
+    constants: constants,
+    OnResume: OnResume
+  });
+  var bSfx = MakeMuteButton({
+    constants: constants
+  });
   return {
     focusId: "bSfx",
     navigation: {
-      bQuit: {
-        button: bQuit,
-        down: "bSfx"
-      },
       bSfx: {
         button: bSfx,
-        up: "bQuit"
+        down: "bResume"
+      },
+      bResume: {
+        button: bResume,
+        up: "bSfx",
+        down: "bQuit"
+      },
+      bQuit: {
+        button: bQuit,
+        up: "bResume"
       }
     }
   };

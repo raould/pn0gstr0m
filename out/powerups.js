@@ -1,5 +1,6 @@
 "use strict";
 
+function _readOnlyError(r) { throw new TypeError('"' + r + '" is read-only'); }
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
@@ -55,13 +56,14 @@ var kSplitPill = 3;
 var kDefendPill = 4;
 var kXtraPill = 5;
 var kNeoPill = 6;
-var kChaosPill = 7;
+var kWildPill = 7;
 var kYarsPill = 8;
+var kWallPill = 9;
 
 // note: order matters, this is the
 // canonical progression through the pills.
 // match: gPillInfo length.
-var gPillIDs = [kForcePushPill, kDecimatePill, kEngorgePill, kChaosPill, kDefendPill, kSplitPill, kXtraPill, kNeoPill, kYarsPill];
+var gPillIDs = [kForcePushPill, kDecimatePill, kEngorgePill, kWildPill, kWallPill, kYarsPill, kDefendPill, kSplitPill, kXtraPill, kNeoPill];
 
 // note:
 // 1) width and height are functions
@@ -71,7 +73,7 @@ var gPillIDs = [kForcePushPill, kDecimatePill, kEngorgePill, kChaosPill, kDefend
 // 2) keep the names short, to avoid overlapping
 // on the Get Ready screen.
 // match: gPillIDs length.
-var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty({}, kForcePushPill, {
+var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty({}, kForcePushPill, {
   name: "PUSH",
   maker: MakeForcePushProps,
   drawer: DrawForcePushPill,
@@ -79,7 +81,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return sxi(20);
   },
   hfn: function hfn() {
-    return syi(20);
+    return sxi(20);
   }
 }), kDecimatePill, {
   name: "ZAP",
@@ -89,7 +91,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return sxi(20);
   },
   hfn: function hfn() {
-    return syi(20);
+    return sxi(20);
   }
 }), kEngorgePill, {
   name: "PHAT",
@@ -101,15 +103,15 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
   hfn: function hfn() {
     return syi(35);
   }
-}), kChaosPill, {
+}), kWildPill, {
   name: "WILD",
-  maker: MakeChaosProps,
-  drawer: DrawChaosPill,
+  maker: MakeWildProps,
+  drawer: DrawWildPill,
   wfn: function wfn() {
     return sxi(22);
   },
   hfn: function hfn() {
-    return syi(22);
+    return sxi(22);
   }
 }), kDefendPill, {
   name: "SHLD",
@@ -129,7 +131,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return sxi(20);
   },
   hfn: function hfn() {
-    return syi(20);
+    return sxi(20);
   }
 }), kXtraPill, {
   name: "XTRA",
@@ -149,7 +151,7 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
     return sxi(20);
   },
   hfn: function hfn() {
-    return syi(20);
+    return sxi(20);
   }
 }), kYarsPill, {
   name: "YARS",
@@ -161,6 +163,16 @@ var gPillInfo = _defineProperty(_defineProperty(_defineProperty(_defineProperty(
   hfn: function hfn() {
     return sx1(20);
   }
+}), kWallPill, {
+  name: "WALL",
+  maker: MakeWallProps,
+  drawer: DrawWallPill,
+  wfn: function wfn() {
+    return sx1(15);
+  },
+  hfn: function hfn() {
+    return sy1(30);
+  }
 });
 Assert(gPillInfo);
 Assert(Object.keys(gPillInfo).length === gPillIDs.length);
@@ -168,6 +180,7 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
 // cycle through the powerups in order
 // so we have some control over when they
 // are presented in the course of the game.
+// one per paddle.
 /*class*/
 function Powerups(props) {
   var self = this;
@@ -187,14 +200,14 @@ function Powerups(props) {
       var yTop = gh(0.1);
       var yBottom = gh(0.9) - propsBase.height;
       var y = self.paddle.GetMidY() > gh(0.5) ? yTop : yBottom;
-      var props = _objectSpread(_objectSpread({}, propsBase), {}, {
+      var _props = _objectSpread(_objectSpread({}, propsBase), {}, {
         name: propsBase.name,
         x: ForSide(self.side, gw(0.35), gw(0.65)),
         y: y,
         vx: ForSide(self.side, -1, 1) * sx(3),
         vy: gR.RandomCentered(0, 2, 0.5)
       });
-      return new Pill(props);
+      return new Pill(_props);
     }
     return undefined;
   };
@@ -245,7 +258,7 @@ function DrawForcePushPill(side, xywh, alpha) {
     gCx.beginPath();
     gCx.arc(mx, my, xywh.width / 2 + sx1(1), 0, k2Pi);
     gCx.closePath();
-    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.strokeStyle = RandomColor(alpha);
     gCx.lineWidth = sx1(1);
     gCx.stroke();
   });
@@ -264,7 +277,7 @@ function DrawDecimatePill(side, xywh, alpha) {
     gCx.lineTo(mx, wy + xywh.height);
     gCx.lineTo(wx, my);
     gCx.closePath();
-    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.strokeStyle = RandomColor(alpha);
     gCx.lineWidth = sx1(1);
     gCx.stroke();
   });
@@ -278,7 +291,7 @@ function DrawEngorgePill(side, xywh, alpha) {
     gCx.beginPath();
     gCx.rect(wx, wy, xywh.width, xywh.height);
     gCx.lineWidth = sx1(1);
-    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.strokeStyle = RandomColor(alpha);
     gCx.stroke();
   });
 }
@@ -290,7 +303,7 @@ function DrawSplitPill(side, xywh, alpha) {
     gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
     gCx.beginPath();
     gCx.RoundRect(wx, wy, xywh.width, xywh.height, 10);
-    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.strokeStyle = RandomColor(alpha);
     gCx.lineWidth = sx1(1);
     gCx.stroke();
   });
@@ -303,7 +316,7 @@ function DrawDefendPill(side, xywh, alpha) {
     gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
     gCx.beginPath();
     gCx.RoundRect(wx, wy, xywh.width, xywh.height, 14);
-    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.strokeStyle = RandomColor(alpha);
     gCx.lineWidth = sx1(1);
     gCx.stroke();
   });
@@ -316,7 +329,7 @@ function DrawXtraPill(side, xywh, alpha) {
     gCx.drawImage(img, wx, wy, xywh.width, xywh.height);
     gCx.beginPath();
     gCx.RoundRect(wx, wy, xywh.width, xywh.height, 14);
-    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.strokeStyle = RandomColor(alpha);
     gCx.lineWidth = sx1(1);
     gCx.stroke();
   });
@@ -335,13 +348,13 @@ function DrawNeoPill(side, xywh, alpha) {
     gCx.lineTo(mx, wy + xywh.height);
     gCx.lineTo(wx, my);
     gCx.closePath();
-    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.strokeStyle = RandomColor(alpha);
     gCx.lineWidth = sx1(1);
     gCx.stroke();
   });
 }
-function DrawChaosPill(side, xywh, alpha) {
-  var img = gImageCache["chaos"];
+function DrawWildPill(side, xywh, alpha) {
+  var img = gImageCache["wild"];
   Cxdo(function () {
     // make it randomly resizing to look more chaotic.
     var o = gR.RandomRange(1, sx1(4));
@@ -355,7 +368,7 @@ function DrawChaosPill(side, xywh, alpha) {
     gCx.beginPath();
     gCx.arc(mx, my, ww / 2, 0, k2Pi);
     gCx.closePath();
-    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.strokeStyle = RandomColor(alpha);
     gCx.lineWidth = sx1(1);
     gCx.stroke();
   });
@@ -371,9 +384,24 @@ function DrawYarsPill(side, xywh, alpha) {
     gCx.beginPath();
     gCx.arc(mx, my, xywh.width / 2 + sx1(4), 0, k2Pi);
     gCx.closePath();
-    gCx.strokeStyle = gCx.fillStyle = RandomColor(alpha);
+    gCx.strokeStyle = RandomColor(alpha);
     gCx.lineWidth = sx1(2);
     gCx.stroke();
+  });
+}
+function DrawWallPill(side, xywh, alpha) {
+  Cxdo(function () {
+    var wx = WX(xywh.x);
+    var wy = WY(xywh.y);
+    gCx.beginPath();
+    gCx.rect(wx, wy, xywh.width, xywh.height);
+    gCx.lineWidth = sx1(2);
+    gCx.strokeStyle = RandomColor(alpha);
+    gCx.stroke();
+    gCx.beginPath();
+    gCx.rect(wx, wy, xywh.width, xywh.height);
+    gCx.fillStyle = RandomCyan(alpha * 0.5);
+    gCx.fill();
   });
 }
 
@@ -472,7 +500,7 @@ function MakeDecimateProps(context) {
           });
           Assert(targets.length < pcount);
           if (targets.length === 0 && pcount > 1) {
-            targets = gPucks.A.slice(0, 1);
+            gPucks.A.slice(0, 1), _readOnlyError("targets");
           }
           targets.forEach(function (p) {
             p.alive = "gone"; // special hard-coded case, yay.
@@ -509,7 +537,7 @@ function MakeEngorgeProps(context) {
     width: width,
     height: height,
     lifespan: kPillLifespan,
-    // sucked. isUrgent: true,
+    isUrgent: true,
     testFn: function testFn(gameState) {
       var can = !context.paddle.engorged;
       //console.log("engorce?", can);
@@ -601,11 +629,11 @@ function MakeDefendProps(context) {
     width: width,
     height: height,
     lifespan: kPillLifespan,
-    // sucked. isUrgent: true,
+    isUrgent: true,
     testFn: function testFn(gameState) {
       // todo: there is a bug here that let one paddle
       // have 2 defend powerups active at the same time wtf.
-      var can = gameState.level.IsBeforeEndingGame() && gPucks.A.length > 10 && context.paddle.barriers.A.length == 0 && isU(context.paddle.yars);
+      var can = gameState.level.IsBeforeEndingGame() && gPucks.A.length > kPuckPoolSize * 1 / 2 && context.paddle.barriers.A.length == 0 && isU(gameState.paddleP1.wall) && isU(gameState.paddleP2.wall) && isU(context.paddle.yars);
       //console.log("defend?", can);
       return can;
     },
@@ -615,13 +643,11 @@ function MakeDefendProps(context) {
     },
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();
-      var n = 4; // match: kBarriersArrayInitialSize.
-      // zen is more crazy so upping the hp and thus also scaling drawing so they aren't too wide.
-      var pc = T01(gPucks.A.length, kPuckPoolSize);
+      var n = context.paddle.barriers.A.capacity;
       var hp = ForGameMode({
         regular: 50,
         hard: 70,
-        zen: 50 + pc * 100,
+        zen: 100,
         pp: 70
       });
       //console.log(`defend pc=${pc} hp=${F(hp)}`);
@@ -671,9 +697,9 @@ function MakeXtraProps(context) {
     width: width,
     height: height,
     lifespan: kPillLifespan,
-    // sucked. isUrgent: true,
+    isUrgent: true,
     testFn: function testFn(gameState) {
-      var can = gameState.level.IsBeforeEndingGame() && gPucks.A.length > 20 && context.paddle.xtras.A.length == 0 && isU(context.paddle.yars);
+      var can = gameState.level.IsBeforeEndingGame() && gPucks.A.length > kPuckPoolSize * 1 / 2 && context.paddle.xtras.A.length == 0 && isU(gameState.paddleP1.wall) && isU(gameState.paddleP2.wall) && isU(context.paddle.yars);
       //console.log("xtra?", can);
       return can;
     },
@@ -683,16 +709,15 @@ function MakeXtraProps(context) {
     },
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();
-      var n = 6; // match: kXtrasArrayInitialSize.
+      var n = context.paddle.xtras.A.capacity;
       var yy = (gHeight - gYInset * 2) / n;
       var width = gPaddleWidth * 2 / 3;
       var height = Math.min(gPaddleHeight / 2, yy / 2);
-      var pc = T01(gPucks.A.length, kPuckPoolSize);
       var hp = ForGameMode({
         regular: 30,
         hard: 50,
-        zen: 50 + pc * 100,
-        pp: 50 + Math.floor(gPucks.A.length / 5)
+        zen: 100,
+        pp: 50
       });
       //console.log(`xtra pc=${pc} hp=${F(hp)}`);
       ForCount(n, function (i) {
@@ -727,7 +752,7 @@ function MakeNeoProps(context) {
     width: width,
     height: height,
     lifespan: kPillLifespan,
-    // sucked. isUrgent: true,
+    isUrgent: true,
     testFn: function testFn(gameState) {
       var can = gameState.level.IsBeforeEndingGame() && gPucks.A.length > 20 && isU(context.paddle.neo);
       //console.log("neo?", can);
@@ -748,40 +773,42 @@ function MakeNeoProps(context) {
     }
   };
 }
-function MakeChaosProps(context) {
-  var _gPillInfo$kChaosPill = gPillInfo[kChaosPill],
-    name = _gPillInfo$kChaosPill.name,
-    wfn = _gPillInfo$kChaosPill.wfn,
-    hfn = _gPillInfo$kChaosPill.hfn;
+function MakeWildProps(context) {
+  var _gPillInfo$kWildPill = gPillInfo[kWildPill],
+    name = _gPillInfo$kWildPill.name,
+    wfn = _gPillInfo$kWildPill.wfn,
+    hfn = _gPillInfo$kWildPill.hfn;
   var width = wfn();
   var height = hfn();
   return {
     name: name,
     width: width,
     height: height,
-    // try to force more chaos in arcade mode
+    // try to force more wild in arcade mode
     // to break up streaming-for-too-long?!
     // see also: dark matter.
     lifespan: kPillLifespan * (kAppMode ? 1 : 2),
     testFn: function testFn(gameState) {
       var can = gPucks.A.length > 10 && isU(context.paddle.neo);
-      //console.log("chaos?", can);
+      //console.log("wild?", can);
       return can;
     },
     drawFn: function drawFn(self) {
       var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
-      return DrawChaosPill(context.side, self, alpha);
+      return DrawWildPill(context.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();
+      var vs = ForSide(context.paddle.side, 1, -1);
       var targets = [];
-      gPucks.A.forEach(function (p, i) {
-        if (isMultiple(i, 2)) {
-          p.vy *= -gR.RandomCentered(7, 2);
+      gPucks.A.forEach(function (p) {
+        var ps = Math.sign(p.vx);
+        if (vs === ps) {
+          p.vy *= gR.RandomCentered(7, 2);
           targets.push(p);
         }
       });
-      gameState.AddAnimation(MakeChaosAnimation({
+      gameState.AddAnimation(MakeWildAnimation({
         targets: targets
       }));
     }
@@ -799,12 +826,14 @@ function MakeYarsProps(context) {
     width: width,
     height: height,
     lifespan: kPillLifespan,
+    isUrgent: true,
     testFn: function testFn(gameState) {
-      var p_count = gPucks.A.length > kPuckPoolSize * 1 / 3;
-      var no_neo = isU(context.paddle.neo);
+      var p_count = gPucks.A.length > kPuckPoolSize * 1 / 2;
+      var no_yars = isU(context.paddle.yars);
+      var no_wall = isU(gameState.paddleP1.wall) && isU(gameState.paddleP2.wall);
       var no_barriers = context.paddle.barriers.A.length == 0;
       var no_xtras = context.paddle.xtras.A.length == 0;
-      var can = p_count && no_neo && no_barriers && no_xtras;
+      var can = p_count && no_yars && no_wall && no_barriers && no_xtras;
       //console.log("yars?", can);
       return can;
     },
@@ -814,11 +843,56 @@ function MakeYarsProps(context) {
     },
     boomFn: function boomFn(gameState) {
       PlayPowerupBoom();
-      context.paddle.yars = new Yars({
-        side: context.side,
-        cols: 14,
+      var midX = ForSide(context.paddle.side, gw(0.15), gw(0.85));
+      var pc = T01(gPucks.A.length, kPuckPoolSize);
+      context.paddle.AddYars({
+        midX: midX,
+        cols: 4,
         rows: 80,
         col_width: gw(0.005)
+      });
+    }
+  };
+}
+function MakeWallProps(context) {
+  var _gPillInfo$kWallPill = gPillInfo[kWallPill],
+    name = _gPillInfo$kWallPill.name,
+    wfn = _gPillInfo$kWallPill.wfn,
+    hfn = _gPillInfo$kWallPill.hfn;
+  var width = wfn();
+  var height = hfn();
+  return {
+    name: name,
+    width: width,
+    height: height,
+    lifespan: kPillLifespan,
+    isUrgent: true,
+    testFn: function testFn(gameState) {
+      var p_count = gPucks.A.length > kPuckPoolSize * 1 / 2;
+      var no_wall = isU(gameState.paddleP1.wall) && isU(gameState.paddleP2.wall);
+      var no_yars = isU(context.paddle.yars);
+      var no_barriers = context.paddle.barriers.A.length == 0;
+      var no_xtras = context.paddle.xtras.A.length == 0;
+      var can = p_count && no_wall && no_yars && no_barriers && no_xtras;
+      //console.log("yars?", can);
+      return can;
+    },
+    drawFn: function drawFn(self) {
+      var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+      return DrawWallPill(context.side, self, alpha);
+    },
+    boomFn: function boomFn(gameState) {
+      PlayPowerupBoom();
+      var pc = T01(gPucks.A.length, kPuckPoolSize);
+      var midX = gw(0.5);
+      // there can be only 1.
+      gameState.paddleP1.wall = undefined;
+      gameState.paddleP2.wall = undefined;
+      context.paddle.AddYars({
+        midX: midX,
+        cols: 4,
+        rows: 30,
+        col_width: gw(0.015)
       });
     }
   };

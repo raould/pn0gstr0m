@@ -32,9 +32,11 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
+// the web is a lie.
+var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
+
 // keep this committed as false.
 var gDebug = true;
-var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
@@ -51,6 +53,7 @@ var gShowToasts = gDebug;
 
 // screens auto-advance after this long.
 var kUITimeout = 1000 * (gDebug ? 5 : 20);
+var kHintTimeout = 1000 * 6;
 
 // match: index.html
 var kCanvasName = "canvas";
@@ -92,21 +95,24 @@ if (gGameMode === "z2p") {
   gGameMode = kGameMode2P;
 }
 function is1P() {
+  // fails to account for attract mode.
   return gGameMode != kGameMode2P;
 }
 function is2P() {
+  // fails to account for attract mode.
   return !is1P();
 }
 
-// code smell: sentinel values, -1 is attract, -2 is zen. 
-var kAttractLevelIndex = -1;
-var kZenLevelIndex = -2;
+// bad code smell: sentinel value -1 is zen. 
+var kZenLevelIndex = -1;
 
 // levels are 1-based.
-// todo: gLevelIndex is an overloaded mess yay.
-var gLevelIndex = gGameMode === kGameModeZen ? kZenLevelIndex : 1;
+// todo: gLevelInt is an overloaded mess yay.
+var gLevelInt = gGameMode === kGameModeZen ? kZenLevelIndex : 1;
 
 // this doesn't even handle attract-mode levels.
+// it also doesn't handle app vs. arcade modes.
+// what a freaking self-induced nightmare.
 function ForGameMode(_ref) {
   var regular = _ref.regular,
     hard = _ref.hard,
@@ -134,14 +140,14 @@ function SetGameMode() {
   gGameMode = mode;
   ForGameMode({
     regular: function regular() {
-      return gLevelIndex = 1;
+      return gLevelInt = 1;
     },
     zen: function zen() {
-      return gLevelIndex = kZenLevelIndex;
+      return gLevelInt = kZenLevelIndex;
     }
   })();
   SaveLocal(LocalStorageKeys.gameMode, gGameMode);
-  console.log("SetGameMode", mode, gLevelIndex);
+  console.log("SetGameMode", mode, gLevelInt);
 }
 
 // ----------------------------------------
@@ -981,14 +987,14 @@ function Lifecycle(handlerMap) {
     self.stop = true;
   };
   self.RunLoop = function () {
-    var _self$handler$GetIsPa, _self$handler;
+    var _self$handler$IsPause, _self$handler;
     if (self.stop) {
       return;
     }
     // this got complicated quickly, trying to handle time:
     // a) only stepping if enough time has really passed.
     // b) updating the screen even when paused & thus delta time is 0.
-    var paused = aub((_self$handler$GetIsPa = (_self$handler = self.handler).GetIsPaused) == null ? void 0 : _self$handler$GetIsPa.call(_self$handler), false) || document.hidden;
+    var paused = aub((_self$handler$IsPause = (_self$handler = self.handler).IsPaused) == null ? void 0 : _self$handler$IsPause.call(_self$handler), false) || document.hidden;
     var now = Date.now();
     var dt = now - self.lastGameTime;
     if (dt >= kMaybeWasPausedInTheDangedDebuggerMsec) {
@@ -1380,7 +1386,7 @@ function GetReadyState() {
     });
   };
   self.DrawPills = function () {
-    var whscale = Math.max(0.4, T10(Math.max(gP1PillState.deck.length, gP2PillState.deck.length), gPillIDs.length));
+    var whscale = Math.max(0.3, T10(Math.max(gP1PillState.deck.length, gP2PillState.deck.length), gPillIDs.length));
     var y = gh(0.7);
     var maxWidth = 0;
     var maxHeight = 0;
@@ -1439,7 +1445,7 @@ function GetReadyState() {
       ForGameMode({
         regular: function regular() {
           gCx.fillStyle = RandomForColor(cyanSpec);
-          DrawText("LEVEL ".concat(gLevelIndex), "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
+          DrawText("LEVEL ".concat(gLevelInt), "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
         },
         zen: function zen() {} // only 1 level.
       })();
@@ -1495,9 +1501,9 @@ function ChargeUpState() {
       DrawText(ForP1Side(p2txt, "P1"), "right", gw(0.8), gh(0.22), gRegularFontSizePt);
 
       // match: Level.DrawTitle().
-      if (gLevelIndex >= 1) {
+      if (gLevelInt >= 1) {
         gCx.fillStyle = RandomForColor(cyanSpec);
-        DrawText("LEVEL ".concat(gLevelIndex), "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
+        DrawText("LEVEL ".concat(gLevelInt), "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
       }
     });
   };
@@ -1531,12 +1537,13 @@ function GameState(props) {
     gLastPuckSide = undefined;
     gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
     gLevelTime = gGameTime;
-    self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelIndex];
+    self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelInt];
     self.pauseButtonEnabled = false;
     self.paused = false;
     self.animations = {};
     self.quit = false;
     self.stepping = false;
+    self.hintTimeout = kHintTimeout;
     if (!self.isAttract) {
       self.theMenu = self.MakeMenu();
     }
@@ -1554,10 +1561,11 @@ function GameState(props) {
     };
 
     // show paddle labels for zen or level 1.
-    var p1label = self.isAttract || gLevelIndex > 1 ? undefined : "P1";
-    var p2label = self.isAttract || gLevelIndex > 1 ? undefined : is1P() ? "GPT" : "P2";
+    var p1label = self.isAttract || gLevelInt > 1 ? undefined : "P1";
+    var p2label = self.isAttract || gLevelInt > 1 ? undefined : is1P() ? "GPT" : "P2";
     var paddle1specs = {
       isPlayer: !self.isAttract,
+      isAttract: self.isAttract,
       width: gPaddleWidth,
       height: gPaddleHeight,
       label: p1label,
@@ -1569,6 +1577,7 @@ function GameState(props) {
     };
     var paddle2specs = {
       isPlayer: !self.isAttract && is2P(),
+      isAttract: self.isAttract,
       width: gPaddleWidth,
       height: gPaddleHeight,
       label: p2label,
@@ -1584,28 +1593,33 @@ function GameState(props) {
     // p2 is either cpu or another human.
     ForSide(gP1Side, function () {
       self.paddleP1 = new Paddle(_objectSpread(_objectSpread({}, paddle1specs), {}, {
+        levelIndex: gLevelInt,
         side: "left",
         x: lp.x,
         y: lp.y
       }));
       self.paddleP2 = new Paddle(_objectSpread(_objectSpread({}, paddle2specs), {}, {
+        levelIndex: gLevelInt,
         side: "right",
         x: rp.x,
         y: rp.y
       }));
     }, function () {
       self.paddleP1 = new Paddle(_objectSpread(_objectSpread({}, paddle1specs), {}, {
+        levelIndex: gLevelInt,
         side: "right",
         x: rp.x,
         y: rp.y
       }));
       self.paddleP2 = new Paddle(_objectSpread(_objectSpread({}, paddle2specs), {}, {
+        levelIndex: gLevelInt,
         side: "left",
         x: lp.x,
         y: lp.y
       }));
     })();
     self.MakeLevel();
+    // todo: this should be in the level, no?
     self.CreateStartingPuck(self.level.vx0);
 
     // this countdown is a block on both player & cpu pill spawning.
@@ -1613,10 +1627,10 @@ function GameState(props) {
     // also see the 'must' check later on.
     // prevent pills from showing up too often, or too early - but not too late.
     self.pillSpawnCooldown = ForGameMode({
-      regular: 1000 * (kAppMode ? 3 : 6),
+      regular: 1000 * 3,
       hard: 1000 * 4,
-      zen: 1000 * 5,
-      pp: 1000 * (kAppMode ? 3 : 6)
+      zen: 1000 * 4,
+      pp: 1000 * 3
     });
     self.pillP1SpawnCountdown = self.pillSpawnCooldown;
     self.pillP2SpawnCountdown = self.pillSpawnCooldown;
@@ -1646,7 +1660,7 @@ function GameState(props) {
     return new Menu({
       showButton: false,
       OnClose: function OnClose() {
-        self.paused = false;
+        self.SetPaused(false);
         // forget any extra in-menu state
         // like which button is default seleted.
         self.theMenu = self.MakeMenu();
@@ -1655,6 +1669,9 @@ function GameState(props) {
         return MakeGameMenuButtons({
           OnQuit: function OnQuit() {
             self.quit = true;
+          },
+          OnResume: function OnResume() {
+            self.SetPaused(false);
           }
         });
       }
@@ -1670,35 +1687,48 @@ function GameState(props) {
     } else if (gGameMode === kGameModeZen) {
       self.level = MakeZen(self.paddleP1, self.paddleP2);
     } else {
-      Assert(gLevelIndex > 0);
-      self.level = MakeLevel(gLevelIndex, self.paddleP1, self.paddleP2);
+      Assert(gLevelInt > 0);
+      self.level = MakeLevel(gLevelInt, self.paddleP1, self.paddleP2);
     }
     self.maxVX = self.level.maxVX;
     Assert(!isBadNumber(self.maxVX));
     //logOnDelta("maxVX", self.maxVX, 1);
   };
-  self.Pause = function () {
+  self.SetPaused = function () {
+    var pause = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     // match: ProcessOneInput().
-    self.paused = true;
-    if (exists(self.theMenu)) {
-      var _self$theMenu;
-      if (!((_self$theMenu = self.theMenu) != null && _self$theMenu.isOpen())) {
-        var _self$theMenu2;
-        (_self$theMenu2 = self.theMenu) == null || _self$theMenu2.bMenu.Click(); // sure hope this stays in sync.
-        clearAnyMenuPressed(); // todo: code smell.
+    if (self.paused != pause) {
+      self.paused = pause;
+      if (self.paused && exists(self.theMenu)) {
+        var _self$theMenu;
+        if (!((_self$theMenu = self.theMenu) != null && _self$theMenu.isOpen())) {
+          var _self$theMenu2;
+          (_self$theMenu2 = self.theMenu) == null || _self$theMenu2.bMenu.Click(); // sure hope this stays in sync.
+          clearAnyMenuPressed(); // todo: code smell.
+        }
+      } else if (false == self.paused && exists(self.theMenu)) {
+        var _self$theMenu3;
+        if ((_self$theMenu3 = self.theMenu) != null && _self$theMenu3.isOpen()) {
+          var _self$theMenu4;
+          (_self$theMenu4 = self.theMenu) == null || _self$theMenu4.bMenu.Click(); // sure hope this stays in sync.
+          clearAnyMenuPressed(); // todo: code smell.
+        }
       }
     }
   };
-  self.GetIsPaused = function () {
+  self.IsPaused = function () {
     return self.paused;
   };
   self.Step = function (dt) {
-    var _self$theMenu3;
-    (_self$theMenu3 = self.theMenu) == null || _self$theMenu3.Step(); // fyi this doesn't process menu inputs, that is below.
+    var _self$theMenu5;
+    (_self$theMenu5 = self.theMenu) == null || _self$theMenu5.Step(); // fyi this doesn't process menu inputs, that is below.
     self.level.Step(dt);
     self.maxVX = self.level.maxVX; // todo: code smell global.
     self.MaybeSpawnPills(dt);
     self.StepDarkMatter(dt);
+    if (self.hintTimeout > 0) {
+      self.hintTimeout -= dt;
+    }
     self.ProcessAllInput();
     if (self.quit != false) {
       // could be false, true, "won", or "lost". :-(
@@ -1711,7 +1741,7 @@ function GameState(props) {
     if (self.stepping) {
       dt = kTimeStep;
     }
-    if (!self.paused || self.stepping) {
+    if (false == self.IsPaused() || self.stepping) {
       self.paddleP1.Step(dt, self);
       self.paddleP2.Step(dt, self);
       self.StepMoveables(dt);
@@ -1788,7 +1818,7 @@ function GameState(props) {
     Assert(Math.abs(self.unfairPillCount) <= self.unfairPillDiffMax, "unfairPillCount");
   };
   self.MaybeSpawnPill = function (forced, prev, spawnFactor, maker) {
-    var can_paused = !self.paused;
+    var can_paused = !self.IsPaused();
     var can_attract = !self.isAttract;
     var can_factor = gR.RandomBool(spawnFactor);
     var can_empty = isU(prev);
@@ -1836,7 +1866,7 @@ function GameState(props) {
   };
   self.CreateStartingPuck = function (vx) {
     range(0, 1).forEach(function (_) {
-      // can be increase when debugging.
+      // can be increased for debugging.
       var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
       var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
       if (self.isAttract) {
@@ -1897,36 +1927,37 @@ function GameState(props) {
     }
   };
   self.ProcessOneInput = function (cmds) {
-    var _self$theMenu4;
+    var _self$theMenu6;
     // note: oddly enough, the paddles handle their own input.
+    var paused = self.IsPaused();
     if (cmds.step) {
-      if (self.paused) {
+      if (paused) {
         self.stepping = true;
       }
     }
     if (cmds.levelWon) {
-      if (self.paused) {
+      if (paused) {
         self.quit = "won";
       }
     }
     if (cmds.levelLost) {
-      if (self.paused) {
+      if (paused) {
         self.quit = "lost";
       }
     }
     if (cmds.spawnPill) {
-      if (self.paused) {
+      if (paused) {
         // todo: move more of the pill code to the Level.
         self.MaybeSpawnPills(0, true);
       }
     }
     if (cmds.spawnDarkMatter) {
-      if (self.paused) {
+      if (paused) {
         self.StepDarkMatter(0, true);
       }
     }
     if (cmds.clearHighScore) {
-      if (self.paused) {
+      if (paused) {
         gLevelHighScores = {};
         gHighScore = 0;
         self.levelHighScore = undefined;
@@ -1935,23 +1966,23 @@ function GameState(props) {
       }
     }
     if (cmds.addPuck) {
-      if (self.paused) {
+      if (paused) {
         self.CreateRandomPucks({
           count: 10,
-          y: gYInset * 2,
+          y: gYInset * 1.5,
           vy: -0.1
         }); // fixed y for bolus.
       }
     }
     if (cmds.addPuckRandomY) {
-      if (self.paused) {
+      if (paused) {
         self.CreateRandomPucks({
           count: 20
         }); // random y for bolus.
       }
     }
     // everything below is about pause state and menu showing oh boy.
-    if ((_self$theMenu4 = self.theMenu) != null && _self$theMenu4.ProcessOneInput(cmds)) {
+    if ((_self$theMenu6 = self.theMenu) != null && _self$theMenu6.ProcessOneInput(cmds)) {
       return;
     }
     var pbp = false;
@@ -1973,11 +2004,7 @@ function GameState(props) {
       pbp = p1p || p2p;
     }
     if (isAnyMenuPressed(cmds) || cmds.pause || pbp) {
-      var _self$theMenu5;
-      // match: Pause().
-      self.paused = !self.paused;
-      (_self$theMenu5 = self.theMenu) == null || _self$theMenu5.bMenu.Click(); // sure hope this stays in sync.
-      clearAnyMenuPressed(); // todo: code smell.
+      self.SetPaused(!self.IsPaused());
     }
   };
   self.AddAnimation = function (a) {
@@ -2271,24 +2298,28 @@ function GameState(props) {
       });
       (_self$darkMatter4 = self.darkMatter) == null || _self$darkMatter4.Draw(self.Alpha());
       if (!isEndScreenshot) {
+        var _self$theMenu7;
+        self.DrawHint();
         gSparks.A.forEach(function (s) {
           s.Draw(self.Alpha());
         });
-      }
-      if (!isEndScreenshot) {
         self.DrawMoveTargets();
-      }
-      if (!isEndScreenshot) {
+
         // late/high z order so the animations can clear the screen if desired.
         self.DrawAnimations();
-      }
-      if (!isEndScreenshot) {
-        var _self$theMenu6;
-        (_self$theMenu6 = self.theMenu) == null || _self$theMenu6.Draw();
+        (_self$theMenu7 = self.theMenu) == null || _self$theMenu7.Draw();
         self.DrawPauseButton();
       }
     }
     self.DrawDebug();
+  };
+  self.DrawHint = function () {
+    if (false === self.isAttract && is1P() && gLevelInt === 1 && self.hintTimeout > 0) {
+      Cxdo(function () {
+        gCx.fillStyle = RandomGreen(T01(self.hintTimeout, kHintTimeout));
+        DrawText("HI SCORE WINS LEVEL", "center", ForP1Side(gw(0.3), gw(0.7)), gh(0.88), gSmallerFontSizePt);
+      });
+    }
   };
 
   // call this last so it is the top z layer.
@@ -2297,6 +2328,8 @@ function GameState(props) {
     if (!gDebug) {
       return;
     }
+
+    // lordy why so much hard-coding & inconsistency?
     self.paddleP1.DrawDebug();
     self.paddleP2.DrawDebug();
     gP1Target.DrawDebug();
@@ -2332,7 +2365,7 @@ function LevelFinishState() {
   var self = this;
   self.Init = function () {
     ResetInput();
-    self.levelIndex = gLevelIndex;
+    self.levelIndex = gLevelInt;
     self.timeout = 1000 * (gDebug ? 1 : 2);
     self.started = gGameTime;
     self.levelHigh = gLevelHighScores[self.levelIndex];
@@ -2355,27 +2388,6 @@ function LevelFinishState() {
       SaveLocal(LocalStorageKeys.levelHighScores, gLevelHighScores, true);
     }
     self.animations = {};
-    /* todo: i would like some motivation for the player to try to win the
-       last puck, but that ends up being strange because if the bonus for
-       the final puck goes to the cpu, that could cause it's score to be
-       the winner, which is potentially very confusing to the player.
-       an option would be to only ever give the bonus to the player.
-       but for now i am just disabling this while i percolate.
-       if (exists(gLastPuckSide)) {
-       var anim = ForSide(
-       gLastPuckSide,
-       () => { return MakeLastPuckWonAnimation(self.timeout, gw(0.75)) },
-       () => { return MakeLastPuckWonAnimation(self.timeout, gw(0.25)) },
-       )();
-       self.AddAnimation(anim);
-       var wasLeft = gLastPuckSide === "left";
-       ForP1Side(
-       () => { incrScore(wasLeft ? gP2Score : gP1Score, kScoreLastPuckIncrement) },
-       () => { incrScore(wasLeft ? gP1Score : gP2Score, kScoreLastPuckIncrement) },
-       )();
-       }
-    */
-
     self.goOn = false;
     PlayGameOver();
   };
@@ -2415,7 +2427,7 @@ function LevelFinishState() {
       advance = ud || ap || apd;
     }
     if (advance) {
-      gLevelIndex += 1;
+      gLevelInt += 1;
       if (is1P()) {
         return kLevelFinishChoose;
       } else {
@@ -2534,12 +2546,12 @@ function LevelFinishChooseState() {
     self.playedSfx = false;
   };
   self.RemainingTime = function () {
-    return self.started + self.timeout - gGameTime;
+    return self.started + self.timeout - gGameTime; // wugly des, ne?
   };
   self.Step = function (dt) {
     var nextState;
     self.updateInput = self.RemainingTime() >= 0;
-    self.goOn |= self.RemainingTime() <= -3000; // neg seconds to show final choice.
+    self.goOn |= self.RemainingTime() <= -2000; // oww, neg seconds to show final choice!!!
     if (self.goOn) {
       self.SaveHighlighted();
       nextState = kGetReady;
@@ -3263,7 +3275,7 @@ function OnBlur() {
   if (exists(gLifecycle)) {
     if (gLifecycle.state == kGame) {
       if (exists(gLifecycle.handler)) {
-        gLifecycle.handler.Pause();
+        gLifecycle.handler.SetPaused(true);
       }
     }
   }
@@ -3279,7 +3291,7 @@ function OnResize() {
   if (exists(gLifecycle)) {
     if (gLifecycle.state == kGame) {
       if (exists(gLifecycle.handler)) {
-        gLifecycle.handler.Pause();
+        gLifecycle.handler.SetPaused(true);
       }
     } else if (!gResizing && kResizeAllowedStates.includes(gLifecycle.state)) {
       gResizing = true;

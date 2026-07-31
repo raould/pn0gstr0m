@@ -16,6 +16,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 var k2Pi = Math.PI * 2;
 var kPi2 = Math.PI / 2;
+function round(n) {
+  return Math.floor(n + 0.5);
+}
 function mod(n, m) {
   // history is a b*tch.
   return (n % m + m) % m;

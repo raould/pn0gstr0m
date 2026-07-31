@@ -55,7 +55,7 @@ function Random() {
       Swap(min, max);
     }
     var rf = self.next() * (max - min);
-    var ri = Math.floor(rf + 0.5);
+    var ri = round(rf);
     var rc = Clip(min, max, ri);
     return (min + rc) * (bothSigns ? self.RandomSign() : 1);
   };
