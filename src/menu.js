@@ -43,10 +43,10 @@ function MakeMenuButton({ OnClose }) {
     var bMenu = new Button({
         x: gw(0.5)-(w/2), y: gh(0.80),
         width: w, height: gReducedFontSizePt * 1.4,
-        radii: 0,
         margin: {x: sx1(10), y: sy1(10)},
         title: "",
         align: "center",
+	is_blocky: true,
         color: rgba255s(greyDarkSpec.regular),
         font_size: gReducedFontSizePt,
         step_fn: (bself) => {

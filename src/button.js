@@ -31,6 +31,7 @@
     self.Init();
 }
 
+// this thing is too overloaded.
 /*class*/ function Button(props) {
     var self = this;
 
@@ -39,7 +40,7 @@
         self.y = props.y;
         self.width = props.width;
         self.height = props.height;
-        self.radii = aub(props.radii, sx1(10));
+        self.radii = aub(props.radii, sx1(10)); // only for checkboxes. :-/
         self.margin = aub(props.margin, {x:0, y:0});
         self.rect = { x: self.x, y: self.y, width: self.width, height: self.height };
         self.title = props.title;
@@ -59,6 +60,7 @@
         self.has_focus = aub(props.has_focus, false);
 	self.disabled = aub(props.disabled, false);
         self.wants_focus = false;
+	self.is_blocky = self.is_checkbox ? false : aub(props.is_blocky, false);
     };
 
     self.Step = function() {
@@ -143,7 +145,19 @@
     };
 
     self.DrawBorder = function(wx, wy) {
-	if (self.is_checkbox) {
+	if (self.is_blocky) {
+            gCx.beginPath();
+            gCx.rect(wx, wy, self.width, self.height);
+            gCx.fillStyle = backgroundColorStr;
+            gCx.fill();
+
+            gCx.beginPath();
+            gCx.rect(wx, wy, self.width, self.height);
+            gCx.lineWidth = sx1( self.has_focus ? 4 : 2 );
+            self.UpdateStyle();
+            gCx.stroke();
+	}
+	else if (self.is_checkbox) {
             gCx.beginPath();
             gCx.RoundRect(wx, wy, self.width, self.height, self.radii);
             gCx.fillStyle = backgroundColorStr;
