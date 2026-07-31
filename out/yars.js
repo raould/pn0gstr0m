@@ -10,16 +10,15 @@
 // note: everything assumes using full gHeight.
 
 var kDeathFrames = 30;
-var kStepPeriod = 10;
+var kStepPeriod = 5;
 function RandomBlockColor() {
   var choices = [redSpec, greenSpec, blueSpec, cyanSpec, magentaSpec, yellowSpec];
-  return rgba255s(gR.RandomElement(choices).strong);
+  return rgba255s(gR.RandomElement(choices).regular);
 }
-function YarCol(props /*side, count, isUp, x, width*/) {
+function YarCol(props /*count, isUp, x, width*/) {
   var self = this;
   self.Init = function () {
     self.alive = true;
-    self.side = props.side;
     self.isUp = props.isUp;
     self.x = props.x;
     self.width = props.width;
@@ -66,19 +65,18 @@ function YarCol(props /*side, count, isUp, x, width*/) {
         gCx.globalAlpha = alpha;
         for (var i = 0; i < self.blocks.length; ++i) {
           var y = mod(i * self.bh + self.yoff, gHeight);
-          var xoff = 0; // todo: ((gHeight/2)-Math.abs((gHeight/2)-(y+self.bh/2))) * ForSide(self.side, -0.02, 0.02);
           var bottom = (y + self.bh) % gHeight;
           var block = self.blocks[i];
-          var fillStyle = typeof block === "number" ? rgba255s(yellowSpec.strong, block / kDeathFrames) : block;
+          var fillStyle = typeof block === "number" ? rgba255s(whiteSpec.strong, Clip01(0.2 + block / kDeathFrames)) : block;
           if (exists(block)) {
             gCx.beginPath();
-            gCx.rect(self.x + xoff, y, self.width, self.bh);
+            gCx.rect(self.x, y, self.width, self.bh);
             gCx.fillStyle = fillStyle;
             gCx.fill();
             if (bottom < y) {
               // wrapped at the bottom, so missing at the top.
               gCx.beginPath();
-              gCx.rect(self.x + xoff, bottom - self.bh, self.width, self.bh);
+              gCx.rect(self.x, bottom - self.bh, self.width, self.bh);
               gCx.fillStyle = fillStyle;
               gCx.fill();
             }
@@ -111,7 +109,7 @@ function YarCol(props /*side, count, isUp, x, width*/) {
 
       if (collided) {
         var by = mod(puck.midY - self.yoff, gHeight);
-        var bi = Math.floor(by / self.bh + 0.5);
+        var bi = round(by / self.bh);
         if (bi >= 0 && bi < self.blocks.length) {
           collided = typeof self.blocks[bi] === "string";
           if (collided) {
@@ -126,21 +124,19 @@ function YarCol(props /*side, count, isUp, x, width*/) {
   };
   self.Init();
 }
-function Yars(props /*side, cols, rows, col_width*/) {
+function Yars(props /*midX, cols, rows, col_width*/) {
   var self = this;
   self.Init = function () {
     // support xywh
     self.id = gNextID++;
-    self.side = props.side;
     self.width = props.col_width * props.cols;
-    self.x = ForSide(self.side, gw(0.1), gw(0.9) - self.width);
+    self.x = props.midX - self.width / 2;
     self.y = 0;
     self.height = gHeight;
     self.cols = Array.from({
       length: props.cols
     }, function (e, i) {
       return new YarCol({
-        side: self.side,
         count: props.rows,
         x: self.x + i * props.col_width,
         isUp: i % 2 === 1,
@@ -162,15 +158,17 @@ function Yars(props /*side, cols, rows, col_width*/) {
     self.cols.forEach(function (c) {
       return c.Draw(alpha);
     });
+    /*
     if (gDebug) {
-      Cxdo(function () {
-        gCx.beginPath();
-        gCx.rect(self.x, 0, self.width, gHeight);
-        gCx.lineWidth = 1;
-        gCx.strokeStyle = "cyan";
-        gCx.stroke();
-      });
-    }
+        Cxdo(() => {
+    	gCx.beginPath();
+    	gCx.rect(self.x, 0, self.width, gHeight);
+    	gCx.lineWidth = 1;
+    	gCx.strokeStyle = "cyan";
+    	gCx.stroke();
+        });
+        }
+        */
   };
   self.CollisionTest = function (puck) {
     return self.cols.reduce(function (r, c) {

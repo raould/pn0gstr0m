@@ -110,16 +110,7 @@
         Cxdo(() => {
             var wx = WX(self.x);
             var wy = WY(self.y);
-            gCx.beginPath();
-            gCx.RoundRect(wx, wy, self.width, self.height, self.radii);
-            gCx.fillStyle = backgroundColorStr;
-            gCx.fill();
-
-            gCx.beginPath();
-            gCx.RoundRect(wx, wy, self.width, self.height, self.radii);
-            gCx.lineWidth = sx1( self.has_focus ? 4 : 2 );
-            self.UpdateStyle();
-            gCx.stroke();
+	    self.DrawBorder(wx, wy);
 
             var cx = wx+self.width*0.5;
             var lx = wx+self.width*0.1;
@@ -149,6 +140,48 @@
                 gCx.strokeRect(wx-self.margin.x, wy-self.margin.y, self.width+self.margin.x*2, self.height+self.margin.y*2);
             }
         });
+    };
+
+    self.DrawBorder = function(wx, wy) {
+	if (self.is_checkbox) {
+            gCx.beginPath();
+            gCx.RoundRect(wx, wy, self.width, self.height, self.radii);
+            gCx.fillStyle = backgroundColorStr;
+            gCx.fill();
+
+            gCx.beginPath();
+            gCx.RoundRect(wx, wy, self.width, self.height, self.radii);
+            gCx.lineWidth = sx1( self.has_focus ? 4 : 2 );
+            self.UpdateStyle();
+            gCx.stroke();
+	}
+	else {
+	    const begin_path = () => {
+		// was previously experimenting with height/4.
+		const off = Math.min( sx1(self.height/2), self.height/2 );
+		const l = wx;
+		const r = wx + self.width;
+		const t = wy;
+		const b = wy + self.height;
+		gCx.beginPath();
+		gCx.moveTo(l+off, t);
+		gCx.lineTo(r-off, t);
+		gCx.lineTo(r, t+off);
+		gCx.lineTo(r, b-off);
+		gCx.lineTo(r-off, b);
+		gCx.lineTo(l+off, b);
+		gCx.lineTo(l, b-off);
+		gCx.lineTo(l, t+off);
+		gCx.lineTo(l+off, t);
+	    };
+	    begin_path();
+	    gCx.fillStyle = backgroundColorStr;
+            gCx.fill();
+	    begin_path();
+            gCx.lineWidth = sx1( self.has_focus ? 4 : 2 );
+            self.UpdateStyle();
+            gCx.stroke();
+	}
     };
 
     self.Init();

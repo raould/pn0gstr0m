@@ -82,6 +82,7 @@ function MakePlayerButtons(_ref) {
       width: k.bw,
       height: k.bh,
       title: "2 PLAYERS",
+      // wild-type.
       align: "left",
       margin: k.margin,
       font_size: k.font_size,

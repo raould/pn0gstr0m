@@ -6,7 +6,7 @@
  */
 
 function ii(v) {
-  return Math.floor(0.5 + v);
+  return round(v);
 }
 // "absolute" casling helpers to scale values based on actual canvas resolution.
 // arbiraryily trying to consistently use sx() for symmetrics e.g. lineWidth.

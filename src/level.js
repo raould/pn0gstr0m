@@ -25,6 +25,7 @@ const kEnglishStep = 0.05;
 
 	self.vx0 = props.vx0;
         self.maxVX = props.maxVX;
+	console.log("level vx's", self.index, self.vx0, self.maxVX);
 	Assert(!isBadNumber(self.maxVX));
 
         self.speedupFactor = props.speedupFactor;

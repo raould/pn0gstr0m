@@ -3,7 +3,7 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-function ii(v) { return Math.floor(0.5 + v); }
+function ii(v) { return round(v); }
 // "absolute" casling helpers to scale values based on actual canvas resolution.
 // arbiraryily trying to consistently use sx() for symmetrics e.g. lineWidth.
 function sxi(x) { return ii(sx(x)); }

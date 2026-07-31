@@ -5,8 +5,8 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-var kDarkMatterDim = 30;
-var kDarkMatterForce = 0.003;
+var kDarkMatterDim = 35;
+var kDarkMatterForce = 0.002;
 var kDarkMatterAnimMsec = 16;
 
 // true if any part of the rect is in bounds.
@@ -51,6 +51,7 @@ function DarkMatterGenerator(props /*timeout*/) {
     var x = gR.RandomChoice(gw(0.2), gw(0.8));
     var y = gPuckYAvg < gh(0.5) ? gh(0.9) : gh(0.1);
     var vx = (x < gw(0.5) ? 1 : -1) * sx(0.015);
+    // if it transitions too slowly it is too painful.
     var vy = y < gh(0.5) ? sy(0.02) : -sy(0.02);
     return new DarkMatter({
       x: x,
@@ -125,22 +126,29 @@ function DarkMatter(props /*x, y, dim, vx, vy*/) {
       var df = 30;
       var or = T10(gFrameCount % df, df) * sx1(100);
       var a = T01(gFrameCount % df, df);
-      // outermost.
+      // out
       gCx.beginPath();
       gCx.arc(mx, my, or, 0, k2Pi);
       gCx.closePath();
-      gCx.strokeStyle = RandomYellow(a);
-      gCx.lineWidth = sx1(1);
+      gCx.strokeStyle = RandomBlue(a);
+      gCx.lineWidth = sx1(2);
       gCx.stroke();
-      // innermost.
+      // in
       gCx.beginPath();
       gCx.arc(mx, my, or / 2, 0, k2Pi);
       gCx.closePath();
       gCx.strokeStyle = RandomRed(a);
-      gCx.lineWidth = sx1(1);
+      gCx.lineWidth = sx1(2);
+      gCx.stroke();
+      // more-in
+      gCx.beginPath();
+      gCx.arc(mx, my, or / 3, 0, k2Pi);
+      gCx.closePath();
+      gCx.strokeStyle = RandomYellow(a);
+      gCx.lineWidth = sx1(2);
       gCx.stroke();
 
-      // inner.
+      // sprite.
       var now = Date.now();
       var dt = now - self.lastTime;
       if (dt > kDarkMatterAnimMsec) {

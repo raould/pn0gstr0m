@@ -8,7 +8,7 @@
 // note: everything assumes using full gHeight.
 
 const kDeathFrames = 30;
-const kStepPeriod = 10;
+const kStepPeriod = 5;
 
 function RandomBlockColor() {
     const choices = [
@@ -19,15 +19,14 @@ function RandomBlockColor() {
 	magentaSpec,
 	yellowSpec,
     ];
-    return rgba255s(gR.RandomElement(choices).strong);
+    return rgba255s(gR.RandomElement(choices).regular);
 }
 
-function YarCol(props /*side, count, isUp, x, width*/) {
+function YarCol(props /*count, isUp, x, width*/) {
     var self = this;
 
     self.Init = function() {
 	self.alive = true;
-	self.side = props.side;
 	self.isUp = props.isUp;
 	self.x = props.x;
 	self.width = props.width;
@@ -75,20 +74,19 @@ function YarCol(props /*side, count, isUp, x, width*/) {
 		gCx.globalAlpha = alpha;
 		for(let i = 0; i < self.blocks.length; ++i) {
 		    const y = mod(((i * self.bh) + self.yoff), gHeight);
-		    const xoff = 0; // todo: ((gHeight/2)-Math.abs((gHeight/2)-(y+self.bh/2))) * ForSide(self.side, -0.02, 0.02);
 		    const bottom = (y + self.bh) % gHeight;
 		    const block = self.blocks[i];
 		    const fillStyle = (typeof block === "number") ?
-			  rgba255s(yellowSpec.strong, block/kDeathFrames) :
+			  rgba255s(whiteSpec.strong, Clip01(0.2+block/kDeathFrames)) :
 			  block;
 		    if (exists(block)) {
 			gCx.beginPath();
-			gCx.rect(self.x+xoff, y, self.width, self.bh);
+			gCx.rect(self.x, y, self.width, self.bh);
 			gCx.fillStyle = fillStyle;
 			gCx.fill();
 			if (bottom < y) { // wrapped at the bottom, so missing at the top.
 			    gCx.beginPath();
-			    gCx.rect(self.x+xoff, (bottom-self.bh), self.width, self.bh);
+			    gCx.rect(self.x, (bottom-self.bh), self.width, self.bh);
 			    gCx.fillStyle = fillStyle;
 			    gCx.fill();
 			}
@@ -119,7 +117,7 @@ function YarCol(props /*side, count, isUp, x, width*/) {
 
 	    if (collided) {
 		const by = mod(puck.midY - self.yoff, gHeight);
-		const bi = Math.floor(by / self.bh + 0.5);
+		const bi = round(by / self.bh);
 		if (bi >= 0 && bi < self.blocks.length) {
 		    collided = typeof self.blocks[bi] === "string";
 		    if (collided) {
@@ -136,25 +134,19 @@ function YarCol(props /*side, count, isUp, x, width*/) {
     self.Init();
 }
 
-function Yars( props /*side, cols, rows, col_width*/) {
+function Yars( props /*midX, cols, rows, col_width*/) {
     var self = this;
 
     self.Init = function() { // support xywh
         self.id = gNextID++;
-        self.side = props.side;
 	self.width = props.col_width * props.cols;
-	self.x = ForSide(
-	    self.side,
-	    gw(0.1),
-	    gw(0.9) - self.width
-	);
+	self.x = props.midX - self.width/2;
 	self.y = 0;
 	self.height = gHeight;
 
 	self.cols = Array.from(
 	    { length: props.cols },
 	    (e, i) => new YarCol({
-		side: self.side,
 		count: props.rows,
 		x: self.x + (i*props.col_width),
 		isUp: i % 2 === 1,
@@ -174,6 +166,7 @@ function Yars( props /*side, cols, rows, col_width*/) {
 
     self.Draw = function( alpha ) {
 	self.cols.forEach(c => c.Draw(alpha));
+	/*
 	if (gDebug) {
 	    Cxdo(() => {
 		gCx.beginPath();
@@ -182,7 +175,8 @@ function Yars( props /*side, cols, rows, col_width*/) {
 		gCx.strokeStyle = "cyan";
 		gCx.stroke();
 	    });
-	}
+	    }
+	    */
     };
 
     self.CollisionTest = function( puck ) {

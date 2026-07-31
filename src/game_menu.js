@@ -8,7 +8,7 @@
 // in the various Make*Buttons() below.
 
 function GameMenuConstants() {
-    var by0 = gh(0.4);
+    var by0 = gh(0.2);
     var bw = gw(0.2);
     var bh = gSmallFontSizePt * 1.7;
     var bs = bh * 1.3;
@@ -32,25 +32,9 @@ function GameMenuConstants() {
     };
 }
 
-function MakeQuitButton({ constants:k, OnQuit }) {
-    return new Button({
-        x: k.bl, y: k.by0,
-        width: k.bw, height: k.bh,
-        margin: k.margin,
-        // leading spaces to align with sfx checkbox.
-        title: "  QUIT",
-        align: "left",
-        font_size: k.font_size,
-        is_checkbox: false,
-        click_fn: (bself) => {
-            OnQuit();
-        }
-    });
-}
-
 function MakeMuteButton({constants:k}) {
     return new Button({
-        x: k.bl, y: k.by0 + k.bs*2,
+        x: k.bl, y: k.by0,
         width: k.bw, height: k.bh,
         title: "SFX",
         align: "left",
@@ -67,20 +51,58 @@ function MakeMuteButton({constants:k}) {
     });
 }
 
-function MakeGameMenuButtons({ OnQuit }) {
+function MakeResumeButton({ constants:k, OnResume }) {
+    return new Button({
+        x: k.bl, y: k.by0 + k.bs*2,
+        width: k.bw, height: k.bh,
+        // leading spaces to align with sfx checkbox.
+        title: " RESUME",
+        align: "left",
+        margin: k.margin,
+        font_size: k.font_size,
+        is_checkbox: false,
+        click_fn: (bself) => {
+	    OnResume();
+        }
+    });
+}
+
+function MakeQuitButton({ constants:k, OnQuit }) {
+    return new Button({
+        x: k.bl, y: k.by0 + k.bs*3,
+        width: k.bw, height: k.bh,
+        margin: k.margin,
+        // leading spaces to align with sfx checkbox.
+        title: "  QUIT",
+        align: "left",
+        font_size: k.font_size,
+        is_checkbox: false,
+        click_fn: (bself) => {
+            OnQuit();
+        }
+    });
+}
+
+function MakeGameMenuButtons({ OnResume, OnQuit }) {
     var constants = new GameMenuConstants();
-    var bSfx = MakeMuteButton({ constants });
     var bQuit = MakeQuitButton({ constants, OnQuit });
+    var bResume = MakeResumeButton({ constants, OnResume });
+    var bSfx = MakeMuteButton({ constants });
     return {
         focusId: "bSfx",
         navigation: {
-            bQuit: {
-                button: bQuit,
-                down: "bSfx",
-            },
             bSfx: {
                 button: bSfx,
-                up: "bQuit",
+		down: "bResume",
+            },
+	    bResume: {
+		button: bResume,
+		up: "bSfx",
+		down: "bQuit",
+	    },
+            bQuit: {
+                button: bQuit,
+                up: "bResume",
             },
         }
     };

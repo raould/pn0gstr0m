@@ -5,6 +5,7 @@
 
 function Paddle(props) {
     /* props is {
+       levelIndex,
        isPlayer,
        side,
        x, y,
@@ -22,10 +23,13 @@ function Paddle(props) {
     */
     var self = this;
 
-    self.Init = function(label) {
+    self.Init = function() {
         self.id = gNextID++;
 
+	self.levelIndex = props.levelIndex; // could be zen sentinel values :-(
+	self.isAttract = aub(props.isAttract, false);
         self.isPlayer = props.isPlayer;
+	self.isXtra = aub(props.isXtra, false);
         self.side = props.side;
         // barriers are { x, y, width, height,
         //   prevX, prevY,
@@ -66,7 +70,24 @@ function Paddle(props) {
         self.aiCountdownToUpdate = kAIPeriod;
         self.label = props.label;
         self.engorged = false;
-        self.stepSize = aub(props.stepSize, gPaddleStepSize);
+
+	// keeping original stepSize mainly for debugging introspection.
+	self.stepSizeBase = aub(props.stepSize, gPaddleStepSize);
+	// increase CPU speed to make things harder & get more quarters.
+	self.stepSize = self.stepSizeBase;
+	const isHard = false === self.isAttract &&
+	      (gGameMode === kGameModeHard ||
+	       false === kAppMode);
+	if (isHard && false === self.isPlayer && false === self.isXtra) {
+	    const level0Index = Math.max(0, self.levelIndex) - 1;
+	    const factor = Clip( // don't get impossible.
+		1 + level0Index * 0.02,
+		1,
+		1.15
+	    );
+	    self.stepSize = self.stepSizeBase * factor;
+	    console.log("paddle", level0Index, factor, self.stepSizeBase, self.stepSize);
+	}
 
         self.keyStates = props.keyStates;
         // todo: fold button & stick states together into a gamepadState wrapper.
@@ -133,6 +154,7 @@ function Paddle(props) {
         var o = new Paddle({
             side: self.side,
             ...props,
+	    isXtra: true,
             isPlayer: false,
             isSplitter: true,
             isPillSeeker: false,
@@ -142,6 +164,10 @@ function Paddle(props) {
 
     self.AddNeo = function( props ) {
         self.neo = new Neo(props);
+    };
+
+    self.AddYars = function( props ) {
+	self.yars = new Yars(props);
     };
 
     self.StepPowerups = function( dt, gameState ) {
@@ -317,6 +343,14 @@ function Paddle(props) {
     self.DrawDebugSinglePaddle = function(paddle) {
         if (gDebug) {
             Cxdo(() => {
+		if (false === self.isPlayer && false === self.isXtra) {
+		    gCx.fillStyle = "grey";
+		    const x = ForSide(self.side, gw(0.1), gw(0.9));
+		    const align = ForSide(self.side, "right", "left");
+		    DrawText(F(self.stepSizeBase), align, x, gh(0.2), gSmallestFontSizePt);
+		    DrawText(F(self.stepSize), align, x, gh(0.25), gSmallestFontSizePt);
+		}
+				
                 gCx.beginPath();
                 gCx.strokeStyle = "red";
                 gCx.moveTo(paddle.GetMidX(), paddle.GetMidY());
@@ -357,9 +391,9 @@ function Paddle(props) {
         }
     };
 
-    self.MoveDown = function( dt, scale=1 ) {
+    self.MoveDown = function( dt ) {
         self.prevY = self.y;
-	var step = self.stepSize * scale * dt * kPhysicsStepScale;
+	var step = self.stepSize * dt * kPhysicsStepScale;
         self.y += step;
         self.isAtLimit = false;
         if( self.y+self.height > self.yMax ) {
@@ -369,9 +403,9 @@ function Paddle(props) {
         self.nudgeX();
     };
 
-    self.MoveUp = function( dt, scale=1 ) {
+    self.MoveUp = function( dt ) {
         self.prevY = self.y;
-	var step = self.stepSize * scale * dt * kPhysicsStepScale;
+	var step = self.stepSize * dt * kPhysicsStepScale;
         self.y -= step;
         self.isAtLimit = false;
         if( self.y < self.yMin ) {
@@ -463,71 +497,57 @@ function Paddle(props) {
 
     self.StepAI = function( dt, gameState ) {
 	Assert(!self.isPlayer);
-        if (isU(self.aiPuck) || self.aiPuck.alive === false) { self.aiPuck = undefined; }
-        if (isU(self.aiPill) || self.aiPill.alive === false) { self.aiPill = undefined; }
-        self.AISeek( dt, gameState.level.index );
+        if (false === self.aiPuck?.alive) { self.aiPuck = undefined; }
+        if (false === self.aiPill?.alive) { self.aiPill = undefined; }
+        self.AISeek( dt );
         if (self.shouldUpdate()) {
             self.UpdatePuckTarget();
             self.UpdatePillTarget(gameState);
         }
     };
 
-    self.AISeek = function( dt, levelIndex ) {
+    self.AISeek = function( dt ) {
         // heuristics are kind of a nightmare to maintain;
         // the order here does matter. and still isn't great.
         var PS = self.isPillSeeker;
-
-        // ai paddle can turn around vertically more responsively
-        // than most any human player, hence < 1 rather than = 1
-        // for regular mode. but even in easy mode, ai slowly
-        // gets better to make things more interesting.
-        var levelScale = (levelIndex-1) * 0.02;
-
-        // only 1p regular has the slower ai paddle.
-        var scale = ForGameMode({
-            regular: 0.4,
-            hard: 1.1,
-        }) + levelScale;
-        scale = Clip(scale, 0.1, 1.2);
-
-        gDebug && gDebug_DrawList.push({ fn: () => {
-            gCx.fillStyle = "blue";
-            DrawText(F(scale), "center", gw(0.8), gh(0.6), gSmallestFontSizePt);
-        }});
 
 	const count = gPucks.A.length;
 
         if (count > 10 && PS && exists(self.aiPill) && self.aiPill.isUrgent) {
             self.debugMsg = "PILL_URGENT";
-            self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, scale );
-            return;
+	    const dyf = Math.abs(self.aiPill.y - self.y) / gHeight;
+	    if (dyf < 0.2) {
+		self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2 );
+		return;
+	    }
         }
 
 	const attacking_count = ForSide(self.side, gPuckLeftCount, gPuckRightCount);
 	if (count < 10 || attacking_count / count > 0.25) {
+	    // note: can we get rid of the ai_puck and just use attacking buckets?
             if (exists(self.aiPuck) && self.isPuckAttacking(self.aiPuck)) {
 		self.debugMsg = "AI_PUCK";
-		self.AISeekTargetMidY( dt, self.aiPuck.midY, scale );
+		self.AISeekTargetMidY( dt, self.aiPuck.midY );
 		return;
             }
 	    const index = ForSide(self.side, gPuckYLeftCommonIndex, gPuckYRightCommonIndex);
 	    if (exists(index)) {
 		self.debugMsg = "PUCKS!";
 		const midY = kPuckYCountBucketHeight * index - (kPuckYCountBucketHeight/2);
-		self.AISeekTargetMidY( dt, midY, scale );
+		self.AISeekTargetMidY( dt, midY );
 		return;
 	    }
 	}
 
         if (PS && self.attackingNearCount == 0 && exists(self.aiPill)) {
             self.debugMsg = "PILL_FREE";
-            self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, scale );
+            self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2 );
             return;
         }
 
         if (PS && exists(self.aiPill)) {
             self.debugMsg = "PILL_DEFAULT";
-            self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2, scale );
+            self.AISeekTargetMidY( dt, self.aiPill.y + self.aiPill.height/2 );
             return;
         }
     };
@@ -549,13 +569,13 @@ function Paddle(props) {
         return should;
     };
 
-    self.AISeekTargetMidY = function( dt, tmy, scale ) {
-        var deadzone = (self.height * scale * 1/3);
+    self.AISeekTargetMidY = function( dt, tmy ) {
+        var deadzone = (self.height * 1/3);
         if( tmy <= self.GetMidY() - deadzone) {
-            self.MoveUp( dt, scale );
+            self.MoveUp( dt );
         }
         else if( tmy >= self.GetMidY() + deadzone) {
-            self.MoveDown( dt, scale );
+            self.MoveDown( dt );
         }
     };
 
@@ -609,5 +629,5 @@ function Paddle(props) {
         self.aiPill = gameState.level.p2Pill;
     };
 
-    self.Init(props.label);
+    self.Init();
 }

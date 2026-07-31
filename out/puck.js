@@ -14,10 +14,10 @@ function Puck() {
 
   /* props = { x, y, vx, vy, ur=true, forced=false, maxVX } */
   self.PlacementInit = function (props) {
-    Assert(!isNaN(props.x));
-    Assert(!isNaN(props.y));
-    Assert(!isNaN(props.vx));
-    Assert(!isNaN(props.vy));
+    Assert(!isBadNumber(props.x));
+    Assert(!isBadNumber(props.y));
+    Assert(!isBadNumber(props.vx));
+    Assert(!isBadNumber(props.vy));
     self.x = props.x;
     self.y = props.y;
     self.prevX = self.x;
@@ -126,22 +126,22 @@ function Puck() {
     if (self.alive === true && !self.isLocked) {
       self.impotentTime -= dt;
       dt = dt * kPhysicsStepScale;
-      Assert(!isNaN(dt));
-      Assert(!isNaN(self.x), [dt, self]);
-      Assert(!isNaN(self.y), [dt, self]);
+      Assert(!isBadNumber(dt));
+      Assert(!isBadNumber(self.x), [dt, self]);
+      Assert(!isBadNumber(self.y), [dt, self]);
       self.prevX = self.x;
       self.prevY = self.y;
       self.x += self.vx * dt;
       self.y += self.vy * dt;
-      Assert(!isNaN(self.x), [dt, self]);
-      Assert(!isNaN(self.y), [dt, self]);
+      Assert(!isBadNumber(self.x), [dt, self]);
+      Assert(!isBadNumber(self.y), [dt, self]);
       var xout = self.x < 0 || self.x + self.width >= gWidth;
-      Assert(!isNaN(xout), "xout");
+      Assert(!isBadNumber(xout), "xout");
 
       // technically, pucks should never escape vertically!
       self.y = Clip(self.y, 0, gHeight - 1 - self.height);
       var yout = self.y < 0 || self.y + self.height >= gHeight;
-      Assert(!isNaN(yout), "yout");
+      Assert(!isBadNumber(yout), "yout");
       Assert(yout == false, "yout");
       self.alive = !(xout || yout);
       self.midX = self.x + self.width / 2;
@@ -152,8 +152,8 @@ function Puck() {
       self.prevVY = self.vy;
       self.vx = Math.min(maxVX, self.vx);
       self.vy = Math.min(maxVY, self.vy);
-      Assert(!isNaN(self.vx), "vx");
-      Assert(!isNaN(self.vy), "vy");
+      Assert(!isBadNumber(self.vx), "vx");
+      Assert(!isBadNumber(self.vy), "vy");
     }
   };
 
@@ -226,14 +226,14 @@ function Puck() {
           // the faster things get, the more spread out, i hope, but,
           // not too much since it can be fun to be 'streaming'
           // up until neo / darkMatter.
-          pp: 3 * T01(Math.abs(self.vx), maxVX)
+          pp: 1 + 0.15 * T01(Math.abs(self.vx), maxVX)
         });
-        var vyf = gR.RandomBool(0.7) ? vyff : 0;
+        var vyf = gR.RandomBool(0.7) ? vyff : 1;
         vy = self.vy * vyf;
         //console.log(F(self.vy), F(vyff), F(vyf), F(vy), F(vy-self.vy));
       }
-      Assert(!isNaN(vx), "vx");
-      Assert(!isNaN(vy), "vy");
+      Assert(!isBadNumber(vx), "vx");
+      Assert(!isBadNumber(vy), "vy");
       newprops = {
         x: self.x,
         y: self.y,
@@ -316,7 +316,7 @@ function Puck() {
       nvy += mody;
     }
     self.vy = nvy;
-    Assert(!isNaN(self.vy), "vy");
+    Assert(!isBadNumber(self.vy), "vy");
   };
   self.PaddleCollisionNewprops = function (paddle, isSuddenDeath, maxVX) {
     var newprops = undefined;
@@ -443,7 +443,7 @@ function Puck() {
       self.vy *= -1;
       if (is2P()) {
         // trying to avoid degenerate steaming at top and bottom.
-        if (Math.abs(self.vy) < 0.3) {
+        if (Math.abs(self.vy) < 1) {
           self.vy *= 1.05;
         }
       }
