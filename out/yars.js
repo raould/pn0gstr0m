@@ -124,15 +124,14 @@ function YarCol(props /*count, isUp, x, width*/) {
   };
   self.Init();
 }
-function Yars(props /*midX, cols, rows, col_width*/) {
+function Yars(props /*midX, cols, rows, col_width, dy*/) {
   var self = this;
   self.Init = function () {
-    // support xywh
+    // support xw
     self.id = gNextID++;
     self.width = props.col_width * props.cols;
     self.x = props.midX - self.width / 2;
-    self.y = 0;
-    self.height = gHeight;
+    self.dy = props.dy;
     self.cols = Array.from({
       length: props.cols
     }, function (e, i) {
@@ -140,7 +139,8 @@ function Yars(props /*midX, cols, rows, col_width*/) {
         count: props.rows,
         x: self.x + i * props.col_width,
         isUp: i % 2 === 1,
-        width: props.col_width
+        width: props.col_width,
+        dy: props.dy
       });
     });
   };

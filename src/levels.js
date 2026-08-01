@@ -11,7 +11,7 @@ var gP1PillState;
 var gP2PillState;
 function spec_mk() {
     return {
-	deck: [],
+	deck: [kWallPill],
 	remaining: [...gPillIDs]
     };
 }

@@ -21,7 +21,7 @@
 const kIsSafari = UAParser()?.browser?.name === "Safari";
 
 // keep this committed as false.
-var gDebug = false;
+var gDebug = true;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
@@ -1636,6 +1636,7 @@ function CopyScreenBuffer() {
     self.MakeMenu = function() {
         return new Menu({
             showButton: false,
+	    closeOnAnyTap: false,
             OnClose: () => {
 		self.SetPaused(false);
                 // forget any extra in-menu state
@@ -1648,7 +1649,7 @@ function CopyScreenBuffer() {
                 },
 		OnResume: () => {
 		    self.SetPaused(false);
-		}
+		},
             }),
         });
     };

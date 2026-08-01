@@ -297,6 +297,9 @@ function Puck() {
             self.x = xw.x + xw.width;
         }
         self.vx *= -1;
+
+	const dy = xw.dy ?? 1;
+	self.vy *= dy;
     };
 
     self.ApplyEnglish = function( paddle ) {

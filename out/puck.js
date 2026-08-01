@@ -279,12 +279,15 @@ function Puck() {
     return false;
   };
   self.AdjustAndBounceX = function (xw) {
+    var _xw$dy;
     if (self.vx > 0) {
       self.x = xw.x - self.width;
     } else {
       self.x = xw.x + xw.width;
     }
     self.vx *= -1;
+    var dy = (_xw$dy = xw.dy) != null ? _xw$dy : 1;
+    self.vy *= dy;
   };
   self.ApplyEnglish = function (paddle) {
     // ugh, see: paddle, level.

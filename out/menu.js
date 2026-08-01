@@ -90,13 +90,15 @@ function Menu(_ref2) {
   var showButton = _ref2.showButton,
     showStatus = _ref2.showStatus,
     OnClose = _ref2.OnClose,
-    MakeNavigation = _ref2.MakeNavigation;
+    MakeNavigation = _ref2.MakeNavigation,
+    closeOnAnyTap = _ref2.closeOnAnyTap;
   var self = this;
   self.Init = function () {
     var _self$Focused;
     self.showButton = showButton;
     self.showStatus = showStatus;
     self.OnClose = OnClose;
+    self.closeOnAnyTap = aub(closeOnAnyTap, true);
     self.bMenu = MakeMenuButton({
       OnClose: OnClose
     });
@@ -245,8 +247,8 @@ function Menu(_ref2) {
             }
             found[1].button.Click();
           }
-        } else {
-          // touching outside the menu closes it.
+        } else if (self.closeOnAnyTap) {
+          // touching outside menu closes it.
           self.bMenu.Click();
           target.ClearPointer();
           hit = true;

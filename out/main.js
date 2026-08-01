@@ -36,7 +36,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
 
 // keep this committed as false.
-var gDebug = false;
+var gDebug = true;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
@@ -1659,6 +1659,7 @@ function GameState(props) {
   self.MakeMenu = function () {
     return new Menu({
       showButton: false,
+      closeOnAnyTap: false,
       OnClose: function OnClose() {
         self.SetPaused(false);
         // forget any extra in-menu state
