@@ -8,6 +8,7 @@
 * uh, like (prevX,prevY) should also have (prevVX,prevVY) for handling bounces.
 * support webgl (e.g. via pixijs) to get performance (vs. e.g. cavas color string hell).
 * comment out asserts in out/* somehow, for perf.
+* fix the "classes" to not be bad code.
 * i actually detest "!" and "!!".
 * gLevelIndex vs. kAttractLevelIndex is a self-owned hell.
 * fix resizing to be allowed during the game, especially for toggling fullscreen.

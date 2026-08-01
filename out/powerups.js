@@ -890,9 +890,10 @@ function MakeWallProps(context) {
       gameState.paddleP2.wall = undefined;
       context.paddle.AddYars({
         midX: midX,
-        cols: 4,
+        cols: 3,
         rows: 30,
-        col_width: gw(0.015)
+        col_width: gw(0.015),
+        dy: 1.5
       });
     }
   };
