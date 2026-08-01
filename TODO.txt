@@ -17,6 +17,7 @@
 * add more global variables /s.
 * add more hard-coded values /s.
 * optimize to have fewer loops over all pucks.
+* all the ui timeouts are too inconsistent.
 * step broken when paused e.g. wrt animations.js, i think?
 * fix resizing to be allowed during the game, especially for toggling fullscreen.
 * figure out the right hellacious way to support fullscreen button?!@#?!@?#!!!

@@ -104,11 +104,11 @@ function is2P() {
 }
 
 // bad code smell: sentinel value -1 is zen. 
-var kZenLevelIndex = -1;
+var kZenLevelInt = -1;
 
 // levels are 1-based.
 // todo: gLevelInt is an overloaded mess yay.
-var gLevelInt = gGameMode === kGameModeZen ? kZenLevelIndex : 1;
+var gLevelInt = gGameMode === kGameModeZen ? kZenLevelInt : 1;
 
 // this doesn't even handle attract-mode levels.
 // it also doesn't handle app vs. arcade modes.
@@ -143,7 +143,7 @@ function SetGameMode() {
       return gLevelInt = 1;
     },
     zen: function zen() {
-      return gLevelInt = kZenLevelIndex;
+      return gLevelInt = kZenLevelInt;
     }
   })();
   SaveLocal(LocalStorageKeys.gameMode, gGameMode);
@@ -1593,26 +1593,26 @@ function GameState(props) {
     // p2 is either cpu or another human.
     ForSide(gP1Side, function () {
       self.paddleP1 = new Paddle(_objectSpread(_objectSpread({}, paddle1specs), {}, {
-        levelIndex: gLevelInt,
+        levelInt: gLevelInt,
         side: "left",
         x: lp.x,
         y: lp.y
       }));
       self.paddleP2 = new Paddle(_objectSpread(_objectSpread({}, paddle2specs), {}, {
-        levelIndex: gLevelInt,
+        levelInt: gLevelInt,
         side: "right",
         x: rp.x,
         y: rp.y
       }));
     }, function () {
       self.paddleP1 = new Paddle(_objectSpread(_objectSpread({}, paddle1specs), {}, {
-        levelIndex: gLevelInt,
+        levelInt: gLevelInt,
         side: "right",
         x: rp.x,
         y: rp.y
       }));
       self.paddleP2 = new Paddle(_objectSpread(_objectSpread({}, paddle2specs), {}, {
-        levelIndex: gLevelInt,
+        levelInt: gLevelInt,
         side: "left",
         x: lp.x,
         y: lp.y
@@ -2365,10 +2365,10 @@ function LevelFinishState() {
   var self = this;
   self.Init = function () {
     ResetInput();
-    self.levelIndex = gLevelInt;
+    self.levelInt = gLevelInt;
     self.timeout = 1000 * (gDebug ? 1 : 2);
     self.started = gGameTime;
-    self.levelHigh = gLevelHighScores[self.levelIndex];
+    self.levelHigh = gLevelHighScores[self.levelInt];
     self.isNewHighScore = false;
     if (is1P()) {
       if (gP1Score.level > 0 && (isU(self.levelHigh) || gP1Score.level > self.levelHigh)) {
@@ -2384,7 +2384,7 @@ function LevelFinishState() {
     }
     if (self.isNewHighScore) {
       Assert(!isBadNumber(self.levelHigh));
-      gLevelHighScores[self.levelIndex] = self.levelHigh;
+      gLevelHighScores[self.levelInt] = self.levelHigh;
       SaveLocal(LocalStorageKeys.levelHighScores, gLevelHighScores, true);
     }
     self.animations = {};
@@ -2428,6 +2428,10 @@ function LevelFinishState() {
     }
     if (advance) {
       gLevelInt += 1;
+      if (false == kAppMode && gP1PillState.remaining.length === 0) {
+        // let somebody else play!
+        return kGameOverSummary;
+      }
       if (is1P()) {
         return kLevelFinishChoose;
       } else {
@@ -2458,10 +2462,10 @@ function LevelFinishState() {
   self.DrawSinglePlayer = function () {
     Cxdo(function () {
       gCx.fillStyle = RandomGreen();
-      DrawText("LEVEL ".concat(self.levelIndex, " WON!"), "center", gw(0.5), gh(0.45), gBigFontSizePt);
+      DrawText("LEVEL ".concat(self.levelInt, " WON!"), "center", gw(0.5), gh(0.45), gBigFontSizePt);
       DrawText("P1 LVL: ".concat(gP1Score.level), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
       DrawText("GPT LVL: ".concat(gP2Score.level), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.2), gSmallFontSizePt);
-      if (self.levelIndex > 1) {
+      if (self.levelInt > 1) {
         gCx.fillStyle = RandomGreen(0.5);
         DrawText("P1 GAME: ".concat(gP1Score.game), ForP1Side("left", "right"), ForP1Side(gw(0.2), gw(0.8)), gh(0.27), gSmallFontSizePt);
         DrawText("GPT GAME: ".concat(gP2Score.game), ForP2Side("left", "right"), ForP2Side(gw(0.2), gw(0.8)), gh(0.27), gSmallFontSizePt);
@@ -2828,7 +2832,7 @@ function GameOverSummaryState() {
   var self = this;
   self.Init = function () {
     ResetInput();
-    self.timeoutMsg = 2000;
+    self.timeoutMsg = 1000;
     self.started = gGameTime;
     self.maxScore = is1P() ? gP1Score.game : Math.max(gP1Score.game, gP2Score.game);
     self.isNewHighScore = self.maxScore > gHighScore;
@@ -2865,7 +2869,16 @@ function GameOverSummaryState() {
   };
   self.Draw = function () {
     is1P() ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
+    if (false == kAppMode) {
+      // potentially the case of limiting player's hogging it.
+      self.DrawThankYou();
+    }
     self.DrawGoOn();
+  };
+  self.DrawThankYou = function () {
+    gCx.fillStyle = RandomForColor(cyanSpec);
+    DrawText("*** T H E   E N D ***", "center", gw(0.5), gh(0.6), gReducedFontSizePt);
+    DrawText("THANKS FOR PLAYING!", "center", gw(0.5), gh(0.68), gReducedFontSizePt);
   };
   self.DrawGoOn = function () {
     if (self.goOn) {

@@ -13,7 +13,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 
 function Paddle(props) {
   /* props is {
-     levelIndex,
+     levelInt,
      isPlayer,
      side,
      x, y,
@@ -32,7 +32,7 @@ function Paddle(props) {
   var self = this;
   self.Init = function () {
     self.id = gNextID++;
-    self.levelIndex = props.levelIndex; // could be zen sentinel values :-(
+    self.levelInt = props.levelInt; // could be zen sentinel values :-(
     self.isAttract = aub(props.isAttract, false);
     self.isPlayer = props.isPlayer;
     self.isXtra = aub(props.isXtra, false);
@@ -82,7 +82,7 @@ function Paddle(props) {
     self.stepSize = self.stepSizeBase;
     var isHard = false === self.isAttract && (gGameMode === kGameModeHard || false === kAppMode);
     if (isHard && false === self.isPlayer && false === self.isXtra) {
-      var level0Index = Math.max(0, self.levelIndex) - 1;
+      var level0Index = Math.max(0, self.levelInt - 1);
       var factor = Clip(
       // don't get impossible.
       1 + level0Index * 0.02, 1, 1.15);

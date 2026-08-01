@@ -85,11 +85,11 @@ function is2P() { // fails to account for attract mode.
 }
 
 // bad code smell: sentinel value -1 is zen. 
-const kZenLevelIndex = -1;
+const kZenLevelInt = -1;
 
 // levels are 1-based.
 // todo: gLevelInt is an overloaded mess yay.
-var gLevelInt = (gGameMode === kGameModeZen) ? kZenLevelIndex : 1;
+var gLevelInt = (gGameMode === kGameModeZen) ? kZenLevelInt : 1;
 
 // this doesn't even handle attract-mode levels.
 // it also doesn't handle app vs. arcade modes.
@@ -135,7 +135,7 @@ function SetGameMode(mode=gGameMode) {
     gGameMode = mode;
     ForGameMode({
         regular: () => gLevelInt = 1,
-        zen: () => gLevelInt = kZenLevelIndex
+        zen: () => gLevelInt = kZenLevelInt
     })();
     SaveLocal(LocalStorageKeys.gameMode, gGameMode);
     console.log("SetGameMode", mode, gLevelInt);
@@ -1583,12 +1583,12 @@ function CopyScreenBuffer() {
         ForSide(
             gP1Side,
             () => {
-                self.paddleP1 = new Paddle({...paddle1specs, levelIndex: gLevelInt, side: "left", x: lp.x, y: lp.y});
-                self.paddleP2 = new Paddle({...paddle2specs, levelIndex: gLevelInt, side: "right", x: rp.x, y: rp.y});
+                self.paddleP1 = new Paddle({...paddle1specs, levelInt: gLevelInt, side: "left", x: lp.x, y: lp.y});
+                self.paddleP2 = new Paddle({...paddle2specs, levelInt: gLevelInt, side: "right", x: rp.x, y: rp.y});
             },
             () => {
-                self.paddleP1 = new Paddle({...paddle1specs, levelIndex: gLevelInt, side: "right", x: rp.x, y: rp.y});
-                self.paddleP2 = new Paddle({...paddle2specs, levelIndex: gLevelInt, side: "left", x: lp.x, y: lp.y});
+                self.paddleP1 = new Paddle({...paddle1specs, levelInt: gLevelInt, side: "right", x: rp.x, y: rp.y});
+                self.paddleP2 = new Paddle({...paddle2specs, levelInt: gLevelInt, side: "left", x: lp.x, y: lp.y});
             }
         )();
 
@@ -1713,6 +1713,7 @@ function CopyScreenBuffer() {
                 zen: kGameOver,
             });
         }
+
         if (self.stepping) {
             dt = kTimeStep;
         }
@@ -2358,10 +2359,10 @@ function CopyScreenBuffer() {
 
     self.Init = function() {
         ResetInput();
-        self.levelIndex = gLevelInt;
+        self.levelInt = gLevelInt;
         self.timeout = 1000 * (gDebug ? 1 : 2);
         self.started = gGameTime;
-        self.levelHigh = gLevelHighScores[self.levelIndex];
+        self.levelHigh = gLevelHighScores[self.levelInt];
         self.isNewHighScore = false;
         if (is1P()) {
             if (gP1Score.level > 0 && (isU(self.levelHigh) || gP1Score.level > self.levelHigh)) {
@@ -2378,7 +2379,7 @@ function CopyScreenBuffer() {
         }
         if (self.isNewHighScore) {
             Assert(!isBadNumber(self.levelHigh));
-            gLevelHighScores[self.levelIndex] = self.levelHigh;
+            gLevelHighScores[self.levelInt] = self.levelHigh;
             SaveLocal(LocalStorageKeys.levelHighScores, gLevelHighScores, true);
         }
 
@@ -2425,6 +2426,10 @@ function CopyScreenBuffer() {
         }
         if (advance) {
             gLevelInt += 1;
+	    if (false == kAppMode && gP1PillState.remaining.length === 0) {
+		// let somebody else play!
+		return kGameOverSummary;
+	    }
             if (is1P()) {
                 return kLevelFinishChoose;
             }
@@ -2459,7 +2464,7 @@ function CopyScreenBuffer() {
         Cxdo(() => {
             gCx.fillStyle = RandomGreen();
             DrawText(
-                `LEVEL ${self.levelIndex} WON!`,
+                `LEVEL ${self.levelInt} WON!`,
                 "center",
                 gw(0.5),
                 gh(0.45),
@@ -2481,7 +2486,7 @@ function CopyScreenBuffer() {
                 gSmallFontSizePt
             );
 
-            if (self.levelIndex > 1) {
+            if (self.levelInt > 1) {
 		gCx.fillStyle = RandomGreen(0.5);
                 DrawText(
                     `P1 GAME: ${gP1Score.game}`,
@@ -2913,7 +2918,7 @@ function CopyScreenBuffer() {
 
     self.Init = function() {
         ResetInput();
-        self.timeoutMsg = 2000;
+        self.timeoutMsg = 1000;
         self.started = gGameTime;
         self.maxScore =
             is1P() ?
@@ -2957,7 +2962,17 @@ function CopyScreenBuffer() {
     
     self.Draw = function() {
         is1P() ? self.DrawSinglePlayer() : self.DrawTwoPlayer();
+	if (false == kAppMode) {
+	    // potentially the case of limiting player's hogging it.
+	    self.DrawThankYou();
+	}
         self.DrawGoOn();
+    };
+
+    self.DrawThankYou = function() {
+	gCx.fillStyle = RandomForColor(cyanSpec);
+	DrawText("*** T H E   E N D ***", "center", gw(0.5), gh(0.6), gReducedFontSizePt);
+	DrawText("THANKS FOR PLAYING!", "center", gw(0.5), gh(0.68), gReducedFontSizePt);
     };
 
     self.DrawGoOn = function() {

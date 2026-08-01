@@ -5,7 +5,7 @@
 
 function Paddle(props) {
     /* props is {
-       levelIndex,
+       levelInt,
        isPlayer,
        side,
        x, y,
@@ -26,7 +26,7 @@ function Paddle(props) {
     self.Init = function() {
         self.id = gNextID++;
 
-	self.levelIndex = props.levelIndex; // could be zen sentinel values :-(
+	self.levelInt = props.levelInt; // could be zen sentinel values :-(
 	self.isAttract = aub(props.isAttract, false);
         self.isPlayer = props.isPlayer;
 	self.isXtra = aub(props.isXtra, false);
@@ -79,7 +79,7 @@ function Paddle(props) {
 	      (gGameMode === kGameModeHard ||
 	       false === kAppMode);
 	if (isHard && false === self.isPlayer && false === self.isXtra) {
-	    const level0Index = Math.max(0, self.levelIndex) - 1;
+	    const level0Index = Math.max(0, self.levelInt-1);
 	    const factor = Clip( // don't get impossible.
 		1 + level0Index * 0.02,
 		1,

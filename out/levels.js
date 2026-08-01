@@ -14,25 +14,22 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 // yes this is really hard to playtest.
 
 // no, i am not proud of all the globals.
+// note: all pill states have to be the same length, other code assumes that!
 var gP1PillState;
 var gP2PillState;
+function spec_mk() {
+  return {
+    deck: [],
+    remaining: _toConsumableArray(gPillIDs)
+  };
+}
 function ResetLevelsPillStates() {
-  // production values:
-  gP1PillState = {
-    deck: [],
-    remaining: _toConsumableArray(gPillIDs)
-  };
-  gP2PillState = {
-    deck: [],
-    remaining: _toConsumableArray(gPillIDs)
-  };
-  // testing values:
-  //    gP1PillState = { deck: gPillIDs.slice(0,count), remaining: gPillIDs.slice(count,count+1) };
-  //    gP2PillState = { deck: gPillIDs.slice(0,count), remaining: gPillIDs.slice(count,count+1) };
-  //    gP1PillState = { deck: [...gPillIDs].reverse(), remaining: [] };
-  //    gP2PillState = { deck: [...gPillIDs].reverse(), remaining: [] };
+  gP1PillState = spec_mk();
+  gP2PillState = spec_mk();
   console.log("gP1PillState", gP1PillState);
   console.log("gP2PillState", gP2PillState);
+  Assert(gP1PillState.deck.length === gP2PillState.deck.length);
+  Assert(gP1PillState.remaining.length === gP2PillState.remaining.length);
 }
 ResetLevelsPillStates();
 function PillIDsToMakers(pids) {
@@ -54,7 +51,7 @@ function MakeNoPillState() {
 }
 function MakeAttract(paddleP1, paddleP2) {
   return new Level({
-    index: 0,
+    levelInt: 0,
     isAttract: true,
     isSpawning: false,
     splitsCount: undefined,
@@ -72,7 +69,7 @@ function MakeAttract(paddleP1, paddleP2) {
 }
 function MakeZen(paddleP1, paddleP2) {
   return new Level({
-    index: kZenLevelIndex,
+    levelInt: kZenLevelInt,
     isSpawning: true,
     splitsCount: undefined,
     // no limit on how many.
@@ -92,7 +89,7 @@ function MakeZen(paddleP1, paddleP2) {
 }
 function MakePP(paddleP1, paddleP2) {
   return new Level({
-    index: kZenLevelIndex,
+    levelInt: kZenLevelInt,
     isSpawning: true,
     splitsCount: undefined,
     // no limit on how many.
@@ -113,18 +110,18 @@ function MakePP(paddleP1, paddleP2) {
 
 // level is one-based.
 // zen mode means only one level!
-function MakeLevel(index, paddleP1, paddleP2) {
-  Assert(index !== 0, "index is 1-based");
+function MakeLevel(levelInt, paddleP1, paddleP2) {
+  Assert(levelInt !== 0, "levelInt is 1-based");
   var level = new Level({
-    index: index,
+    levelInt: levelInt,
     isSpawning: true,
-    splitsCount: MakeSplitsCount(index),
-    vx0: sx(Clip(index * 0.1, 0.1, 1) + ForGameMode({
+    splitsCount: MakeSplitsCount(levelInt),
+    vx0: sx(Clip(levelInt * 0.1, 0.1, 1) + ForGameMode({
       regular: 2.5,
       hard: 3.5
     })),
     // fyi maxVX is allowed to grow somewhat later when there are no more splits.
-    maxVX: Math.min(sxi(12 + index), kMaxVX),
+    maxVX: Math.min(sxi(12 + levelInt), kMaxVX),
     speedupFactor: 0.0001,
     // should be less than what is in paddle. :-(
     englishFactorPlayer: 0.01,
@@ -138,18 +135,18 @@ function MakeLevel(index, paddleP1, paddleP2) {
   });
   return level;
 }
-function MakeSplitsCount(index) {
+function MakeSplitsCount(levelInt) {
   // see also: animations
-  if (index === kZenLevelIndex) {
+  if (levelInt === kZenLevelInt) {
     return undefined;
-  } else if (index === 1) {
+  } else if (levelInt === 1) {
     return kAppMode ? 150 : 100; // shorter in arcade mode.
-  } else if (index > 1) {
+  } else if (levelInt > 1) {
     // note: this is just a big bad random swag.
     // at least need enough splits to let the powerups come out?!
-    return 150 + index * 150;
+    return 150 + levelInt * 150;
   } else {
-    Assert(false, "splitsCount " + index);
+    Assert(false, "splitsCount " + levelInt);
     return 150;
   }
 }

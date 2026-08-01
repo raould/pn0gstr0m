@@ -66,7 +66,6 @@ function MakePlayerButtons({constants:k, playerRadios}) {
             },
             click_fn: (bself) => {
                 // match: TitleState.ProcessOneInput singlePlayer.
-                gSinglePlayer = true;
                 SetGameMode(kGameModeRegular);
                 playerRadios.OnSelect(bself);
             }

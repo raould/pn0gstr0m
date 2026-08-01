@@ -210,9 +210,6 @@ function RandomForColorFadeIn(spec) {
     return RandomForColor(spec, alpha);
   }
 }
-function RandomZen(alpha) {
-  return RandomForColorFadeIn(zenSpec, alpha);
-}
 function RandomGreySolid() {
   return RandomForColorFadeIn(greySpec, 1);
 }

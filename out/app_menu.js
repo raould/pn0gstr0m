@@ -73,7 +73,6 @@ function MakePlayerButtons(_ref) {
       },
       click_fn: function click_fn(bself) {
         // match: TitleState.ProcessOneInput singlePlayer.
-        gSinglePlayer = true;
         SetGameMode(kGameModeRegular);
         playerRadios.OnSelect(bself);
       }

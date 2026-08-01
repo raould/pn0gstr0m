@@ -16,8 +16,8 @@ function Level(props) {
     self.startTime = gGameTime;
 
     // for the regular 1 player game, index is 1-based.
-    // see also: main.js k*LevelIndex values.
-    self.index = props.index;
+    // see also: main.js k*LevelInt values.
+    self.levelInt = props.levelInt;
 
     // note: some of these are allowed to be undefined,
     // ie for attract mode level. although it is sort of ugly
@@ -26,7 +26,7 @@ function Level(props) {
 
     self.vx0 = props.vx0;
     self.maxVX = props.maxVX;
-    console.log("level vx's", self.index, self.vx0, self.maxVX);
+    console.log("level vx's", self.levelInt, self.vx0, self.maxVX);
     Assert(!isBadNumber(self.maxVX));
     self.speedupFactor = props.speedupFactor;
     // these do not apply until later in the level.
@@ -145,10 +145,10 @@ function Level(props) {
     }
   };
   self.DrawTitle = function (alpha) {
-    if (self.index >= 1) {
+    if (self.levelInt >= 1) {
       Cxdo(function () {
         gCx.fillStyle = RandomForColor(cyanSpec, alpha);
-        DrawText("LEVEL ".concat(self.index), "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
+        DrawText("LEVEL ".concat(self.levelInt), "center", gw(0.5), gh(0.08), gSmallestFontSizePt);
       });
     }
   };
