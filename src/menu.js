@@ -78,13 +78,14 @@ function MakeMenuButton({ OnClose }) {
     return bMenu;
 }
 
-/*class*/ function Menu({ showButton, showStatus, OnClose, MakeNavigation }) {
+/*class*/ function Menu({ showButton, showStatus, OnClose, MakeNavigation, closeOnAnyTap }) {
     var self = this;
 
     self.Init = function() {
         self.showButton = showButton;
-				self.showStatus = showStatus;
+	self.showStatus = showStatus;
         self.OnClose = OnClose;
+	self.closeOnAnyTap = aub(closeOnAnyTap, true);
         self.bMenu = MakeMenuButton({ OnClose });
         self.spec = MakeNavigation(self);
         Assert(exists(self.spec));
@@ -249,14 +250,12 @@ function MakeMenuButton({ OnClose }) {
                     e => e[1].button.ProcessTarget(target)
                 );
                 hit = exists(found);
-
                 if (hit) {
 		    if (!found[1].button.disabled) {
 			if (found != self.bMenu) { self.Focus(found[0]); }
 			found[1].button.Click();
 		    }
-                } else {
-                    // touching outside the menu closes it.
+                } else if (self.closeOnAnyTap) { // touching outside menu closes it.
                     self.bMenu.Click();
                     target.ClearPointer();
                     hit = true;

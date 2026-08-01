@@ -1659,6 +1659,7 @@ function GameState(props) {
   self.MakeMenu = function () {
     return new Menu({
       showButton: false,
+      closeOnAnyTap: false,
       OnClose: function OnClose() {
         self.SetPaused(false);
         // forget any extra in-menu state

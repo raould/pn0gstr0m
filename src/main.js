@@ -1636,6 +1636,7 @@ function CopyScreenBuffer() {
     self.MakeMenu = function() {
         return new Menu({
             showButton: false,
+	    closeOnAnyTap: false,
             OnClose: () => {
 		self.SetPaused(false);
                 // forget any extra in-menu state
@@ -1648,7 +1649,7 @@ function CopyScreenBuffer() {
                 },
 		OnResume: () => {
 		    self.SetPaused(false);
-		}
+		},
             }),
         });
     };
