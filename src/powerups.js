@@ -186,13 +186,14 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
 
 	// if one player already has a defense, then try to give the other player the same chance.
 	// todo: also defend? xtras?
+	let pid = self.pillState.deck.shift();
 	let otherPaddle = self.paddle === gameState.paddleP1 ? gameState.paddleP2 : gameState.paddleP1;
-	let pid = undefined;
-	if (exists(otherPaddle.blocks) && isU(self.paddle.blocks) && self.pillState.deck.includes(kYarsPill)) {
+	if (exists(otherPaddle.blocks) &&
+	    isU(self.paddle.blocks) &&
+	    self.pillState.deck.includes(kYarsPill) &&
+	    gPillInfo[kYarsPill].maker(self).testFn(gameState)) {
+	    self.pillState.deck.push(pid);
 	    pid = kYarsPill;
-	}
-	else {
-	    pid = self.pillState.deck.shift();
 	}
 	Assert(exists(pid));
         const info = gPillInfo[pid];

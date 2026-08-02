@@ -185,17 +185,6 @@ function BlockCol(props /*isYars, side, count, isUp, x, width*/) {
 			    gCx.fillStyle = fillStyle;
 			    gCx.fill();
 			}
-			// outside border.
-			gCx.beginPath();
-			gCx.rect(self.x + xoff, y, self.width, self.bh);
-			gCx.strokeStyle = backgroundColorStr;
-			gCx.lineWidth = 1;
-			gCx.stroke();
-			if (bottom < y) { // wrapped at the bottom, so missing at the top.
-			    gCx.beginPath();
-			    gCx.rect(self.x + xoff, (bottom-self.bh), self.width, self.bh);
-			    gCx.stroke();
-			}
 		    }
 		}
 		gCx.globalAlpha = ga;
