@@ -63,7 +63,7 @@ var kWallPill = 9;
 // note: order matters, this is the
 // canonical progression through the pills.
 // match: gPillInfo length.
-var gPillIDs = [kForcePushPill, kDecimatePill, kEngorgePill, kWildPill, kWallPill, kYarsPill, kDefendPill, kSplitPill, kXtraPill, kNeoPill];
+var gPillIDs = [kForcePushPill, kDecimatePill, kSplitPill, kWildPill, kEngorgePill, kWallPill, kYarsPill, kDefendPill, kXtraPill, kNeoPill];
 
 // note:
 // 1) width and height are functions

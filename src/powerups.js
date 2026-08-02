@@ -57,12 +57,12 @@ const kWallPill = 9;
 const gPillIDs = [
     kForcePushPill,
     kDecimatePill,
-    kEngorgePill,
+    kSplitPill,
     kWildPill,
+    kEngorgePill,
     kWallPill,
     kYarsPill,
     kDefendPill,
-    kSplitPill,
     kXtraPill,
     kNeoPill,
 ];
