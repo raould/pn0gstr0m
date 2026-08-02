@@ -857,8 +857,6 @@ function MakeYarsProps(context) {
     hfn = _gPillInfo$kYarsPill.hfn;
   var width = wfn();
   var height = hfn();
-  var cols = 8;
-  var rows = 40;
   return {
     name: name,
     width: width,
@@ -872,7 +870,7 @@ function MakeYarsProps(context) {
       var can_barriers = context.paddle.barriers.A.length === 0;
       var can_xtras = context.paddle.xtras.A.length === 0;
       var can = p_count && can_yars && can_wall && can_barriers && can_xtras;
-      //console.log("yars?", can);
+      console.log("yars?", p_count, can_yars, can_wall, can_barriers, can_xtras, can);
       return can;
     },
     drawFn: function drawFn(self) {
@@ -883,6 +881,8 @@ function MakeYarsProps(context) {
       PlayPowerupBoom();
       var midX = ForSide(context.paddle.side, gw(0.15), gw(0.85));
       var pc = T01(gPucks.A.length, kPuckPoolSize);
+      var cols = 3 + Math.min(gPucks.A.length / 150);
+      var rows = 40;
       context.paddle.AddBlocks({
         isYars: true,
         side: context.side,
@@ -902,7 +902,7 @@ function MakeWallProps(context) {
     hfn = _gPillInfo$kWallPill.hfn;
   var width = wfn();
   var height = hfn();
-  var cols = 6;
+  var cols = 4;
   var rows = 30;
   return {
     name: name,
@@ -917,7 +917,7 @@ function MakeWallProps(context) {
       var can_barriers = context.paddle.barriers.A.length === 0;
       var can_xtras = context.paddle.xtras.A.length === 0;
       var can = p_count && can_wall && can_yars && can_barriers && can_xtras;
-      //console.log("yars?", can);
+      //console.log("wall?", can);
       return can;
     },
     drawFn: function drawFn(self) {

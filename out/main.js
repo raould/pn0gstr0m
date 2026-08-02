@@ -1346,15 +1346,22 @@ function GetReadyState() {
     self.animations[gNextID++] = a;
   };
   self.Step = function (dt) {
+    var goOnState = ForGameMode({
+      regular: kChargeUp,
+      hard: kChargeUp,
+      zen: kGame,
+      pp: kGame
+    });
+
+    // just for debugging support.
+    var cmdState = self.ProcessAllInput();
+    if (cmdState === "next") {
+      return goOnState;
+    }
     self.StepAnimations(dt);
     self.timeout -= dt;
     if (self.timeout <= 0) {
-      return ForGameMode({
-        regular: kChargeUp,
-        hard: kChargeUp,
-        zen: kGame,
-        pp: kGame
-      });
+      return goOnState;
     } else {
       // one-second-at-a-time countdown.
       var sec = Math.floor(self.timeout / 1000);
@@ -1363,6 +1370,22 @@ function GetReadyState() {
         self.lastSec = sec;
       }
       return undefined;
+    }
+  };
+  self.ProcessAllInput = function () {
+    var nextState;
+    gEventQueue.forEach(function (event, i) {
+      var cmds = {};
+      event.updateFn(cmds);
+      if (isU(nextState)) {
+        nextState = self.ProcessOneInput(cmds);
+      }
+    });
+    return nextState;
+  };
+  self.ProcessOneInput = function (cmds) {
+    if (cmds.levelWon) {
+      return "next";
     }
   };
   self.StepAnimations = function (dt) {
@@ -1867,7 +1890,7 @@ function GameState(props) {
     });
   };
   self.CreateStartingPuck = function (vx) {
-    range(0, 300).forEach(function (_) {
+    range(0, 1).forEach(function (_) {
       // can be increased for debugging.
       var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
       var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
