@@ -191,9 +191,6 @@ function Powerups(props) {
     self.paddle = props.paddle;
     Assert(self.side === self.paddle.side);
     self.pillState = props.pillState;
-    if (!gDebug) {
-      Assert(self.pillState.deck.length > 0);
-    }
   };
   self.MakeRandomPill = function (gameState) {
     var propsBase = self.NextPropsBase(gameState);
