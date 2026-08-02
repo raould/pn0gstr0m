@@ -21,7 +21,7 @@
 const kIsSafari = UAParser()?.browser?.name === "Safari";
 
 // keep this committed as false.
-var gDebug = false;
+var gDebug = true;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
@@ -237,9 +237,9 @@ const kDarkMatterGeneratorTimeout = 20 * 1000;
 const kPuckPoolSize = 500;
 const kSparkPoolSize = 300;
 
-const kBarriersArrayInitialSize = 4;
-const kXtrasArrayInitialSize = 6;
-const kBlocksArrayInitialSize = 1;
+const kBarriersCount = 4;
+const kXtrasCount = 6;
+const kBlocksCount = 1;
 
 const kSpawnPlayerPillFactor = 0.003;
 
@@ -1855,7 +1855,7 @@ function CopyScreenBuffer() {
     };
 
     self.CreateStartingPuck = function(vx) {
-	range(0, 1).forEach(_ => { // can be increased for debugging.
+	range(0, 300).forEach(_ => { // can be increased for debugging.
             var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
             var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
 
