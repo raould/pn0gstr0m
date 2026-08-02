@@ -431,13 +431,11 @@ function Puck() {
 
     self.BlocksCollision = function(blocks) {
 	if (self.alive === true && exists(blocks)) {
-            blocks.forEach( (b) => {
-		var hit = b.CollisionTest( self );
-		if (exists(hit)) {
-		    PlayBlip();
-		    self.AdjustAndBounceX(hit);
-		}
-	    } );
+	    var hit = blocks.CollisionTest( self );
+	    if (exists(hit)) {
+		PlayBlip();
+		self.AdjustAndBounceX(hit);
+	    }
 	}
     };
 

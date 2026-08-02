@@ -244,7 +244,7 @@ var kPuckPoolSize = 500;
 var kSparkPoolSize = 300;
 var kBarriersArrayInitialSize = 4;
 var kXtrasArrayInitialSize = 6;
-var kBlocksArrayInitialSize = 2;
+var kBlocksArrayInitialSize = 1;
 var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
@@ -2089,8 +2089,9 @@ function GameState(props) {
         p.NeoCollision(self.paddleP1.neo);
         p.NeoCollision(self.paddleP2.neo);
         p.DarkMatterCollision(self.darkMatter);
-        p.BlocksCollision(self.paddleP1.blocks.A);
-        p.BlocksCollision(self.paddleP2.blocks.A);
+        p.BlocksCollision(self.paddleP1.blocks);
+        p.BlocksCollision(self.paddleP2.blocks);
+        p.BlocksCollision(self.level.blocks);
         self.paddleP1.OnPuckMoved(p, i);
         self.paddleP2.OnPuckMoved(p, i);
 

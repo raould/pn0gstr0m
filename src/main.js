@@ -239,7 +239,7 @@ const kSparkPoolSize = 300;
 
 const kBarriersArrayInitialSize = 4;
 const kXtrasArrayInitialSize = 6;
-const kBlocksArrayInitialSize = 2;
+const kBlocksArrayInitialSize = 1;
 
 const kSpawnPlayerPillFactor = 0.003;
 
@@ -2057,8 +2057,9 @@ function CopyScreenBuffer() {
                 p.NeoCollision(self.paddleP1.neo);
                 p.NeoCollision(self.paddleP2.neo);
 		p.DarkMatterCollision(self.darkMatter);
-		p.BlocksCollision(self.paddleP1.blocks.A);
-		p.BlocksCollision(self.paddleP2.blocks.A);
+		p.BlocksCollision(self.paddleP1.blocks);
+		p.BlocksCollision(self.paddleP2.blocks);
+		p.BlocksCollision(self.level.blocks);
 
                 self.paddleP1.OnPuckMoved(p, i);
                 self.paddleP2.OnPuckMoved(p, i);

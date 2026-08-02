@@ -46,10 +46,7 @@ function Paddle(props) {
         // neos are sticky fly traps.
         self.neo = undefined;
         // blocks are obstacles/shields.
-        self.blocks = {
-            A: new ReuseArray(kBlocksArrayInitialSize),
-            B: new ReuseArray(kBlocksArrayInitialSize)
-        };
+        self.blocks = undefined;
 
         self.hp0 = props.hp;
         self.hp = props.hp;
@@ -172,8 +169,7 @@ function Paddle(props) {
     };
 
     self.AddBlocks = function( props ) {
-        var b = new Blocks(props);
-        self.blocks.A.push(b);
+        self.blocks = new Blocks(props);
     };
 
     self.StepPowerups = function( dt, gameState ) {
@@ -208,12 +204,9 @@ function Paddle(props) {
     };
 
     self.StepBlocks = function( dt ) {
-        self.blocks.B.clear();
-        self.blocks.A.forEach(s => {
-            s.Step( dt );
-            s.alive && self.blocks.B.push( s );
-        } );
-        SwapBuffers(self.blocks);
+	if (exists(self.blocks)) {
+	    self.blocks = self.blocks.Step( dt );
+	}
     };
 
     self.OnPuckHit = function() {
@@ -267,7 +260,7 @@ function Paddle(props) {
         self.barriers.A.forEach(b => b.Draw( alpha ));
         self.xtras.A.forEach(x => x.Draw( alpha, gameState, 1, isEndScreenshot ));
         if (exists(self.neo)) { self.neo.Draw( alpha, gameState ); }
-        self.blocks.A.forEach(b => b.Draw( alpha ));
+        self.blocks?.Draw( alpha );
 
 	if (exists(self.hp)) { self.DrawAsXtra(alpha, (self.hp/self.hp0)); }
 	else { self.DrawAsPlayer(alpha, s01, isEndScreenshot); }

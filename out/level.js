@@ -42,6 +42,7 @@ function Level(props) {
 
     // powerup code is split very nastily across many files.
     self.p1Powerups = new Powerups({
+      level: self,
       isPlayer: props.isP1Player,
       paddle: self.paddleP1,
       side: ForSide(gP1Side, "left", "right"),
@@ -49,12 +50,16 @@ function Level(props) {
     });
     self.p1Pill = undefined;
     self.p2Powerups = new Powerups({
+      level: self,
       isPlayer: props.isP2Player,
       paddle: self.paddleP2,
       side: ForSide(gP1Side, "right", "left"),
       pillState: props.p2PillState
     });
     self.p2Pill = undefined;
+
+    // effects not owned by a side.
+    self.blocks = undefined;
   };
   self.EnergyFactor = function () {
     if (isU(self.splitsRemaining)) {
@@ -75,6 +80,7 @@ function Level(props) {
     }
   };
   self.Step = function (dt) {
+    self.StepBlocks(dt);
     // ugh, see: paddle, puck.
     if (self.IsSecondHalfGame()) {
       Assert(gGameMode !== kGameModeZen);
@@ -128,6 +134,14 @@ function Level(props) {
   self.IsSuddenDeath = function () {
     return exists(self.splitsRemaining) && self.splitsRemaining <= 0;
   };
+  self.AddBlocks = function (props) {
+    self.blocks = new Blocks(props);
+  };
+  self.StepBlocks = function (dt) {
+    if (exists(self.blocks)) {
+      self.blocks = self.blocks.Step(dt);
+    }
+  };
 
   // match: main.GameState,Draw().
   // todo: Draw is too split up, kind of
@@ -136,9 +150,11 @@ function Level(props) {
     var alpha = _ref.alpha,
       isEndScreenshot = _ref.isEndScreenshot;
     if (!isEndScreenshot) {
+      var _self$blocks;
       self.DrawTitle(alpha);
       self.DrawEnergy(alpha);
       self.DrawPills(alpha);
+      (_self$blocks = self.blocks) == null || _self$blocks.Draw(alpha);
       // todo: you'd maybe kind of expect lots of
       // other things like paddles and pucks to be
       // drawn by the level too, huh? ... :-(
