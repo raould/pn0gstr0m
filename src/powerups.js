@@ -155,6 +155,9 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
         self.paddle = props.paddle;
 	Assert(self.side === self.paddle.side);
         self.pillState = props.pillState;
+	if (!gDebug) {
+	    Assert(self.pillState.deck.length > 0);
+	}
     };
 
     self.MakeRandomPill = function(gameState) {
@@ -183,7 +186,18 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
         if (self.pillState.deck.length === 0) {
             return undefined;
         }
-        const pid = self.pillState.deck.shift();
+
+	// if one player already has a defense, then try to give the other player the same chance.
+	// todo: also defend? xtras?
+	let otherPaddle = self.paddle === gameState.paddleP1 ? gameState.paddleP2 : gameState.paddleP1;
+	let pid = undefined;
+	if (exists(otherPaddle.blocks) && isU(self.paddle.blocks) && self.pillState.deck.includes(kYarsPill)) {
+	    pid = kYarsPill;
+	}
+	else {
+	    pid = self.pillState.deck.shift();
+	}
+	Assert(exists(pid));
         const info = gPillInfo[pid];
         const maker = info.maker;
         Assert(exists(maker));
@@ -720,7 +734,8 @@ function MakeWildProps(context) {
             gPucks.A.forEach(p => {
 		const ps = Math.sign(p.vx);
                 if (vs === ps) {
-                    p.vy *= gR.RandomCentered(7, 2);
+		    // repeated applications in a level gets crazy.
+                    p.vy *= gR.RandomCentered(3, 1);
                     targets.push(p);
                 }
             });
