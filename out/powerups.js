@@ -641,9 +641,9 @@ function MakeBarrierProps(context) {
     lifespan: kPillLifespan,
     isUrgent: true,
     testFn: function testFn(gameState) {
-      // todo: there is a bug here that let one paddle
+      // todo: there was a bug i saw once that let one paddle
       // have 2 barrier powerups active at the same time wtf.
-      var can_end = true; //gameState.level.IsBeforeEndingGame(); // todo: revert
+      var can_end = gameState.level.IsBeforeEndingGame();
       var p_count = gPucks.A.length > kPuckPoolSize / 5;
       var can_paddles = context.paddle.barriers.A.length === 0;
       var can_blocks = isU(context.level.blocks);
@@ -680,7 +680,7 @@ function MakeBarrierProps(context) {
         regular: 1,
         zen: 0.5
       });
-      var width = sx1(20); // no matter what the hp.
+      var width = sx1(10); // no matter what the hp.
       var height = (gHeight - gYInset * 2) / kBarriersCount;
       var x = gw(ForSide(context.side, 0.1, 0.9));
       var targets = [];
@@ -724,8 +724,13 @@ function MakeXtraProps(context) {
     lifespan: kPillLifespan,
     isUrgent: true,
     testFn: function testFn(gameState) {
-      var can = gameState.level.IsBeforeEndingGame() && gPucks.A.length > kPuckPoolSize * 1 / 2 && context.paddle.xtras.A.length === 0 && isU(context.level.blocks) && isU(context.paddle.yars);
-      //console.log("xtra?", can);
+      var can_end = gameState.level.IsBeforeEndingGame();
+      var p_count = gPucks.A.length > kPuckPoolSize / 2;
+      var can_paddles = context.paddle.xtras.A.length === 0;
+      var can_blocks = isU(context.level.blocks);
+      var can_yars = isU(context.paddle.yars);
+      var can = can_end && p_count && can_paddles && can_blocks && can_yars;
+      console.log("xtras?", can_end, p_count, can_paddles, can_blocks, can_yars, can);
       return can;
     },
     drawFn: function drawFn(self) {

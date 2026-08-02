@@ -580,9 +580,9 @@ function MakeBarrierProps(context) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            // todo: there is a bug here that let one paddle
+            // todo: there was a bug i saw once that let one paddle
             // have 2 barrier powerups active at the same time wtf.
-            const can_end = true;//gameState.level.IsBeforeEndingGame(); // todo: revert
+            const can_end = gameState.level.IsBeforeEndingGame();
             const p_count = gPucks.A.length > kPuckPoolSize/5;
 	    const can_paddles = context.paddle.barriers.A.length === 0;
             const can_blocks = isU(context.level.blocks);
@@ -611,7 +611,7 @@ function MakeBarrierProps(context) {
 	    const hp = other_hp0 === 0 ? hpp : other_hp0;
             console.log(`barrier minHp=${minHp} ohp0=${other_hp0} hpf=${hpf} pf=${pf} hpp=${hpp} hp=${F(hp)}`);
 	    const drawScale = ForGameMode({ regular: 1, zen: 0.5 });
-            const width = sx1(20); // no matter what the hp.
+            const width = sx1(10); // no matter what the hp.
             const height = (gHeight-gYInset*2)/kBarriersCount;
             const x = gw(ForSide(context.side, 0.1, 0.9));
             const targets = [];
@@ -647,12 +647,13 @@ function MakeXtraProps(context) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            const can = gameState.level.IsBeforeEndingGame() &&
-                  gPucks.A.length > kPuckPoolSize*1/2 &&
-                  context.paddle.xtras.A.length === 0 &&
-                  isU(context.level.blocks) &&
-		  isU(context.paddle.yars);
-	    //console.log("xtra?", can);
+            const can_end = gameState.level.IsBeforeEndingGame();
+            const p_count = gPucks.A.length > kPuckPoolSize/2;
+            const can_paddles = context.paddle.xtras.A.length === 0;
+            const can_blocks = isU(context.level.blocks);
+	    const can_yars = isU(context.paddle.yars);
+	    const can = can_end && p_count && can_paddles && can_blocks && can_yars;
+	    console.log("xtras?", can_end, p_count, can_paddles, can_blocks, can_yars, can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawXtraPill(context.side, self, alpha),
