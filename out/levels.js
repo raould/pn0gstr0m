@@ -19,7 +19,7 @@ var gP1PillState;
 var gP2PillState;
 function spec_mk() {
   return {
-    deck: [],
+    deck: [kWallPill, kYarsPill],
     remaining: _toConsumableArray(gPillIDs)
   };
 }

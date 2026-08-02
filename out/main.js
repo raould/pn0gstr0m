@@ -244,6 +244,7 @@ var kPuckPoolSize = 500;
 var kSparkPoolSize = 300;
 var kBarriersArrayInitialSize = 4;
 var kXtrasArrayInitialSize = 6;
+var kBlocksArrayInitialSize = 1;
 var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
@@ -1866,7 +1867,7 @@ function GameState(props) {
     });
   };
   self.CreateStartingPuck = function (vx) {
-    range(0, 1).forEach(function (_) {
+    range(0, 300).forEach(function (_) {
       // can be increased for debugging.
       var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
       var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
@@ -2088,8 +2089,9 @@ function GameState(props) {
         p.NeoCollision(self.paddleP1.neo);
         p.NeoCollision(self.paddleP2.neo);
         p.DarkMatterCollision(self.darkMatter);
-        p.YarsCollision(self.paddleP1.yars);
-        p.YarsCollision(self.paddleP2.yars);
+        p.BlocksCollision(self.paddleP1.blocks);
+        p.BlocksCollision(self.paddleP2.blocks);
+        p.BlocksCollision(self.level.blocks);
         self.paddleP1.OnPuckMoved(p, i);
         self.paddleP2.OnPuckMoved(p, i);
 

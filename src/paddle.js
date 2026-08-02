@@ -45,6 +45,8 @@ function Paddle(props) {
         };
         // neos are sticky fly traps.
         self.neo = undefined;
+        // blocks are obstacles/shields.
+        self.blocks = undefined;
 
         self.hp0 = props.hp;
         self.hp = props.hp;
@@ -166,15 +168,15 @@ function Paddle(props) {
         self.neo = new Neo(props);
     };
 
-    self.AddYars = function( props ) {
-	self.yars = new Yars(props);
+    self.AddBlocks = function( props ) {
+        self.blocks = new Blocks(props);
     };
 
     self.StepPowerups = function( dt, gameState ) {
         self.StepBarriers( dt );
         self.StepXtras( dt, gameState );
         self.StepNeo( dt, gameState );
-	self.StepYars( dt );
+	self.StepBlocks( dt );
     };
 
     self.StepBarriers = function( dt ) {
@@ -201,9 +203,9 @@ function Paddle(props) {
         }
     };
 
-    self.StepYars = function( dt ) {
-	if (exists(self.yars)) {
-	    self.yars = self.yars.Step( dt );
+    self.StepBlocks = function( dt ) {
+	if (exists(self.blocks)) {
+	    self.blocks = self.blocks.Step( dt );
 	}
     };
 
@@ -255,25 +257,13 @@ function Paddle(props) {
 
     self.Draw = function( alpha, gameState, s01, isEndScreenshot ) {
 	Assert(exists(isEndScreenshot));
-        self.barriers.A.forEach(b => {
-            b.Draw( alpha );
-        });
-        self.xtras.A.forEach(x => {
-            x.Draw( alpha, gameState, 1, isEndScreenshot );
-        });
-        if (exists(self.neo)) {
-            self.neo.Draw( alpha, gameState );
-        }
-	if (exists(self.yars)) {
-	    self.yars.Draw( alpha );
-	}
+        self.barriers.A.forEach(b => b.Draw( alpha ));
+        self.xtras.A.forEach(x => x.Draw( alpha, gameState, 1, isEndScreenshot ));
+        if (exists(self.neo)) { self.neo.Draw( alpha, gameState ); }
+        self.blocks?.Draw( alpha );
 
-	if (exists(self.hp)) {
-	    self.DrawAsXtra(alpha, (self.hp/self.hp0));
-	}
-	else {
-            self.DrawAsPlayer(alpha, s01, isEndScreenshot);
-	}
+	if (exists(self.hp)) { self.DrawAsXtra(alpha, (self.hp/self.hp0)); }
+	else { self.DrawAsPlayer(alpha, s01, isEndScreenshot); }
     };
 
     self.DrawAsXtra = function( alpha, hp01 ) {
