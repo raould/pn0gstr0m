@@ -20,5 +20,8 @@
     "@babel/runtime": "^7.24.7",
     "core-js": "^3.37.1",
     "ua-parser-js": "^0.7.41"
+  },
+  "overrides": {
+    "brace-expansion": "1.1.16"
   }
 }
