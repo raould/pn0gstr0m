@@ -122,7 +122,7 @@ function Level(props) {
   // because they can get into degenerate states
   // that are hard to escape w/out enough pucks.
   self.IsBeforeEndingGame = function () {
-    return self.IsNGame(self.splitsMax * 0.7);
+    return self.IsNGame(100);
   };
   self.IsNGame = function (n) {
     var isNGame = true;
