@@ -1450,7 +1450,7 @@ function CopyScreenBuffer() {
     var self = this;
 
     self.Init = function() {
-        var seconds = gDebug ? 1 : 3;
+        var seconds = gDebug ? 1 : 2;
         self.timeout = 1000 * seconds - 1;
         self.lastSec = Math.floor((self.timeout+1)/1000);
         self.animations = {};
