@@ -2307,9 +2307,9 @@ function CopyScreenBuffer() {
 	    Cxdo(() => {
 		gCx.fillStyle = RandomGreen(T01(self.hintTimeout, kHintTimeout));
 		DrawText(
-		    "HI SCORE WINS LEVEL",
+		    "HIGH SCORE WINS LEVEL",
 		    "center",
-		    ForP1Side(gw(0.3), gw(0.7)),
+		    ForP1Side(gw(0.27), gw(0.73)),
 		    gh(0.88),
 		    gSmallerFontSizePt
 		);

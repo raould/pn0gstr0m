@@ -2320,7 +2320,7 @@ function GameState(props) {
     if (false === self.isAttract && is1P() && gLevelInt === 1 && self.hintTimeout > 0) {
       Cxdo(function () {
         gCx.fillStyle = RandomGreen(T01(self.hintTimeout, kHintTimeout));
-        DrawText("HI SCORE WINS LEVEL", "center", ForP1Side(gw(0.3), gw(0.7)), gh(0.88), gSmallerFontSizePt);
+        DrawText("HIGH SCORE WINS LEVEL", "center", ForP1Side(gw(0.27), gw(0.73)), gh(0.88), gSmallerFontSizePt);
       });
     }
   };
