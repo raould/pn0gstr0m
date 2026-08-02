@@ -51,6 +51,11 @@ function Paddle(props) {
     };
     // neos are sticky fly traps.
     self.neo = undefined;
+    // blocks are obstacles/shields.
+    self.blocks = {
+      A: new ReuseArray(kBlocksArrayInitialSize),
+      B: new ReuseArray(kBlocksArrayInitialSize)
+    };
     self.hp0 = props.hp;
     self.hp = props.hp;
     self.x0 = props.x;
@@ -162,14 +167,15 @@ function Paddle(props) {
   self.AddNeo = function (props) {
     self.neo = new Neo(props);
   };
-  self.AddYars = function (props) {
-    self.yars = new Yars(props);
+  self.AddBlocks = function (props) {
+    var b = new Blocks(props);
+    self.blocks.A.push(b);
   };
   self.StepPowerups = function (dt, gameState) {
     self.StepBarriers(dt);
     self.StepXtras(dt, gameState);
     self.StepNeo(dt, gameState);
-    self.StepYars(dt);
+    self.StepBlocks(dt);
   };
   self.StepBarriers = function (dt) {
     self.barriers.B.clear();
@@ -192,10 +198,13 @@ function Paddle(props) {
       self.neo = self.neo.Step(dt, gameState);
     }
   };
-  self.StepYars = function (dt) {
-    if (exists(self.yars)) {
-      self.yars = self.yars.Step(dt);
-    }
+  self.StepBlocks = function (dt) {
+    self.blocks.B.clear();
+    self.blocks.A.forEach(function (s) {
+      s.Step(dt);
+      s.alive && self.blocks.B.push(s);
+    });
+    SwapBuffers(self.blocks);
   };
   self.OnPuckHit = function () {
     if (exists(self.hp)) {
@@ -238,17 +247,17 @@ function Paddle(props) {
   self.Draw = function (alpha, gameState, s01, isEndScreenshot) {
     Assert(exists(isEndScreenshot));
     self.barriers.A.forEach(function (b) {
-      b.Draw(alpha);
+      return b.Draw(alpha);
     });
     self.xtras.A.forEach(function (x) {
-      x.Draw(alpha, gameState, 1, isEndScreenshot);
+      return x.Draw(alpha, gameState, 1, isEndScreenshot);
     });
     if (exists(self.neo)) {
       self.neo.Draw(alpha, gameState);
     }
-    if (exists(self.yars)) {
-      self.yars.Draw(alpha);
-    }
+    self.blocks.A.forEach(function (b) {
+      return b.Draw(alpha);
+    });
     if (exists(self.hp)) {
       self.DrawAsXtra(alpha, self.hp / self.hp0);
     } else {

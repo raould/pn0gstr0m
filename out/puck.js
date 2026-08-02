@@ -278,7 +278,7 @@ function Puck() {
     }
     return false;
   };
-  self.AdjustAndBounceX = function (xw) {
+  self.AdjustAndBounceX = function (xw /*and optionally dy*/) {
     var _xw$dy;
     if (self.vx > 0) {
       self.x = xw.x - self.width;
@@ -417,13 +417,15 @@ function Puck() {
       }
     }
   };
-  self.YarsCollision = function (yars) {
-    if (self.alive === true && exists(yars)) {
-      var hit = yars.CollisionTest(self);
-      if (hit) {
-        PlayBlip();
-        self.AdjustAndBounceX(yars);
-      }
+  self.BlocksCollision = function (blocks) {
+    if (self.alive === true && exists(blocks)) {
+      blocks.forEach(function (b) {
+        var hit = b.CollisionTest(self);
+        if (exists(hit)) {
+          PlayBlip();
+          self.AdjustAndBounceX(hit);
+        }
+      });
     }
   };
   self.WallsCollision = function (maxVX) {

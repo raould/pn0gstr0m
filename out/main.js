@@ -36,7 +36,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
 
 // keep this committed as false.
-var gDebug = false;
+var gDebug = true;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
@@ -244,6 +244,7 @@ var kPuckPoolSize = 500;
 var kSparkPoolSize = 300;
 var kBarriersArrayInitialSize = 4;
 var kXtrasArrayInitialSize = 6;
+var kBlocksArrayInitialSize = 2;
 var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
@@ -1866,7 +1867,7 @@ function GameState(props) {
     });
   };
   self.CreateStartingPuck = function (vx) {
-    range(0, 1).forEach(function (_) {
+    range(0, 300).forEach(function (_) {
       // can be increased for debugging.
       var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
       var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
@@ -2088,8 +2089,8 @@ function GameState(props) {
         p.NeoCollision(self.paddleP1.neo);
         p.NeoCollision(self.paddleP2.neo);
         p.DarkMatterCollision(self.darkMatter);
-        p.YarsCollision(self.paddleP1.yars);
-        p.YarsCollision(self.paddleP2.yars);
+        p.BlocksCollision(self.paddleP1.blocks.A);
+        p.BlocksCollision(self.paddleP2.blocks.A);
         self.paddleP1.OnPuckMoved(p, i);
         self.paddleP2.OnPuckMoved(p, i);
 

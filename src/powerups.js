@@ -571,7 +571,7 @@ function MakeDefendProps(context) {
             // have 2 defend powerups active at the same time wtf.
             const can = gameState.level.IsBeforeEndingGame() &&
                   gPucks.A.length > kPuckPoolSize*1/2 &&
-                  context.paddle.barriers.A.length == 0 &&
+                  context.paddle.barriers.A.length === 0 &&
 		  isU(gameState.paddleP1.wall) && isU(gameState.paddleP2.wall) &&
 		  isU(context.paddle.yars);
 	    //console.log("defend?", can);
@@ -627,7 +627,7 @@ function MakeXtraProps(context) {
         testFn: (gameState) => {
             const can = gameState.level.IsBeforeEndingGame() &&
                   gPucks.A.length > kPuckPoolSize*1/2 &&
-                  context.paddle.xtras.A.length == 0 &&
+                  context.paddle.xtras.A.length === 0 &&
 		  isU(gameState.paddleP1.wall) && isU(gameState.paddleP2.wall) &&
 		  isU(context.paddle.yars);
 	    //console.log("xtra?", can);
@@ -734,6 +734,9 @@ function MakeYarsProps(context) {
     const { name, wfn, hfn } = gPillInfo[kYarsPill];
     const width = wfn();
     const height = hfn();
+    const cols = 8;
+    const rows = 40;
+    const yarsTestHp = cols * rows * 1/3;
     return {
         name,
         width, height,
@@ -741,10 +744,10 @@ function MakeYarsProps(context) {
         isUrgent: true,
         testFn: (gameState) => {
 	    const p_count = gPucks.A.length > (kPuckPoolSize*1/2);
-	    const no_yars = isU(context.paddle.yars);
+	    const no_yars = context.paddle.blocks.A.reduce((a,b) => a && (b.isYars ? b.hp < yarsTestHp : true), true);
 	    const no_wall = isU(gameState.paddleP1.wall) && isU(gameState.paddleP2.wall);
-	    const no_barriers = context.paddle.barriers.A.length == 0;
-	    const no_xtras = context.paddle.xtras.A.length == 0;
+	    const no_barriers = context.paddle.barriers.A.length === 0;
+	    const no_xtras = context.paddle.xtras.A.length === 0;
 	    const can = p_count && no_yars && no_wall && no_barriers && no_xtras;
 	    //console.log("yars?", can);
 	    return can;
@@ -758,11 +761,14 @@ function MakeYarsProps(context) {
 		gw(0.85),
 	    );
             const pc = T01(gPucks.A.length, kPuckPoolSize);
-	    context.paddle.AddYars({
+	    context.paddle.AddBlocks({
+		isYars: true,
+		side: context.side,
 		midX,
-		cols: 4,
-		rows: 80,
-		col_width: gw(0.005)
+		cols,
+		rows,
+		col_width: gw(0.01),
+		dy: 1.5,
 	    });
         },
     };
@@ -772,6 +778,9 @@ function MakeWallProps(context) {
     const { name, wfn, hfn } = gPillInfo[kWallPill];
     const width = wfn();
     const height = hfn();
+    const cols = 6;
+    const rows = 30;
+    const yarsTestHp = cols * rows * 1/3;
     return {
         name,
         width, height,
@@ -780,9 +789,9 @@ function MakeWallProps(context) {
         testFn: (gameState) => {
 	    const p_count = gPucks.A.length > (kPuckPoolSize*1/2);
 	    const no_wall = isU(gameState.paddleP1.wall) && isU(gameState.paddleP2.wall);
-	    const no_yars = isU(context.paddle.yars);
-	    const no_barriers = context.paddle.barriers.A.length == 0;
-	    const no_xtras = context.paddle.xtras.A.length == 0;
+	    const no_yars = context.paddle.blocks.A.reduce((a,b) => a && (b.isYars ? b.hp < yarsTestHp : true), true);
+	    const no_barriers = context.paddle.barriers.A.length === 0;
+	    const no_xtras = context.paddle.xtras.A.length === 0;
 	    const can = p_count && no_wall && no_yars && no_barriers && no_xtras;
 	    //console.log("yars?", can);
 	    return can;
@@ -795,10 +804,11 @@ function MakeWallProps(context) {
 	    // there can be only 1.
 	    gameState.paddleP1.wall = undefined;
 	    gameState.paddleP2.wall = undefined;
-	    context.paddle.AddYars({
+	    context.paddle.AddBlocks({
+		isYars: false,
 		midX,
-		cols: 3,
-		rows: 30,
+		cols,
+		rows,
 		col_width: gw(0.015),
 		dy: 1.5,
 	    });
