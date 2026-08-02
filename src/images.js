@@ -16,7 +16,7 @@ AddImageToCache("forcepushR", "images/forcepushR.png", gImageCache);
 AddImageToCache("decimate", "images/decimate.png", gImageCache);
 AddImageToCache("engorge", "images/engorge.png", gImageCache);
 AddImageToCache("split", "images/split.png", gImageCache);
-AddImageToCache("defend", "images/defend.png", gImageCache);
+AddImageToCache("barrier", "images/defend.png", gImageCache);
 AddImageToCache("xtra", "images/xtra.png", gImageCache);
 AddImageToCache("neo", "images/neo.png", gImageCache);
 AddImageToCache("wild", "images/chaos.png", gImageCache);

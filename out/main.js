@@ -242,9 +242,9 @@ var kDarkMatterCountThreshold = 100; // should be <= kEjectCountThreshold i gues
 var kDarkMatterGeneratorTimeout = 20 * 1000;
 var kPuckPoolSize = 500;
 var kSparkPoolSize = 300;
-var kBarriersArrayInitialSize = 4;
-var kXtrasArrayInitialSize = 6;
-var kBlocksArrayInitialSize = 1;
+var kBarriersCount = 4;
+var kXtrasCount = 6;
+var kBlocksCount = 1;
 var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
@@ -1346,15 +1346,22 @@ function GetReadyState() {
     self.animations[gNextID++] = a;
   };
   self.Step = function (dt) {
+    var goOnState = ForGameMode({
+      regular: kChargeUp,
+      hard: kChargeUp,
+      zen: kGame,
+      pp: kGame
+    });
+
+    // just for debugging support.
+    var cmdState = self.ProcessAllInput();
+    if (cmdState === "next") {
+      return goOnState;
+    }
     self.StepAnimations(dt);
     self.timeout -= dt;
     if (self.timeout <= 0) {
-      return ForGameMode({
-        regular: kChargeUp,
-        hard: kChargeUp,
-        zen: kGame,
-        pp: kGame
-      });
+      return goOnState;
     } else {
       // one-second-at-a-time countdown.
       var sec = Math.floor(self.timeout / 1000);
@@ -1363,6 +1370,22 @@ function GetReadyState() {
         self.lastSec = sec;
       }
       return undefined;
+    }
+  };
+  self.ProcessAllInput = function () {
+    var nextState;
+    gEventQueue.forEach(function (event, i) {
+      var cmds = {};
+      event.updateFn(cmds);
+      if (isU(nextState)) {
+        nextState = self.ProcessOneInput(cmds);
+      }
+    });
+    return nextState;
+  };
+  self.ProcessOneInput = function (cmds) {
+    if (cmds.levelWon) {
+      return "next";
     }
   };
   self.StepAnimations = function (dt) {

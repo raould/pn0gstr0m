@@ -237,9 +237,9 @@ const kDarkMatterGeneratorTimeout = 20 * 1000;
 const kPuckPoolSize = 500;
 const kSparkPoolSize = 300;
 
-const kBarriersArrayInitialSize = 4;
-const kXtrasArrayInitialSize = 6;
-const kBlocksArrayInitialSize = 1;
+const kBarriersCount = 4;
+const kXtrasCount = 6;
+const kBlocksCount = 1;
 
 const kSpawnPlayerPillFactor = 0.003;
 
@@ -1334,15 +1334,23 @@ function CopyScreenBuffer() {
     };
 
     self.Step = function( dt ) {
+	const goOnState = ForGameMode({
+	    regular: kChargeUp,
+	    hard: kChargeUp,
+	    zen: kGame,
+	    pp: kGame
+	});
+
+	// just for debugging support.
+	const cmdState = self.ProcessAllInput();
+	if (cmdState === "next") {
+	    return goOnState;
+	}
+
         self.StepAnimations( dt );
         self.timeout -= dt;
         if (self.timeout <= 0) {
-	    return ForGameMode({
-		regular: kChargeUp,
-		hard: kChargeUp,
-		zen: kGame,
-		pp: kGame
-	    });
+	    return goOnState;
         } else {
             // one-second-at-a-time countdown.
             var sec = Math.floor(self.timeout/1000);
@@ -1352,6 +1360,24 @@ function CopyScreenBuffer() {
             }
 	    return undefined;
         }
+    };
+
+    self.ProcessAllInput = function() {
+        var nextState;
+        gEventQueue.forEach((event, i) => {
+            var cmds = {};
+            event.updateFn(cmds);
+            if (isU(nextState)) {
+		nextState = self.ProcessOneInput(cmds);
+            }
+        });
+        return nextState;
+    };
+
+    self.ProcessOneInput = function(cmds) {
+	if (cmds.levelWon) {
+	    return "next";
+	}
     };
 
     self.StepAnimations = function( dt ) {

@@ -35,13 +35,13 @@ function Paddle(props) {
         //   prevX, prevY,
         //   CollisionTest()
         self.barriers = {
-            A: new ReuseArray(kBarriersArrayInitialSize),
-            B: new ReuseArray(kBarriersArrayInitialSize)
+            A: new ReuseArray(kBarriersCount),
+            B: new ReuseArray(kBarriersCount)
         };
         // xtras are mini paddles.
         self.xtras = {
-            A: new ReuseArray(kXtrasArrayInitialSize),
-            B: new ReuseArray(kXtrasArrayInitialSize)
+            A: new ReuseArray(kXtrasCount),
+            B: new ReuseArray(kXtrasCount)
         };
         // neos are sticky fly traps.
         self.neo = undefined;

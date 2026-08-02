@@ -44,7 +44,7 @@ const kForcePushPill = 0;
 const kDecimatePill = 1;
 const kEngorgePill = 2;
 const kSplitPill = 3;
-const kDefendPill = 4;
+const kBarrierPill = 4;
 const kXtraPill = 5;
 const kNeoPill = 6;
 const kWildPill = 7;
@@ -62,7 +62,7 @@ const gPillIDs = [
     kEngorgePill,
     kWallPill,
     kYarsPill,
-    kDefendPill,
+    kBarrierPill,
     kXtraPill,
     kNeoPill,
 ];
@@ -100,10 +100,10 @@ const gPillInfo = {
         drawer: DrawWildPill,
         wfn: () => sxi(22), hfn: () => sxi(22),
     },
-    [kDefendPill]: {
+    [kBarrierPill]: {
         name: "SHLD",
-	maker: MakeDefendProps,
-        drawer: DrawDefendPill,
+	maker: MakeBarrierProps,
+        drawer: DrawBarrierPill,
         wfn: () => sxi(20), hfn: () => syi(40),
     },
     [kSplitPill]: {
@@ -184,8 +184,8 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
             return undefined;
         }
 
-	// if one player already has a defense, then try to give the other player the same chance.
-	// todo: also defend? xtras?
+	// if one player already has any defense, then try to give the other player the same chance.
+	// todo: also barrier? xtras?
 	let pid = self.pillState.deck.shift();
 	let otherPaddle = self.paddle === gameState.paddleP1 ? gameState.paddleP2 : gameState.paddleP1;
 	if (exists(otherPaddle.blocks) &&
@@ -295,8 +295,8 @@ function DrawSplitPill(side, xywh, alpha) {
     });
 }
 
-function DrawDefendPill(side, xywh, alpha) {
-    const img = gImageCache["defend"];
+function DrawBarrierPill(side, xywh, alpha) {
+    const img = gImageCache["barrier"];
     Cxdo(() => {
         const wx = WX(xywh.x);
         const wy = WY(xywh.y);
@@ -570,8 +570,8 @@ function MakeSplitProps(context) {
     };
 }
 
-function MakeDefendProps(context) {
-    const { name, wfn, hfn } = gPillInfo[kDefendPill];
+function MakeBarrierProps(context) {
+    const { name, wfn, hfn } = gPillInfo[kBarrierPill];
     const width = wfn();
     const height = hfn();
     return {
@@ -580,33 +580,42 @@ function MakeDefendProps(context) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            // todo: there is a bug here that let one paddle
-            // have 2 defend powerups active at the same time wtf.
-            const can = gameState.level.IsBeforeEndingGame() &&
-                  gPucks.A.length > kPuckPoolSize*1/2 &&
-                  context.paddle.barriers.A.length === 0 &&
-                  isU(context.level.blocks) &&
-		  isU(context.paddle.yars);
-	    //console.log("defend?", can);
+            // todo: there was a bug i saw once that let one paddle
+            // have 2 barrier powerups active at the same time wtf.
+            const can_end = gameState.level.IsBeforeEndingGame();
+            const p_count = gPucks.A.length > kPuckPoolSize/5;
+	    const can_paddles = context.paddle.barriers.A.length === 0;
+            const can_blocks = isU(context.level.blocks);
+	    const can_yars = isU(context.paddle.yars);
+	    const can = can_end && p_count && can_paddles && can_blocks && can_yars;
+	    console.log("barrier?", can_end, p_count, can_paddles, can_blocks, can_yars, can);
 	    return can;
         },
-        drawFn: (self, alpha=1) => DrawDefendPill(context.side, self, alpha),
+        drawFn: (self, alpha=1) => DrawBarrierPill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
-            const n = context.paddle.barriers.A.capacity;
-	    const hp = ForGameMode({
-		regular: 50,
-		hard: 70,
-		zen: 100,
-		pp: 70
+	    // if the other player has any barriers, we should match their hp0.
+	    // else the hp should be related to the number of pucks.
+	    // and we don't want barriers to be less than some useful absolute amount.
+	    const minHp = 50;
+	    let otherPaddle = self.paddle === gameState.paddleP1 ? gameState.paddleP2 : gameState.paddleP1;
+	    const other_hp0 = otherPaddle.barriers.A.reduce((m,b) => Math.max(m,b.hp0), 0);
+	    const hpf = ForGameMode({
+		regular: 1,
+		hard: 1.5,
+		zen: 2,
+		pp: 1.5
 	    });
-            //console.log(`defend pc=${pc} hp=${F(hp)}`);
+	    const pf = gPucks.A.length / (kPuckPoolSize/5);
+	    const hpp = hpf * Math.max( minHp, minHp * pf );
+	    const hp = other_hp0 === 0 ? hpp : other_hp0;
+            console.log(`barrier minHp=${minHp} ohp0=${other_hp0} hpf=${hpf} pf=${pf} hpp=${hpp} hp=${F(hp)}`);
 	    const drawScale = ForGameMode({ regular: 1, zen: 0.5 });
-            const width = sx1(hp/3);
-            const height = (gHeight-gYInset*2) / n;
+            const width = sx1(10); // no matter what the hp.
+            const height = (gHeight-gYInset*2)/kBarriersCount;
             const x = gw(ForSide(context.side, 0.1, 0.9));
             const targets = [];
-            for (var i = 0; i < n; ++i) {
+            for (let i = 0; i < kBarriersCount; ++i) {
                 const y = gYInset + i * height;
                 const xoff = xyNudge(y, height, 10, context.side);
                 context.paddle.AddBarrier({
@@ -638,19 +647,19 @@ function MakeXtraProps(context) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-            const can = gameState.level.IsBeforeEndingGame() &&
-                  gPucks.A.length > kPuckPoolSize*1/2 &&
-                  context.paddle.xtras.A.length === 0 &&
-                  isU(context.level.blocks) &&
-		  isU(context.paddle.yars);
-	    //console.log("xtra?", can);
+            const can_end = gameState.level.IsBeforeEndingGame();
+            const p_count = gPucks.A.length > kPuckPoolSize/2;
+            const can_paddles = context.paddle.xtras.A.length === 0;
+            const can_blocks = isU(context.level.blocks);
+	    const can_yars = isU(context.paddle.yars);
+	    const can = can_end && p_count && can_paddles && can_blocks && can_yars;
+	    console.log("xtras?", can_end, p_count, can_paddles, can_blocks, can_yars, can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawXtraPill(context.side, self, alpha),
         boomFn: (gameState) => {
             PlayPowerupBoom();
-            const n = context.paddle.xtras.A.capacity;
-            const yy = (gHeight-gYInset*2)/n;
+            const yy = (gHeight-gYInset*2)/kXtrasCount;
             const width = gPaddleWidth*2/3;
             const height = Math.min(gPaddleHeight/2, yy/2);
 	    const hp = ForGameMode({
@@ -660,7 +669,7 @@ function MakeXtraProps(context) {
 		pp: 50,
 	    });
             //console.log(`xtra pc=${pc} hp=${F(hp)}`);
-            ForCount(n, (i) => {
+            for (let i = 0; i < kXtrasCount; ++i) {
                 const x = ForSide(context.side, gw(0.15), gw(0.85));
                 const xoff = isEven(i) ? 0 : gw(0.02);
                 const y = gYInset+yy*i;
@@ -673,7 +682,7 @@ function MakeXtraProps(context) {
                     hp,
                     stepSize: Math.max(1,(yMax-yMin)/10),
                 });
-            });
+	    }
         },
     };
 }
@@ -755,8 +764,6 @@ function MakeYarsProps(context) {
     const { name, wfn, hfn } = gPillInfo[kYarsPill];
     const width = wfn();
     const height = hfn();
-    const cols = 8;
-    const rows = 40;
     return {
         name,
         width, height,
@@ -764,12 +771,12 @@ function MakeYarsProps(context) {
         isUrgent: true,
         testFn: (gameState) => {
 	    const p_count = gPucks.A.length > (kPuckPoolSize*1/2);
-	    const no_yars = IsWeakBlocks(context.paddle.blocks, 1/4);
-            const no_wall = IsWeakBlocks(context.level.blocks, 1/4);
-	    const no_barriers = context.paddle.barriers.A.length === 0;
-	    const no_xtras = context.paddle.xtras.A.length === 0;
-	    const can = p_count && no_yars && no_wall && no_barriers && -no_xtras;
-	    //console.log("yars?", can);
+	    const can_yars = IsWeakBlocks(context.paddle.blocks, 1/4);
+            const can_wall = IsWeakBlocks(context.level.blocks, 1/4);
+	    const can_barriers = context.paddle.barriers.A.length === 0;
+	    const can_xtras = context.paddle.xtras.A.length === 0;
+	    const can = p_count && can_yars && can_wall && can_barriers && can_xtras;
+	    console.log("yars?", p_count, can_yars, can_wall, can_barriers, can_xtras, can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawYarsPill(context.side, self, alpha),
@@ -781,6 +788,8 @@ function MakeYarsProps(context) {
 		gw(0.85),
 	    );
             const pc = T01(gPucks.A.length, kPuckPoolSize);
+	    const cols = 3 + Math.min(gPucks.A.length / 150);
+	    const rows = 40;
 	    context.paddle.AddBlocks({
 		isYars: true,
 		side: context.side,
@@ -798,7 +807,7 @@ function MakeWallProps(context) {
     const { name, wfn, hfn } = gPillInfo[kWallPill];
     const width = wfn();
     const height = hfn();
-    const cols = 6;
+    const cols = 4;
     const rows = 30;
     return {
         name,
@@ -807,12 +816,12 @@ function MakeWallProps(context) {
         isUrgent: true,
         testFn: (gameState) => {
 	    const p_count = gPucks.A.length > (kPuckPoolSize*1/2);
-            const no_wall = IsWeakBlocks(context.level.blocks, 1/4);
-	    const no_yars = IsWeakBlocks(context.paddle.blocks, 1/4);
-	    const no_barriers = context.paddle.barriers.A.length === 0;
-	    const no_xtras = context.paddle.xtras.A.length === 0;
-	    const can = p_count && no_wall && no_yars && no_barriers && no_xtras;
-	    //console.log("yars?", can);
+            const can_wall = IsWeakBlocks(context.level.blocks, 1/4);
+	    const can_yars = IsWeakBlocks(context.paddle.blocks, 1/4);
+	    const can_barriers = context.paddle.barriers.A.length === 0;
+	    const can_xtras = context.paddle.xtras.A.length === 0;
+	    const can = p_count && can_wall && can_yars && can_barriers && can_xtras;
+	    //console.log("wall?", can);
 	    return can;
         },
         drawFn: (self, alpha=1) => DrawWallPill(context.side, self, alpha),

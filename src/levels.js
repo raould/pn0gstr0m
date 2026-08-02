@@ -12,7 +12,7 @@ var gP2PillState;
 function spec_mk() {
     return {
 	deck: [],
-	remaining: [...gPillIDs]
+	remaining: [...gPillIDs],
     };
 }
 function ResetLevelsPillStates() {
