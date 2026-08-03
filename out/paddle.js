@@ -82,14 +82,14 @@ function Paddle(props) {
     self.stepSizeBase = aub(props.stepSize, gPaddleStepSize);
     // increase CPU speed to make things harder & get more quarters.
     self.stepSize = self.stepSizeBase;
-    var isHard = false === self.isAttract && (gGameMode === kGameModeHard || false === kAppMode);
+    var isHard = false === self.isAttract && false === kAppMode && gGameMode === kGameModeHard;
     if (isHard && false === self.isPlayer && false === self.isXtra) {
-      var level0Index = Math.max(0, self.levelInt - 1);
+      var level0Int = Math.max(0, self.levelInt - 1);
       var factor = Clip(
       // don't get impossible.
-      1 + level0Index * 0.02, 1, 1.15);
+      1 + level0Int * 0.02, 1, 1.15);
       self.stepSize = self.stepSizeBase * factor;
-      console.log("paddle", level0Index, factor, self.stepSizeBase, self.stepSize);
+      console.log("paddle", level0Int, factor, self.stepSizeBase, self.stepSize);
     }
     self.keyStates = props.keyStates;
     // todo: fold button & stick states together into a gamepadState wrapper.

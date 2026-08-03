@@ -634,6 +634,7 @@ function MakeBarrierProps(context) {
     hfn = _gPillInfo$kBarrierPi.hfn;
   var width = wfn();
   var height = hfn();
+  var puck_cutoff = kPuckPoolSize / 5;
   return {
     name: name,
     width: width,
@@ -644,7 +645,7 @@ function MakeBarrierProps(context) {
       // todo: there was a bug i saw once that let one paddle
       // have 2 barrier powerups active at the same time wtf.
       var can_end = gameState.level.IsBeforeEndingGame();
-      var p_count = gPucks.A.length > kPuckPoolSize / 5;
+      var p_count = gPucks.A.length > puck_cutoff;
       var can_paddles = context.paddle.barriers.A.length === 0;
       var can_blocks = isU(context.level.blocks);
       var can_yars = isU(context.paddle.yars);
@@ -672,7 +673,7 @@ function MakeBarrierProps(context) {
         zen: 2,
         pp: 1.5
       });
-      var pf = gPucks.A.length / (kPuckPoolSize / 5);
+      var pf = gPucks.A.length / puck_cutoff;
       var hpp = hpf * Math.max(minHp, minHp * pf);
       var hp = other_hp0 === 0 ? hpp : other_hp0;
       console.log("barrier minHp=".concat(minHp, " ohp0=").concat(other_hp0, " hpf=").concat(hpf, " pf=").concat(pf, " hpp=").concat(hpp, " hp=").concat(F(hp)));
@@ -864,7 +865,7 @@ function MakeYarsProps(context) {
     lifespan: kPillLifespan,
     isUrgent: true,
     testFn: function testFn(gameState) {
-      var p_count = gPucks.A.length > kPuckPoolSize * 1 / 2;
+      var p_count = gPucks.A.length > kPuckPoolSize * 1 / 3;
       var can_yars = IsWeakBlocks(context.paddle.blocks, 1 / 4);
       var can_wall = IsWeakBlocks(context.level.blocks, 1 / 4);
       var can_barriers = context.paddle.barriers.A.length === 0;
@@ -881,7 +882,7 @@ function MakeYarsProps(context) {
       PlayPowerupBoom();
       var midX = ForSide(context.paddle.side, gw(0.15), gw(0.85));
       var pc = T01(gPucks.A.length, kPuckPoolSize);
-      var cols = 3 + Math.min(gPucks.A.length / 150);
+      var cols = 3 + Math.floor(gPucks.A.length / 50);
       var rows = 40;
       context.paddle.AddBlocks({
         isYars: true,

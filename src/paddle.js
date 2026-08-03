@@ -78,17 +78,17 @@ function Paddle(props) {
 	// increase CPU speed to make things harder & get more quarters.
 	self.stepSize = self.stepSizeBase;
 	const isHard = false === self.isAttract &&
-	      (gGameMode === kGameModeHard ||
-	       false === kAppMode);
+	      (false === kAppMode &&
+	       gGameMode === kGameModeHard);
 	if (isHard && false === self.isPlayer && false === self.isXtra) {
-	    const level0Index = Math.max(0, self.levelInt-1);
+	    const level0Int = Math.max(0, self.levelInt-1);
 	    const factor = Clip( // don't get impossible.
-		1 + level0Index * 0.02,
+		1 + level0Int * 0.02,
 		1,
 		1.15
 	    );
 	    self.stepSize = self.stepSizeBase * factor;
-	    console.log("paddle", level0Index, factor, self.stepSizeBase, self.stepSize);
+	    console.log("paddle", level0Int, factor, self.stepSizeBase, self.stepSize);
 	}
 
         self.keyStates = props.keyStates;
