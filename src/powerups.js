@@ -531,7 +531,7 @@ function MakeSplitProps(context) {
         width, height,
         lifespan: kPillLifespan,
         testFn: (gameState) => {
-	    const can = gPucks.A.length < kPuckPoolSize / 3;
+	    const can = gPucks.A.length < kPuckPoolSize/3;
 	    //console.log("split?", can);
 	    return can;
         },
@@ -574,6 +574,7 @@ function MakeBarrierProps(context) {
     const { name, wfn, hfn } = gPillInfo[kBarrierPill];
     const width = wfn();
     const height = hfn();
+    const puck_cutoff = kPuckPoolSize/5;
     return {
         name,
         width, height,
@@ -583,7 +584,7 @@ function MakeBarrierProps(context) {
             // todo: there was a bug i saw once that let one paddle
             // have 2 barrier powerups active at the same time wtf.
             const can_end = gameState.level.IsBeforeEndingGame();
-            const p_count = gPucks.A.length > kPuckPoolSize/5;
+            const p_count = gPucks.A.length > puck_cutoff;
 	    const can_paddles = context.paddle.barriers.A.length === 0;
             const can_blocks = isU(context.level.blocks);
 	    const can_yars = isU(context.paddle.yars);
@@ -606,7 +607,7 @@ function MakeBarrierProps(context) {
 		zen: 2,
 		pp: 1.5
 	    });
-	    const pf = gPucks.A.length / (kPuckPoolSize/5);
+	    const pf = gPucks.A.length / puck_cutoff;
 	    const hpp = hpf * Math.max( minHp, minHp * pf );
 	    const hp = other_hp0 === 0 ? hpp : other_hp0;
             console.log(`barrier minHp=${minHp} ohp0=${other_hp0} hpf=${hpf} pf=${pf} hpp=${hpp} hp=${F(hp)}`);
@@ -728,8 +729,7 @@ function MakeWildProps(context) {
 	// see also: dark matter.
         lifespan: kPillLifespan * (kAppMode ? 1 : 2),
         testFn: (gameState) => {
-	    const can = gPucks.A.length > 10 &&
-		  isU(context.paddle.neo);
+	    const can = gPucks.A.length > 10 && isU(context.paddle.neo);
 	    //console.log("wild?", can);
 	    return can;
         },
@@ -770,7 +770,7 @@ function MakeYarsProps(context) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-	    const p_count = gPucks.A.length > (kPuckPoolSize*1/2);
+	    const p_count = gPucks.A.length > (kPuckPoolSize*1/3);
 	    const can_yars = IsWeakBlocks(context.paddle.blocks, 1/4);
             const can_wall = IsWeakBlocks(context.level.blocks, 1/4);
 	    const can_barriers = context.paddle.barriers.A.length === 0;
@@ -788,7 +788,7 @@ function MakeYarsProps(context) {
 		gw(0.85),
 	    );
             const pc = T01(gPucks.A.length, kPuckPoolSize);
-	    const cols = 3 + Math.min(gPucks.A.length / 150);
+	    const cols = 3 + Math.floor(gPucks.A.length / 50);
 	    const rows = 40;
 	    context.paddle.AddBlocks({
 		isYars: true,
