@@ -574,7 +574,7 @@ function MakeBarrierProps(context) {
     const { name, wfn, hfn } = gPillInfo[kBarrierPill];
     const width = wfn();
     const height = hfn();
-    const puck_cutoff = kPuckPoolSize/5;
+    const puck_cutoff = 100;
     return {
         name,
         width, height,
@@ -649,7 +649,7 @@ function MakeXtraProps(context) {
         isUrgent: true,
         testFn: (gameState) => {
             const can_end = gameState.level.IsBeforeEndingGame();
-            const p_count = gPucks.A.length > kPuckPoolSize/2;
+            const p_count = gPucks.A.length > 100;
             const can_paddles = context.paddle.xtras.A.length === 0;
             const can_blocks = isU(context.level.blocks);
 	    const can_yars = isU(context.paddle.yars);
@@ -770,7 +770,7 @@ function MakeYarsProps(context) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-	    const p_count = gPucks.A.length > (kPuckPoolSize*1/3);
+	    const p_count = gPucks.A.length > 100;
 	    const can_yars = IsWeakBlocks(context.paddle.blocks, 1/4);
             const can_wall = IsWeakBlocks(context.level.blocks, 1/4);
 	    const can_barriers = context.paddle.barriers.A.length === 0;
@@ -815,7 +815,7 @@ function MakeWallProps(context) {
         lifespan: kPillLifespan,
         isUrgent: true,
         testFn: (gameState) => {
-	    const p_count = gPucks.A.length > (kPuckPoolSize*1/2);
+	    const p_count = gPucks.A.length > 100;
             const can_wall = IsWeakBlocks(context.level.blocks, 1/4);
 	    const can_yars = IsWeakBlocks(context.paddle.blocks, 1/4);
 	    const can_barriers = context.paddle.barriers.A.length === 0;
