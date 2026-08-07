@@ -9,7 +9,7 @@
 // todo: 'curvature'.
 // note: everything assumes using full gHeight.
 
-var kDeathFrames = 30;
+var kDeathFrames = 15;
 var kStepPeriod = 10;
 function y2xoff(side, y) {
   if (exists(side)) {
@@ -23,7 +23,8 @@ function y2xoff(side, y) {
 function RandomBlockColor(isYars) {
   var a = [greenSpec, blueSpec, cyanSpec];
   var b = [redSpec, magentaSpec, yellowSpec];
-  return rgba255s(gR.RandomElement(isYars ? a : b).regular);
+  var c = gR.RandomElement(isYars ? a : b).strong;
+  return rgba255s(c);
 }
 
 // this is getting too overloaded, "isYars" sucks.
@@ -33,21 +34,23 @@ function Blocks(props /*isYars, side, midX, cols, rows, col_width, dy*/) {
   self.Init = function () {
     // support xw
     self.id = gNextID++;
+    self.side = props.side;
     self.isYars = props.isYars;
+    self.isSplitter = props.isYars;
     self.alive = true;
-    self.hp = props.cols * props.rows;
-    self.maxHp = self.hp; // other code needs to know this.
     self.width = props.col_width * props.cols;
     self.x = props.midX - self.width / 2;
     self.dy = props.dy;
-    self.cols = Array.from({
+    self.rows = props.rows;
+    self.cols = props.cols;
+    self.blockCols = Array.from({
       length: props.cols
     }, function (e, i) {
       // outside-in works best for collision testing.
       var ci = i % 2 === 0 ? i / 2 : Math.floor(props.cols - i / 2);
       return new BlockCol({
         isYars: props.isYars,
-        side: props.side,
+        side: self.side,
         // undefined means wall.
         count: props.rows,
         x: self.x + ci * props.col_width,
@@ -56,10 +59,12 @@ function Blocks(props /*isYars, side, midX, cols, rows, col_width, dy*/) {
         dy: props.dy
       });
     });
+    self.hp = self.cols * self.rows;
+    self.maxHp = self.hp; // other code needs to know this.
   };
   self.Step = function (dt) {
     self.hp = 0;
-    self.alive = self.cols.reduce(function (a, c) {
+    self.alive = self.blockCols.reduce(function (a, c) {
       var ca = c.Step(dt);
       self.hp += c.hp;
       return a || ca;
@@ -70,7 +75,7 @@ function Blocks(props /*isYars, side, midX, cols, rows, col_width, dy*/) {
     return self.alive ? self : undefined;
   };
   self.Draw = function (alpha) {
-    self.cols.forEach(function (c) {
+    self.blockCols.forEach(function (c) {
       return c.Draw(alpha);
     });
     /*
@@ -86,8 +91,13 @@ function Blocks(props /*isYars, side, midX, cols, rows, col_width, dy*/) {
         */
   };
   self.CollisionTest = function (puck) {
-    for (var i = 0; i < self.cols.length; ++i) {
-      var c = self.cols[i];
+    var xoff = y2xoff(self.side, puck.y);
+    var l = self.x + xoff;
+    var r = l + self.width;
+    var ppl = puck.prevX;
+    var ppr = ppl + puck.width;
+    for (var i = 0; i < self.blockCols.length; ++i) {
+      var c = self.blockCols[i];
       var hit = c.CollisionTest(puck);
       if (exists(hit)) {
         hit.dy = self.dy;
@@ -196,13 +206,13 @@ function BlockCol(props /*isYars, side, count, isUp, x, width*/) {
           hit = puck.x + puck.width >= l;
         }
       }
-      // else puck is inside blocks, let it go. (todo: eat it?)
+      // else puck is inside blocks! let it go.
 
       if (hit) {
         var by = mod(puck.midY - self.yoff, gHeight);
         var bi = round(by / self.bh);
         if (bi >= 0 && bi < self.blocks.length) {
-          hit = typeof self.blocks[bi] === "string";
+          hit = typeof self.blocks[bi] != "number";
           if (hit) {
             self.blocks[bi] = kDeathFrames; // hard-coded hack # of frames.
             collided = {

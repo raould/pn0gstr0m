@@ -9,15 +9,15 @@
 // note: all pill states have to be the same length, other code assumes that!
 var gP1PillState;
 var gP2PillState;
-function spec_mk() {
+function PillStateMake() {
     return {
-	deck: [],
-	remaining: [...gPillIDs],
+	deck: uniq([]),
+	remaining: uniq([...gPillIDs]),
     };
 }
 function ResetLevelsPillStates() {
-    gP1PillState = spec_mk();
-    gP2PillState = spec_mk();
+    gP1PillState = PillStateMake();
+    gP2PillState = PillStateMake();
     console.log("gP1PillState", gP1PillState);
     console.log("gP2PillState", gP2PillState);
     Assert(gP1PillState.deck.length === gP2PillState.deck.length);

@@ -1,6 +1,12 @@
 "use strict";
 
 function _readOnlyError(r) { throw new TypeError('"' + r + '" is read-only'); }
+function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
@@ -189,6 +195,7 @@ function Powerups(props) {
     self.isPlayer = props.isPlayer;
     self.side = props.side;
     self.paddle = props.paddle;
+    self.otherPaddle = props.otherPaddle;
     Assert(self.side === self.paddle.side);
     self.pillState = props.pillState;
   };
@@ -216,14 +223,15 @@ function Powerups(props) {
     if (self.pillState.deck.length === 0) {
       return undefined;
     }
+    var preDeckLength = self.pillState.deck.length;
+    var preRemainingLength = self.pillState.remaining.length;
 
-    // if one player already has any defense, then try to give the other player the same chance.
-    // todo: also barrier? xtras?
-    var pid = self.pillState.deck.shift();
-    var otherPaddle = self.paddle === gameState.paddleP1 ? gameState.paddleP2 : gameState.paddleP1;
-    if (exists(otherPaddle.blocks) && isU(self.paddle.blocks) && self.pillState.deck.includes(kYarsPill) && gPillInfo[kYarsPill].maker(self).testFn(gameState)) {
-      self.pillState.deck.push(pid);
-      pid = kYarsPill;
+    // if one player already has yars, try to match it. todo: also defend? xtras?
+    var pid = undefined;
+    if (exists(self.otherPaddle.yars) && isU(self.paddle.yars) && self.pillState.deck.includes(kYarsPill)) {
+      pid = self.pillState.deck.splice(self.pillState.deck.indexOf(kYarsPill), 1)[0];
+    } else {
+      pid = self.pillState.deck.shift();
     }
     Assert(exists(pid));
     var info = gPillInfo[pid];
@@ -232,23 +240,30 @@ function Powerups(props) {
     Assert(typeof maker == "function", "maker()? ".concat(info.name, " ").concat(self.pillState, " ").concat(_typeof(maker)));
     var spec = maker(self);
     Assert(exists(spec), "wtf maker? ".concat(info.name));
+    Assert(false === self.pillState.deck.includes(pid), pid);
     if (!spec.testFn(gameState)) {
       spec = undefined;
-      if (gDebug) {
-        // loop through them all.
-        self.pillState.deck.push(pid);
-      } else {
-        // try the failed powerup again after the next one
-        // in order to attempt to spawn the new ones soon even
-        // if they were skipped i.e. at the start of the level when
-        // there aren't many pucks.
-        self.pillState.deck.splice(1, 0, pid);
-      }
+      // try the failed powerup again after the next one
+      // in order to attempt to spawn the new ones soon even
+      // if they were skipped i.e. at the start of the level when
+      // there aren't many pucks.
+      self.pillState.deck.splice(1, 0, pid);
     } else {
       // keep looping through the pills. also keeps the 
       // state across levels so you aren't retreading.
       self.pillState.deck.push(pid);
     }
+    var postDeckLength = self.pillState.deck.length;
+    var postRemainingLength = self.pillState.remaining.length;
+    Assert(preDeckLength <= postDeckLength);
+    Assert(preRemainingLength >= postRemainingLength);
+    Assert(preDeckLength + preRemainingLength === postDeckLength + postRemainingLength);
+    Assert(function () {
+      var snew = new Set([].concat(_toConsumableArray(self.pillState.deck), _toConsumableArray(self.pillState.remaining)));
+      var pold = PillStateMake();
+      var sold = new Set([].concat(_toConsumableArray(pold.deck), _toConsumableArray(pold.remaining)));
+      return snew.size === sold.size && snew.isSubsetOf(sold);
+    }());
     return spec;
   };
   self.Init();
@@ -364,7 +379,7 @@ function DrawNeoPill(side, xywh, alpha) {
   });
 }
 function DrawWildPill(side, xywh, alpha) {
-  var img = gImageCache["wild"];
+  var img = gImageCache[ForSide(side, "wildL", "wildR")];
   Cxdo(function () {
     // make it randomly resizing to look more chaotic.
     var o = gR.RandomRange(1, sx1(4));
@@ -611,7 +626,6 @@ function MakeSplitProps(context) {
           forced: true,
           maxVX: maxVX
         });
-        gameState.level.OnPuckSplits(1);
         var p = gPuckPool.Alloc();
         if (exists(p)) {
           p.PlacementInit(split);
@@ -866,7 +880,7 @@ function MakeYarsProps(context) {
     isUrgent: true,
     testFn: function testFn(gameState) {
       var p_count = gPucks.A.length > 100;
-      var can_yars = IsWeakBlocks(context.paddle.blocks, 1 / 4);
+      var can_yars = IsWeakBlocks(context.paddle.yars, 1 / 4);
       var can_wall = IsWeakBlocks(context.level.blocks, 1 / 4);
       var can_barriers = context.paddle.barriers.A.length === 0;
       var can_xtras = context.paddle.xtras.A.length === 0;
@@ -879,13 +893,17 @@ function MakeYarsProps(context) {
       return DrawYarsPill(context.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
+      var _otherYars$hp;
       PlayPowerupBoom();
       var midX = ForSide(context.paddle.side, gw(0.15), gw(0.85));
       var pc = T01(gPucks.A.length, kPuckPoolSize);
-      var cols = 3 + Math.floor(gPucks.A.length / 50);
+      var otherYars = context.otherPaddle.yars;
       var rows = 40;
-      context.paddle.AddBlocks({
-        isYars: true,
+      var cols = 3 + Math.floor(gPucks.A.length / 50);
+      if ((_otherYars$hp = otherYars == null ? void 0 : otherYars.hp) != null ? _otherYars$hp : 0 > 0) {
+        cols = otherYars.cols; // egalite.
+      }
+      context.paddle.AddYars({
         side: context.side,
         midX: midX,
         cols: cols,
@@ -903,8 +921,8 @@ function MakeWallProps(context) {
     hfn = _gPillInfo$kWallPill.hfn;
   var width = wfn();
   var height = hfn();
-  var cols = 4;
-  var rows = 30;
+  var cols = 5;
+  var rows = 40;
   return {
     name: name,
     width: width,
@@ -914,7 +932,7 @@ function MakeWallProps(context) {
     testFn: function testFn(gameState) {
       var p_count = gPucks.A.length > 100;
       var can_wall = IsWeakBlocks(context.level.blocks, 1 / 4);
-      var can_yars = IsWeakBlocks(context.paddle.blocks, 1 / 4);
+      var can_yars = IsWeakBlocks(context.paddle.yars, 1 / 4);
       var can_barriers = context.paddle.barriers.A.length === 0;
       var can_xtras = context.paddle.xtras.A.length === 0;
       var can = p_count && can_wall && can_yars && can_barriers && can_xtras;
@@ -932,12 +950,11 @@ function MakeWallProps(context) {
       // there can be only 1.
       gameState.paddleP1.wall = undefined;
       gameState.paddleP2.wall = undefined;
-      context.level.AddBlocks({
-        isYars: false,
+      context.level.AddBricks({
         midX: midX,
         cols: cols,
         rows: rows,
-        col_width: gw(0.015),
+        col_width: gw(0.008),
         dy: 1.5
       });
     }

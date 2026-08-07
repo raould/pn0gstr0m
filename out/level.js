@@ -1,5 +1,11 @@
 "use strict";
 
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 /* Copyright (C) 2026 raould@gmail.com License: GPLv2 / GNU General
  * Public License, version 2
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
@@ -45,6 +51,7 @@ function Level(props) {
       level: self,
       isPlayer: props.isP1Player,
       paddle: self.paddleP1,
+      otherPaddle: self.paddleP2,
       side: ForSide(gP1Side, "left", "right"),
       pillState: props.p1PillState
     });
@@ -53,13 +60,14 @@ function Level(props) {
       level: self,
       isPlayer: props.isP2Player,
       paddle: self.paddleP2,
+      otherPaddle: self.paddleP1,
       side: ForSide(gP1Side, "right", "left"),
       pillState: props.p2PillState
     });
     self.p2Pill = undefined;
 
     // effects not owned by a side.
-    self.blocks = undefined;
+    self.bricks = undefined;
   };
   self.EnergyFactor = function () {
     if (isU(self.splitsRemaining)) {
@@ -68,11 +76,11 @@ function Level(props) {
       return T01(self.splitsRemaining, self.splitsMax);
     }
   };
-  self.OnPuckSplits = function (splits) {
+  self.OnPaddlePuckSplits = function (splits) {
     var _splits$length;
     var count = (_splits$length = splits == null ? void 0 : splits.length) != null ? _splits$length : 0;
+    Assert(count <= 1, count); // expecting doubling at most.
     if (self.isSpawning) {
-      Assert(count <= 1, count);
       if (count > 0 && exists(self.splitsRemaining)) {
         self.splitsRemaining = Math.max(0, self.splitsRemaining - count);
         self.isSpawning = self.splitsRemaining > 0;
@@ -80,7 +88,7 @@ function Level(props) {
     }
   };
   self.Step = function (dt) {
-    self.StepBlocks(dt);
+    self.StepBricks(dt);
     // ugh, see: paddle, puck.
     if (self.IsSecondHalfGame()) {
       Assert(gGameMode !== kGameModeZen);
@@ -134,12 +142,14 @@ function Level(props) {
   self.IsSuddenDeath = function () {
     return exists(self.splitsRemaining) && self.splitsRemaining <= 0;
   };
-  self.AddBlocks = function (props) {
-    self.blocks = new Blocks(props);
+  self.AddBricks = function (props) {
+    self.bricks = new Blocks(_objectSpread(_objectSpread({}, props), {}, {
+      isYars: false
+    }));
   };
-  self.StepBlocks = function (dt) {
-    if (exists(self.blocks)) {
-      self.blocks = self.blocks.Step(dt);
+  self.StepBricks = function (dt) {
+    if (exists(self.bricks)) {
+      self.bricks = self.bricks.Step(dt);
     }
   };
 
@@ -150,11 +160,11 @@ function Level(props) {
     var alpha = _ref.alpha,
       isEndScreenshot = _ref.isEndScreenshot;
     if (!isEndScreenshot) {
-      var _self$blocks;
+      var _self$bricks;
       self.DrawTitle(alpha);
       self.DrawEnergy(alpha);
       self.DrawPills(alpha);
-      (_self$blocks = self.blocks) == null || _self$blocks.Draw(alpha);
+      (_self$bricks = self.bricks) == null || _self$bricks.Draw(alpha);
       // todo: you'd maybe kind of expect lots of
       // other things like paddles and pucks to be
       // drawn by the level too, huh? ... :-(

@@ -1,4 +1,5 @@
 * all the todo's noted in code comments.
+* apple safari sound playback with howl is broken stuff.
 * this has quickly become an empirical big ball of mud. :-(
 * warning: things in code tend to not be simply what they seem / what you'd expect, even for me.
 * fyi 'top (of screen)' (should) means low-y-value, 'bottom (of screen)' means high-y-value.
@@ -18,9 +19,11 @@
 * all interval math is hand wavy and bad and off by one possibly.
 * add more global variables /s.
 * add more hard-coded values /s.
+* remove unused debug toasts feature.
 * optimize to have fewer loops over all pucks.
 * the middle blocks wall is bad because it is owned by a player.
 * all the ui timeouts are too inconsistent.
+* cmds.pause = false seems dumb.
 * step broken when paused e.g. wrt animations.js, i think?
 * fix resizing to be allowed during the game, especially for toggling fullscreen.
 * figure out the right hellacious way to support fullscreen button?!@#?!@?#!!!

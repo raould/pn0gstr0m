@@ -6,10 +6,12 @@
   "author": "",
   "license": "GPL-2.0-only",
   "scripts": {
-    "h9": "babel ./src/*.js --out-dir ./out"
+    "h9": "BABEL_ENV=prod babel ./src/*.js --out-dir ./out",
+    "h9t": "BABEL_ENV=test babel ./src/*.js --out-dir ./out"
   },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.24.7",
+    "babel-plugin-transform-define": "^2.1.4",
     "eslint": "^9.1.1",
     "typescript": "^5.6.2"
   },
