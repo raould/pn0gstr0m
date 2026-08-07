@@ -41,8 +41,8 @@ try {
 // the web is a lie.
 var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
 console.log("safari?", kIsSafari);
-var gDebug = false; // keep this committed as false.
-var kStartingPuckCount = 100;
+var gDebug = true; // keep this committed as false.
+var kStartingPuckCount = 1;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
@@ -2950,9 +2950,10 @@ function GameOverSummaryState() {
       gCx.fillStyle = RandomForColor(magentaSpec);
       var msg = "FINAL SCORE: ".concat(gP1Score.game);
       DrawText(msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt);
-      if (self.isNewHighScore) {
+      if (true) {
+        //self.isNewHighScore) {
         gCx.fillStyle = ColorCycle();
-        DrawText("NEW HIGH: ".concat(self.maxScore), "center", gw(0.5), gh(0.65), gSmallFontSizePt);
+        DrawText(">>>> NEW HIGH: ".concat(self.maxScore, " <<<<"), "center", gw(0.5), gh(0.15), gReducedFontSizePt);
       }
     });
   };

@@ -23,8 +23,8 @@ try { console.log("environment", gEnvironment); } catch { console.error("environ
 const kIsSafari = UAParser()?.browser?.name === "Safari";
 console.log("safari?", kIsSafari);
 
-let gDebug = false; // keep this committed as false.
-const kStartingPuckCount = 100;
+let gDebug = true; // keep this committed as false.
+const kStartingPuckCount = 1;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
@@ -3050,13 +3050,13 @@ function CopyScreenBuffer() {
             var msg = `FINAL SCORE: ${gP1Score.game}`;
             DrawText( msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt );
 
-            if (self.isNewHighScore) {
+            if (true) { //self.isNewHighScore) {
                 gCx.fillStyle = ColorCycle();
                 DrawText(
-                    `NEW HIGH: ${self.maxScore}`,
+                    `>>>> NEW HIGH: ${self.maxScore} <<<<`,
                     "center",
-                    gw(0.5), gh(0.65),
-                    gSmallFontSizePt
+                    gw(0.5), gh(0.15),
+                    gReducedFontSizePt
                 );
             }
         });
