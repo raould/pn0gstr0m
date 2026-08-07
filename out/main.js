@@ -32,11 +32,17 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
+try {
+  console.log("environment", "prod");
+} catch (_unused) {
+  console.error("environment unknown");
+}
+
 // the web is a lie.
 var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
-
-// keep this committed as false.
-var gDebug = false;
+console.log("safari?", kIsSafari);
+var gDebug = true; // keep this committed as false.
+var kStartingPuckCount = 1;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
@@ -908,16 +914,17 @@ function ResetClipping() {
 function DrawDebugList() {
   if (gDebug) {
     var dl2 = [];
-    Cxdo(function () {
-      for (var i = 0; i < gDebug_DrawList.length; ++i) {
-        var e = gDebug_DrawList[i];
-        e.fn();
-        if (exists(e.frames) && e.frames > 0) {
-          dl2.push(e);
-          e.frames--;
-        }
+    for (var i = 0; i < gDebug_DrawList.length; ++i) {
+      var e = gDebug_DrawList[i];
+      Cxdo(function () {
+        var _e$frames;
+        e.fn((_e$frames = e.frames) != null ? _e$frames : 1);
+      });
+      if (exists(e.frames) && e.frames > 0) {
+        dl2.push(e);
+        e.frames--;
       }
-    });
+    }
     gDebug_DrawList = dl2;
   }
 }
@@ -997,7 +1004,8 @@ function Lifecycle(handlerMap) {
     // b) updating the screen even when paused & thus delta time is 0.
     var paused = aub((_self$handler$IsPause = (_self$handler = self.handler).IsPaused) == null ? void 0 : _self$handler$IsPause.call(_self$handler), false) || document.hidden;
     var now = Date.now();
-    var dt = now - self.lastGameTime;
+    var dt = now - self.lastGameTime; // msec.
+
     if (dt >= kMaybeWasPausedInTheDangedDebuggerMsec) {
       // do not suddenly jump the sum of time we were paused in the debugger.
       self.lastGameTime = now;
@@ -1138,6 +1146,8 @@ function WarningState() {
 function TitleState() {
   var self = this;
   self.Init = function () {
+    forgetLogOnceAll(); // gross ass/u/me-ption.
+
     BeginMusic();
     ResetInput();
     ResetP1Side();
@@ -1400,7 +1410,7 @@ function GetReadyState() {
     });
   };
   self.Draw = function () {
-    self.DrawText();
+    self.DrawTexts();
     self.DrawPills();
     self.DrawAnimations();
   };
@@ -1409,11 +1419,15 @@ function GetReadyState() {
       return a.Draw();
     });
   };
+
+  // todo: seen some pretty strange bugs with all this, very hard to repro :-(
   self.DrawPills = function () {
     var whscale = Math.max(0.3, T10(Math.max(gP1PillState.deck.length, gP2PillState.deck.length), gPillIDs.length));
     var y = gh(0.7);
     var maxWidth = 0;
     var maxHeight = 0;
+    logOnce("DrawPills gP1", tryStringify(gP1PillState));
+    logOnce("DrawPills gP2", tryStringify(gP2PillState));
     gP1PillState.deck.map(function (pid) {
       maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
       maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
@@ -1443,6 +1457,7 @@ function GetReadyState() {
             drawer = _gPillInfo$pid.drawer,
             wfn = _gPillInfo$pid.wfn,
             hfn = _gPillInfo$pid.hfn;
+          logOnce("DrawPillsSide ".concat(gLevelInt, " ").concat(side, " ").concat(i), pid, name, drawer == null ? void 0 : drawer.name);
           var width = wfn() * whscale;
           var height = hfn() * whscale;
           drawer(side, {
@@ -1458,7 +1473,7 @@ function GetReadyState() {
       });
     }
   };
-  self.DrawText = function () {
+  self.DrawTexts = function () {
     var p2txt = is1P() ? "" : "P2";
     var t = Math.ceil(self.timeout / 1000);
     Cxdo(function () {
@@ -1512,10 +1527,10 @@ function ChargeUpState() {
     });
   };
   self.Draw = function () {
-    self.DrawText();
+    self.DrawTexts();
     self.DrawAnimations();
   };
-  self.DrawText = function () {
+  self.DrawTexts = function () {
     var p2txt = is1P() ? "" : "P2";
     var t = Math.ceil(self.timeout / 1000);
     Cxdo(function () {
@@ -1890,7 +1905,7 @@ function GameState(props) {
     });
   };
   self.CreateStartingPuck = function (vx) {
-    range(0, 1).forEach(function (_) {
+    range(0, kStartingPuckCount).forEach(function (_) {
       // can be increased for debugging.
       var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
       var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
@@ -2058,6 +2073,25 @@ function GameState(props) {
       })();
     }
   };
+  self.AddSplits = function (splits) {
+    for (var i = 0; (_ref0 = i < (splits == null ? void 0 : splits.length)) != null ? _ref0 : 0; ++i) {
+      var _ref0;
+      var p = gPuckPool.Alloc();
+      if (exists(p)) {
+        p.PlacementInit(splits[i]);
+        gPucks.B.push(p);
+        AddSparks({
+          x: p.x,
+          y: p.y,
+          vx: sx(0.5),
+          vy: sy(1),
+          count: 3,
+          rx: sx(1),
+          ry: sy(1)
+        });
+      }
+    }
+  };
   self.MovePucks = function (dt) {
     var pmaxvx = -Number.MAX_SAFE_INTEGER;
     var ySum = 0;
@@ -2084,26 +2118,9 @@ function GameState(props) {
         var splits = p.AllPaddlesCollision(self.level.IsSuddenDeath(), self.maxVX, self.paddleP1, self.paddleP2);
         // note: splits are pushed before parent, match: Draw()'s revEach() z order.
         if (self.level.isSpawning) {
-          for (var _i = 0; (_ref10 = _i < (splits == null ? void 0 : splits.length)) != null ? _ref10 : 0; ++_i) {
-            var _ref10;
-            var _p = gPuckPool.Alloc();
-            if (exists(_p)) {
-              _p.PlacementInit(splits[_i]);
-              gPucks.B.push(_p);
-              AddSparks({
-                x: _p.x,
-                y: _p.y,
-                vx: sx(0.5),
-                vy: sy(1),
-                count: 3,
-                rx: sx(1),
-                ry: sy(1)
-              });
-            }
-          }
+          self.AddSplits(splits);
+          self.level.OnPaddlePuckSplits(splits);
         }
-        // this has to be called after adding the pucks, else off by 1.
-        self.level.OnPuckSplits(splits);
         p.WallsCollision(self.maxVX);
         p.BarriersCollision(self.paddleP1.barriers.A);
         p.BarriersCollision(self.paddleP2.barriers.A);
@@ -2112,9 +2129,22 @@ function GameState(props) {
         p.NeoCollision(self.paddleP1.neo);
         p.NeoCollision(self.paddleP2.neo);
         p.DarkMatterCollision(self.darkMatter);
-        p.BlocksCollision(self.paddleP1.blocks);
-        p.BlocksCollision(self.paddleP2.blocks);
-        p.BlocksCollision(self.level.blocks);
+
+        // note: the 'blocks' name aliasing here is fragile.
+        var blockSplits = [];
+        var bs1 = p.BlocksCollision(self.paddleP1.yars);
+        if (exists(bs1)) {
+          blockSplits.push(bs1);
+        }
+        var bs2 = p.BlocksCollision(self.paddleP2.yars);
+        if (exists(bs2)) {
+          blockSplits.push(bs2);
+        }
+        var bs3 = p.BlocksCollision(self.level.bricks);
+        if (exists(bs3)) {
+          blockSplits.push(bs3);
+        }
+        self.AddSplits(blockSplits);
         self.paddleP1.OnPuckMoved(p, i);
         self.paddleP2.OnPuckMoved(p, i);
 
@@ -2126,28 +2156,28 @@ function GameState(props) {
         // statistics for things lke AI and force fields.
         if (p.vx < 0) {
           gPuckLeftCount++;
-          var _i2 = yCountBucketIndex(p.y);
-          gPuckYLeftCounts[_i2]++;
+          var _i = yCountBucketIndex(p.y);
+          gPuckYLeftCounts[_i]++;
           if (gPuckYLeftCommonIndex == null) {
-            gPuckYLeftCommonIndex = _i2;
+            gPuckYLeftCommonIndex = _i;
           } else {
             var oldcount = gPuckYLeftCounts[gPuckYLeftCommonIndex];
-            var newcount = gPuckYLeftCounts[_i2];
+            var newcount = gPuckYLeftCounts[_i];
             if (newcount > oldcount) {
-              gPuckYLeftCommonIndex = _i2;
+              gPuckYLeftCommonIndex = _i;
             }
           }
         } else {
           gPuckRightCount++;
-          var _i3 = yCountBucketIndex(p.y);
-          gPuckYRightCounts[_i3]++;
+          var _i2 = yCountBucketIndex(p.y);
+          gPuckYRightCounts[_i2]++;
           if (gPuckYRightCommonIndex == null) {
-            gPuckYRightCommonIndex = _i3;
+            gPuckYRightCommonIndex = _i2;
           } else {
             var _oldcount = gPuckYRightCounts[gPuckYRightCommonIndex];
-            var _newcount = gPuckYRightCounts[_i3];
+            var _newcount = gPuckYRightCounts[_i2];
             if (_newcount > _oldcount) {
-              gPuckYRightCommonIndex = _i3;
+              gPuckYRightCommonIndex = _i2;
             }
           }
         }
@@ -2434,10 +2464,10 @@ function LevelFinishState() {
     return nextState;
   };
   self.StepAnimations = function (dt) {
-    Object.entries(self.animations).forEach(function (_ref11) {
-      var _ref12 = _slicedToArray(_ref11, 2),
-        id = _ref12[0],
-        anim = _ref12[1];
+    Object.entries(self.animations).forEach(function (_ref1) {
+      var _ref10 = _slicedToArray(_ref1, 2),
+        id = _ref10[0],
+        anim = _ref10[1];
       var done = anim.Step(dt, self);
       if (done) {
         delete self.animations[id];
@@ -2562,11 +2592,11 @@ function LevelFinishChooseState() {
         cy: cy
       });
     }
-    for (var _i4 = 0; _i4 < count; ++_i4) {
-      var _cy = s0 + sy * _i4;
+    for (var _i3 = 0; _i3 < count; ++_i3) {
+      var _cy = s0 + sy * _i3;
       var p2x = gw(ForP2Side(0.25, 0.75));
       self.p2Specs.push({
-        pid: p2Rewards[_i4],
+        pid: p2Rewards[_i3],
         cx: p2x,
         cy: _cy
       });
@@ -2684,14 +2714,14 @@ function LevelFinishChooseState() {
   };
   self.Draw = function () {
     if (!self.goOn) {
-      self.DrawText();
+      self.DrawTexts();
       self.DrawPills();
       if (self.updateInput) {
         DrawMoveTargets();
       }
     }
   };
-  self.DrawText = function () {
+  self.DrawTexts = function () {
     Cxdo(function () {
       gCx.fillStyle = RandomGreen();
       var countdown = Math.ceil(Math.max(0, self.RemainingTime() / 1000));
@@ -2812,7 +2842,7 @@ function GameOverState() {
   };
   self.Draw = function () {
     self.DrawScores();
-    self.DrawTexts();
+    self.DrawTextss();
   };
   self.DrawScores = function () {
     // see GameOverSummaryState.Draw*()
@@ -2840,7 +2870,7 @@ function GameOverState() {
       DrawText("P2: ".concat(gP2Score.game), p2a, p2x, gh(0.22), gRegularFontSizePt);
     });
   };
-  self.DrawTexts = function () {
+  self.DrawTextss = function () {
     Cxdo(function () {
       gCx.fillStyle = RandomForColor(redSpec);
       DrawText("GAME OVER", "center", gw(0.5), gh(0.45), gBigFontSizePt);
@@ -2920,9 +2950,10 @@ function GameOverSummaryState() {
       gCx.fillStyle = RandomForColor(magentaSpec);
       var msg = "FINAL SCORE: ".concat(gP1Score.game);
       DrawText(msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt);
-      if (self.isNewHighScore) {
+      if (true) {
+        //self.isNewHighScore) {
         gCx.fillStyle = ColorCycle();
-        DrawText("NEW HIGH: ".concat(self.maxScore), "center", gw(0.5), gh(0.65), gSmallFontSizePt);
+        DrawText(">>>> NEW HIGH: ".concat(self.maxScore, " <<<<"), "center", gw(0.5), gh(0.15), gReducedFontSizePt);
       }
     });
   };
@@ -3522,6 +3553,17 @@ function InitEvents() {
     }
   });
 }
+function pushEventDebugDraw(msg) {
+  var lifetime = 15;
+  gDebug && gDebug_DrawList.push({
+    frames: lifetime,
+    fn: function fn(f) {
+      var a = T01(f, lifetime);
+      gCx.fillStyle = rgba255s(greenSpec.strong, a);
+      DrawText(msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt);
+    }
+  });
+}
 function handleHotrodDown(e) {
   var g = gKey2Cmd_hotrod_general[e.key];
   var left = gKey2Cmd_hotrod_left[e.key];
@@ -3575,6 +3617,7 @@ function handleHotrodDown(e) {
   }
   switch (left) {
     case 'up':
+      pushEventDebugDraw("+LU");
       e.preventDefault();
       gEventQueue.push({
         type: kEventKeyDown,
@@ -3589,6 +3632,7 @@ function handleHotrodDown(e) {
       });
       break;
     case 'down':
+      pushEventDebugDraw("+LD");
       e.preventDefault();
       gEventQueue.push({
         type: kEventKeyDown,
@@ -3605,6 +3649,7 @@ function handleHotrodDown(e) {
   }
   switch (right) {
     case 'up':
+      pushEventDebugDraw("+RU");
       e.preventDefault();
       gEventQueue.push({
         type: kEventKeyDown,
@@ -3619,6 +3664,7 @@ function handleHotrodDown(e) {
       });
       break;
     case 'down':
+      pushEventDebugDraw("+RD");
       e.preventDefault();
       gEventQueue.push({
         type: kEventKeyDown,
@@ -3668,6 +3714,7 @@ function handleHotrodUp(e) {
   }
   switch (left) {
     case 'up':
+      pushEventDebugDraw("-LU");
       e.preventDefault();
       gEventQueue.push({
         type: kEventKeyUp,
@@ -3679,6 +3726,7 @@ function handleHotrodUp(e) {
       });
       break;
     case 'down':
+      pushEventDebugDraw("-LD");
       e.preventDefault();
       gEventQueue.push({
         type: kEventKeyUp,
@@ -3692,6 +3740,7 @@ function handleHotrodUp(e) {
   }
   switch (right) {
     case 'up':
+      pushEventDebugDraw("-RU");
       e.preventDefault();
       gEventQueue.push({
         type: kEventKeyUp,
@@ -3703,6 +3752,7 @@ function handleHotrodUp(e) {
       });
       break;
     case 'down':
+      pushEventDebugDraw("-RD");
       e.preventDefault();
       gEventQueue.push({
         type: kEventKeyUp,

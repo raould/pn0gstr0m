@@ -46,6 +46,7 @@ const kEnglishStep = 0.05;
 	    level: self,
             isPlayer: props.isP1Player,
             paddle: self.paddleP1,
+	    otherPaddle: self.paddleP2,
             side: ForSide(gP1Side, "left", "right"),
             pillState: props.p1PillState
         });
@@ -54,13 +55,14 @@ const kEnglishStep = 0.05;
 	    level: self,
             isPlayer: props.isP2Player,
             paddle: self.paddleP2,
+	    otherPaddle: self.paddleP1,
             side: ForSide(gP1Side, "right", "left"),
             pillState: props.p2PillState
         });
         self.p2Pill = undefined;
 
 	// effects not owned by a side.
-        self.blocks = undefined;
+        self.bricks = undefined;
     };
 
     self.EnergyFactor = function() {
@@ -72,10 +74,10 @@ const kEnglishStep = 0.05;
 	}
     };
 
-    self.OnPuckSplits = function(splits) {
+    self.OnPaddlePuckSplits = function(splits) {
 	var count = splits?.length ?? 0;
-        if (self.isSpawning) {
-            Assert(count <= 1, count);
+        Assert(count <= 1, count); // expecting doubling at most.
+	if (self.isSpawning) {
             if (count > 0 && exists(self.splitsRemaining)) {
                 self.splitsRemaining = Math.max(0, self.splitsRemaining - count);
                 self.isSpawning = self.splitsRemaining > 0;
@@ -84,7 +86,7 @@ const kEnglishStep = 0.05;
     };
 
     self.Step = function( dt ) {
-	self.StepBlocks( dt );
+	self.StepBricks( dt );
         // ugh, see: paddle, puck.
         if (self.IsSecondHalfGame()) {
 	    Assert(gGameMode !== kGameModeZen);
@@ -151,13 +153,16 @@ const kEnglishStep = 0.05;
         return exists(self.splitsRemaining) && self.splitsRemaining <= 0;
     };
 
-    self.AddBlocks = function( props ) {
-        self.blocks = new Blocks(props);
+    self.AddBricks = function( props ) {
+        self.bricks = new Blocks({
+	    ...props,
+	    isYars: false,
+	});
     };
 
-    self.StepBlocks = function( dt ) {
-	if (exists(self.blocks)) {
-	    self.blocks = self.blocks.Step( dt );
+    self.StepBricks = function( dt ) {
+	if (exists(self.bricks)) {
+	    self.bricks = self.bricks.Step( dt );
 	}
     };
 
@@ -169,7 +174,7 @@ const kEnglishStep = 0.05;
 	    self.DrawTitle( alpha );
 	    self.DrawEnergy( alpha );
             self.DrawPills( alpha );
-            self.blocks?.Draw( alpha );
+            self.bricks?.Draw( alpha );
             // todo: you'd maybe kind of expect lots of
             // other things like paddles and pucks to be
             // drawn by the level too, huh? ... :-(

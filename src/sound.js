@@ -67,8 +67,8 @@ function RegisterSound(name, basename, props, isMusic) {
 		console.log("onloaderror", gAudio.name2meta[name]);
                 LoadNextSound();
             },
-            html5: false, // this is a never-win parameter.
-            preload: false,
+            html5: kIsSafari, // this is a never-win parameter.
+            preload: false === isMusic,
             // only 1 concurrent playback per name.
             onend: () => OnSfxStop(name),
         });
@@ -199,7 +199,7 @@ function PlaySfx(name, ignoreMuted=false) {
     return undefined;
 }
 
-function PlaySfxDebounced(name, debounceMsec=110) {
+function PlaySfxDebounced(name, debounceMsec=20) {
     let sid;
     if (!gStateMuted && !gSfxMuted) {
         const meta = gAudio.name2meta[name];
@@ -235,7 +235,7 @@ function PlaySound(name) {
 	if (play) {
 	    meta.id = sid = howl.play();
 	    meta.last = Date.now();
-	    gAudio.id2name[sid] = name;
+	    gAudio.id2name[meta.id] = name;
 	}
     }
     return sid;
@@ -255,10 +255,10 @@ function MakePlayFn(count, basename, playfn) {
 const PlayStart = MakePlayFn(1, "start", PlaySfx);
 const PlayGameOver = MakePlayFn(1, "gameover", PlaySfx);
 const PlayChargeup = MakePlayFn(1, "chargeup", PlaySfx);
-const PlayPowerupBoom = MakePlayFn(1, "powerupboom", (name) => PlaySfxDebounced(name, 250));
-const PlayBlip = MakePlayFn(1, "blip", (name) => PlaySfxDebounced(name, 55));
+const PlayPowerupBoom = MakePlayFn(1, "powerupboom", (name) => PlaySfxDebounced(name, 100));
+const PlayBlip = MakePlayFn(1, "blip", (name) => PlaySfxDebounced(name, 30));
 const PlayChosen = MakePlayFn(1, "chosen", PlaySfx);
-const PlayPaddleHit = MakePlayFn(2, "explosion", (name) => PlaySfxDebounced(name, 55));
+const PlayPaddleHit = MakePlayFn(2, "explosion", (name) => PlaySfxDebounced(name, 30));
 
 function LoadAudio() {
     SaveLocal(LocalStorageKeys.unplayed, []);

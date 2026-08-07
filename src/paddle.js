@@ -45,8 +45,7 @@ function Paddle(props) {
         };
         // neos are sticky fly traps.
         self.neo = undefined;
-        // blocks are obstacles/shields.
-        self.blocks = undefined;
+        self.yars = undefined;
 
         self.hp0 = props.hp;
         self.hp = props.hp;
@@ -138,9 +137,10 @@ function Paddle(props) {
         else {
             bounds = self;
         }
-        gDebug && gDebug_DrawList.push({ fn: () => {
-            gCx.strokeStyle = "yellow";
-            gCx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+        gDebug && gDebug_DrawList.push({
+	    fn: () => {
+		gCx.strokeStyle = "yellow";
+		gCx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
         }});
         return bounds;
     };
@@ -168,15 +168,18 @@ function Paddle(props) {
         self.neo = new Neo(props);
     };
 
-    self.AddBlocks = function( props ) {
-        self.blocks = new Blocks(props);
+    self.AddYars = function( props ) {
+        self.yars = new Blocks({
+	    ...props,
+	    isYars: true,
+	});
     };
 
     self.StepPowerups = function( dt, gameState ) {
         self.StepBarriers( dt );
         self.StepXtras( dt, gameState );
         self.StepNeo( dt, gameState );
-	self.StepBlocks( dt );
+	self.StepYars( dt );
     };
 
     self.StepBarriers = function( dt ) {
@@ -203,13 +206,14 @@ function Paddle(props) {
         }
     };
 
-    self.StepBlocks = function( dt ) {
-	if (exists(self.blocks)) {
-	    self.blocks = self.blocks.Step( dt );
+    self.StepYars = function( dt ) {
+	if (exists(self.yars)) {
+	    self.yars = self.yars.Step( dt );
 	}
     };
 
     self.OnPuckHit = function() {
+        PlayPaddleHit();
         if (exists(self.hp)) {
             self.hp--;
             self.alive = self.hp > 0;
@@ -260,7 +264,7 @@ function Paddle(props) {
         self.barriers.A.forEach(b => b.Draw( alpha ));
         self.xtras.A.forEach(x => x.Draw( alpha, gameState, 1, isEndScreenshot ));
         if (exists(self.neo)) { self.neo.Draw( alpha, gameState ); }
-        self.blocks?.Draw( alpha );
+        self.yars?.Draw( alpha );
 
 	if (exists(self.hp)) { self.DrawAsXtra(alpha, (self.hp/self.hp0)); }
 	else { self.DrawAsPlayer(alpha, s01, isEndScreenshot); }

@@ -6,8 +6,8 @@
  */
 
 function Assert(result, msg) {
-  if (!result) {
-    console.error("ASSERTION FAILED", msg);
+  console.assert(result, msg);
+  if (!result && false) {
     debugger;
   }
 }

@@ -153,6 +153,7 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
         self.isPlayer = props.isPlayer;
         self.side = props.side;
         self.paddle = props.paddle;
+	self.otherPaddle = props.otherPaddle;
 	Assert(self.side === self.paddle.side);
         self.pillState = props.pillState;
     };
@@ -184,43 +185,53 @@ Assert(Object.keys(gPillInfo).length === gPillIDs.length);
             return undefined;
         }
 
-	// if one player already has any defense, then try to give the other player the same chance.
-	// todo: also barrier? xtras?
-	let pid = self.pillState.deck.shift();
-	let otherPaddle = self.paddle === gameState.paddleP1 ? gameState.paddleP2 : gameState.paddleP1;
-	if (exists(otherPaddle.blocks) &&
-	    isU(self.paddle.blocks) &&
-	    self.pillState.deck.includes(kYarsPill) &&
-	    gPillInfo[kYarsPill].maker(self).testFn(gameState)) {
-	    self.pillState.deck.push(pid);
-	    pid = kYarsPill;
+	const preDeckLength = self.pillState.deck.length;
+	const preRemainingLength = self.pillState.remaining.length;
+
+	// if one player already has yars, try to match it. todo: also defend? xtras?
+	var pid = undefined;
+	if (exists(self.otherPaddle.yars) && isU(self.paddle.yars) && self.pillState.deck.includes(kYarsPill)) {
+	    pid = self.pillState.deck.splice(
+		self.pillState.deck.indexOf(kYarsPill),
+		1
+	    )[0];
+	} else {
+	    pid = self.pillState.deck.shift();
 	}
 	Assert(exists(pid));
+
         const info = gPillInfo[pid];
         const maker = info.maker;
         Assert(exists(maker));
         Assert(typeof maker == "function", `maker()? ${info.name} ${self.pillState} ${typeof maker}`);
         let spec = maker(self);
         Assert(exists(spec), `wtf maker? ${info.name}`);
+	Assert(false === self.pillState.deck.includes(pid), pid);
         if (!spec.testFn(gameState)) {
 	    spec = undefined;
-	    if (gDebug) {
-		// loop through them all.
-		self.pillState.deck.push(pid);
-	    }
-	    else {
-		// try the failed powerup again after the next one
-		// in order to attempt to spawn the new ones soon even
-		// if they were skipped i.e. at the start of the level when
-		// there aren't many pucks.
-		self.pillState.deck.splice(1, 0, pid);
-	    }
+	    // try the failed powerup again after the next one
+	    // in order to attempt to spawn the new ones soon even
+	    // if they were skipped i.e. at the start of the level when
+	    // there aren't many pucks.
+	    self.pillState.deck.splice(1, 0, pid);
         }
 	else {
             // keep looping through the pills. also keeps the 
             // state across levels so you aren't retreading.
             self.pillState.deck.push(pid);
 	}
+
+	const postDeckLength = self.pillState.deck.length;
+	const postRemainingLength = self.pillState.remaining.length;
+	Assert(preDeckLength <= postDeckLength);
+	Assert(preRemainingLength >= postRemainingLength);
+	Assert(preDeckLength + preRemainingLength === postDeckLength + postRemainingLength);
+	Assert((() => {
+	    const snew = new Set([...self.pillState.deck, ...self.pillState.remaining]);
+	    const pold = PillStateMake();
+	    const sold =  new Set([...pold.deck, ...pold.remaining]);
+	    return snew.size === sold.size && snew.isSubsetOf(sold);
+	})());
 
         return spec;
     };
@@ -344,7 +355,7 @@ function DrawNeoPill(side, xywh, alpha) {
 }
 
 function DrawWildPill(side, xywh, alpha) {
-    const img = gImageCache["wild"];
+    const img = gImageCache[ForSide(side, "wildL", "wildR")];
     Cxdo(() => {
         // make it randomly resizing to look more chaotic.
         const o = gR.RandomRange(1, sx1(4));
@@ -553,7 +564,6 @@ function MakeSplitProps(context) {
 	    targets.forEach(t => {
 		const maxVX = gameState.level.maxVX;
                 const split = t.MaybeSplitPuck({ forced: true, maxVX });
-                gameState.level.OnPuckSplits(1);
                 const p = gPuckPool.Alloc();
 		if (exists(p)) {
 		    p.PlacementInit(split);
@@ -771,7 +781,7 @@ function MakeYarsProps(context) {
         isUrgent: true,
         testFn: (gameState) => {
 	    const p_count = gPucks.A.length > 100;
-	    const can_yars = IsWeakBlocks(context.paddle.blocks, 1/4);
+	    const can_yars = IsWeakBlocks(context.paddle.yars, 1/4);
             const can_wall = IsWeakBlocks(context.level.blocks, 1/4);
 	    const can_barriers = context.paddle.barriers.A.length === 0;
 	    const can_xtras = context.paddle.xtras.A.length === 0;
@@ -788,10 +798,13 @@ function MakeYarsProps(context) {
 		gw(0.85),
 	    );
             const pc = T01(gPucks.A.length, kPuckPoolSize);
-	    const cols = 3 + Math.floor(gPucks.A.length / 50);
+	    const otherYars = context.otherPaddle.yars;
 	    const rows = 40;
-	    context.paddle.AddBlocks({
-		isYars: true,
+	    let cols = 3 + Math.floor(gPucks.A.length / 50);
+	    if (otherYars?.hp ?? 0 > 0) {
+		cols = otherYars.cols; // egalite.
+	    }
+	    context.paddle.AddYars({
 		side: context.side,
 		midX,
 		cols,
@@ -807,8 +820,8 @@ function MakeWallProps(context) {
     const { name, wfn, hfn } = gPillInfo[kWallPill];
     const width = wfn();
     const height = hfn();
-    const cols = 4;
-    const rows = 30;
+    const cols = 5;
+    const rows = 40;
     return {
         name,
         width, height,
@@ -817,7 +830,7 @@ function MakeWallProps(context) {
         testFn: (gameState) => {
 	    const p_count = gPucks.A.length > 100;
             const can_wall = IsWeakBlocks(context.level.blocks, 1/4);
-	    const can_yars = IsWeakBlocks(context.paddle.blocks, 1/4);
+	    const can_yars = IsWeakBlocks(context.paddle.yars, 1/4);
 	    const can_barriers = context.paddle.barriers.A.length === 0;
 	    const can_xtras = context.paddle.xtras.A.length === 0;
 	    const can = p_count && can_wall && can_yars && can_barriers && can_xtras;
@@ -832,12 +845,11 @@ function MakeWallProps(context) {
 	    // there can be only 1.
 	    gameState.paddleP1.wall = undefined;
 	    gameState.paddleP2.wall = undefined;
-	    context.level.AddBlocks({
-		isYars: false,
+	    context.level.AddBricks({
 		midX,
 		cols,
 		rows,
-		col_width: gw(0.015),
+		col_width: gw(0.008),
 		dy: 1.5,
 	    });
         },

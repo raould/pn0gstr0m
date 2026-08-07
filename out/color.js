@@ -91,15 +91,14 @@ var puckColorStr = "cyan";
 // meh! doubt/dunno that this does anything enough
 // to reduce the sheer number of color strings
 // such that javascript engines can optimize.
-var kChannelQuantizeStep = 255 / 8;
-function quantizeChannel(c) {
-  if (c >= 255) {
-    return 255;
-  }
-  if (c <= 0) {
-    return 0;
-  }
-  return Math.floor(c / kChannelQuantizeStep) * kChannelQuantizeStep;
+var kQuantizeSteps = 8;
+var kQuantize255Step = 255 / kQuantizeSteps;
+var kQuantize01Step = 1 / kQuantizeSteps;
+function quantize255(c) {
+  return Clip255(Math.floor(Math.floor(c / kQuantize255Step) * kQuantize255Step));
+}
+function quantize01(c) {
+  return Clip01(Math.floor(c / kQuantize01Step) * kQuantize01Step);
 }
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
@@ -107,9 +106,9 @@ var _tc = Array(4);
 function rgba255s(array, alpha) {
   // detect any old style code that called this function.
   Assert(Array.isArray(array), "expected array as first parameter");
-  _tc[0] = quantizeChannel(array[0]);
-  _tc[1] = quantizeChannel(array[1]);
-  _tc[2] = quantizeChannel(array[2]);
+  _tc[0] = quantize255(array[0]);
+  _tc[1] = quantize255(array[1]);
+  _tc[2] = quantize255(array[2]);
 
   // alpha is, in order of highest precedence:
   // array[4], or the 'alpha' argument, or the default value of 1.
@@ -117,9 +116,8 @@ function rgba255s(array, alpha) {
   if (array.length == 4) {
     _tc[3] = array[3];
   }
-  var joined = _tc.map(function (ch, i) {
-    return i < 3 ? Clip255(ch) : ch;
-  }).join(",");
+  _tc[3] = quantize01(_tc[3]);
+  var joined = _tc.join(",");
   var str = (array.length == 4 || exists(alpha) ? "rgba(" : "rgb(") + joined + ")";
   return str;
 }
@@ -147,7 +145,8 @@ function ColorCycle() {
   if (r + g + b < 0.2) {
     g = 0.4;
   }
-  return rgba255s([Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)], alpha);
+  var next = rgba255s([Math.floor(r * 255 % 255), Math.floor(g * 255 % 255), Math.floor(b * 255 % 255)], alpha);
+  return next;
 }
 function RandomColor() {
   var alpha = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;

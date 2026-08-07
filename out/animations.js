@@ -234,7 +234,6 @@ function MakeTargetsLightningAnimation(props) {
     drawFn: function drawFn() {
       var px, py;
       targets.forEach(function (xy) {
-        var _px, _py;
         var spec = {
           color: gR.RandomBool(0.4) ? RandomMagenta() : RandomBlue(),
           // todo: er, ahem, there's maybe some bug where the last leg of lightning
@@ -242,8 +241,8 @@ function MakeTargetsLightningAnimation(props) {
           // on purpose to compensate because it looks less bad for now.
           x0: xy.x,
           y0: xy.y,
-          x1: (_px = px) != null ? _px : paddle.GetMidX(),
-          y1: (_py = py) != null ? _py : paddle.GetMidY(),
+          x1: px != null ? px : paddle.GetMidX(),
+          y1: py != null ? py : paddle.GetMidY(),
           steps: 10,
           range: aub(props.range, sx1(15))
         };

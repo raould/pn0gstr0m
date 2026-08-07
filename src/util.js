@@ -32,13 +32,16 @@ function aub(a, b) {
 
 function noOp() {}
 
-const gLogOnceMap = {};
+let gLogOnceMap = {};
+function forgetLogOnceAll() { gLogOnceMap = {}; }
+function forgetLogOnce(key) { delete gLogOnceMap[key]; }
 function logOnce(key, msg) {
     if (!gLogOnceMap[key]) {
-        console.log(msg);
+        console.log(key, msg);
         gLogOnceMap[key] = true;
     }
 }
+// todo: logOncePerLevel(), logOncePerGame().
 
 const gLogEveryMap = {};
 function logEvery(key, v, count) {
@@ -226,15 +229,9 @@ function Clip255(n) {
     return Clip(i, 0, 255);
 }
 
-function T01Range(v, min, max) {
-    const t = T01(
-	Clip(v, min, max) - min,
-	max- min
-    );
-    Assert(!isBadNumber(t), "t");
-    return t;
-}
-
+// v expected to go from 0 to max.
+// v = 0 -> return = 1.
+// v = max -> return = 0.
 function T10Range(v, min, max) {
     const t = T10(
 	Clip(v, min, max) - min,
@@ -257,6 +254,18 @@ function T10(v, max) {
 function T10Signed(v, max) {
     max = max == 0 ? 1 : max;
     const t = Clip01Signed(1 - v/max);
+    Assert(!isBadNumber(t), "t");
+    return t;
+}
+
+// v expected to be in range [0, max].
+// v = 0 -> return = 0.
+// v = max -> return = 1.
+function T01Range(v, min, max) {
+    const t = T01(
+	Clip(v, min, max) - min,
+	max- min
+    );
     Assert(!isBadNumber(t), "t");
     return t;
 }
@@ -365,4 +374,27 @@ function * range(start, end) {
 	yield cur;
 	cur += step;
     }
+}
+
+function tryStringify(data) {
+    try {
+	return JSON.stringify(data);
+    }
+    catch (err) {
+	console.error("tryStringify", err);
+    }
+}
+
+function uniq(arr) {
+    const h = new Map();
+    for( let i = 0; i < arr.length; ++i ) {
+	h.set(i, arr[i]);
+    }
+    const uniq = [];
+    for( let i = 0; i < arr.length; ++i ) {
+	if (h.has(i)) {
+	    uniq.push(h.get(i));
+	}
+    }
+    return uniq;
 }

@@ -17,11 +17,14 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
+try { console.log("environment", gEnvironment); } catch { console.error("environment unknown"); }
+
 // the web is a lie.
 const kIsSafari = UAParser()?.browser?.name === "Safari";
+console.log("safari?", kIsSafari);
 
-// keep this committed as false.
-var gDebug = false;
+let gDebug = true; // keep this committed as false.
+const kStartingPuckCount = 1;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.
@@ -854,16 +857,14 @@ function ResetClipping() {
 function DrawDebugList() {
     if (gDebug) {
         var dl2 = [];
-        Cxdo(() => {
-            for (let i = 0; i < gDebug_DrawList.length; ++i) {
-                var e = gDebug_DrawList[i];
-                e.fn();
-                if (exists(e.frames) && e.frames > 0) {
-                    dl2.push(e);
-                    e.frames--;
-                }
+        for (let i = 0; i < gDebug_DrawList.length; ++i) {
+            var e = gDebug_DrawList[i];
+            Cxdo(() => { e.fn(e.frames ?? 1); });
+            if (exists(e.frames) && e.frames > 0) {
+                dl2.push(e);
+                e.frames--;
             }
-        });
+        }
         gDebug_DrawList = dl2;
     }
 }
@@ -950,7 +951,7 @@ function CopyScreenBuffer() {
         // b) updating the screen even when paused & thus delta time is 0.
         var paused = aub(self.handler.IsPaused?.(), false) || document.hidden;
         var now = Date.now();
-        var dt = now - self.lastGameTime;
+        var dt = now - self.lastGameTime; // msec.
         
         if (dt >= kMaybeWasPausedInTheDangedDebuggerMsec) {
             // do not suddenly jump the sum of time we were paused in the debugger.
@@ -1099,6 +1100,8 @@ function CopyScreenBuffer() {
     var self = this;
 
     self.Init = function() {
+	forgetLogOnceAll(); // gross ass/u/me-ption.
+
 	BeginMusic();
         ResetInput();
         ResetP1Side();
@@ -1390,7 +1393,7 @@ function CopyScreenBuffer() {
     };
 
     self.Draw = function() {
-        self.DrawText();
+        self.DrawTexts();
         self.DrawPills();
         self.DrawAnimations();
     };
@@ -1399,6 +1402,7 @@ function CopyScreenBuffer() {
         Object.values(self.animations).forEach(a => a.Draw());
     };
 
+    // todo: seen some pretty strange bugs with all this, very hard to repro :-(
     self.DrawPills = function() {
         var whscale = Math.max(
             0.3,
@@ -1410,6 +1414,8 @@ function CopyScreenBuffer() {
         var y = gh(0.7);
         let maxWidth = 0;
         let maxHeight = 0;
+	logOnce("DrawPills gP1", tryStringify(gP1PillState));
+	logOnce("DrawPills gP2", tryStringify(gP2PillState));
         gP1PillState.deck.map(pid => {
             maxWidth = Math.max(maxWidth, gPillInfo[pid].wfn());
             maxHeight = Math.max(maxHeight, gPillInfo[pid].hfn());
@@ -1436,6 +1442,7 @@ function CopyScreenBuffer() {
                     const pid = pills[i];
                     const x = lx + (ox*i);
                     const { name, drawer, wfn, hfn } = gPillInfo[pid];
+		    logOnce(`DrawPillsSide ${gLevelInt} ${side} ${i}`, pid, name, drawer?.name);
                     const width = wfn() * whscale;
                     const height = hfn() * whscale;
                     drawer(side, { x:x-width/2, y:y-height/2+yoff, width, height }, 1);       
@@ -1447,7 +1454,7 @@ function CopyScreenBuffer() {
         }
     };
 
-    self.DrawText = function() {
+    self.DrawTexts = function() {
 	var p2txt = is1P() ? "" : "P2";
         var t = Math.ceil(self.timeout/1000);
         Cxdo(() => {
@@ -1505,11 +1512,11 @@ function CopyScreenBuffer() {
     };
 
     self.Draw = function() {
-	self.DrawText();
+	self.DrawTexts();
         self.DrawAnimations();
     };
 
-    self.DrawText = function() {
+    self.DrawTexts = function() {
 	var p2txt = is1P() ? "" : "P2";
         var t = Math.ceil(self.timeout/1000);
         Cxdo(() => {
@@ -1881,7 +1888,7 @@ function CopyScreenBuffer() {
     };
 
     self.CreateStartingPuck = function(vx) {
-	range(0, 1).forEach(_ => { // can be increased for debugging.
+	range(0, kStartingPuckCount).forEach(_ => { // can be increased for debugging.
             var toLeft = [gR.RandomCentered(gw(0.6), gw(0.1)), -1];
             var toRight = [gR.RandomCentered(gw(0.4), gw(0.1)), 1];
 
@@ -2033,6 +2040,17 @@ function CopyScreenBuffer() {
 	}
     };
 
+    self.AddSplits = function(splits) {
+	for (let i = 0; i < splits?.length ?? 0; ++i) {
+            const p = gPuckPool.Alloc();
+            if (exists(p)) {
+                p.PlacementInit(splits[i]);
+                gPucks.B.push(p);
+		AddSparks({ x:p.x, y:p.y, vx:sx(0.5), vy:sy(1), count: 3, rx:sx(1), ry:sy(1) });
+            }
+        }
+    };
+
     self.MovePucks = function( dt ) {
         let pmaxvx = -Number.MAX_SAFE_INTEGER;
 	let ySum = 0;
@@ -2063,17 +2081,9 @@ function CopyScreenBuffer() {
                 );
                 // note: splits are pushed before parent, match: Draw()'s revEach() z order.
                 if(self.level.isSpawning) {
-                    for (let i = 0; i < splits?.length ?? 0; ++i) {
-                        const p = gPuckPool.Alloc();
-                        if (exists(p)) {
-                            p.PlacementInit(splits[i]);
-                            gPucks.B.push(p);
-			    AddSparks({ x:p.x, y:p.y, vx:sx(0.5), vy:sy(1), count: 3, rx:sx(1), ry:sy(1) });
-                        }
-                    }
+		    self.AddSplits(splits);
+                    self.level.OnPaddlePuckSplits(splits);
                 }
-		// this has to be called after adding the pucks, else off by 1.
-                self.level.OnPuckSplits(splits);
 
                 p.WallsCollision(self.maxVX);
                 p.BarriersCollision(self.paddleP1.barriers.A);
@@ -2083,9 +2093,16 @@ function CopyScreenBuffer() {
                 p.NeoCollision(self.paddleP1.neo);
                 p.NeoCollision(self.paddleP2.neo);
 		p.DarkMatterCollision(self.darkMatter);
-		p.BlocksCollision(self.paddleP1.blocks);
-		p.BlocksCollision(self.paddleP2.blocks);
-		p.BlocksCollision(self.level.blocks);
+
+		// note: the 'blocks' name aliasing here is fragile.
+		const blockSplits = [];
+		const bs1 = p.BlocksCollision(self.paddleP1.yars);
+		if (exists(bs1)) { blockSplits.push(bs1); }
+		const bs2 = p.BlocksCollision(self.paddleP2.yars);
+		if (exists(bs2)) { blockSplits.push(bs2); }
+		const bs3 = p.BlocksCollision(self.level.bricks);
+		if (exists(bs3)) { blockSplits.push(bs3); }
+		self.AddSplits(blockSplits);
 
                 self.paddleP1.OnPuckMoved(p, i);
                 self.paddleP2.OnPuckMoved(p, i);
@@ -2744,7 +2761,7 @@ function CopyScreenBuffer() {
 
     self.Draw = function() {
         if (!self.goOn) {
-            self.DrawText();
+            self.DrawTexts();
             self.DrawPills();
 	    if (self.updateInput) {
 		DrawMoveTargets();
@@ -2752,7 +2769,7 @@ function CopyScreenBuffer() {
 	}
     };
     
-    self.DrawText = function() {
+    self.DrawTexts = function() {
         Cxdo(() => {
             gCx.fillStyle = RandomGreen();
 	    var countdown = Math.ceil(Math.max(0, self.RemainingTime() / 1000));
@@ -2871,7 +2888,7 @@ function CopyScreenBuffer() {
 
     self.Draw = function() {
 	self.DrawScores();
-	self.DrawTexts();
+	self.DrawTextss();
     };
 
     self.DrawScores = function() {
@@ -2916,7 +2933,7 @@ function CopyScreenBuffer() {
 	});
     };
 
-    self.DrawTexts = function() {
+    self.DrawTextss = function() {
         Cxdo(() => {
             gCx.fillStyle = RandomForColor(redSpec);
             DrawText(
@@ -3033,13 +3050,13 @@ function CopyScreenBuffer() {
             var msg = `FINAL SCORE: ${gP1Score.game}`;
             DrawText( msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt );
 
-            if (self.isNewHighScore) {
+            if (true) { //self.isNewHighScore) {
                 gCx.fillStyle = ColorCycle();
                 DrawText(
-                    `NEW HIGH: ${self.maxScore}`,
+                    `>>>> NEW HIGH: ${self.maxScore} <<<<`,
                     "center",
-                    gw(0.5), gh(0.65),
-                    gSmallFontSizePt
+                    gw(0.5), gh(0.15),
+                    gReducedFontSizePt
                 );
             }
         });
@@ -3664,6 +3681,18 @@ function InitEvents() {
     });
 }
     
+function pushEventDebugDraw(msg) {
+    const lifetime = 15;
+    gDebug && gDebug_DrawList.push({
+	frames: lifetime,
+	fn: (f) => {
+	    const a = T01(f, lifetime);
+	    gCx.fillStyle = rgba255s(greenSpec.strong, a);
+	    DrawText(msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt);
+	}
+    });
+}
+
 function handleHotrodDown(e) {
     const g = gKey2Cmd_hotrod_general[e.key];
     const left = gKey2Cmd_hotrod_left[e.key];
@@ -3681,7 +3710,6 @@ function handleHotrodDown(e) {
             }
         });
 	break;
-
     case '2p':
 	e.preventDefault();
         gEventQueue.push({
@@ -3691,7 +3719,6 @@ function handleHotrodDown(e) {
             }
         });
 	break;
-
     case 'pause':
         e.preventDefault();
 	gEventQueue.push({
@@ -3722,6 +3749,7 @@ function handleHotrodDown(e) {
 
     switch (left) {
     case 'up':
+	pushEventDebugDraw("+LU");
         e.preventDefault();
         gEventQueue.push({
             type: kEventKeyDown,
@@ -3734,6 +3762,7 @@ function handleHotrodDown(e) {
         });
 	break;
     case 'down':
+	pushEventDebugDraw("+LD");
         e.preventDefault();
         gEventQueue.push({
             type: kEventKeyDown,
@@ -3749,6 +3778,7 @@ function handleHotrodDown(e) {
 
     switch (right) {
     case 'up':
+	pushEventDebugDraw("+RU");
         e.preventDefault();
         gEventQueue.push({
             type: kEventKeyDown,
@@ -3761,6 +3791,7 @@ function handleHotrodDown(e) {
         });
 	break;
     case 'down':
+	pushEventDebugDraw("+RD");
         e.preventDefault();
         gEventQueue.push({
             type: kEventKeyDown,
@@ -3811,6 +3842,7 @@ function handleHotrodUp(e) {
 
     switch (left) {
     case 'up':
+	pushEventDebugDraw("-LU");
         e.preventDefault();
         gEventQueue.push({
             type: kEventKeyUp,
@@ -3820,6 +3852,7 @@ function handleHotrodUp(e) {
         });
 	break;
     case 'down':
+	pushEventDebugDraw("-LD");
         e.preventDefault();
         gEventQueue.push({
             type: kEventKeyUp,
@@ -3832,6 +3865,7 @@ function handleHotrodUp(e) {
 
     switch (right) {
     case 'up':
+	pushEventDebugDraw("-RU");
         e.preventDefault();
         gEventQueue.push({
             type: kEventKeyUp,
@@ -3841,6 +3875,7 @@ function handleHotrodUp(e) {
         });
 	break;
     case 'down':
+	pushEventDebugDraw("-RD");
         e.preventDefault();
         gEventQueue.push({
             type: kEventKeyUp,
@@ -4210,4 +4245,11 @@ function handleKeyboardUp(e) {
     }
 }
 
-window.addEventListener( 'load', () => { Start(); InitEvents(); }, false );
+window.addEventListener(
+    'load',
+    () => {
+	Start();
+	InitEvents();
+    },
+    false
+);

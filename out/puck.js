@@ -5,6 +5,7 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
+var kPuckBounceTime = 500;
 function Puck() {
   var self = this;
   self.Init = function () {
@@ -36,6 +37,7 @@ function Puck() {
     }
     self.prevVX = self.vx;
     self.prevVY = self.vy;
+    self.bounceTime = 0;
     self.alive = true;
     self.ur = aub(props.ur, false);
     self.startTime = self.ur ? -Number.MAX_SAFE_INTEGER : gGameTime;
@@ -78,6 +80,9 @@ function Puck() {
     var dt = GameTime01(1000, self.startTime);
     var fadeinStyle = FadeIn(1);
     var inplayStyle = aub(fadeinStyle, gR.RandomFloat() > dt ? self.splitStyle : puckColorStr);
+    if (self.bounceTime !== false && self.bounceTime > 0) {
+      inplayStyle = "white";
+    }
     var lostStyle = RandomYellow(0.7);
     var isLost = self.x + self.width < gXInset || self.x > gw(1) - gXInset;
     var style = isLost ? lostStyle : inplayStyle;
@@ -93,7 +98,8 @@ function Puck() {
       gCx.rect(wx, wy, width, height);
       gCx.fillStyle = style;
       gCx.fill();
-      if (gDebug) {
+      if (false) {
+        // gDebug) {
         // tail to show direction of movement.
         // tail is at top or bottom depending on vx direction.
         gCx.beginPath();
@@ -124,7 +130,8 @@ function Puck() {
   };
   self.Step = function (dt, maxVX, maxVY) {
     if (self.alive === true && !self.isLocked) {
-      self.impotentTime -= dt;
+      self.bounceTime = Math.max(0, self.bounceTime - dt);
+      self.impotentTime = Math.max(0, self.impotentTime - dt);
       dt = dt * kPhysicsStepScale;
       Assert(!isBadNumber(dt));
       Assert(!isBadNumber(self.x), [dt, self]);
@@ -244,7 +251,6 @@ function Puck() {
         maxVX: maxVX
       };
     }
-    PlayPaddleHit();
 
     // try to hurry up when the level has no more pucks.
     var nvx = MinSigned(self.vx * (isSuddenDeath ? 1.1 : 1), maxVX);
@@ -286,6 +292,7 @@ function Puck() {
       self.x = xw.x + xw.width;
     }
     self.vx *= -1;
+    self.bounceTime = kPuckBounceTime;
     var dy = (_xw$dy = xw.dy) != null ? _xw$dy : 1;
     self.vy *= dy;
   };
@@ -423,6 +430,14 @@ function Puck() {
       if (exists(hit)) {
         PlayBlip();
         self.AdjustAndBounceX(hit);
+        /* dunno.
+        if (blocks.isSplitter && gR.RandomBool(0.1)) {
+                          return self.MaybeSplitPuck({
+        	forced: true,
+        	maxVX: kMaxVX
+            });
+            }
+            */
       }
     }
   };
@@ -443,6 +458,7 @@ function Puck() {
       self.y = top - self.height;
     }
     if (did) {
+      self.bounceTime = kPuckBounceTime;
       self.vy *= -1;
       if (is2P()) {
         // trying to avoid degenerate steaming at top and bottom.

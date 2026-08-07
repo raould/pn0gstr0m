@@ -7,7 +7,7 @@
 // todo: 'curvature'.
 // note: everything assumes using full gHeight.
 
-const kDeathFrames = 30;
+const kDeathFrames = 15;
 const kStepPeriod = 10;
 
 function y2xoff(side, y) {
@@ -31,11 +31,8 @@ function RandomBlockColor(isYars) {
 	magentaSpec,
 	yellowSpec,
     ];
-    return rgba255s(
-	gR.RandomElement(
-	    isYars ? a : b
-	).regular
-    );
+    const c = gR.RandomElement(isYars ? a : b).strong;
+    return rgba255s(c);
 }
 
 // this is getting too overloaded, "isYars" sucks.
@@ -45,22 +42,24 @@ function Blocks( props /*isYars, side, midX, cols, rows, col_width, dy*/) {
 
     self.Init = function() { // support xw
         self.id = gNextID++;
+	self.side = props.side;
 	self.isYars = props.isYars;
+	self.isSplitter = props.isYars;
 	self.alive = true;
-	self.hp = props.cols * props.rows;
-	self.maxHp = self.hp; // other code needs to know this.
 	self.width = props.col_width * props.cols;
 	self.x = props.midX - self.width/2;
 	self.dy = props.dy;
 
-	self.cols = Array.from(
+	self.rows = props.rows;
+	self.cols = props.cols;
+	self.blockCols = Array.from(
 	    { length: props.cols },
 	    (e, i) => {
 		// outside-in works best for collision testing.
 		const ci = i%2===0 ? (i/2) : Math.floor(props.cols-i/2);
 		return new BlockCol({
 		    isYars: props.isYars,
-		    side: props.side, // undefined means wall.
+		    side: self.side, // undefined means wall.
 		    count: props.rows,
 		    x: self.x + (ci * props.col_width),
 		    isUp: ci % 2 === 1,
@@ -69,11 +68,14 @@ function Blocks( props /*isYars, side, midX, cols, rows, col_width, dy*/) {
 		});
 	    }
 	);
+
+	self.hp = self.cols * self.rows;
+	self.maxHp = self.hp; // other code needs to know this.
     };
 
     self.Step = function( dt ) {
 	self.hp = 0;
-	self.alive = self.cols.reduce((a,c) => {
+	self.alive = self.blockCols.reduce((a,c) => {
 	    const ca = c.Step(dt);
 	    self.hp += c.hp;
 	    return a || ca;
@@ -83,7 +85,7 @@ function Blocks( props /*isYars, side, midX, cols, rows, col_width, dy*/) {
     };
 
     self.Draw = function( alpha ) {
-	self.cols.forEach(c => c.Draw(alpha));
+	self.blockCols.forEach(c => c.Draw(alpha));
 	/*
 	if (gDebug) {
 	    Cxdo(() => {
@@ -98,8 +100,14 @@ function Blocks( props /*isYars, side, midX, cols, rows, col_width, dy*/) {
     };
 
     self.CollisionTest = function( puck ) {
-	for(let i = 0; i < self.cols.length; ++i) {
-	    const c = self.cols[i];
+	const xoff = y2xoff(self.side, puck.y);
+	const l = self.x + xoff;
+	const r = l + self.width;
+	const ppl = puck.prevX;
+	const ppr = ppl + puck.width;
+
+	for(let i = 0; i < self.blockCols.length; ++i) {
+	    const c = self.blockCols[i];
 	    const hit = c.CollisionTest(puck);
 	    if (exists(hit)) {
 		hit.dy = self.dy;
@@ -212,13 +220,13 @@ function BlockCol(props /*isYars, side, count, isUp, x, width*/) {
 		    hit = puck.x + puck.width >= l
 		}
 	    }
-	    // else puck is inside blocks, let it go. (todo: eat it?)
+	    // else puck is inside blocks! let it go.
 
 	    if (hit) {
 		const by = mod(puck.midY - self.yoff, gHeight);
 		const bi = round(by / self.bh);
 		if (bi >= 0 && bi < self.blocks.length) {
-		    hit = typeof self.blocks[bi] === "string";
+		    hit = typeof self.blocks[bi] != "number";
 		    if (hit) {
 			self.blocks[bi] = kDeathFrames; // hard-coded hack # of frames.
 			collided = { x: l, width: self.width };
