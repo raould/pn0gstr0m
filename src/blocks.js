@@ -31,7 +31,7 @@ function RandomBlockColor(isYars) {
 	magentaSpec,
 	yellowSpec,
     ];
-    const c = gR.RandomElement(isYars ? a : b).strong;
+    const c = gR.RandomElement(isYars ? a : b).regular;
     return rgba255s(c);
 }
 

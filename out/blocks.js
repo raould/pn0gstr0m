@@ -23,7 +23,7 @@ function y2xoff(side, y) {
 function RandomBlockColor(isYars) {
   var a = [greenSpec, blueSpec, cyanSpec];
   var b = [redSpec, magentaSpec, yellowSpec];
-  var c = gR.RandomElement(isYars ? a : b).strong;
+  var c = gR.RandomElement(isYars ? a : b).regular;
   return rgba255s(c);
 }
 
