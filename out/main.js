@@ -33,7 +33,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 try {
-  console.log("environment", "test");
+  console.log("environment", "prod");
 } catch (_unused) {
   console.error("environment unknown");
 }
@@ -50,7 +50,7 @@ var kStartingPuckCount = 1;
 // and the only way to start the game is to click start (game controllers),
 // and no hard or zen modes.
 // see also: kGameMode*, so this is all quite confusing.
-var kAppMode = false; // keep it commited as true, please.
+var kAppMode = true; // keep it commited as true, please.
 var kHotRod = false; // keep this committed as false.
 
 // [{ fn, frames? }]
