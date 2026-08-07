@@ -23,7 +23,7 @@ try { console.log("environment", gEnvironment); } catch { console.error("environ
 const kIsSafari = UAParser()?.browser?.name === "Safari";
 console.log("safari?", kIsSafari);
 
-let gDebug = true; // keep this committed as false.
+let gDebug = false; // keep this committed as false.
 const kStartingPuckCount = 1;
 
 // which title menu to show?

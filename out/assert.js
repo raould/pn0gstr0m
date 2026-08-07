@@ -7,7 +7,7 @@
 
 function Assert(result, msg) {
   console.assert(result, msg);
-  if (!result && false) {
+  if (!result && true) {
     debugger;
   }
 }

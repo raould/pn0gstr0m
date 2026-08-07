@@ -33,7 +33,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 try {
-  console.log("environment", "prod");
+  console.log("environment", "test");
 } catch (_unused) {
   console.error("environment unknown");
 }
@@ -41,7 +41,7 @@ try {
 // the web is a lie.
 var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
 console.log("safari?", kIsSafari);
-var gDebug = true; // keep this committed as false.
+var gDebug = false; // keep this committed as false.
 var kStartingPuckCount = 1;
 
 // which title menu to show?
