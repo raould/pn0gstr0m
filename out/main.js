@@ -33,7 +33,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // with a few icons in the lower case.
 
 try {
-  console.log("environment", "test");
+  console.log("environment", "prod");
 } catch (_unused) {
   console.error("environment unknown");
 }

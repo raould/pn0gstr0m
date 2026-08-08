@@ -17,7 +17,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-var kMusicVolume = 0.7;
+var kMusicVolume = 0.6;
 
 // this object contains multiple mappings.
 // 0-bsed index to name.
@@ -61,7 +61,7 @@ function RegisterSound(name, basename, props, isMusic) {
     var files = ["ogg", "aac", "mp3"].map(function (e) {
       return "sounds/".concat(basename, ".").concat(e);
     });
-    var howl = new Howl(_objectSpread(_objectSpread({}, props), {}, {
+    var howlProps = _objectSpread(_objectSpread({}, props), {}, {
       src: files,
       onload: function onload() {
         var meta = gAudio.name2meta[name];
@@ -86,7 +86,9 @@ function RegisterSound(name, basename, props, isMusic) {
       onend: function onend() {
         return OnSfxStop(name);
       }
-    }));
+    });
+    console.log("RegisterSound", name, howlProps);
+    var howl = new Howl(howlProps);
     Assert(!gAudio.names.includes(name), "RegisterSound ".concat(name));
     gAudio.names.push(name);
     gAudio.name2meta[name] = /*meta*/_objectSpread(_objectSpread({}, gAudio[name]), {}, {
@@ -228,7 +230,8 @@ function PlaySfxDebounced(name) {
     Assert(exists(meta), name, "PlaySfxDebounced ".concat(name));
     if (exists(meta)) {
       var last = meta.last || 0;
-      if (Date.now() - last > debounceMsec) {
+      var diff = Date.now() - last;
+      if (diff > debounceMsec) {
         sid = PlaySound(name);
       }
     }
@@ -285,7 +288,7 @@ var PlayBlip = MakePlayFn(1, "blip", function (name) {
 });
 var PlayChosen = MakePlayFn(1, "chosen", PlaySfx);
 var PlayPaddleHit = MakePlayFn(2, "explosion", function (name) {
-  return PlaySfxDebounced(name, 30);
+  return PlaySfxDebounced(name, 10);
 });
 function LoadAudio() {
   SaveLocal(LocalStorageKeys.unplayed, []);
@@ -302,15 +305,19 @@ function LoadSfx() {
     volume: 0.35
   }); // puck hits paddle.
   RegisterSfx("blip1", "blipSelectC", {
-    volume: 0.2
-  }); // puck hits wall etc.
-  RegisterSfx("start1", "start");
-  RegisterSfx("chargeup1", "chargeup", {
     volume: 0.3
+  }); // puck hits wall etc.
+  RegisterSfx("chargeup1", "chargeup", {
+    volume: 0.5
   });
+  RegisterSfx("start1", "start");
   RegisterSfx("powerupboom1", "powerUp");
-  RegisterSfx("gameover1", "gameover");
-  RegisterSfx("chosen1", "chosen");
+  RegisterSfx("gameover1", "gameover", {
+    volume: 0.8
+  });
+  RegisterSfx("chosen1", "chosen", {
+    volume: 0.9
+  });
 }
 function LoadMusic() {
   var musicSources = gR.RandomizeArray(["nervouslynx", "candiddonkey", "devotedhyena", "sweetgorilla", "sweettapir", "uglyshrimp", "vulgarhamster", "cynicalsheep2", "cynicaltermite2", "grumpywolverine", "lazymouse", "lonelymouse", "modestcamel", "nastywalrus", "oldpenguin", "rudeantelope", "skinnykoala", "sneakylabradoodle", "wickedguppy", "wickedmoose", "youngchipmunk", "youngprawn", "politetortoise", "poorhamster"]);

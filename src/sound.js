@@ -3,7 +3,7 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-const kMusicVolume = 0.7;
+const kMusicVolume = 0.6;
 
 // this object contains multiple mappings.
 // 0-bsed index to name.
@@ -50,7 +50,7 @@ function RegisterSound(name, basename, props, isMusic) {
     else {
 	console.log("RegisterSound", name, basename);
         var files = ["ogg", "aac", "mp3"].map((e) => `sounds/${basename}.${e}`);
-        var howl = new Howl({ // there is no good answer to browser audio at all.
+	var howlProps = { // there is no good answer to browser audio at all.
             ...props,
             src: files,
             onload: () => {
@@ -71,7 +71,9 @@ function RegisterSound(name, basename, props, isMusic) {
             preload: false === isMusic,
             // only 1 concurrent playback per name.
             onend: () => OnSfxStop(name),
-        });
+        };
+	console.log("RegisterSound", name, howlProps);
+        var howl = new Howl(howlProps);
         Assert(!gAudio.names.includes(name), `RegisterSound ${name}`);
         gAudio.names.push(name);
         gAudio.name2meta[name] = /*meta*/ {
@@ -206,7 +208,8 @@ function PlaySfxDebounced(name, debounceMsec=20) {
         Assert(exists(meta), name, `PlaySfxDebounced ${name}`);
         if (exists(meta)) {
             const last = meta.last || 0;
-            if (Date.now()-last > debounceMsec) {
+	    const diff = Date.now() - last;
+            if (diff > debounceMsec) {
                 sid = PlaySound(name);
             }
         }
@@ -258,7 +261,7 @@ const PlayChargeup = MakePlayFn(1, "chargeup", PlaySfx);
 const PlayPowerupBoom = MakePlayFn(1, "powerupboom", (name) => PlaySfxDebounced(name, 100));
 const PlayBlip = MakePlayFn(1, "blip", (name) => PlaySfxDebounced(name, 30));
 const PlayChosen = MakePlayFn(1, "chosen", PlaySfx);
-const PlayPaddleHit = MakePlayFn(2, "explosion", (name) => PlaySfxDebounced(name, 30));
+const PlayPaddleHit = MakePlayFn(2, "explosion", (name) => PlaySfxDebounced(name, 10));
 
 function LoadAudio() {
     SaveLocal(LocalStorageKeys.unplayed, []);
@@ -271,12 +274,12 @@ function LoadSfx() {
     // todo: not enough audible difference between the explosion sfx.
     RegisterSfx("explosion1", "explosionB2", { volume: 0.35 }); // puck hits paddle.
     RegisterSfx("explosion2", "explosionA2", { volume: 0.35 }); // puck hits paddle.
-    RegisterSfx("blip1", "blipSelectC", { volume: 0.2 }); // puck hits wall etc.
+    RegisterSfx("blip1", "blipSelectC", { volume: 0.3 }); // puck hits wall etc.
+    RegisterSfx("chargeup1", "chargeup", { volume: 0.5 });
     RegisterSfx("start1", "start");
-    RegisterSfx("chargeup1", "chargeup", { volume: 0.3 });
     RegisterSfx("powerupboom1", "powerUp");
-    RegisterSfx("gameover1", "gameover");
-    RegisterSfx("chosen1", "chosen");
+    RegisterSfx("gameover1", "gameover", { volume: 0.8 });
+    RegisterSfx("chosen1", "chosen", { volume: 0.9 });
 }
 
 function LoadMusic() {
