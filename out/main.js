@@ -50,8 +50,8 @@ console.log("safari?", kIsSafari);
 // and the only way to start the game is to click start (game controllers),
 // and no hard or zen modes.
 // see also: kGameMode*, so this is all quite confusing.
-var kAppMode = true; // keep it commited as true, please.
-var kHotRod = false; // keep this committed as false.
+var kAppMode = false; // keep it commited as true, please.
+var kHotRod = true; // keep this committed as false.
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
