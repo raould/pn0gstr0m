@@ -32,6 +32,8 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
+var gDebug = false; // keep this committed as false.
+var kStartingPuckCount = 1;
 try {
   console.log("environment", "prod");
 } catch (_unused) {
@@ -41,8 +43,6 @@ try {
 // the web is a lie.
 var kIsSafari = ((_UAParser = UAParser()) == null || (_UAParser = _UAParser.browser) == null ? void 0 : _UAParser.name) === "Safari";
 console.log("safari?", kIsSafari);
-var gDebug = false; // keep this committed as false.
-var kStartingPuckCount = 1;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.

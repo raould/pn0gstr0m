@@ -17,14 +17,14 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
+let gDebug = false; // keep this committed as false.
+const kStartingPuckCount = 1;
+
 try { console.log("environment", gEnvironment); } catch { console.error("environment unknown"); }
 
 // the web is a lie.
 const kIsSafari = UAParser()?.browser?.name === "Safari";
 console.log("safari?", kIsSafari);
-
-let gDebug = false; // keep this committed as false.
-const kStartingPuckCount = 1;
 
 // which title menu to show?
 // true: (which is the expected shipping state) the title menu has more options.

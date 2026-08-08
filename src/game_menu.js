@@ -89,7 +89,7 @@ function MakeGameMenuButtons({ OnResume, OnQuit }) {
     var bResume = MakeResumeButton({ constants, OnResume });
     var bSfx = MakeMuteButton({ constants });
     return {
-        focusId: "bSfx",
+        focusId: "bResume",
         navigation: {
             bSfx: {
                 button: bSfx,

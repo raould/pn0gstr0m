@@ -109,7 +109,7 @@ function MakeGameMenuButtons(_ref4) {
     constants: constants
   });
   return {
-    focusId: "bSfx",
+    focusId: "bResume",
     navigation: {
       bSfx: {
         button: bSfx,

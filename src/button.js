@@ -137,10 +137,10 @@
             }
 
             if (gDebug) {
-                gCx.strokeStyle = "rgba(255,0,0,0.5)";
+                gCx.strokeStyle = "rgba(255,0,0,0.2)";
                 gCx.strokeRect(wx, wy, self.width, self.height);
                 gCx.strokeRect(wx-self.margin.x, wy-self.margin.y, self.width+self.margin.x*2, self.height+self.margin.y*2);
-            }
+		}
         });
     };
 
@@ -170,7 +170,7 @@
             gCx.stroke();
 	}
 	else {
-	    const begin_path = () => {
+	    const make_path = () => {
 		// was previously experimenting with height/4.
 		const off = Math.min( sx1(self.height/2), self.height/2 );
 		const l = wx;
@@ -187,11 +187,12 @@
 		gCx.lineTo(l, b-off);
 		gCx.lineTo(l, t+off);
 		gCx.lineTo(l+off, t);
+		gCx.closePath();
 	    };
-	    begin_path();
+	    make_path();
 	    gCx.fillStyle = backgroundColorStr;
             gCx.fill();
-	    begin_path();
+	    make_path();
             gCx.lineWidth = sx1( self.has_focus ? 4 : 2 );
             self.UpdateStyle();
             gCx.stroke();
