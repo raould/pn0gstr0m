@@ -44,9 +44,9 @@ const kUITimeout = 1000 * (gDebug ? 5 : 20);
 const kHintTimeout = 1000 * 6;
 
 // match: index.html
-const kCanvasName = "canvas";
-const kFullscreenIconName = "fullscreen";
-const kLinksDivName = "links";
+const kCanvasId = "canvas";
+const kFullscreenIconId = "fullscreen";
+const kLinksDivId = "links";
 
 var gLifecycle;
 
@@ -3305,28 +3305,25 @@ function RemoveGamepad(e) {
 // ----------------------------------------
 
 function setFullscreenIconVisible(visible) {
-    var icon = document.getElementById( kFullscreenIconName );
-    if (icon != undefined) {
+    var icon = document.getElementById( kFullscreenIconId );
+    if (icon != null) {
         icon.style.visibility = visible ? 'visible' : 'hidden';
     }
 }
 
 function handleFullscreen(e) {
     // so far there's only one <img> in the page.
-    if (e.target.nodeName === "IMG") {
-        if (!window.screenTop && !window.screenY) {
-            var xfn = document.exitFullscreen ||
-                document.webkitExitFullscreen ||
-                document.mozCancelFullScreen ||
-                document.msExitFullScreen;
-            xfn && xfn.call(document);
+    if (e.target.id === kFullscreenIconId) {
+        if (document.fullscreenElement != null) {
+	    console.log("exiting fullscreen (?)");
+	    document.exitFullscreen().catch(err => console.error(err));
         }
         else {
-            var fsfn = document.body.requestFullScreen ||
-                document.body.webkitRequestFullscreen ||
-                document.body.mozRequestFullScreen ||
-                document.body.msRequestFullScreen;
-            fsfn && fsfn.call(document.body);
+	    console.log("requesting fullscreen (?)");
+	    gCanvasOnscreen.requestFullscreen({
+		keyboardLock: "browser",
+		navigationUI: "hide",
+	    }).catch((err) => console.error(err));
         }
         return true;
     }
@@ -3576,7 +3573,7 @@ function Start() {
 }
 
 function UnhideLinks() {
-    const links = document.getElementById(kLinksDivName);
+    const links = document.getElementById( kLinksDivId );
     if (exists(links)) {
 	console.log("found links");
 	if (kAppMode) {
@@ -3589,7 +3586,7 @@ function UnhideLinks() {
 function InitCanvases() {
     // the 'onscreen' canvas which we update at the end of each frame.
     // it is not where the drawing commands go, that is gCanvasBacking.
-    gCanvasOnscreen = document.getElementById(kCanvasName);
+    gCanvasOnscreen = document.getElementById( kCanvasId );
     Assert(gCanvasOnscreen != null);
     gCxOnscreen = gCanvasOnscreen.getContext('2d');
     gCxOnscreen.globalAlpha = 1;

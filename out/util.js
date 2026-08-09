@@ -347,9 +347,11 @@ function TimedElements(_ref) {
 }
 var kAppleMobileHellPlatforms = ["ipad", "iphone", "ipod", "mac"];
 function supportsFullscreen() {
-  if (!kAppMode) {
-    return false;
+  if (false === kAppMode) {
+    return true;
   }
+
+  // todo: still not really right.
   var plc = navigator.platform.toLowerCase();
   var isAppleHell = kAppleMobileHellPlatforms.reduce(function (h, p) {
     return h || plc.includes(p);
