@@ -256,12 +256,13 @@ var kSpawnPlayerPillFactor = 0.003;
 
 // actually useful sometimes when debugging.
 var gNextID = 0;
-var nokeys = {
-  up: false,
-  down: false
-};
+
+//var nokeys = { up: false, down: false };
 function noKeysState() {
-  return _objectSpread({}, nokeys);
+  return {
+    up: false,
+    down: false
+  };
 }
 var gP1Keys = new WrapState({
   resetFn: noKeysState
@@ -323,13 +324,13 @@ function RightKeys() {
   return ForP1Side(gP2Keys, gP1Keys);
 }
 var kJoystickDeadZone = 0.5;
-var nostick = {
-  up: false,
-  down: false,
-  dz: kJoystickDeadZone
-};
+//var nostick = { up: false, down: false, dz: kJoystickDeadZone };
 function noStickState() {
-  return _objectSpread({}, nostick);
+  return {
+    up: false,
+    down: false,
+    dz: kJoystickDeadZone
+  };
 }
 var gGamepad1Sticks = new WrapState({
   resetFn: noStickState
@@ -337,14 +338,14 @@ var gGamepad1Sticks = new WrapState({
 var gGamepad2Sticks = new WrapState({
   resetFn: noStickState
 });
-var nobuttons = {
-  up: false,
-  down: false,
-  menu: false,
-  activate: false
-};
+//var nobuttons = { up: false, down: false, menu: false, activate: false };
 function noButtonsState() {
-  return _objectSpread({}, nobuttons);
+  return {
+    up: false,
+    down: false,
+    menu: false,
+    activate: false
+  };
 }
 var gGamepad1Buttons = new WrapState({
   resetFn: noButtonsState
