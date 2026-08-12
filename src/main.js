@@ -3031,7 +3031,7 @@ function CopyScreenBuffer() {
             var msg = `FINAL SCORE: ${gP1Score.game}`;
             DrawText( msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt );
 
-            if (true) { //self.isNewHighScore) {
+            if (self.isNewHighScore) {
                 gCx.fillStyle = ColorCycle();
                 DrawText(
                     `>>>> NEW HIGH: ${self.maxScore} <<<<`,
