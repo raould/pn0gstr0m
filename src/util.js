@@ -321,6 +321,17 @@ function update(o, s) {
     }
 }
 
+function getWithDefault(esmap, key, init_fn) {
+    if (false === esmap.has(key)) {
+	console.log("cache miss", key);
+	esmap.set(key, init_fn(esmap, key));
+    }
+    else {
+	//console.log("cache hit", key);
+    }
+    return esmap.get(key);
+}
+
 function easeOutExpo(n) {
     n = Clip01(n);
     return n >= 1 ? 1 : 1 - Math.pow(2, -10 * n);
@@ -356,7 +367,9 @@ var kAppleMobileHellPlatforms = [
     "mac",
 ];
 function supportsFullscreen() {
-    if (!kAppMode) { return false; }
+    if (false === kAppMode) { return true; }
+
+    // todo: still not really right.
     const plc = navigator.platform.toLowerCase();
     const isAppleHell = kAppleMobileHellPlatforms.reduce(
         (h, p) => h || plc.includes(p),

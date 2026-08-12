@@ -44,9 +44,9 @@ const kUITimeout = 1000 * (gDebug ? 5 : 20);
 const kHintTimeout = 1000 * 6;
 
 // match: index.html
-const kCanvasName = "canvas";
-const kFullscreenIconName = "fullscreen";
-const kLinksDivName = "links";
+const kCanvasId = "canvas";
+const kFullscreenIconId = "fullscreen";
+const kLinksDivId = "links";
 
 var gLifecycle;
 
@@ -216,7 +216,7 @@ function RecalculateConstants() {
     gPauseRadius = sxi(12);
     gSparkWidth = sxi(3);
     gSparkHeight = syi(3);
-    gBigFontSizePt = NearestEven(gw(0.088));
+    gBigFontSizePt = NearestEven(gw(0.08));
     gRegularFontSizePt = NearestEven(gw(0.047));
     gReducedFontSizePt = NearestEven(gw(0.037));
     gSmallFontSizePt = NearestEven(gw(0.027));
@@ -228,7 +228,8 @@ function RecalculateConstants() {
 // anything here below that ends up depending on
 // gWidth or gHeight must got up into RecalculateConstants().
 
-const kFontName = "noyb2Regular";
+const kMainFontName = "noyb2Regular";
+const kMonospaceFontName = "monospace";
 const kAvgSparkFrame = 20;
 
 // hand-waving 'heuristic's abound!
@@ -249,10 +250,10 @@ const kSpawnPlayerPillFactor = 0.003;
 // actually useful sometimes when debugging.
 var gNextID = 0;
 
-var nokeys = { up: false, down: false };
-function noKeysState() { return {...nokeys}; }
-var gP1Keys = new WrapState({resetFn: noKeysState });
-var gP2Keys = new WrapState({resetFn: noKeysState });
+//var nokeys = { up: false, down: false };
+function noKeysState() { return { up: false, down: false }; }
+var gP1Keys = new WrapState({ resetFn: noKeysState });
+var gP2Keys = new WrapState({ resetFn: noKeysState });
 function isP1UpKey(reset=false) {
     if (gP1Keys.$.up || gP2Keys.$.up) {
         console.log("up");
@@ -297,12 +298,12 @@ function RightKeys() {
 }
 
 const kJoystickDeadZone = 0.5;
-var nostick = { up: false, down: false, dz: kJoystickDeadZone };
-function noStickState() { return {...nostick}; }
+//var nostick = { up: false, down: false, dz: kJoystickDeadZone };
+function noStickState() { return { up: false, down: false, dz: kJoystickDeadZone }; }
 var gGamepad1Sticks = new WrapState({resetFn: noStickState});
 var gGamepad2Sticks = new WrapState({resetFn: noStickState});
-var nobuttons = { up: false, down: false, menu: false, activate: false };
-function noButtonsState() { return {...nobuttons}; }
+//var nobuttons = { up: false, down: false, menu: false, activate: false };
+function noButtonsState() { return { up: false, down: false, menu: false, activate: false }; }
 var gGamepad1Buttons = new WrapState({resetFn: noButtonsState});
 var gGamepad2Buttons = new WrapState({resetFn: noButtonsState});
 
@@ -643,19 +644,34 @@ function RectXYWH( xywh ) {
     gCx.rect( xywh.x, xywh.y, xywh.width, xywh.height );
 }
 
-function DrawText( data, align, x, y, size, wiggle, font ) {
-    if (wiggle != false) {
-        x = WX(x);
-        y = WY(y);
-    }
+const gFontCache = new Map();
+function cachedFont(size, font=kMainFontName) {
     // wtf recent exports of noyb2.ttf and conversion to woff
     // have ended up with the font being way bigger than
     // it used to be and i have no idea why or where the
     // buggy change happens end to end. i hate complexity.
-    if (font == undefined) {
+    // this kind of sucks, is fragile, too...
+    if (font === kMainFontName) {
 	size *= 0.5;
     }
-    gCx.font = size + "pt " + (font ?? kFontName);
+    const bySize = getWithDefault(
+	gFontCache,
+	size,
+	() => new Map()
+    );
+    const byFont = getWithDefault(
+	bySize,
+	font,
+	() => size + "pt " + font
+    );
+    return byFont;
+}
+function DrawText( data, align, x, y, size, wiggle, font ) {
+    if (wiggle !== false) {
+        x = WX(x);
+        y = WY(y);
+    }
+    gCx.font = cachedFont(size, font);
     gCx.textAlign = align;
     gCx.fillText( data.toString(), x, y );
 }
@@ -694,7 +710,7 @@ function StepToasts() {
             Cxdo(() => {
                 gCx.fillStyle = "magenta";
                 gToasts.forEach(t => {
-                    DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, "monospace");
+                    DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, kMonospaceFontName);
                     y += gSmallestFontSizePt * 1.1;
                     if (y > gh(0.8)) { y = gh(0.1); }
                 });
@@ -745,7 +761,7 @@ function DrawWarning() {
     var y0 = gh(1) - gYInset - gWarning.length * lineFactor * 1.4;
     Cxdo(() => {
         gWarning.forEach((t, i) => {
-            DrawText(t, "center", gw(0.5), y0 + i*lineFactor, gSmallestFontSizePt, false, "monospace");
+            DrawText(t, "center", gw(0.5), y0 + i*lineFactor, gSmallestFontSizePt, false, kMonospaceFontName);
         });
     });
 }
@@ -3305,28 +3321,25 @@ function RemoveGamepad(e) {
 // ----------------------------------------
 
 function setFullscreenIconVisible(visible) {
-    var icon = document.getElementById( kFullscreenIconName );
-    if (icon != undefined) {
+    var icon = document.getElementById( kFullscreenIconId );
+    if (icon != null) {
         icon.style.visibility = visible ? 'visible' : 'hidden';
     }
 }
 
 function handleFullscreen(e) {
     // so far there's only one <img> in the page.
-    if (e.target.nodeName === "IMG") {
-        if (!window.screenTop && !window.screenY) {
-            var xfn = document.exitFullscreen ||
-                document.webkitExitFullscreen ||
-                document.mozCancelFullScreen ||
-                document.msExitFullScreen;
-            xfn && xfn.call(document);
+    if (e.target.id === kFullscreenIconId) {
+        if (document.fullscreenElement != null) {
+	    console.log("exiting fullscreen (?)");
+	    document.exitFullscreen().catch(err => console.error(err));
         }
         else {
-            var fsfn = document.body.requestFullScreen ||
-                document.body.webkitRequestFullscreen ||
-                document.body.mozRequestFullScreen ||
-                document.body.msRequestFullScreen;
-            fsfn && fsfn.call(document.body);
+	    console.log("requesting fullscreen (?)");
+	    gCanvasOnscreen.requestFullscreen({
+		keyboardLock: "browser",
+		navigationUI: "hide",
+	    }).catch((err) => console.error(err));
         }
         return true;
     }
@@ -3576,7 +3589,7 @@ function Start() {
 }
 
 function UnhideLinks() {
-    const links = document.getElementById(kLinksDivName);
+    const links = document.getElementById( kLinksDivId );
     if (exists(links)) {
 	console.log("found links");
 	if (kAppMode) {
@@ -3589,7 +3602,7 @@ function UnhideLinks() {
 function InitCanvases() {
     // the 'onscreen' canvas which we update at the end of each frame.
     // it is not where the drawing commands go, that is gCanvasBacking.
-    gCanvasOnscreen = document.getElementById(kCanvasName);
+    gCanvasOnscreen = document.getElementById( kCanvasId );
     Assert(gCanvasOnscreen != null);
     gCxOnscreen = gCanvasOnscreen.getContext('2d');
     gCxOnscreen.globalAlpha = 1;
