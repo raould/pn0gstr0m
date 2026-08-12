@@ -66,7 +66,6 @@ var kFullscreenIconId = "fullscreen";
 var kLinksDivId = "links";
 var gLifecycle;
 var kScoreIncrement = 1;
-var kScoreLastPuckIncrement = 100;
 // note: see GameState.Init().
 var kZeroScore = {
   game: 0,
@@ -83,8 +82,6 @@ function incrScore(pscore, amount) {
   pscore.level += amount;
   pscore.game += amount;
 }
-// give bonus points to whoever wins the final puck (if it isn't game over).
-var gLastPuckSide;
 
 // mutually exclusive enum.
 // regular & hard & zen are single player.
@@ -1553,7 +1550,6 @@ function GameState(props) {
     ResetInput();
     gP1Score.level = 0;
     gP2Score.level = 0;
-    gLastPuckSide = undefined;
     gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
     gLevelTime = gGameTime;
     self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelInt];
@@ -2045,7 +2041,6 @@ function GameState(props) {
     if (!self.isAttract && p.alive === false) {
       // "gone" gets no score.
       var wasLeft = p.x < gw(0.5);
-      gLastPuckSide = wasLeft ? "left" : "right";
       ForP1Side(function () {
         incrScore(wasLeft ? gP2Score : gP1Score, kScoreIncrement);
       }, function () {
