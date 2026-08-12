@@ -18,14 +18,10 @@
 * all interval math is hand wavy and bad and off by one possibly.
 * add more global variables /s.
 * add more hard-coded values /s.
-* remove unused debug toasts feature.
 * optimize to have fewer loops over all pucks.
-* the middle blocks wall is bad because it is owned by a player.
 * all the ui timeouts are too inconsistent.
 * cmds.pause = false seems dumb.
 * step broken when paused e.g. wrt animations.js, i think?
-* fix resizing to be allowed during the game, especially for toggling fullscreen.
-* figure out the right hellacious way to support fullscreen button?!@#?!@?#!!!
 * pill/powerup code is across too many files, i am so confused.
 * there is a lot of similar/copied but not shared code for e.g. drawing score header.
 * cmds vs. targets vs. button polling is a buggy mess, needs to be unified.
@@ -38,7 +34,6 @@
 * the ownership graph is heck even if done right.
 * figure out per-game high score ui ux.
 * need to specify first puck speed specifically rather than ratio?
-* quit should really ask ays?
 * pill that turns it into regular pong with one faaaat puck.
 * do i need clearFn() for gamepad buttons and joystick? or what else instead?
 * check that the gamepad buttons & sticks non/repeat is sane/right.
