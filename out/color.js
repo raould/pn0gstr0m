@@ -9,6 +9,18 @@
 // though i do partially blame the utterly asinine canvas string based api.
 // there really needs to be a cleanup of all this, like how spec.dark works.
 
+// meh! doubt/dunno that this does anything enough
+// to reduce the sheer number of color strings
+// such that javascript engines can optimize.
+var kQuantizeSteps = 8;
+var kQuantize255Step = 255 / kQuantizeSteps;
+var kQuantize01Step = 1 / kQuantizeSteps;
+function quantize255(c) {
+  return Clip255(Math.floor(Math.floor(c / kQuantize255Step) * kQuantize255Step));
+}
+function quantize01(c) {
+  return Clip01(Math.floor(c / kQuantize01Step) * kQuantize01Step);
+}
 var black = [0x0, 0x0, 0x0];
 var blackSpec = {
   regular: black,
@@ -87,19 +99,6 @@ var backgroundColorStr = "black";
 // match: backgroundColorStr, index.html
 var scanlineColorStr = "rgba(0, 0, 0, 0.15)";
 var puckColorStr = "cyan";
-
-// meh! doubt/dunno that this does anything enough
-// to reduce the sheer number of color strings
-// such that javascript engines can optimize.
-var kQuantizeSteps = 8;
-var kQuantize255Step = 255 / kQuantizeSteps;
-var kQuantize01Step = 1 / kQuantizeSteps;
-function quantize255(c) {
-  return Clip255(Math.floor(Math.floor(c / kQuantize255Step) * kQuantize255Step));
-}
-function quantize01(c) {
-  return Clip01(Math.floor(c / kQuantize01Step) * kQuantize01Step);
-}
 
 // array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 var _tc = Array(4);
