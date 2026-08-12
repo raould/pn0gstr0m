@@ -55,7 +55,6 @@ var kHotRod = false; // keep this committed as false.
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
-var gShowToasts = gDebug;
 
 // screens auto-advance after this long.
 var kUITimeout = 1000 * (gDebug ? 5 : 20);
@@ -67,7 +66,6 @@ var kFullscreenIconId = "fullscreen";
 var kLinksDivId = "links";
 var gLifecycle;
 var kScoreIncrement = 1;
-var kScoreLastPuckIncrement = 100;
 // note: see GameState.Init().
 var kZeroScore = {
   game: 0,
@@ -84,8 +82,6 @@ function incrScore(pscore, amount) {
   pscore.level += amount;
   pscore.game += amount;
 }
-// give bonus points to whoever wins the final puck (if it isn't game over).
-var gLastPuckSide;
 
 // mutually exclusive enum.
 // regular & hard & zen are single player.
@@ -608,7 +604,6 @@ var gCanvasScreenshot;
 var gCx;
 var gCxOnscreen;
 var gCxS;
-var gToasts = [];
 var gGamepad1;
 var gGamepad2;
 var gR = new Random(Math.round(Date.now()));
@@ -767,35 +762,6 @@ function StepSparks(dt) {
     s.alive && gSparks.B.push(s);
   });
   SwapBuffers(gSparks);
-}
-function StepToasts() {
-  if (gToasts.length > 0) {
-    var now = Date.now();
-    gToasts = gToasts.filter(function (t) {
-      return t.end > now;
-    });
-    if (gToasts.length > 0) {
-      var y = gh(0.1);
-      Cxdo(function () {
-        gCx.fillStyle = "magenta";
-        gToasts.forEach(function (t) {
-          DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, kMonospaceFontName);
-          y += gSmallestFontSizePt * 1.1;
-          if (y > gh(0.8)) {
-            y = gh(0.1);
-          }
-        });
-      });
-    }
-  }
-}
-function PushToast(msg) {
-  var lifespan = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1000;
-  console.log("PushToast", msg);
-  gToasts.push({
-    msg: msg.toUpperCase(),
-    end: Date.now() + lifespan
-  });
 }
 function ClearScreen() {
   gCx.clearRect(0, 0, gCanvasBacking.width, gCanvasBacking.height);
@@ -1071,9 +1037,6 @@ function Lifecycle(handlerMap) {
     DrawDebugList();
     if (gDebug) {
       DrawBounds(0.3);
-    }
-    if (gShowToasts) {
-      StepToasts();
     }
   };
   self.DrawCRTScanlines = function () {
@@ -1587,7 +1550,6 @@ function GameState(props) {
     ResetInput();
     gP1Score.level = 0;
     gP2Score.level = 0;
-    gLastPuckSide = undefined;
     gMonochrome = self.isAttract; // todo: make gMonochrome local instead?
     gLevelTime = gGameTime;
     self.levelHighScore = self.isAttract ? undefined : gLevelHighScores[gLevelInt];
@@ -2079,7 +2041,6 @@ function GameState(props) {
     if (!self.isAttract && p.alive === false) {
       // "gone" gets no score.
       var wasLeft = p.x < gw(0.5);
-      gLastPuckSide = wasLeft ? "left" : "right";
       ForP1Side(function () {
         incrScore(wasLeft ? gP2Score : gP1Score, kScoreIncrement);
       }, function () {
@@ -2964,8 +2925,7 @@ function GameOverSummaryState() {
       gCx.fillStyle = RandomForColor(magentaSpec);
       var msg = "FINAL SCORE: ".concat(gP1Score.game);
       DrawText(msg, "center", gw(0.5), gh(0.5), gRegularFontSizePt);
-      if (true) {
-        //self.isNewHighScore) {
+      if (self.isNewHighScore) {
         gCx.fillStyle = ColorCycle();
         DrawText(">>>> NEW HIGH: ".concat(self.maxScore, " <<<<"), "center", gw(0.5), gh(0.15), gReducedFontSizePt);
       }

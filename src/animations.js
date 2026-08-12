@@ -103,24 +103,6 @@ function MakeChargeUpMeterAnimation(duration) {
     });
 }
 
-function MakeLastPuckWonAnimation(duration, cx) {
-    var lifespan = duration;
-    return new Animation({
-	name: "lastpuckwon",
-	lifespan,
-	drawFn: (self) => {
-	    var t = T01(self.lifespan0-self.life, self.lifespan0 * 0.6);
-	    Cxdo(() => {
-		gCx.fillStyle = RandomForColor(yellowSpec, easeOutExpo(1-t));
-		DrawText(`+${kScoreLastPuckIncrement} LAST PUCK!`,
-			 "center",
-			 cx, gh(1) - t * gh(0.3),
-			 gSmallFontSizePt);
-	    });
-	}
-    });
-}
-
 function MakePoofAnimation(x, y, radius) {
     var lifespan = 1000 * 1;
     var r = radius;
