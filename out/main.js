@@ -712,9 +712,6 @@ function cachedFont(size) {
   // it used to be and i have no idea why or where the
   // buggy change happens end to end. i hate complexity.
   // this kind of sucks, is fragile, too...
-  if (font === null) {
-    font = kMainFontName;
-  }
   if (font === kMainFontName) {
     size *= 0.5;
   }
