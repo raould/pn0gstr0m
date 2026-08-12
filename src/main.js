@@ -37,7 +37,6 @@ const kHotRod = false; // keep this committed as false.
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
-var gShowToasts = gDebug;
 
 // screens auto-advance after this long.
 const kUITimeout = 1000 * (gDebug ? 5 : 20);
@@ -554,7 +553,6 @@ var gCanvasScreenshot;
 var gCx;
 var gCxOnscreen;
 var gCxS;
-var gToasts = [];
 var gGamepad1;
 var gGamepad2;
 var gR = new Random( Math.round(Date.now()) );
@@ -700,33 +698,6 @@ function StepSparks(dt) {
     } );
     SwapBuffers(gSparks);
 }
-
-function StepToasts() {
-    if (gToasts.length > 0) {
-        var now = Date.now();
-        gToasts = gToasts.filter((t) => { return t.end > now; });
-        if (gToasts.length > 0) {
-            var y = gh(0.1);
-            Cxdo(() => {
-                gCx.fillStyle = "magenta";
-                gToasts.forEach(t => {
-                    DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, kMonospaceFontName);
-                    y += gSmallestFontSizePt * 1.1;
-                    if (y > gh(0.8)) { y = gh(0.1); }
-                });
-            });
-        }
-    }
-}
-
-function PushToast(msg, lifespan=1000) {
-    console.log("PushToast", msg);
-    gToasts.push({
-        msg: msg.toUpperCase(),
-        end: Date.now() + lifespan
-    });
-}
-
 
 function ClearScreen() {
     gCx.clearRect( 0, 0, gCanvasBacking.width, gCanvasBacking.height );
@@ -1023,7 +994,6 @@ function CopyScreenBuffer() {
         }
         DrawDebugList();
         if (gDebug) { DrawBounds(0.3); }
-        if (gShowToasts) { StepToasts(); }
     };
 
     self.DrawCRTScanlines = function() {
