@@ -32,10 +32,10 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-var gDebug = false; // keep this committed as false.
+var gDebug = true; // keep this committed as false.
 var kStartingPuckCount = 1;
 try {
-  console.log("environment", "prod");
+  console.log("environment", "test");
 } catch (_unused) {
   console.error("environment unknown");
 }
@@ -51,7 +51,7 @@ console.log("safari?", kIsSafari);
 // and no hard or zen modes.
 // see also: kGameMode*, so this is all quite confusing.
 var kAppMode = false; // keep it commited as true, please.
-var kHotRod = true; // keep this committed as false.
+var kHotRod = false; // keep this committed as false.
 
 // [{ fn, frames? }]
 var gDebug_DrawList = [];
@@ -225,7 +225,7 @@ function RecalculateConstants() {
   gPauseRadius = sxi(12);
   gSparkWidth = sxi(3);
   gSparkHeight = syi(3);
-  gBigFontSizePt = NearestEven(gw(0.088));
+  gBigFontSizePt = NearestEven(gw(0.08));
   gRegularFontSizePt = NearestEven(gw(0.047));
   gReducedFontSizePt = NearestEven(gw(0.037));
   gSmallFontSizePt = NearestEven(gw(0.027));
@@ -237,7 +237,8 @@ function RecalculateConstants() {
 // anything here below that ends up depending on
 // gWidth or gHeight must got up into RecalculateConstants().
 
-var kFontName = "noyb2Regular";
+var kMainFontName = "noyb2Regular";
+var kMonospaceFontName = "monospace";
 var kAvgSparkFrame = 20;
 
 // hand-waving 'heuristic's abound!
@@ -703,19 +704,34 @@ function StrokeRect(x, y, w, h) {
 function RectXYWH(xywh) {
   gCx.rect(xywh.x, xywh.y, xywh.width, xywh.height);
 }
-function DrawText(data, align, x, y, size, wiggle, font) {
-  if (wiggle != false) {
-    x = WX(x);
-    y = WY(y);
-  }
+var gFontCache = new Map();
+function cachedFont(size) {
+  var font = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : kMainFontName;
   // wtf recent exports of noyb2.ttf and conversion to woff
   // have ended up with the font being way bigger than
   // it used to be and i have no idea why or where the
   // buggy change happens end to end. i hate complexity.
-  if (font == undefined) {
+  // this kind of sucks, is fragile, too...
+  if (font === null) {
+    font = kMainFontName;
+  }
+  if (font === kMainFontName) {
     size *= 0.5;
   }
-  gCx.font = size + "pt " + (font != null ? font : kFontName);
+  var bySize = getWithDefault(gFontCache, size, function () {
+    return new Map();
+  });
+  var byFont = getWithDefault(bySize, font, function () {
+    return size + "pt " + font;
+  });
+  return byFont;
+}
+function DrawText(data, align, x, y, size, wiggle, font) {
+  if (wiggle !== false) {
+    x = WX(x);
+    y = WY(y);
+  }
+  gCx.font = cachedFont(size, font);
   gCx.textAlign = align;
   gCx.fillText(data.toString(), x, y);
 }
@@ -765,7 +781,7 @@ function StepToasts() {
       Cxdo(function () {
         gCx.fillStyle = "magenta";
         gToasts.forEach(function (t) {
-          DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, "monospace");
+          DrawText(t.msg, "center", gw(0.5), y, gSmallestFontSizePt, false, kMonospaceFontName);
           y += gSmallestFontSizePt * 1.1;
           if (y > gh(0.8)) {
             y = gh(0.1);
@@ -815,7 +831,7 @@ function DrawWarning() {
   var y0 = gh(1) - gYInset - gWarning.length * lineFactor * 1.4;
   Cxdo(function () {
     gWarning.forEach(function (t, i) {
-      DrawText(t, "center", gw(0.5), y0 + i * lineFactor, gSmallestFontSizePt, false, "monospace");
+      DrawText(t, "center", gw(0.5), y0 + i * lineFactor, gSmallestFontSizePt, false, kMonospaceFontName);
     });
   });
 }
