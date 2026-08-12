@@ -17,7 +17,7 @@
 // note: the noyb2 font only has upper case letters,
 // with a few icons in the lower case.
 
-let gDebug = true; // keep this committed as false.
+let gDebug = false; // keep this committed as false.
 const kStartingPuckCount = 1;
 
 try { console.log("environment", gEnvironment); } catch { console.error("environment unknown"); }
@@ -32,7 +32,7 @@ console.log("safari?", kIsSafari);
 // and the only way to start the game is to click start (game controllers),
 // and no hard or zen modes.
 // see also: kGameMode*, so this is all quite confusing.
-const kAppMode = false; // keep it commited as true, please.
+const kAppMode = true; // keep it commited as true, please.
 const kHotRod = false; // keep this committed as false.
 
 // [{ fn, frames? }]
