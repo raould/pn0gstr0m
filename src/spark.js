@@ -12,6 +12,7 @@ function Spark() {
     };
 
     self.PlacementInit = function(props) {
+        self.id = gNextID++;
         self.x = props.x;
         self.y = props.y;
         self.prevX = self.x;

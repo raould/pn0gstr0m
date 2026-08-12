@@ -19,6 +19,7 @@ function Puck() {
 	Assert(!isBadNumber(props.y));
 	Assert(!isBadNumber(props.vx));
 	Assert(!isBadNumber(props.vy));
+        self.id = gNextID++;
         self.x = props.x;
         self.y = props.y;
         self.prevX = self.x;
