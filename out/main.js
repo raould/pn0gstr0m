@@ -701,7 +701,7 @@ function RectXYWH(xywh) {
   gCx.rect(xywh.x, xywh.y, xywh.width, xywh.height);
 }
 var gFontCache = new Map();
-function cachedFont(size) {
+function cachedFontStr(size) {
   var font = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : kMainFontName;
   // wtf recent exports of noyb2.ttf and conversion to woff
   // have ended up with the font being way bigger than
@@ -724,7 +724,7 @@ function DrawText(data, align, x, y, size, wiggle, font) {
     x = WX(x);
     y = WY(y);
   }
-  gCx.font = cachedFont(size, font);
+  gCx.font = cachedFontStr(size, font);
   gCx.textAlign = align;
   gCx.fillText(data.toString(), x, y);
 }

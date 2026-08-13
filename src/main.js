@@ -640,7 +640,7 @@ function RectXYWH( xywh ) {
 }
 
 const gFontCache = new Map();
-function cachedFont(size, font=kMainFontName) {
+function cachedFontStr(size, font=kMainFontName) {
     // wtf recent exports of noyb2.ttf and conversion to woff
     // have ended up with the font being way bigger than
     // it used to be and i have no idea why or where the
@@ -666,7 +666,7 @@ function DrawText( data, align, x, y, size, wiggle, font ) {
         x = WX(x);
         y = WY(y);
     }
-    gCx.font = cachedFont(size, font);
+    gCx.font = cachedFontStr(size, font);
     gCx.textAlign = align;
     gCx.fillText( data.toString(), x, y );
 }

@@ -196,8 +196,7 @@ function Pow2(v) {
   return Math.pow(v, 2);
 }
 function F(n, sd) {
-  var dd = sd == undefined ? 100 : Math.pow(10, sd);
-  return Math.floor(n * dd) / dd;
+  return n.toFixed(sd);
 }
 function FNP(n, singular, plural) {
   if (n === 1) {
@@ -320,7 +319,7 @@ function update(o, s) {
 }
 function getWithDefault(esmap, key, init_fn) {
   if (false === esmap.has(key)) {
-    console.log("cache miss", key);
+    console.log("cache miss for key", key);
     esmap.set(key, init_fn(esmap, key));
   } else {
     //console.log("cache hit", key);

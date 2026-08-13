@@ -94,7 +94,6 @@ const backgroundColorStr = "black";
 const scanlineColorStr = "rgba(0, 0, 0, 0.15)";
 const puckColorStr = "cyan";
 
-// array channels are 0x0 - 0xFF, alpha is 0.0 - 1.0, like html/css.
 const _tc = Array(4);
 function rgba255s(array, alpha) {
     // detect any old style code that called this function.
