@@ -203,7 +203,7 @@ const kEnglishStep = 0.05;
 		}
 	    });
 	}
-        else if (gGameMode === kGameModeZen) {
+        else if (!self.isAttract && gGameMode === kGameModeZen) {
 	    Cxdo(() => {
 		gCx.beginPath();
 		gCx.fillStyle = RandomForColor(cyanSpec, alpha);

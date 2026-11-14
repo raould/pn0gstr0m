@@ -189,7 +189,7 @@ function Level(props) {
           DrawText("NIL", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
         }
       });
-    } else if (gGameMode === kGameModeZen) {
+    } else if (!self.isAttract && gGameMode === kGameModeZen) {
       Cxdo(function () {
         gCx.beginPath();
         gCx.fillStyle = RandomForColor(cyanSpec, alpha);
