@@ -604,6 +604,7 @@ function MakeSplitProps(context) {
       return DrawSplitPill(context.side, self, alpha);
     },
     boomFn: function boomFn(gameState) {
+      PlayPowerupBoom();
       var needone = true;
       var targets = [];
       gPucks.A.forEach(function (p) {

@@ -548,6 +548,7 @@ function MakeSplitProps(context) {
         },
         drawFn: (self, alpha=1) => DrawSplitPill(context.side, self, alpha),
         boomFn: (gameState) => {
+            PlayPowerupBoom();
 	    let needone = true;
 	    const targets = [];
             gPucks.A.forEach(p => {
