@@ -193,7 +193,7 @@ function Level(props) {
       Cxdo(function () {
         gCx.beginPath();
         gCx.fillStyle = RandomForColor(cyanSpec, alpha);
-        DrawText("ZEN", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
+        DrawText("ZENDLESS", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
       });
     }
   };

@@ -138,7 +138,7 @@ function MakeModeButtons(_ref2) {
       y: k.by1 + k.bs,
       width: k.bw,
       height: k.bh,
-      title: "ZEN MODE",
+      title: "ZENDLESS",
       align: "left",
       margin: k.margin,
       font_size: k.font_size,
