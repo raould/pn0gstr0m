@@ -2200,12 +2200,9 @@ function GameState(props) {
         regular: gYInset * 1.5,
         zen: gYInset
       }) + dashStep / 2;
-      // match: Level.DrawText().
+      // match: Level.DrawText(). :-(
       var txo = gSmallFontSizePt;
-      var bottom = ForGameMode({
-        regular: gh() - gYInset * 1.05 - txo,
-        zen: gh() - gYInset
-      });
+      var bottom = gh() - gYInset * 1.05 - txo;
       var range = bottom - top;
       var e = ((_self$level$EnergyFac = self.level.EnergyFactor()) != null ? _self$level$EnergyFac : 0) * range;
       var gotfat = false;

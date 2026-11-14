@@ -155,7 +155,7 @@ function Level(props) {
 
   // match: main.GameState,Draw().
   // todo: Draw is too split up, kind of
-  // confusing that midline is in game state.
+  // confusing that midline is in game state. <- !!!
   self.Draw = function (_ref) {
     var alpha = _ref.alpha,
       isEndScreenshot = _ref.isEndScreenshot;
@@ -188,6 +188,12 @@ function Level(props) {
         } else {
           DrawText("NIL", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
         }
+      });
+    } else if (gGameMode === kGameModeZen) {
+      Cxdo(function () {
+        gCx.beginPath();
+        gCx.fillStyle = RandomForColor(cyanSpec, alpha);
+        DrawText("ZEN", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
       });
     }
   };

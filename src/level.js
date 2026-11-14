@@ -168,7 +168,7 @@ const kEnglishStep = 0.05;
 
     // match: main.GameState,Draw().
     // todo: Draw is too split up, kind of
-    // confusing that midline is in game state.
+    // confusing that midline is in game state. <- !!!
     self.Draw = function({ alpha, isEndScreenshot }) {
         if (!isEndScreenshot) {
 	    self.DrawTitle( alpha );
@@ -203,6 +203,13 @@ const kEnglishStep = 0.05;
 		}
 	    });
 	}
+        else if (gGameMode === kGameModeZen) {
+	    Cxdo(() => {
+		gCx.beginPath();
+		gCx.fillStyle = RandomForColor(cyanSpec, alpha);
+		DrawText("ZEN", "center", gw(0.5), gh(0.95), gSmallerFontSizePt);
+	    });
+        }
     };
 
     self.DrawPills = function( alpha ) {

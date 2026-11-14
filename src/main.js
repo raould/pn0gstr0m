@@ -2169,9 +2169,9 @@ function CopyScreenBuffer() {
             // note: this is all a tweaky hacky heuristic mess.
             var dashStep = gh() / (gMidLineDashCount*2);
             var top = ForGameMode({regular: gYInset*1.5, zen: gYInset}) + dashStep/2;
-	    // match: Level.DrawText().
+	    // match: Level.DrawText(). :-(
             var txo = gSmallFontSizePt;
-            var bottom = ForGameMode({regular: gh() - gYInset*1.05 - txo, zen: gh()-gYInset});
+            var bottom = gh() - gYInset*1.05 - txo;
             var range = bottom - top;
             var e = (self.level.EnergyFactor() ?? 0) * range;
             var gotfat = false;
