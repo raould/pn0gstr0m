@@ -3,7 +3,7 @@
  * https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 
-const kMusicVolume = 0.1; // todo: revert, do not merge to main branch.
+const kMusicVolume = 0.9;
 
 // this object contains multiple mappings.
 // 0-bsed index to name.

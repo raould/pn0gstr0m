@@ -35,7 +35,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 var gDebug = false; // keep this committed as false.
 var kStartingPuckCount = 1;
 try {
-  console.log("environment", "test");
+  console.log("environment", "prod");
 } catch (_unused) {
   console.error("environment unknown");
 }

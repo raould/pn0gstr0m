@@ -28,6 +28,7 @@ function Neo(props /*{x, normalX, lifespan, side}*/) {
   self.Step = function (dt, gameState) {
     self.alive = self.lifespan > 0;
     if (!self.alive) {
+      PlayPowerupBoom();
       gameState.AddAnimation(Make2PtLightningAnimation({
         lifespan: 500,
         x0: WX(self.x + self.width / 2),
